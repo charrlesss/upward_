@@ -1,0 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+main{
+    font-family: "Roboto", sans-serif;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+main h2{
+    padding-bottom: 20px;
+    margin: 0;   
+    font-weight: 300; 
+}
+main p{
+    padding-top: 10px;
+    padding-bottom: 50px;
+    margin: 0;    
+    font-weight: 300; 
+    color: #797b7c;
+
+}
+main button{
+    border: none;
+    padding: 20px;
+    border-radius: 20px;
+    background-color: #353c47;
+    color: #fbbf24;
+    cursor: pointer;
+}
+main button:hover{
+    background-color: rgb(32, 37, 46);
+    
+}

@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+
+.claim-list{
+    border-collapse: collapse;
+    margin: auto;
+    width: 100%;
+    padding: 20px;
+    font-family: "Roboto", sans-serif;
+}
+.claim-list thead tr td{
+    border-bottom: 1px solid black;
+}
+.claim-list tbody tr td{
+    border-bottom: 1px solid black;
+}
+.claim-list tbody tr:hover{
+    background-color: #f1f5f9;
+}
+.claim-list tbody tr td{
+    cursor: pointer;
+    padding: 0 10px;
+}
+.claim-list tbody tr  td.left{
+    text-align: left;
+}
+.claim-list tbody tr  td.right{
+    text-align:  right;
+}
+.claim-list thead tr th {
+    text-align: left;
+}
+.claim-list thead tr th:nth-child(1) {
+    text-align: center;
+}
+
+
+.summary-modal{
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(158, 155, 157, 0.31);
+    z-index: 999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.summary-modal .content{
+    width: 600px;
+    height: 670px;
+    background-color: white;
+    position: relative;
+    padding: 20px;
+}
+
+.summary-modal .content button{
+   position: absolute;
+   border: none;
+   right: 10px;
+   top:10px ;
+   background-color: transparent;
+   cursor: pointer;
+}
+.summary-modal .content table {
+   border-collapse: collapse;
+   width: 100%;
+   
+}
+.summary-modal .content table tr .datakey{
+    font-weight: bold;
+    color: rgb(3, 3, 3);
+}
+

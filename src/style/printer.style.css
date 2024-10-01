@@ -1,0 +1,158 @@
+table {
+  border-collapse: collapse;
+  width: 100%;
+  height: 100%;
+}
+table thead tr {
+  background-color: #e2e8f0;
+  height: 35px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  border-bottom: 1px solid black;
+  text-align: left;
+}
+table thead tr td.groupheader {
+  text-align: center !important;
+}
+table thead tr td.groupheader textarea {
+  text-align: center !important;
+}
+table tbody tr {
+  background-color: white;
+  border-bottom: 1px solid black;
+}
+table tbody tr:hover {
+  background-color: #e5e7eb;
+}
+table tbody tr td {
+  background-color: transparent;
+  font-weight: 600;
+}
+table tbody tr td.type-text textarea {
+  text-align: left !important;
+}
+table tbody tr td.type-number textarea {
+  text-align: right !important;
+}
+table tbody tr td textarea {
+  background-color: transparent;
+  border: none;
+  padding: 0 10px;
+  min-height: 20px;
+  max-height: auto;
+}
+table tbody tr td textarea {
+  resize: none;
+}
+.rigth-click-modal {
+  box-shadow: 1px 10px 13px 0 #cbd5e1;
+  background: white;
+  position: absolute;
+}
+
+.rigth-click-modal div {
+  width: 100%;
+  height: 100%;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.rigth-click-modal div button.button-rigth-click {
+  display: block;
+  width: 100%;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  background-color: transparent;
+  text-align: left;
+  font-size: 12px;
+}
+.rigth-click-modal div button.button-rigth-click:hover {
+  background-color: #f1f5f9;
+  font-weight: 600;
+}
+table tr.tfoot {
+  padding: 5px;
+  border: none;
+}
+table tr.tfoot td {
+  font-size: 12px;
+  font-weight: 700;
+  font-family: Arial, Helvetica, sans-serif;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+table tr.tfoot td textarea {
+  resize: none;
+  background-color: transparent;
+  border: none;
+  max-width: 120px;
+  font-weight: 600;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+}
+table tr.tfoot td.type-text textarea {
+  text-align: left !important;
+}
+table tr.tfoot td.type-number textarea {
+  text-align: right !important;
+}
+
+.total-rows:nth-child(1) {
+  color: #4b5563;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0;
+  margin: 0;
+}
+
+.total-rows:nth-child(2) {
+  color: black;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0;
+  margin: 0;
+}
+.row-per-page {
+  color: black;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+}
+table tbody tr.shift-row {
+  background-color: #e0f2fe;
+}
+table tbody tr td.shift-td-data {
+  background-color: #2563eb;
+}
+table tbody tr td.shift-td-data textarea {
+  color: white;
+}
+
+table.group {
+  border-collapse: collapse;
+  width: 100%;
+  height: 100%;
+}
+
+table.group thead tr {
+  border-bottom: 1px solid black;
+  background-color: transparent;
+}
+
+table.group tbody tr.tfoot-group {
+  border-top: 1px solid black;
+  background-color: transparent;
+  border-bottom: none;
+}
+
+table.group tbody tr:not(.tfoot-group) {
+  border: none;
+  background-color: transparent;
+}
+
+table.group tbody tr.group-label-row td {
+  padding-bottom: 10px;
+  padding-top: 20px;
+}
