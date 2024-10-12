@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+.main-landing-page{
+    background-color: #d9d9d9;
+    width: 100%;
+    height: 100vh;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Inter", sans-serif;
+}
+.main-landing-page .content{
+    text-align: center;
+}
+.main-landing-page .content{
+    display: block;
+}
+.main-landing-page .content label{
+    font-size: 12px;
+    display: block;
+    text-align: left;
+    margin-bottom: 5px;
+}
+.main-landing-page .content .content-field{
+    display: flex;
+    justify-content: center;
+}
+.main-landing-page .content .content-field input {
+    width: 280px;
+    height: 22px;
+    font-size: 14px;
+    border: none;
+    border-radius: 5px;
+    padding: 0 5px;
+}
+.main-landing-page .content .content-field input:focus{
+    outline: 2px solid rgba(0, 106, 255, 0.633);
+}
+.main-landing-page .content .warning-text{
+    font-size: 11px;
+    margin: 0;
+    padding: 0;
+    text-align: left;
+    color: rgb(147, 7, 7);
+}
+.main-landing-page .content .content-field input.error{
+    outline: 2px solid rgb(147, 7, 7);
+
+}
+
+.main-landing-page .content   button{
+    margin-top: 30px;
+    height: 25px;
+    width: 280px;
+    border: none;
+    font-size: 11px;
+    background-color: rgb(9, 187, 176);
+    cursor: pointer;
+    color: white;
+}
+.loading-component{
+    background-color: rgba(19, 18, 18, 0.092);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+.loader {
+    width: 50px;
+    aspect-ratio: 1;
+    display: grid;
+    color: rgb(139, 139, 139);
+    background: radial-gradient(farthest-side, currentColor calc(100% - 6px),#0000 calc(100% - 5px) 0);
+    mask: radial-gradient(farthest-side,#0000 calc(100% - 13px),#000 calc(100% - 12px));
+    border-radius: 50%;
+    animation: l19 2s infinite linear;
+    
+  }
+  .loader::before,
+  .loader::after {    
+    content: "";
+    grid-area: 1/1;
+    background:
+      linear-gradient(currentColor 0 0) center,
+      linear-gradient(currentColor 0 0) center;
+    background-size: 100% 10px,10px 100%;
+    background-repeat: no-repeat;
+  }
+  .loader::after {
+     transform: rotate(45deg);
+  }
+  
+  @keyframes l19 { 
+    100%{transform: rotate(1turn)}
+  }

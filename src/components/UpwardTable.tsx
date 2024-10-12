@@ -8,6 +8,7 @@ import React, {
 } from "react";
 
 import "../style/datagridview.css";
+import { Pagination } from "@mui/material";
 
 interface UpwardTablePropsType {
   rows: Array<any>;
@@ -22,6 +23,7 @@ interface UpwardTablePropsType {
   inputsearchselector?: string;
   isRowSelectable?: boolean;
   unSelectable?: (row: any) => boolean;
+  isLoading?: boolean
 }
 
 const UpwardTable = forwardRef(
@@ -32,16 +34,19 @@ const UpwardTable = forwardRef(
       width,
       height,
       dataReadOnly,
-      onSelectionChange = () => {},
+      onSelectionChange = () => { },
       isMultipleSelect = false,
       freeze = false,
       onKeyDown,
       inputsearchselector = ".search-input-up-on-key-down",
       isRowSelectable = true,
       unSelectable = () => false,
+      isLoading
     }: UpwardTablePropsType,
     UpwardTableRef
   ) => {
+    const [pages, setPages] = useState<Array<any>>([])
+    const [pageNumber, setPageNumber] = useState(0)
     const onSelectionChangeRef = useRef(onSelectionChange);
     const onKeyDownRef = useRef(onKeyDown);
     const [columns, setColumns] = useState(column.filter((itm) => !itm.hide));
@@ -50,6 +55,12 @@ const UpwardTable = forwardRef(
     const [lastSelectedRowIndex, setLastSelectedRowIndex] = useState(0);
     const [selectedItems, setSelectedItems] = useState<Array<number>>([]);
     const divRef = useRef<HTMLDivElement>(null);
+
+
+    useEffect(() => {
+      const _pages = formatArrayIntoChunks(rows, 100)
+      setPages(_pages)
+    }, [rows])
 
     const startResize = (index: any, e: any) => {
       e.preventDefault();
@@ -296,7 +307,6 @@ const UpwardTable = forwardRef(
         return rows.filter((d, idx) => selectedItems.includes(idx));
       },
     }));
-
     return (
       <div
         style={{
@@ -329,16 +339,15 @@ const UpwardTable = forwardRef(
                   {columns.map((col: any, index: number) => (
                     <div
                       key={index}
-                      className={`grid-cell header-cell ${
-                        hoveredColumn === index ? `highlight-column` : ""
-                      }`} // Add the class if hovered
+                      className={`grid-cell header-cell ${hoveredColumn === index ? `highlight-column` : ""
+                        }`} // Add the class if hovered
                       style={{ width: col.width, height: "20px" }}
                     >
                       <input
                         style={{ fontWeight: "bold" }}
                         defaultValue={col.headerName}
                         readOnly
-                        onChange={(e) => {}}
+                        onChange={(e) => { }}
                       />
                       <div
                         className="resize-handle"
@@ -355,7 +364,7 @@ const UpwardTable = forwardRef(
                     </div>
                   ))}
                 </div>
-                {rows.map((row: any, rowIndex: any) => (
+                {pages[pageNumber]?.map((row: any, rowIndex: any) => (
                   <div
                     className={`grid-row row-${rowIndex}`} // Highlight selected row
                     key={rowIndex}
@@ -366,23 +375,20 @@ const UpwardTable = forwardRef(
                       <div
                         key={colIndex}
                         style={{ width: col.width }}
-                        className={`grid-cell ${
-                          hoveredColumn === colIndex ? `highlight-column` : ""
-                        }`}
+                        className={`grid-cell ${hoveredColumn === colIndex ? `highlight-column` : ""
+                          }`}
                       >
                         <input
                           value={row[col.field]}
-                          onChange={(e) => {}}
+                          onChange={(e) => { }}
                           readOnly={dataReadOnly}
-                          className={`${
-                            selectedRows.includes(rowIndex)
-                              ? "selected-row"
-                              : ""
-                          } ${
-                            selectedItems.includes(rowIndex)
+                          className={`${selectedRows.includes(rowIndex)
+                            ? "selected-row"
+                            : ""
+                            } ${selectedItems.includes(rowIndex)
                               ? "selected-items"
                               : ""
-                          }
+                            }
                           ${col.type === "number" ? "number" : "text"}
                           `}
                         />
@@ -408,11 +414,32 @@ const UpwardTable = forwardRef(
               </div>
             </div>
           </div>
-          <div className="table-panel-footer">Records : {rows.length}</div>
+          <div className="table-panel-footer">
+            <div>Records : {rows.length}</div>
+            <div><Pagination count={pages.length} onChange={(e, value) => {
+              setPageNumber(value - 1)
+            }} />
+            </div>
+          </div>
+          {isLoading && <div className="table-loading">
+            <div className="loader"></div>
+          </div>}
         </div>
       </div>
     );
   }
 );
+
+function formatArrayIntoChunks(arr: Array<any>, chunkSize = 100) {
+  let result = [];
+
+  for (let i = 0; i < arr.length; i += chunkSize) {
+    // Use slice to create chunks of 'chunkSize'
+    result.push(arr.slice(i, i + chunkSize));
+  }
+  return result;
+}
+
+
 
 export default UpwardTable;

@@ -1,40 +1,74 @@
-import { HtmlHTMLAttributes, InputHTMLAttributes, useId } from "react";
+import { HtmlHTMLAttributes, InputHTMLAttributes, useId, ReactNode } from "react";
 import "../style/design.css";
+
+
+interface TextInputProps {
+  input: InputHTMLAttributes<HTMLInputElement>;
+  label: HtmlHTMLAttributes<HTMLLabelElement>;
+  inputRef?: React.RefObject<HTMLInputElement>;
+  icon?: ReactNode; // New prop for the icon
+  iconPosition?: 'start' | 'end'; // New prop to choose icon position
+  onIconClick?: React.MouseEventHandler<HTMLDivElement> | undefined
+}
 
 export function TextInput({
   input,
   label,
   inputRef,
-}: {
-  inputRef?: React.RefObject<HTMLInputElement>;
-  labelRef?: React.RefObject<HTMLLabelElement>;
-  input: InputHTMLAttributes<HTMLInputElement>;
-  label: HtmlHTMLAttributes<HTMLLabelElement>;
-}) {
+  icon,
+  iconPosition = 'end', // Default position is 'end'
+  onIconClick = (e) => { }
+}: TextInputProps) {
   const id = useId();
+
   return (
     <div
       style={{
-        display: "flex",
-        height: "18px",
-        alignItems: "center",
+        display: 'flex',
+        alignItems: 'center',
+        position: 'relative', // Enable absolute positioning for icon
       }}
     >
       <label {...label} htmlFor={id}>
         {label.title}
       </label>
+      {icon && iconPosition === 'start' && (
+        <div style={{ position: 'absolute', left: '8px', zIndex: 1 }}>
+          {icon}
+        </div>
+      )}
       <input
         ref={inputRef}
         id={id}
         {...input}
         style={{
-          height: "18px",
+          height: '100%',
           ...input.style,
         }}
       />
-    </div>
+      {icon && iconPosition === 'end' && (
+        <div onClick={onIconClick}
+          style={{
+            position: 'absolute',
+            right: '2px',
+            top: "50%",
+            transform: "translateY(-50%)",
+            zIndex: 1,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background:"white"
+          }}>
+          {icon}
+        </div>
+
+      )
+      }
+    </div >
   );
 }
+
 
 export function SelectInput({
   select,
@@ -104,7 +138,7 @@ export function ButtonField({
         disabled={disabled}
         {...button}
         ref={buttonRetRef}
-        style={{ ...button.style, background:!disabled ? "transparent" : "#f1f1f1" }}
+        style={{ ...button.style, background: !disabled ? "transparent" : "#f1f1f1" }}
         className="tooltip-button"
       >
         {children}

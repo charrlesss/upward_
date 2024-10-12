@@ -15,13 +15,12 @@ import {
 } from "../lib/findObjectbyLink";
 import { sidebarOptions } from "./Sidebars/SidebarOptions";
 import LoaderLinear from "./LoaderLinear";
-import LoaderCircular from "./LoaderCircular";
 import useUrlParams from "../hooks/useUrlParams";
 import { AuthContext } from "./AuthContext";
 import { Badge } from "@mui/material";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import NotificationsIcon from "@mui/icons-material/Notifications";
-
+import "../style/laoding.css"
 const drawerWidth = 280;
 
 const Main = styled("main", { shouldForwardProp: (prop) => prop !== "open" })<{
@@ -140,6 +139,12 @@ export default function Layout() {
   const { searchParams, setSearchParams } = useUrlParams();
   const [openCircularLoader, setOpenCircularLoader] = useState(false);
 
+  const closeLoading = () => {
+    setOpenCircularLoader(false)
+  }
+  const showLoading = () => {
+    setOpenCircularLoader(true)
+  }
   const open = searchParams.get("drawer") === "true";
   const [matchQuery, setMatchQuery] = useState(
     window.matchMedia("(max-width: 900px)").matches
@@ -186,14 +191,16 @@ export default function Layout() {
           open={open}
           drawerWidth={drawerWidth}
           handleDrawerClose={handleDrawerClose}
-          setOpenCircularLoader={setOpenCircularLoader}
+          showLoading={showLoading}
+          closeLoading={closeLoading}
         />
       ) : (
         <SidebarDesktop
           open={open}
           drawerWidth={drawerWidth}
           handleDrawerClose={handleDrawerClose}
-          setOpenCircularLoader={setOpenCircularLoader}
+          showLoading={showLoading}
+          closeLoading={closeLoading}
         />
       )}
       <AppBar
@@ -234,7 +241,7 @@ export default function Layout() {
             >
               {/* <p style={{ fontSize: "13px", marginRight: "30px" }}>5:31 PM</p> */}
               <Clock />
-              <IconButton
+              {/* <IconButton
                 aria-label="show 17 new notifications"
                 color="inherit"
               >
@@ -261,7 +268,7 @@ export default function Layout() {
                 color="inherit"
               >
                 <AccountCircle />
-              </IconButton>
+              </IconButton> */}
             </Box>
           </Box>
         </Toolbar>
@@ -289,7 +296,10 @@ export default function Layout() {
           </Suspense>
         </Box>
       </Main>
-      <LoaderCircular open={openCircularLoader} />
+
+      {openCircularLoader && <div className="loading-component"><div className="loader"></div></div>}
+
+
     </Box>
   );
 }

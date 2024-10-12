@@ -166,6 +166,7 @@ export default function WarehouseChecks() {
       ),
     refetchOnWindowFocus: false,
   });
+
   const {
     mutate: mutateSelectecCheckInPullout,
     isLoading: isLoadingSelectecCheckInPullout,
@@ -306,7 +307,7 @@ export default function WarehouseChecks() {
     });
   };
   const width = window.innerWidth - 100;
-  const height = window.innerHeight - 100;
+  const height = window.innerHeight - 55;
 
   return (
     <div
@@ -720,12 +721,14 @@ export default function WarehouseChecks() {
       >
         <UpwardTable
           ref={table}
+          isLoading={loadingPulloutApprovedList || isLoadingSelectecCheckInPullout || saveLoading
+          }
           rows={warehouseRows}
           column={warehouseColumns}
           width={width}
           height={height}
           dataReadOnly={true}
-          onSelectionChange={() => {}}
+          onSelectionChange={() => { }}
           isMultipleSelect={!state.pdcStatusDisable}
           isRowSelectable={!state.pdcStatusDisable}
         />
@@ -948,22 +951,19 @@ const ReportModal = ({
       const response = data as any;
       const status = ["ALL", "Stored", "Endorsed", "Pulled Out"];
       const title = `
-      ${
-        user?.department === "UMIS"
+      ${user?.department === "UMIS"
           ? "UPWARD INSURANCE MANAGEMENT SERVICES \n"
           : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.\n"
-      }
+        }
       Post Dated Checks Warehousing Report\n
-      ${status[state.pdcStatus]} ${
-        state.pdcRemarks === "ALL" ? "" : `(${state.pdcRemarks})`
-      } - (${
-        state.specificDate
+      ${status[state.pdcStatus]} ${state.pdcRemarks === "ALL" ? "" : `(${state.pdcRemarks})`
+        } - (${state.specificDate
           ? format(state.dateFrom, "MM/dd/yyyy")
           : `${format(state.dateFrom, "MM/dd/yyyy")} To ${format(
-              state.dateTo,
-              "MM/dd/yyyy"
-            )}`
-      })
+            state.dateTo,
+            "MM/dd/yyyy"
+          )}`
+        })
       `;
 
       console.log(title);
@@ -1018,9 +1018,8 @@ const ReportModal = ({
     if (!state.specificDate) {
       WHR += ``;
     } else {
-      WHR += ` AND (${dWHR} >= '${
-        state.dateFrom.toISOString().split("T")[0]
-      }' AND ${dWHR} <= '${state.dateTo.toISOString().split("T")[0]}')`;
+      WHR += ` AND (${dWHR} >= '${state.dateFrom.toISOString().split("T")[0]
+        }' AND ${dWHR} <= '${state.dateTo.toISOString().split("T")[0]}')`;
     }
 
     const sortDirection = state.sort === 0 ? "ASC" : "DESC";

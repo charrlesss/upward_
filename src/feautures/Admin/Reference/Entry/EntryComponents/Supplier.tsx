@@ -32,6 +32,7 @@ import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../../../lib/confirmationAlert";
+import UpwardTable from "../../../../../components/UpwardTable";
 
 const initialState = {
   firstname: "",
@@ -309,14 +310,15 @@ export default function Supplier() {
   }
   function resetModule() {
     setNewStateValue(dispatch, initialState);
-    table.current?.removeSelection();
+    table.current?.resetTableSelected();
     wait(250).then(() => {
       refetchSupplierSearch();
       refetchSupplierId();
       refetchSubAcct();
     });
   }
-
+  const width = window.innerWidth - 40;
+  const height = window.innerHeight  - 140;
   return (
     <div
       style={{
@@ -360,9 +362,17 @@ export default function Supplier() {
                 e.preventDefault();
                 return refetchSupplierSearch();
               }
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+                const datagridview = document.querySelector(
+                  `.grid-container`
+                ) as HTMLDivElement;
+                datagridview.focus();
+              }
             }}
             InputProps={{
               style: { height: "27px", fontSize: "14px" },
+              className:"manok"
             }}
             sx={{
               width: "500px",
@@ -793,7 +803,47 @@ export default function Supplier() {
           </div>
         </Box>
       </form>
-      <div
+
+      <UpwardTable
+        ref={table}
+        isLoading={isLoading || loadingDelete || loadingEdit || loadingAdd}
+        rows={rows}
+        column={supplierColumn}
+        width={width}
+        height={height}
+        dataReadOnly={true}
+        onSelectionChange={(rowSelected) => {
+          if (rowSelected.length > 0) {
+            handleInputChange({ target: { value: "edit", name: "mode" } });
+
+            setNewStateValue(dispatch, rowSelected[0]);
+
+          } else {
+            setNewStateValue(dispatch, initialState);
+            handleInputChange({ target: { value: "", name: "mode" } });
+            return;
+          }
+        }}
+        onKeyDown={(row, key) => {
+          if (key === "Delete" || key === "Backspace") {
+            const rowSelected = row[0];
+            wait(100).then(() => {
+              codeCondfirmationAlert({
+                isUpdate: false,
+                cb: (userCodeConfirmation) => {
+                  mutateDelete({
+                    id: rowSelected.entry_supplier_id,
+                    userCodeConfirmation,
+                  });
+                },
+              });
+            });
+            return;
+          }
+        }}
+        inputsearchselector=".manok"
+      />
+      {/* <div
         ref={refParent}
         style={{
           marginTop: "10px",
@@ -848,7 +898,7 @@ export default function Supplier() {
             }}
           />
         </Box>
-      </div>
+      </div> */}
     </div>
   );
 }

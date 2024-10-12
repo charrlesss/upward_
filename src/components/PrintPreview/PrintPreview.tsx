@@ -1047,11 +1047,11 @@ const HeaderPrinter = forwardRef(
             </IconButton>
           </div>
         </div>
-        <SidebarMobile
+        {/* <SidebarMobile
           open={openSidebar}
           drawerWidth={drawerWidth}
           handleDrawerClose={() => handleSidebar()}
-        />
+        /> */}
       </>
     );
   }

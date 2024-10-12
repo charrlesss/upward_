@@ -34,6 +34,7 @@ import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../../../lib/confirmationAlert";
+import UpwardTable from "../../../../../components/UpwardTable";
 
 const initialState = {
   firstname: "",
@@ -145,7 +146,7 @@ export default function Agent() {
 
     dispatch({ type: "UPDATE_FIELD", field: name, value });
   };
-   function onSuccess(res: any) {
+  function onSuccess(res: any) {
     if (res.data.success) {
       queryClient.invalidateQueries(queryKey);
       resetModule();
@@ -276,14 +277,15 @@ export default function Agent() {
   }
   function resetModule() {
     setNewStateValue(dispatch, initialState);
-    table.current?.removeSelection();
+    table.current?.resetTableSelected();
     wait(250).then(() => {
       refetchAgentSearch();
       refetchAgentId();
       refetchSubAcct();
     });
   }
-  
+  const width = window.innerWidth - 40;
+  const height = window.innerHeight  - 180;
   return (
     <div
       style={{
@@ -327,9 +329,19 @@ export default function Agent() {
                 e.preventDefault();
                 return refetchAgentSearch();
               }
+
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+                const datagridview = document.querySelector(
+                  `.grid-container`
+                ) as HTMLDivElement;
+                datagridview.focus();
+              }
+
             }}
             InputProps={{
               style: { height: "27px", fontSize: "14px" },
+              className:"manok"
             }}
             sx={{
               width: "500px",
@@ -736,7 +748,47 @@ export default function Agent() {
           }}
         />
       </form>
-      <div
+      <br/>
+      <UpwardTable
+        ref={table}
+        isLoading={isLoading || loadingDelete || loadingEdit || loadingAdd}
+        rows={rows}
+        column={agentColumn}
+        width={width}
+        height={height}
+        dataReadOnly={true}
+        onSelectionChange={(rowSelected) => {
+          if (rowSelected.length > 0) {
+            handleInputChange({ target: { value: "edit", name: "mode" } });
+
+            setNewStateValue(dispatch, rowSelected[0]);
+
+          } else {
+            setNewStateValue(dispatch, initialState);
+            handleInputChange({ target: { value: "", name: "mode" } });
+          }
+        }}
+        onKeyDown={(row, key) => {
+          if (key === "Delete" || key === "Backspace") {
+            const rowSelected = row[0];
+            wait(100).then(() => {
+              codeCondfirmationAlert({
+                isUpdate: false,
+                cb: (userCodeConfirmation) => {
+                  mutateDelete({
+                    id: rowSelected.entry_agent_id,
+                    userCodeConfirmation,
+                  });
+                },
+              });
+            });
+            return;
+          }
+        }}
+        inputsearchselector=".manok"
+      />
+
+      {/* <div
         ref={refParent}
         style={{
           marginTop: "10px",
@@ -791,7 +843,7 @@ export default function Agent() {
             }}
           />
         </Box>
-      </div>
+      </div> */}
     </div>
   );
 }

@@ -725,7 +725,7 @@ export default function PostDateChecks() {
     }
   };
   const isDisableField = state.pdcMode === "";
-  const width = window.innerWidth - 100;
+  const width = window.innerWidth - 50;
   const height = window.innerHeight - 145;
 
   return (

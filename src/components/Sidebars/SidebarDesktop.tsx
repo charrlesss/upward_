@@ -17,12 +17,14 @@ export default function SidebarDesktop({
   drawerWidth,
   handleDrawerClose,
   open,
-  setOpenCircularLoader,
+  showLoading,
+  closeLoading,
 }: {
   open: boolean;
   drawerWidth: number;
   handleDrawerClose: CallableFunction;
-  setOpenCircularLoader: React.Dispatch<React.SetStateAction<boolean>>;
+  showLoading:CallableFunction
+  closeLoading:CallableFunction
 }) {
   const location = useLocation();
   const { setUser, myAxios, user } = useContext(AuthContext);
@@ -37,8 +39,8 @@ export default function SidebarDesktop({
       wait(1200).then(async () => await Logout(myAxios, user)),
     enabled: false,
     onSuccess: (res) => {
-      setOpenCircularLoader(false);
       if (res.data.success) {
+        closeLoading()
         Swal.fire({
           position: "center",
           icon: "success",
@@ -54,12 +56,20 @@ export default function SidebarDesktop({
   });
 
   const handleLogout = () => {
-
-    window.location.href = "closemyapp://run";
-
-    setOpenCircularLoader(true);
-    refetch();
-
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You want to logout!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, logout it!"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        showLoading()
+        refetch();
+      }
+    });
   };
 
   return (

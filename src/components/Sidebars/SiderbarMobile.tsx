@@ -11,16 +11,19 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { wait } from "../../lib/wait";
 import { useQuery } from "react-query";
 import { Logout } from "./Logout";
-import LoaderCircular from "../LoaderCircular";
+import Swal from "sweetalert2";
 export default function SidebarMobile({
   drawerWidth,
   handleDrawerClose,
   open,
+  showLoading,
+  closeLoading,
 }: {
   open: boolean;
   drawerWidth: number;
   handleDrawerClose: CallableFunction;
-  setOpenCircularLoader?: React.Dispatch<React.SetStateAction<boolean>>;
+  showLoading:CallableFunction
+  closeLoading:CallableFunction
 }) {
   const { setUser, myAxios, user } = useContext(AuthContext);
   const [sidebarDataOptions, setSidebarDataOptions] = useState(
@@ -28,45 +31,49 @@ export default function SidebarMobile({
   );
   const navigate = useNavigate();
   const location = useLocation();
-  const { refetch, isLoading } = useQuery(
-    "logout",
-    async () => wait(1200).then(async () => await Logout(myAxios, user)),
-    {
-      enabled: false,
-      onSuccess(res) {
-        if (res.data.success) {
+
+  
+  const { refetch } = useQuery({
+    queryKey: "logout",
+    queryFn: async () =>
+      wait(1200).then(async () => await Logout(myAxios, user)),
+    enabled: false,
+    onSuccess: (res) => {
+      if (res.data.success) {
+        closeLoading()
+        Swal.fire({
+          position: "center",
+          icon: "success",
+          title: res.data.message,
+          showConfirmButton: false,
+          timer: 800,
+        }).then(() => {
           setUser(null);
           navigate("/");
-        }
-      },
-    }
-  );
+        });
+      }
+    },
+  });
 
+  
   const handleLogout = async () => {
-    refetch();
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You want to logout!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, logout it!"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        showLoading()
+        refetch();
+      }
+    });
+    
   };
 
-  if (isLoading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          position: "fixed",
-          top: "0",
-          bottom: "0",
-          left: "0",
-          right: "0",
-          background: "rgba(210, 236, 248, 0.226)",
-        }}
-      >
-        <div>
-          <LoaderCircular open />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <Drawer anchor={"left"} open={open} onClose={() => handleDrawerClose()}>

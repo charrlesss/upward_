@@ -612,15 +612,15 @@ const CLAIMS = [
     ),
   },
 
-  // {
-  //   link: "/dashboard/reports/claims/claims-report",
-  //   text: "Reports",
-  //   icon: (
-  //     <AlignVerticalCenterIcon
-  //       sx={{ width: "20px !important", heigth: "20px !important" }}
-  //     />
-  //   ),
-  // },
+  {
+    link: "/dashboard/reports/claims/claims-report",
+    text: "Reports",
+    icon: (
+      <AlignVerticalCenterIcon
+        sx={{ width: "20px !important", heigth: "20px !important" }}
+      />
+    ),
+  },
 ];
 const ADMIN = [
   {

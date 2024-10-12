@@ -30,6 +30,7 @@ import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../../../lib/confirmationAlert";
+import UpwardTable from "../../../../../components/UpwardTable";
 
 const initialState = {
   firstname: "",
@@ -257,14 +258,15 @@ export default function Employee() {
   }
   function resetModule() {
     setNewStateValue(dispatch, initialState);
-    table.current?.removeSelection();
+    table.current?.resetTableSelected();
     wait(250).then(() => {
       refetchEmployeeId();
       refetchEmployeeSearch();
       refetchSubAcct();
     });
   }
-
+  const width = window.innerWidth - 40;
+  const height = window.innerHeight  - 140;
   return (
     <div
       style={{
@@ -305,11 +307,19 @@ export default function Employee() {
             onChange={handleInputChange}
             InputProps={{
               style: { height: "27px", fontSize: "14px" },
+              className:"manok"
             }}
             onKeyDown={(e) => {
               if (e.code === "Enter" || e.code === "NumpadEnter") {
                 e.preventDefault();
                 return refetchEmployeeSearch();
+              }
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+                const datagridview = document.querySelector(
+                  `.grid-container`
+                ) as HTMLDivElement;
+                datagridview.focus();
               }
             }}
             sx={{
@@ -637,7 +647,48 @@ export default function Employee() {
           }}
         />
       </form>
-      <div
+
+      <UpwardTable
+        ref={table}
+        isLoading={isLoading || loadingDelete || loadingEdit || loadingAdd}
+        rows={rows}
+        column={employeeColumn}
+        width={width}
+        height={height}
+        dataReadOnly={true}
+        onSelectionChange={(rowSelected) => {
+          if (rowSelected.length > 0) {
+            handleInputChange({ target: { value: "edit", name: "mode" } });
+
+            setNewStateValue(dispatch, rowSelected[0]);
+
+          } else {
+            setNewStateValue(dispatch, initialState);
+            handleInputChange({ target: { value: "", name: "mode" } });
+            return;
+          }
+        }}
+        onKeyDown={(row, key) => {
+          if (key === "Delete" || key === "Backspace") {
+            const rowSelected = row[0];
+            wait(100).then(() => {
+              codeCondfirmationAlert({
+                isUpdate: false,
+                cb: (userCodeConfirmation) => {
+                  mutateDelete({
+                    id: rowSelected.entry_employee_id,
+                    userCodeConfirmation,
+                  });
+                },
+              });
+            });
+            return;
+          }
+        }}
+        inputsearchselector=".manok"
+      />
+      
+      {/* <div
         ref={refParent}
         style={{
           marginTop: "10px",
@@ -690,7 +741,7 @@ export default function Employee() {
             }}
           />
         </Box>
-      </div>
+      </div> */}
     </div>
   );
 }

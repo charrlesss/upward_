@@ -35,6 +35,8 @@ const claimsStatus = [
   "Done",
   "",
 ];
+
+
 const claimType = [
   "OWN DAMAGE",
   "LOST/CARNAP",

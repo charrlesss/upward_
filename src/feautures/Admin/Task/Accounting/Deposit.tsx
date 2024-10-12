@@ -36,6 +36,10 @@ import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../../lib/confirmationAlert";
+import { TextInput } from "../../../../components/UpwardFields";
+import { format } from 'date-fns'
+import AutorenewIcon from '@mui/icons-material/Autorenew';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 const defaultCashBreakDown = [
   { value1: "1,000.00", value2: "", value3: "0.00" },
   { value1: "500.00", value2: "", value3: "0.00" },
@@ -133,27 +137,47 @@ export const reducer = (state: any, action: any) => {
       return state;
   }
 };
-const DepositContext = createContext<DepositContextType>({
+const DepositContext = createContext<any>({
   cashCollection: [],
-  setCashCollection: () => {},
+  setCashCollection: () => { },
   checkCollection: [],
-  setCheckCollection: () => {},
+  setCheckCollection: () => { },
   selectedCollection: [],
-  setSelectedCollection: () => {},
+  setSelectedCollection: () => { },
   collectionForDeposit: [],
-  setCollectionForDeposit: () => {},
+  setCollectionForDeposit: () => { },
   tableRows: [],
-  updateTableRowsInput: () => {},
+  updateTableRowsInput: () => { },
   LoadingCashTable: false,
   LoadingCheckTable: false,
-  setTotal: () => {},
+  setTotal: () => { },
   total: "0.00",
   TotalCashForDeposit: "0.00",
   loadingSearchByDepositSlip: false,
 });
 
+
+
 export default function Deposit() {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const depositSearch = useRef<HTMLInputElement>(null)
+
+  const inputSearchRef = useRef<HTMLInputElement>(null)
+  const refSlipCode = useRef<HTMLInputElement>(null)
+  const refDateDepo = useRef<HTMLInputElement>(null)
+  const refBankAcctCode = useRef<HTMLInputElement>(null)
+  const refBankAcctName = useRef<HTMLInputElement>(null)
+
+  const bankDepositSearch = useRef<HTMLInputElement>(null)
+  const _refTempSlipCode = useRef<string>("")
+
+  const refBankAcctCodeTag = useRef('')
+  const refBankAcctNameTag = useRef('')
+  const refAcctID = useRef('')
+  const refAcctName = useRef('')
+  const refClassification = useRef('')
+  const refSubAccount = useRef('')
+  const refShortName = useRef('')
+
   const { myAxios, user } = useContext(AuthContext);
   const { currentStepIndex, step, goTo } = useMultipleComponent([
     <CashCollection />,
@@ -161,20 +185,32 @@ export default function Deposit() {
     <SelectedCollection />,
     <CollectionForDeposit />,
   ]);
+
+  const [cashCollection, setCashCollection] = useState([])
+  const [checkCollection, setCheckCollection] = useState([])
+  const [selectedRows, setSelectedRows] = useState<any>([])
+  const [collectionForDeposit, setCollectionForDeposit] = useState<any>([]);
   const [tableRowsInputValue, setTableRowsInputValue] =
     useState<Array<{ value1: string; value2: string; value3: string }>>(
       defaultCashBreakDown
     );
-  const [cashCollection, setCashCollection] = useState<GridRowSelectionModel>(
-    []
-  );
-  const [checkCollection, setCheckCollection] = useState<GridRowSelectionModel>(
-    []
-  );
-  const [selectedCollection, setSelectedCollection] =
-    useState<GridRowSelectionModel>([]);
-  const [collectionForDeposit, setCollectionForDeposit] =
-    useState<GridRowSelectionModel>([]);
+  const [depositMode, setDepositMode] = useState('')
+
+
+  const [total, setTotal] = useState("0.00");
+  const TotalCashForDeposit = selectedRows
+    .reduce((accumulator: number, currentValue: any) => {
+      const dd =
+        currentValue.Check_No || currentValue.Check_No !== ""
+          ? 0
+          : parseFloat(currentValue.Amount.replace(/,/g, ""));
+      return accumulator + dd;
+    }, 0.0)
+    .toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
   const updateTableRowsInput = (
     fields: { value1: string; value2: string; value3: string },
     idx: number
@@ -188,21 +224,7 @@ export default function Deposit() {
       });
     });
   };
-  const queryClient = useQueryClient();
-  const { isLoading: LoadingCashTable, refetch: refetchCash } = useQuery({
-    queryKey: "cash",
-    queryFn: async () =>
-      await myAxios.get(`/task/accounting/getCashCollection`, {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      }),
-    refetchOnWindowFocus: false,
-    onSuccess: (data) => {
-      const response = data as any;
-      setCashCollection(response.data.cash);
-    },
-  });
+
   const { isLoading: LoadingDepositSlipCode, refetch: RefetchDepositSlipCode } =
     useQuery({
       queryKey: "deposit-slipcode",
@@ -215,52 +237,18 @@ export default function Deposit() {
       refetchOnWindowFocus: false,
       onSuccess: (data) => {
         const response = data as any;
-    
-        dispatch({
-          type: "UPDATE_FIELD",
-          field: "depositSlip",
-          value: response.data.slipcode[0].collectionID,
-        });
-        dispatch({
-          type: "UPDATE_FIELD",
-          field: "temp_depositSlip",
-          value: response.data.slipcode[0].collectionID,
-        });
+        wait(100).then(() => {
+          if (refSlipCode.current) {
+            refSlipCode.current.value = response.data.slipcode[0].collectionID
+            _refTempSlipCode.current = response.data.slipcode[0].collectionID
+          }
+          if (refDateDepo.current) {
+            refDateDepo.current.value = format(new Date(), "yyyy-MM-dd")
+          }
+        })
       },
     });
-  const { isLoading: LoadingCheckTable, refetch: refetchCheck } = useQuery({
-    queryKey: "check",
-    queryFn: async () =>
-      await myAxios.get(`/task/accounting/getCheckCollection`, {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      }),
-    refetchOnWindowFocus: false,
-    onSuccess: (data) => {
-      const response = data as any;
-      setCheckCollection(response.data.check);
-    },
-  });
-  const [total, setTotal] = useState("0.00");
-  const datePickerRef = useRef<HTMLElement>(null);
-  const bankDepositSearch = useRef<HTMLInputElement>(null);
-  const depositSearch = useRef<HTMLInputElement>(null);
-  const submitButton = useRef<HTMLButtonElement>(null);
-  const goToRef = useRef<(index: number) => void>(goTo);
 
-  const TotalCashForDeposit = selectedCollection
-    .reduce((accumulator: number, currentValue: any) => {
-      const dd =
-        currentValue.Check_No || currentValue.Check_No !== ""
-          ? 0
-          : parseFloat(currentValue.Amount.replace(/,/g, ""));
-      return accumulator + dd;
-    }, 0.0)
-    .toLocaleString("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
   const {
     ModalComponent: ModalDepostitBanks,
     openModal: openDepositBanks,
@@ -284,17 +272,29 @@ export default function Deposit() {
     uniqueId: "Account_No",
     responseDataKey: "banks",
     onSelected: (selectedRowData) => {
-      console.log(selectedRowData[0]);
-      const newState = {
-        ...state,
-        ...selectedRowData[0],
-      };
-      setNewStateValue(dispatch, newState);
-      closeDepositBanks();
-    },
+      if (selectedRowData.length > 0) {
+        console.log(selectedRowData[0])
+        if (refBankAcctCode.current)
+          refBankAcctCode.current.value = selectedRowData[0].Account_No
+        if (refBankAcctName.current)
+          refBankAcctName.current.value = selectedRowData[0].Account_Name
 
+        refBankAcctCodeTag.current = selectedRowData[0]?.IDNo
+        refBankAcctNameTag.current = selectedRowData[0]?.Desc
+        refAcctID.current = selectedRowData[0]?.Account_ID
+        refAcctName.current = selectedRowData[0]?.Short
+        refShortName.current = selectedRowData[0]?.client_name
+        refClassification.current = selectedRowData[0]?.Sub_Acct
+        refSubAccount.current = selectedRowData[0]?.ShortName
+
+        closeDepositBanks();
+      }
+    },
     searchRef: bankDepositSearch,
   });
+
+
+
   const { mutate: addDepositMutation, isLoading: addDepositMutationLoading } =
     useMutation({
       mutationKey: "add-deposit",
@@ -308,14 +308,11 @@ export default function Deposit() {
       onSuccess: (res) => {
         const resposnse = res as any;
         if (resposnse.data.success) {
-          queryClient.invalidateQueries("deposit-search");
-          setNewStateValue(dispatch, initialState);
-          setSelectedCollection([]);
+          setSelectedRows([]);
           setCollectionForDeposit([]);
-          refetchCash();
           RefetchDepositSlipCode();
-          refetchCheck();
           setTableRowsInputValue(defaultCashBreakDown);
+          resetRefs()
           return Swal.fire({
             position: "center",
             icon: "success",
@@ -346,13 +343,10 @@ export default function Deposit() {
     onSuccess: (res) => {
       const resposnse = res as any;
       if (resposnse.data.success) {
-        queryClient.invalidateQueries("deposit-search");
-        setNewStateValue(dispatch, initialState);
-        setSelectedCollection([]);
+        resetRefs()
+        setSelectedRows([]);
         setCollectionForDeposit([]);
-        refetchCash();
         RefetchDepositSlipCode();
-        refetchCheck();
         setTableRowsInputValue(defaultCashBreakDown);
         return Swal.fire({
           position: "center",
@@ -389,7 +383,7 @@ export default function Deposit() {
 
         setCashCollection(response.data.cash);
         setCheckCollection(response.data.check);
-        setSelectedCollection([
+        setSelectedRows([
           ...response.data.cash.filter((items: any) => items.SlipCode !== ""),
           ...response.data.check.filter((items: any) => items.SlipCode !== ""),
         ]);
@@ -397,12 +391,13 @@ export default function Deposit() {
           ...response.data.check.filter((items: any) => items.SlipCode !== ""),
         ]);
         setTableRowsInputValue(response.data.cashBreakDownToArray);
-        setNewStateValue(dispatch, {
-          ...state,
-          ...response.data.getBankFromDeposit[0],
-        });
+        // setNewStateValue(dispatch, {
+        //   ...state,
+        //   ...response.data.getBankFromDeposit[0],
+        // });
         setTotal(response.data.cashBreakDownTotal);
-        handleInputChange({ target: { name: "depositMode", value: "edit" } });
+        setDepositMode('edit')
+        // handleInputChange({ target: { name: "depositMode", value: "edit" } });
       },
     });
   const {
@@ -436,26 +431,24 @@ export default function Deposit() {
       const SlipCode = selectedRowData[0].SlipCode;
       const BankAccount = selectedRowData[0].BankAccount;
       searchByDepositSlip({ SlipCode, BankAccount });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "depositSlip",
-        value: SlipCode,
-      });
-      state.depositSlip = SlipCode;
+
+      if (refSlipCode.current) {
+        refSlipCode.current.value = SlipCode
+      }
+
       closeDeposit();
     },
     onCloseFunction: (value: any) => {
-      dispatch({ type: "UPDATE_FIELD", field: "search", value });
+      if (inputSearchRef.current) {
+        inputSearchRef.current.value = ""
+      }
     },
     searchRef: depositSearch,
   });
-  const handleInputChange = (e: any) => {
-    const { name, value } = e.target;
-    dispatch({ type: "UPDATE_FIELD", field: name, value });
-  };
+
   const handleOnSave = (e: any) => {
     e.preventDefault();
-    if (state.Account_ID.length >= 200) {
+    if (refBankAcctCode.current && refBankAcctCode.current?.value.length >= 200) {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -463,7 +456,7 @@ export default function Deposit() {
         timer: 1500,
       });
     }
-    if (state.Account_ID === "") {
+    if (refBankAcctCode.current && refBankAcctCode.current?.value === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -475,7 +468,7 @@ export default function Deposit() {
         });
       });
     }
-    if (selectedCollection.length <= 0) {
+    if (selectedRows.length <= 0) {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -491,14 +484,28 @@ export default function Deposit() {
         timer: 1500,
       });
     }
-    if (state.depositMode === "edit") {
+    const state = {
+      depositSlip: refSlipCode.current?.value,
+      depositdate: refDateDepo.current?.value,
+      BankAcctCode: refBankAcctCode.current?.value,
+      BankAcctName: refBankAcctName.current?.value,
+      BankAcctCodeTag: refBankAcctCodeTag.current,
+      BankAcctNameTag: refBankAcctNameTag.current,
+      AcctID: refAcctID.current,
+      AcctName: refAcctName.current,
+      Classification: refClassification.current,
+      SubAccount: refSubAccount.current,
+      ShortName: refShortName.current,
+    }
+    if (depositMode === "edit") {
       codeCondfirmationAlert({
         isUpdate: true,
         cb: (userCodeConfirmation) => {
+
           updateDepositMutation({
-            ...state,
+
             userCodeConfirmation,
-            selectedCollection: JSON.stringify(selectedCollection),
+            selectedCollection: JSON.stringify(selectedRows),
             tableRowsInputValue: JSON.stringify(tableRowsInputValue),
           });
         },
@@ -508,7 +515,7 @@ export default function Deposit() {
         isConfirm: () => {
           addDepositMutation({
             ...state,
-            selectedCollection: JSON.stringify(selectedCollection),
+            selectedCollection: JSON.stringify(selectedRows),
             tableRowsInputValue: JSON.stringify(tableRowsInputValue),
           });
         },
@@ -516,13 +523,28 @@ export default function Deposit() {
     }
   };
 
-  // useEffect(() => {
-  //   if (selectedCollection.length > 0) {
-  //     goToRef.current(2);
-  //   }
-  // }, [selectedCollection]);
+  function resetRefs() {
 
-  const disabledFields = state.depositMode === "";
+    if (refBankAcctCode.current) {
+      refBankAcctCode.current.value = ''
+    }
+    if (refBankAcctName.current) {
+      refBankAcctName.current.value = ''
+    }
+    if (bankDepositSearch.current)
+      bankDepositSearch.current.value = ''
+    refBankAcctCodeTag.current = ''
+    refBankAcctNameTag.current = ''
+    refAcctID.current = ''
+    refAcctName.current = ''
+    refClassification.current = ''
+    refSubAccount.current = ''
+    refShortName.current = ''
+  }
+  const disabledFields = depositMode === "";
+  if (loadingSearchByDepositSlip) {
+    return <div>Laoding ....</div>
+  }
 
   return (
     <div
@@ -544,27 +566,34 @@ export default function Deposit() {
         {isLoadingDeposit ? (
           <LoadingButton loading={isLoadingDeposit} />
         ) : (
-          <TextField
-            label="Search"
-            size="small"
-            name="search"
-            value={state.search}
-            onChange={handleInputChange}
-            onKeyDown={(e) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                e.preventDefault();
-                return openDeposit((e.target as HTMLInputElement).value);
-              }
+          <TextInput
+            label={{
+              title: "Search: ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "50px",
+              },
             }}
-            InputProps={{
-              style: { height: "27px", fontSize: "14px" },
+            input={{
+              className: "search-input-up-on-key-down",
+              type: "search",
+              onKeyDown: (e) => {
+                if (e.key === "Enter" || e.key === "NumpadEnter") {
+                  e.preventDefault();
+                  openDeposit(inputSearchRef.current?.value);
+                }
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  const datagridview = document.querySelector(
+                    ".grid-container"
+                  ) as HTMLDivElement;
+                  datagridview.focus();
+                }
+              },
+              style: { width: "500px" },
             }}
-            sx={{
-              width: "300px",
-              height: "27px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
+            inputRef={inputSearchRef}
           />
         )}
         {disabledFields && (
@@ -577,9 +606,8 @@ export default function Deposit() {
             startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
             id="entry-header-save-button"
             onClick={() => {
-              handleInputChange({
-                target: { name: "depositMode", value: "add" },
-              });
+              setDepositMode("add")
+
             }}
           >
             New
@@ -621,14 +649,14 @@ export default function Deposit() {
                 confirmButtonText: "Yes, cancel it!",
               }).then((result) => {
                 if (result.isConfirmed) {
-                  initialState.depositMode = "";
-                  setNewStateValue(dispatch, initialState);
-                  setSelectedCollection([]);
+                  setDepositMode("")
+                  setSelectedRows([]);
                   setCollectionForDeposit([]);
-                  refetchCash();
                   RefetchDepositSlipCode();
-                  refetchCheck();
                   setTableRowsInputValue(defaultCashBreakDown);
+                  resetRefs()
+
+
                 }
               });
             }}
@@ -637,6 +665,8 @@ export default function Deposit() {
           </Button>
         )}
       </div>
+
+
       <br />
       <form
         onKeyDown={(e) => {
@@ -650,168 +680,101 @@ export default function Deposit() {
           gap: "10px",
         }}
       >
-        {LoadingDepositSlipCode ? (
-          <LoadingButton loading={LoadingDepositSlipCode} />
-        ) : (
-          <FormControl
-            variant="outlined"
-            size="small"
-            disabled={disabledFields}
-            sx={{
-              width: "200px",
-              ".MuiFormLabel-root": {
-                fontSize: "14px",
-                background: "white",
-                zIndex: 99,
-                padding: "0 3px",
-              },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-          >
-            <InputLabel htmlFor="deposit-id-field">Slip Code</InputLabel>
-            <OutlinedInput
-              // inputRef={checkBankRef}
-              sx={{
-                height: "27px",
-                fontSize: "14px",
-              }}
-              disabled={disabledFields}
-              fullWidth
-              label="Slip Code"
-              name="depositSlip"
-              value={state.depositSlip}
-              onChange={handleInputChange}
-              onKeyDown={(e) => {
-                if (e.code === "Enter" || e.code === "NumpadEnter") {
-                  return handleOnSave(e);
-                }
-              }}
-              readOnly={user?.department !== "UCSMI"}
-              id="deposit-id-field"
-              endAdornment={
-                <InputAdornment position="end">
-                  <IconButton
-                    disabled={disabledFields}
-                    aria-label="search-client"
-                    color="secondary"
-                    edge="end"
-                    onClick={() => {
-                      RefetchDepositSlipCode();
-                    }}
-                  >
-                    <RestartAltIcon />
-                  </IconButton>
-                </InputAdornment>
-              }
-            />
-          </FormControl>
-        )}
-        <CustomDatePicker
-          disabled={disabledFields}
-          label="Deposit Date"
-          onChange={(value: any) => {
-            dispatch({
-              type: "UPDATE_FIELD",
-              field: "depositdate",
-              value: value,
-            });
-          }}
-          value={new Date(state.depositdate)}
-          onKeyDown={(e: any) => {
-            if (e.code === "Enter" || e.code === "NumpadEnter") {
-              const timeout = setTimeout(() => {
-                datePickerRef.current?.querySelector("button")?.click();
-                clearTimeout(timeout);
-              }, 150);
-            }
-          }}
-          textField={{
-            InputLabelProps: {
-              style: {
-                fontSize: "14px",
-              },
-            },
-            InputProps: {
-              style: { height: "27px", fontSize: "14px" },
+        {LoadingDepositSlipCode ? "Loading..." : <TextInput
+          label={{
+            title: "Slip Code: ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "70px",
             },
           }}
-          datePickerRef={datePickerRef}
+          input={{
+            disabled:disabledFields,
+            className: "search-input-up-on-key-down",
+            type: "text",
+            style: { width: "200px" },
+            readOnly: true
+          }}
+          inputRef={refSlipCode}
+          icon={<AutorenewIcon sx={{ fontSize: "18px" }} />}
+          onIconClick={(e) => {
+            e.preventDefault()
+            RefetchDepositSlipCode()
+          }}
+        />}
+        <TextInput
+          label={{
+            title: "Deposit Date: ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "80px",
+            },
+          }}
+          input={{
+            className: "search-input-up-on-key-down",
+            type: "date",
+            style: { width: "200px" },
+            disabled:disabledFields
+          }}
+          inputRef={refDateDepo}
         />
+
         {isLoadingDepostitBanks ? (
-          <LoadingButton loading={isLoadingDepostitBanks} />
+          "Loading..."
         ) : (
-          <FormControl
-            sx={{
-              width: "200px",
-              ".MuiFormLabel-root": {
-                fontSize: "14px",
-                background: "white",
-                zIndex: 99,
-                padding: "0 3px",
+          <TextInput
+            label={{
+              title: "Bank Account: ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "100px",
               },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
             }}
-            variant="outlined"
-            size="small"
-            disabled={disabledFields}
-          >
-            <InputLabel htmlFor="deposit-bank">Bank Account</InputLabel>
-            <OutlinedInput
-              sx={{
-                height: "27px",
-                fontSize: "14px",
-              }}
-              disabled={disabledFields}
-              label="Bank Account"
-              name="Account_ID"
-              value={state.Account_ID}
-              onChange={handleInputChange}
-              onKeyDown={(e) => {
-                if (e.code === "Enter" || e.code === "NumpadEnter") {
-                  return openDepositBanks(state.Account_ID);
+            input={{
+              className: "search-input-up-on-key-down",
+              type: "text",
+              style: { width: "200px" },
+              onKeyDown: (e) => {
+                if (e.key === "Enter" || e.key === "NumpadEnter") {
+                  e.preventDefault();
+                  openDepositBanks(refBankAcctCode.current?.value)
                 }
-              }}
-              id="deposit-bank"
-              endAdornment={
-                <InputAdornment position="end">
-                  <IconButton
-                    disabled={disabledFields}
-                    aria-label="search-client"
-                    color="secondary"
-                    edge="end"
-                    onClick={() => openDepositBanks(state.Account_ID)}
-                  >
-                    <PolicyIcon />
-                  </IconButton>
-                </InputAdornment>
-              }
-            />
-          </FormControl>
-        )}
-        <TextField
-          disabled={disabledFields}
-          name="Account_Name"
-          onChange={handleInputChange}
-          value={state.Account_Name}
-          label="Account Name"
-          size="small"
-          onKeyDown={(e) => {
-            if (e.code === "Enter" || e.code === "NumpadEnter") {
-              return handleOnSave(e);
-            }
+
+              },
+              disabled:disabledFields
+            }}
+            inputRef={refBankAcctCode}
+            icon={<AccountBalanceIcon sx={{ fontSize: "18px" }} />}
+            onIconClick={(e) => {
+              e.preventDefault()
+              openDepositBanks(refBankAcctCode.current?.value)
+            }}
+          />)}
+
+        <TextInput
+          label={{
+            title: "Account Name: ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "100px",
+            },
           }}
-          InputProps={{
-            style: { height: "27px", fontSize: "14px" },
+          input={{
+            className: "search-input-up-on-key-down",
+            type: "text",
+            style: { width: "200px" },
             readOnly: true,
+            disabled:disabledFields
+
           }}
-          sx={{
-            flex: 1,
-            ".MuiFormLabel-root": { fontSize: "14px" },
-            ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-          }}
+          inputRef={refBankAcctName}
         />
         <button
-          ref={submitButton}
+          // ref={submitButton}
           style={{ display: "none" }}
           type="submit"
         ></button>
@@ -870,22 +833,22 @@ export default function Deposit() {
       <br />
       <DepositContext.Provider
         value={{
+          myAxios,
+          user,
           cashCollection,
           setCashCollection,
           checkCollection,
           setCheckCollection,
-          selectedCollection,
-          setSelectedCollection,
+          selectedRows,
+          setSelectedRows,
           collectionForDeposit,
           setCollectionForDeposit,
-          tableRows: tableRowsInputValue,
-          updateTableRowsInput,
-          LoadingCashTable,
-          LoadingCheckTable,
           total,
           setTotal,
           TotalCashForDeposit,
-          loadingSearchByDepositSlip,
+          tableRows: tableRowsInputValue,
+          setTableRowsInputValue,
+          updateTableRowsInput
         }}
       >
         <div
@@ -911,14 +874,35 @@ function slideAnimation(activeButton: number, idx: number) {
     return "translateX(0%)";
   }
 }
+
+
 function CashCollection() {
   const {
+    myAxios,
+    user,
     cashCollection,
-    LoadingCashTable,
-    setSelectedCollection,
-    selectedCollection,
-    loadingSearchByDepositSlip,
+    setCashCollection,
+    selectedRows,
+    setSelectedRows
   } = useContext(DepositContext);
+
+  const { isLoading: loadingCashCollection } =
+    useQuery({
+      queryKey: "get-cash-collection",
+      queryFn: async () =>
+        await myAxios.get(`/task/accounting/get-cash-collection`, {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }),
+      refetchOnWindowFocus: false,
+      onSuccess: (data) => {
+        const response = data as any;
+        setCashCollection(response.data.cash)
+      },
+    });
+
+
 
   const table = useRef<any>(null);
   const cashColumns = [
@@ -954,11 +938,13 @@ function CashCollection() {
 
   useEffect(() => {
     table.current?.setSelectedRows(
-      selectedCollection
+      selectedRows
         .filter((item: any) => item.Check_No === "")
         .map((item: any) => item.TempOR)
     );
-  }, [selectedCollection, table, loadingSearchByDepositSlip]);
+  }, [selectedRows, table]);
+
+  //[checkSelected, table, loadingSearchByDepositSlip]
   return (
     <div
       style={{
@@ -970,10 +956,9 @@ function CashCollection() {
     >
       <Box
         style={{
-          height: `${
-            document.getElementById("concatiner")?.getBoundingClientRect()
-              .height
-          }px`,
+          height: `${document.getElementById("concatiner")?.getBoundingClientRect()
+            .height
+            }px`,
           width: "100%",
           overflowX: "scroll",
           position: "absolute",
@@ -981,7 +966,7 @@ function CashCollection() {
       >
         <Table
           ref={table}
-          isLoading={LoadingCashTable || loadingSearchByDepositSlip}
+          isLoading={loadingCashCollection}
           columns={cashColumns}
           rows={cashCollection}
           table_id={"Temp_OR"}
@@ -995,22 +980,25 @@ function CashCollection() {
               return;
             }
 
-            const newSelected: any = {
-              Deposit: "Cash",
-              Check_No: "",
-              Check_Date: "",
-              Bank: "",
-              Amount: rowSelected.Amount,
-              Name: rowSelected.Client_Name,
-              RowIndex: rowSelected.Temp_OR,
-              DRCode: rowSelected.DRCode,
-              ORNo: rowSelected.OR_No,
-              DRRemarks: rowSelected.ORNo,
-              IDNo: rowSelected.ID_No,
-              TempOR: rowSelected.Temp_OR,
-              Short: rowSelected.Short,
-            };
-            setSelectedCollection((d) => {
+
+            setSelectedRows((d: any) => {
+
+              const newSelected: any = {
+                Deposit: "Cash",
+                Check_No: "",
+                Check_Date: "",
+                Bank: "",
+                Amount: rowSelected.Amount,
+                Name: rowSelected.Client_Name,
+                RowIndex: d.length + 1,
+                DRCode: rowSelected.DRCode,
+                ORNo: rowSelected.OR_No,
+                DRRemarks: "",
+                IDNo: rowSelected.ID_No,
+                TempOR: rowSelected.Temp_OR,
+                Short: rowSelected.Short,
+              };
+
               d = [...d, newSelected];
               return d;
             });
@@ -1022,13 +1010,32 @@ function CashCollection() {
 }
 function CheckCollection() {
   const {
+    myAxios,
+    user,
     checkCollection,
-    LoadingCheckTable,
-    setSelectedCollection,
-    selectedCollection,
-    setCollectionForDeposit,
-    loadingSearchByDepositSlip,
-  } = useContext(DepositContext);
+    setCheckCollection,
+    selectedRows,
+    setSelectedRows,
+    setCollectionForDeposit
+  } = useContext(DepositContext)
+
+  const { isLoading: loadingCheckCollection } =
+    useQuery({
+      queryKey: "get-check-collection",
+      queryFn: async () =>
+        await myAxios.get(`/task/accounting/get-check-collection`, {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }),
+      refetchOnWindowFocus: false,
+      onSuccess: (data) => {
+        const response = data as any;
+        setCheckCollection(response.data.check)
+      },
+    });
+
+
   const checkColumns = [
     {
       field: "OR_No",
@@ -1076,11 +1083,14 @@ function CheckCollection() {
   const table = useRef<any>(null);
   useEffect(() => {
     table.current?.setSelectedRows(
-      selectedCollection
+      selectedRows
         .filter((item: any) => item.Check_No !== "")
         .map((item: any) => item.TempOR)
     );
-  }, [selectedCollection, table, loadingSearchByDepositSlip]);
+  }, [selectedRows, table]);
+
+  // / [selectedRows, table, loadingSearchByDepositSlip]
+
   return (
     <div
       style={{
@@ -1092,10 +1102,9 @@ function CheckCollection() {
     >
       <Box
         style={{
-          height: `${
-            document.getElementById("concatiner")?.getBoundingClientRect()
-              .height
-          }px`,
+          height: `${document.getElementById("concatiner")?.getBoundingClientRect()
+            .height
+            }px`,
           width: "100%",
           overflowX: "scroll",
           position: "absolute",
@@ -1103,7 +1112,7 @@ function CheckCollection() {
       >
         <Table
           ref={table}
-          isLoading={LoadingCheckTable || loadingSearchByDepositSlip}
+          isLoading={loadingCheckCollection}
           columns={checkColumns}
           rows={checkCollection}
           table_id={"Temp_OR"}
@@ -1116,33 +1125,35 @@ function CheckCollection() {
             if (rowSelected === undefined || rowSelected.length <= 0) {
               return;
             }
-            const newSelected: any = {
-              Deposit: "Check",
-              Check_No: rowSelected.Check_No,
-              Check_Date: rowSelected.Check_Date,
-              Bank: rowSelected.Bank_Branch,
-              Amount: rowSelected.Amount,
-              Name: rowSelected.Client_Name,
-              RowIndex: rowSelected.Temp_OR,
-              DRCode: rowSelected.DRCode,
-              ORNo: rowSelected.OR_No,
-              DRRemarks: rowSelected.DRRemarks,
-              IDNo: rowSelected.ID_No,
-              TempOR: rowSelected.Temp_OR,
-              Short: rowSelected.Short,
-            };
-            setSelectedCollection((d) => {
+
+            setSelectedRows((d: any) => {
+              const newSelected: any = {
+                Deposit: "Check",//0
+                Check_No: rowSelected.Check_No,//1
+                Check_Date: rowSelected.Check_Date,//2
+                Bank: rowSelected.Bank_Branch,//3
+                Amount: rowSelected.Amount,//4
+                Name: rowSelected.Client_Name,//5
+                RowIndex: d.length + 1,//6
+                DRCode: rowSelected.DRCode,//7
+                ORNo: rowSelected.OR_No,//8
+                DRRemarks: rowSelected.DRRemarks,//9
+                IDNo: rowSelected.ID_No,//10
+                TempOR: rowSelected.Temp_OR,//11
+                Short: rowSelected.Short,//12
+              };
               d = [...d, newSelected];
               return d;
             });
 
-            const newSelectedCheckForDeposit: any = {
-              Bank: rowSelected.Bank_Branch,
-              Check_No: rowSelected.Check_No,
-              Amount: rowSelected.Amount,
-              TempOR: rowSelected.Temp_OR,
-            };
-            setCollectionForDeposit((d) => {
+
+            setCollectionForDeposit((d: any) => {
+              const newSelectedCheckForDeposit: any = {
+                Bank: rowSelected.Bank_Branch,
+                Check_No: rowSelected.Check_No,
+                Amount: rowSelected.Amount,
+                TempOR: rowSelected.Temp_OR,
+              };
               d = [...d, newSelectedCheckForDeposit];
               return d;
             });
@@ -1151,17 +1162,19 @@ function CheckCollection() {
       </Box>
     </div>
   );
+
+
+
 }
 function SelectedCollection() {
+
   const {
-    selectedCollection,
-    setSelectedCollection,
-    setCollectionForDeposit,
-    loadingSearchByDepositSlip,
+    selectedRows,
+    setSelectedRows,
+    setCollectionForDeposit
   } = useContext(DepositContext);
 
   const table = useRef<any>(null);
-
   const selectedCollectionColumns = [
     { field: "Deposit", headerName: "Deposit", flex: 1, minWidth: 170 },
     { field: "Check_No", headerName: "Check No", flex: 1, minWidth: 170 },
@@ -1184,6 +1197,11 @@ function SelectedCollection() {
     { field: "Short", headerName: "Short", hide: true },
   ];
 
+
+  useEffect(() => {
+
+  }, [selectedRows])
+
   return (
     <div
       style={{
@@ -1195,10 +1213,9 @@ function SelectedCollection() {
     >
       <Box
         style={{
-          height: `${
-            document.getElementById("concatiner")?.getBoundingClientRect()
-              .height
-          }px`,
+          height: `${document.getElementById("concatiner")?.getBoundingClientRect()
+            .height
+            }px`,
           width: "100%",
           overflowX: "scroll",
           position: "absolute",
@@ -1206,9 +1223,9 @@ function SelectedCollection() {
       >
         <Table
           ref={table}
-          isLoading={loadingSearchByDepositSlip}
+          isLoading={false}
           columns={selectedCollectionColumns}
-          rows={selectedCollection}
+          rows={selectedRows}
           table_id={"TempOR"}
           isSingleSelection={true}
           isRowFreeze={false}
@@ -1220,10 +1237,10 @@ function SelectedCollection() {
               return;
             }
 
-            setSelectedCollection((d) => {
+            setSelectedRows((d: any) => {
               return d.filter((item: any) => item.TempOR !== selection[0]);
             });
-            setCollectionForDeposit((d) => {
+            setCollectionForDeposit((d: any) => {
               return d.filter((item: any) => item.TempOR !== selection[0]);
             });
           }}
@@ -1240,6 +1257,8 @@ function SelectedCollection() {
       </Box>
     </div>
   );
+
+
 }
 function CollectionForDeposit() {
   const {
@@ -1253,7 +1272,7 @@ function CollectionForDeposit() {
   useEffect(() => {
     setTotal(
       tableRows
-        .reduce((accumulator, currentValue) => {
+        ?.reduce((accumulator: any, currentValue: any) => {
           return (
             accumulator + parseFloat(currentValue.value3.replace(/,/g, ""))
           );
@@ -1395,7 +1414,7 @@ function CollectionForDeposit() {
             </tr>
           </thead>
           <tbody>
-            {tableRows.map((items, idx) => {
+            {tableRows?.map((items: any, idx: number) => {
               return (
                 <TrComponent
                   key={idx}
@@ -1456,6 +1475,704 @@ function CollectionForDeposit() {
     </div>
   );
 }
+
+// function _Deposit() {
+//   const [state, dispatch] = useReducer(reducer, initialState);
+//   const { myAxios, user } = useContext(AuthContext);
+//   const { currentStepIndex, step, goTo } = useMultipleComponent([
+//     <CashCollection />,
+//     <CheckCollection />,
+//     <SelectedCollection />,
+//     <CollectionForDeposit />,
+//   ]);
+//   const [tableRowsInputValue, setTableRowsInputValue] =
+//     useState<Array<{ value1: string; value2: string; value3: string }>>(
+//       defaultCashBreakDown
+//     );
+//   const [cashCollection, setCashCollection] = useState<GridRowSelectionModel>(
+//     []
+//   );
+//   const [checkCollection, setCheckCollection] = useState<GridRowSelectionModel>(
+//     []
+//   );
+//   const [selectedCollection, setSelectedCollection] =
+//     useState<GridRowSelectionModel>([]);
+//   const [collectionForDeposit, setCollectionForDeposit] =
+//     useState<GridRowSelectionModel>([]);
+//   const updateTableRowsInput = (
+//     fields: { value1: string; value2: string; value3: string },
+//     idx: number
+//   ) => {
+//     setTableRowsInputValue((d) => {
+//       return d.map((item, index) => {
+//         if (idx === index) {
+//           item = { ...item, ...fields };
+//         }
+//         return item;
+//       });
+//     });
+//   };
+//   const queryClient = useQueryClient();
+//   const { isLoading: LoadingCashTable, refetch: refetchCash } = useQuery({
+//     queryKey: "cash",
+//     queryFn: async () =>
+//       await myAxios.get(`/task/accounting/getCashCollection`, {
+//         headers: {
+//           Authorization: `Bearer ${user?.accessToken}`,
+//         },
+//       }),
+//     refetchOnWindowFocus: false,
+//     onSuccess: (data) => {
+//       const response = data as any;
+//       setCashCollection(response.data.cash);
+//     },
+//   });
+//   const { isLoading: LoadingDepositSlipCode, refetch: RefetchDepositSlipCode } =
+//     useQuery({
+//       queryKey: "deposit-slipcode",
+//       queryFn: async () =>
+//         await myAxios.get(`/task/accounting/get-deposit-slipcode`, {
+//           headers: {
+//             Authorization: `Bearer ${user?.accessToken}`,
+//           },
+//         }),
+//       refetchOnWindowFocus: false,
+//       onSuccess: (data) => {
+//         const response = data as any;
+
+//         dispatch({
+//           type: "UPDATE_FIELD",
+//           field: "depositSlip",
+//           value: response.data.slipcode[0].collectionID,
+//         });
+//         dispatch({
+//           type: "UPDATE_FIELD",
+//           field: "temp_depositSlip",
+//           value: response.data.slipcode[0].collectionID,
+//         });
+//       },
+//     });
+//   const { isLoading: LoadingCheckTable, refetch: refetchCheck } = useQuery({
+//     queryKey: "check",
+//     queryFn: async () =>
+//       await myAxios.get(`/task/accounting/getCheckCollection`, {
+//         headers: {
+//           Authorization: `Bearer ${user?.accessToken}`,
+//         },
+//       }),
+//     refetchOnWindowFocus: false,
+//     onSuccess: (data) => {
+//       const response = data as any;
+//       setCheckCollection(response.data.check);
+//     },
+//   });
+//   const [total, setTotal] = useState("0.00");
+//   const datePickerRef = useRef<HTMLElement>(null);
+//   const bankDepositSearch = useRef<HTMLInputElement>(null);
+//   const depositSearch = useRef<HTMLInputElement>(null);
+//   const submitButton = useRef<HTMLButtonElement>(null);
+//   const goToRef = useRef<(index: number) => void>(goTo);
+
+//   const TotalCashForDeposit = selectedCollection
+//     .reduce((accumulator: number, currentValue: any) => {
+//       const dd =
+//         currentValue.Check_No || currentValue.Check_No !== ""
+//           ? 0
+//           : parseFloat(currentValue.Amount.replace(/,/g, ""));
+//       return accumulator + dd;
+//     }, 0.0)
+//     .toLocaleString("en-US", {
+//       minimumFractionDigits: 2,
+//       maximumFractionDigits: 2,
+//     });
+//   const {
+//     ModalComponent: ModalDepostitBanks,
+//     openModal: openDepositBanks,
+//     isLoading: isLoadingDepostitBanks,
+//     closeModal: closeDepositBanks,
+//   } = useQueryModalTable({
+//     link: {
+//       url: "/task/accounting/getBanks",
+//       queryUrlName: "bankDepositSearch",
+//     },
+//     columns: [
+//       { field: "Account_Type", headerName: "Account_Type", width: 200 },
+//       { field: "Account_No", headerName: "Account_No", width: 170 },
+//       {
+//         field: "Account_Name",
+//         headerName: "Account_Name",
+//         flex: 1,
+//       },
+//     ],
+//     queryKey: "bank-deposit",
+//     uniqueId: "Account_No",
+//     responseDataKey: "banks",
+//     onSelected: (selectedRowData) => {
+//       console.log(selectedRowData[0]);
+//       const newState = {
+//         ...state,
+//         ...selectedRowData[0],
+//       };
+//       setNewStateValue(dispatch, newState);
+//       closeDepositBanks();
+//     },
+
+//     searchRef: bankDepositSearch,
+//   });
+
+
+
+//   const disabledFields = state.depositMode === "";
+
+//   return (
+//     <div>
+
+
+//     </div>
+//   )
+// }
+// function _CashCollection() {
+//   const {
+//     cashCollection,
+//     LoadingCashTable,
+//     setSelectedCollection,
+//     selectedCollection,
+//     loadingSearchByDepositSlip,
+//   } = useContext(DepositContext);
+
+//   const table = useRef<any>(null);
+//   const cashColumns = [
+//     {
+//       field: "OR_No",
+//       headerName: "OR No.",
+//       minWidth: 170,
+//     },
+//     {
+//       field: "OR_Date",
+//       headerName: "OR Date",
+//       minWidth: 170,
+//     },
+//     {
+//       field: "Amount",
+//       headerName: "Amount",
+//       minWidth: 150,
+//       align: "right",
+//       cellClassName: "super-app-theme--cell",
+//     },
+//     {
+//       field: "Client_Name",
+//       headerName: "Client Name",
+//       flex: 1,
+//       minWidth: 400,
+//     },
+//     {
+//       field: "Temp_OR",
+//       headerName: "Temp_OR",
+//       hide: true,
+//     },
+//   ];
+
+//   useEffect(() => {
+//     table.current?.setSelectedRows(
+//       selectedCollection
+//         .filter((item: any) => item.Check_No === "")
+//         .map((item: any) => item.TempOR)
+//     );
+//   }, [selectedCollection, table, loadingSearchByDepositSlip]);
+//   return (
+//     <div
+//       style={{
+//         flex: 1,
+//         marginTop: "10px",
+//         width: "100%",
+//         position: "relative",
+//       }}
+//     >
+//       <Box
+//         style={{
+//           height: `${document.getElementById("concatiner")?.getBoundingClientRect()
+//             .height
+//             }px`,
+//           width: "100%",
+//           overflowX: "scroll",
+//           position: "absolute",
+//         }}
+//       >
+//         <Table
+//           ref={table}
+//           isLoading={LoadingCashTable || loadingSearchByDepositSlip}
+//           columns={cashColumns}
+//           rows={cashCollection}
+//           table_id={"Temp_OR"}
+//           isSingleSelection={true}
+//           isRowFreeze={true}
+//           dataSelection={(selection, data, code) => {
+//             const rowSelected = data.filter(
+//               (item: any) => item.Temp_OR === selection[0]
+//             )[0];
+//             if (rowSelected === undefined || rowSelected.length <= 0) {
+//               return;
+//             }
+
+//             const newSelected: any = {
+//               Deposit: "Cash",
+//               Check_No: "",
+//               Check_Date: "",
+//               Bank: "",
+//               Amount: rowSelected.Amount,
+//               Name: rowSelected.Client_Name,
+//               RowIndex: rowSelected.Temp_OR,
+//               DRCode: rowSelected.DRCode,
+//               ORNo: rowSelected.OR_No,
+//               DRRemarks: rowSelected.ORNo,
+//               IDNo: rowSelected.ID_No,
+//               TempOR: rowSelected.Temp_OR,
+//               Short: rowSelected.Short,
+//             };
+//             setSelectedCollection((d) => {
+//               d = [...d, newSelected];
+//               return d;
+//             });
+//           }}
+//         />
+//       </Box>
+//     </div>
+//   );
+// }
+// function _CheckCollection() {
+//   const {
+//     checkCollection,
+//     LoadingCheckTable,
+//     setSelectedCollection,
+//     selectedCollection,
+//     setCollectionForDeposit,
+//     loadingSearchByDepositSlip,
+//   } = useContext(DepositContext);
+//   const checkColumns = [
+//     {
+//       field: "OR_No",
+//       headerName: "OR No.",
+//       minWidth: 170,
+//     },
+//     {
+//       field: "OR_Date",
+//       headerName: "OR Date",
+//       minWidth: 170,
+//     },
+//     {
+//       field: "Check_No",
+//       headerName: "Check No",
+//       minWidth: 170,
+//     },
+//     {
+//       field: "Check_Date",
+//       headerName: "Check Date",
+//       minWidth: 170,
+//     },
+//     {
+//       field: "Amount",
+//       headerName: "Amount",
+//       minWidth: 160,
+//       align: "right",
+//     },
+//     {
+//       field: "Bank_Branch",
+//       headerName: "Bank/Branch",
+//       minWidth: 300,
+//     },
+//     {
+//       field: "Client_Name",
+//       headerName: "Client Name",
+//       minWidth: 300,
+//       flex: 1,
+//     },
+//     {
+//       field: "Temp_OR",
+//       headerName: "Temp_OR",
+//       hide: true,
+//     },
+//   ];
+//   const table = useRef<any>(null);
+//   useEffect(() => {
+//     table.current?.setSelectedRows(
+//       selectedCollection
+//         .filter((item: any) => item.Check_No !== "")
+//         .map((item: any) => item.TempOR)
+//     );
+//   }, [selectedCollection, table, loadingSearchByDepositSlip]);
+//   return (
+//     <div
+//       style={{
+//         marginTop: "10px",
+//         width: "100%",
+//         position: "relative",
+//         flex: 1,
+//       }}
+//     >
+//       <Box
+//         style={{
+//           height: `${document.getElementById("concatiner")?.getBoundingClientRect()
+//             .height
+//             }px`,
+//           width: "100%",
+//           overflowX: "scroll",
+//           position: "absolute",
+//         }}
+//       >
+//         <Table
+//           ref={table}
+//           isLoading={LoadingCheckTable || loadingSearchByDepositSlip}
+//           columns={checkColumns}
+//           rows={checkCollection}
+//           table_id={"Temp_OR"}
+//           isSingleSelection={true}
+//           isRowFreeze={true}
+//           dataSelection={(selection, data, code) => {
+//             const rowSelected = data.filter(
+//               (item: any) => item.Temp_OR === selection[0]
+//             )[0];
+//             if (rowSelected === undefined || rowSelected.length <= 0) {
+//               return;
+//             }
+//             const newSelected: any = {
+//               Deposit: "Check",
+//               Check_No: rowSelected.Check_No,
+//               Check_Date: rowSelected.Check_Date,
+//               Bank: rowSelected.Bank_Branch,
+//               Amount: rowSelected.Amount,
+//               Name: rowSelected.Client_Name,
+//               RowIndex: rowSelected.Temp_OR,
+//               DRCode: rowSelected.DRCode,
+//               ORNo: rowSelected.OR_No,
+//               DRRemarks: rowSelected.DRRemarks,
+//               IDNo: rowSelected.ID_No,
+//               TempOR: rowSelected.Temp_OR,
+//               Short: rowSelected.Short,
+//             };
+//             setSelectedCollection((d) => {
+//               d = [...d, newSelected];
+//               return d;
+//             });
+
+//             const newSelectedCheckForDeposit: any = {
+//               Bank: rowSelected.Bank_Branch,
+//               Check_No: rowSelected.Check_No,
+//               Amount: rowSelected.Amount,
+//               TempOR: rowSelected.Temp_OR,
+//             };
+//             setCollectionForDeposit((d) => {
+//               d = [...d, newSelectedCheckForDeposit];
+//               return d;
+//             });
+//           }}
+//         />
+//       </Box>
+//     </div>
+//   );
+// }
+// function _SelectedCollection() {
+//   const {
+//     selectedCollection,
+//     setSelectedCollection,
+//     setCollectionForDeposit,
+//     loadingSearchByDepositSlip,
+//   } = useContext(DepositContext);
+
+//   const table = useRef<any>(null);
+
+//   const selectedCollectionColumns = [
+//     { field: "Deposit", headerName: "Deposit", flex: 1, minWidth: 170 },
+//     { field: "Check_No", headerName: "Check No", flex: 1, minWidth: 170 },
+//     {
+//       field: "Check_Date",
+//       headerName: "Check Date",
+//       flex: 1,
+//       minWidth: 170,
+//     },
+//     { field: "Bank", headerName: "Bank/Branch", flex: 1, minWidth: 200 },
+//     { field: "Amount", headerName: "Amount", flex: 1, minWidth: 170 },
+//     { field: "Name", headerName: "Client Name", flex: 1, minWidth: 400 },
+//     // hide
+//     { field: "RowIndex", headerName: "RowIndex", hide: true },
+//     { field: "DRCode", headerName: "DRCode", hide: true },
+//     { field: "ORNo", headerName: "ORNo", hide: true },
+//     { field: "DRRemarks", headerName: "DRRemarks", hide: true },
+//     { field: "IDNo", headerName: "IDNo", hide: true },
+//     { field: "TempOR", headerName: "TempOR", hide: true },
+//     { field: "Short", headerName: "Short", hide: true },
+//   ];
+
+//   return (
+//     <div
+//       style={{
+//         marginTop: "10px",
+//         width: "100%",
+//         position: "relative",
+//         flex: 1,
+//       }}
+//     >
+//       <Box
+//         style={{
+//           height: `${document.getElementById("concatiner")?.getBoundingClientRect()
+//             .height
+//             }px`,
+//           width: "100%",
+//           overflowX: "scroll",
+//           position: "absolute",
+//         }}
+//       >
+//         <Table
+//           ref={table}
+//           isLoading={loadingSearchByDepositSlip}
+//           columns={selectedCollectionColumns}
+//           rows={selectedCollection}
+//           table_id={"TempOR"}
+//           isSingleSelection={true}
+//           isRowFreeze={false}
+//           dataSelection={(selection, data, code) => {
+//             const rowSelected = data.filter(
+//               (item: any) => item.TempOR === selection[0]
+//             )[0];
+//             if (rowSelected === undefined || rowSelected.length <= 0) {
+//               return;
+//             }
+
+//             setSelectedCollection((d) => {
+//               return d.filter((item: any) => item.TempOR !== selection[0]);
+//             });
+//             setCollectionForDeposit((d) => {
+//               return d.filter((item: any) => item.TempOR !== selection[0]);
+//             });
+//           }}
+//           getCellClassName={(params) => {
+//             if (params.field === "Deposit" && params.value === "Cash") {
+//               return "cash";
+//             } else if (params.field === "Deposit" && params.value === "Check") {
+//               return "check";
+//             } else {
+//               return "";
+//             }
+//           }}
+//         />
+//       </Box>
+//     </div>
+//   );
+// }
+// function _CollectionForDeposit() {
+//   const {
+//     collectionForDeposit,
+//     tableRows,
+//     total,
+//     setTotal,
+//     TotalCashForDeposit,
+//   } = useContext(DepositContext);
+//   const table = useRef<any>(null);
+//   useEffect(() => {
+//     setTotal(
+//       tableRows
+//         .reduce((accumulator, currentValue) => {
+//           return (
+//             accumulator + parseFloat(currentValue.value3.replace(/,/g, ""))
+//           );
+//         }, 0.0)
+//         .toLocaleString("en-US", {
+//           minimumFractionDigits: 2,
+//           maximumFractionDigits: 2,
+//         })
+//     );
+//   }, [tableRows, setTotal]);
+
+//   return (
+//     <div
+//       style={{
+//         display: "flex",
+//         gap: "10px",
+//         height: "auto ",
+//       }}
+//     >
+//       <fieldset
+//         style={{
+//           flexDirection: "column",
+//           gap: "10px",
+//           padding: "15px",
+//           border: "1px solid #cbd5e1",
+//           borderRadius: "5px",
+//           width: "60%",
+//           position: "relative",
+//         }}
+//       >
+//         <legend>Checks</legend>
+//         <div style={{ marginTop: "10px", width: "100%", position: "relative" }}>
+//           <Box
+//             style={{
+//               height: "530px",
+//               width: "100%",
+//               overflowX: "scroll",
+//               position: "absolute",
+//             }}
+//           >
+//             <Table
+//               ref={table}
+//               isLoading={false}
+//               checkboxSelection={false}
+//               columns={[
+//                 {
+//                   field: "Bank",
+//                   headerName: "Bank/Branch",
+//                   flex: 1,
+//                   minWidth: 170,
+//                 },
+//                 {
+//                   field: "Check_No",
+//                   headerName: "Check No",
+//                   flex: 1,
+//                   minWidth: 170,
+//                 },
+//                 {
+//                   field: "Amount",
+//                   headerName: "Amount",
+//                   flex: 1,
+//                   minWidth: 170,
+//                 },
+//               ]}
+//               rows={collectionForDeposit}
+//               table_id={"TempOR"}
+//               isSingleSelection={true}
+//               isRowFreeze={false}
+//               isRowSelectable={() => false}
+//               footerChildren={() => {
+//                 return <FooterCollectionForDepositCheck />;
+//               }}
+//               footerPaginationPosition={"left-right"}
+//               showFooterSelectedCount={false}
+//             />
+//           </Box>
+//         </div>
+//       </fieldset>
+//       <fieldset
+//         style={{
+//           flexDirection: "column",
+//           gap: "10px",
+//           padding: "15px",
+//           border: "1px solid #cbd5e1",
+//           borderRadius: "5px",
+//           alignSelf: "flex-end",
+//           display: "flex",
+//           width: "40%",
+//         }}
+//       >
+//         <legend
+//           style={{
+//             color: total === TotalCashForDeposit ? "green" : "#ec4899",
+//           }}
+//         >
+//           Cash ( {TotalCashForDeposit} )
+//         </legend>
+//         <table
+//           style={{
+//             border: "2px solid black",
+//             borderCollapse: "collapse",
+//             marginTop: "10px",
+//             width: "100%",
+//           }}
+//         >
+//           <colgroup>
+//             <col style={{ width: "140px" }} />
+//             <col style={{ width: "100px" }} />
+//             <col style={{ width: "140px" }} />
+//           </colgroup>
+//           <thead>
+//             <tr
+//               style={{
+//                 borderBottom: "2px solid black",
+//                 fontSize: "14px",
+//               }}
+//             >
+//               <th
+//                 style={{
+//                   borderRight: "2px solid black",
+//                 }}
+//               >
+//                 Denominations
+//               </th>
+//               <th
+//                 style={{
+//                   borderRight: "2px solid black",
+//                 }}
+//               >
+//                 QTY
+//               </th>
+//               <th
+//                 style={{
+//                   borderRight: "2px solid black",
+//                 }}
+//               >
+//                 Amount
+//               </th>
+//             </tr>
+//           </thead>
+//           <tbody>
+//             {tableRows.map((items, idx) => {
+//               return (
+//                 <TrComponent
+//                   key={idx}
+//                   value1={items.value1}
+//                   value2={items.value2}
+//                   value3={items.value3}
+//                   idx={idx}
+//                 />
+//               );
+//             })}
+//           </tbody>
+//           <tfoot>
+//             <tr
+//               style={{
+//                 borderTop: "2px solid black",
+//                 height: "50px",
+//               }}
+//             >
+//               <td colSpan={3}>
+//                 <div
+//                   style={{
+//                     display: "flex",
+//                     justifyContent: "flex-end",
+//                     padding: "0 10px  ",
+//                   }}
+//                 >
+//                   <div
+//                     style={{
+//                       display: "flex",
+//                       alignItems: "center",
+//                       width: "250px",
+//                     }}
+//                   >
+//                     <span style={{ fontSize: "14px", marginRight: "5px" }}>
+//                       Total Cash Deposit:
+//                     </span>
+//                     <input
+//                       style={{
+//                         fontWeight: "bold",
+//                         border: "1px solid black",
+//                         textAlign: "right",
+//                         fontSize: "15px",
+//                         width: "117px",
+//                       }}
+//                       value={total}
+//                       onChange={(e) => {
+//                         setTotal(e.target.value);
+//                       }}
+//                       readOnly={true}
+//                     />
+//                   </div>
+//                 </div>
+//               </td>
+//             </tr>
+//           </tfoot>
+//         </table>
+//       </fieldset>
+//     </div>
+//   );
+// }
 function TrComponent({ value1, value2, value3, idx }: any) {
   const { updateTableRowsInput } = useContext(DepositContext);
 

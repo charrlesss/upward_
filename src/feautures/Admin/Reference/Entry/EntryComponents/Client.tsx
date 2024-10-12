@@ -32,6 +32,7 @@ import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../../../lib/confirmationAlert";
+import UpwardTable from "../../../../../components/UpwardTable";
 
 const initialState = {
   firstname: "",
@@ -312,14 +313,15 @@ export default function Client() {
   }
   function resetModule() {
     setNewStateValue(dispatch, initialState);
-    table.current?.removeSelection();
+    table.current?.resetTableSelected();
     wait(250).then(() => {
       refetchClientSearch();
       refetchClientId();
       refetchSubAcct();
     });
   }
-
+  const width = window.innerWidth - 40;
+  const height = window.innerHeight  - 190;
   return (
     <div
       style={{
@@ -362,9 +364,17 @@ export default function Client() {
                 e.preventDefault();
                 return refetchClientSearch();
               }
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+                const datagridview = document.querySelector(
+                  `.grid-container`
+                ) as HTMLDivElement;
+                datagridview.focus();
+              }
             }}
             InputProps={{
               style: { height: "27px", fontSize: "14px" },
+              className:"manok"
             }}
             sx={{
               height: "27px",
@@ -886,7 +896,69 @@ export default function Client() {
           </div>
         </Box>
       </form>
-      <div
+      <UpwardTable
+        ref={table}
+        isLoading={isLoading || loadingDelete || loadingEdit || loadingAdd}
+        rows={rows}
+        column={user?.department === " UMIS"
+          ? clientColumn
+          : clientColumn.concat([
+              {
+                field: "chassis",
+                headerName: "Chassis No.",
+                width: 200,
+              },
+              {
+                field: "engine",
+                headerName: "Engine",
+                width: 200,
+              },
+              {
+                field: "client_mortgagee",
+                headerName: "Mortgagee",
+                width: 300,
+              },
+              {
+                field: "client_branch",
+                headerName: "Branch",
+                width: 300,
+              },
+            ])}
+        width={width}
+        height={height}
+        dataReadOnly={true}
+        onSelectionChange={(rowSelected) => {
+          if (rowSelected.length > 0) {
+            handleInputChange({ target: { value: "edit", name: "mode" } });
+
+            setNewStateValue(dispatch, rowSelected[0]);
+
+          } else {
+            setNewStateValue(dispatch, initialState);
+            handleInputChange({ target: { value: "", name: "mode" } });
+            return;
+          }
+        }}
+        onKeyDown={(row, key) => {
+          if (key === "Delete" || key === "Backspace") {
+            const rowSelected = row[0];
+            wait(100).then(() => {
+              codeCondfirmationAlert({
+                isUpdate: false,
+                cb: (userCodeConfirmation) => {
+                  mutateDelete({
+                    id: rowSelected.entry_client_id,
+                    userCodeConfirmation,
+                  });
+                },
+              });
+            });
+            return;
+          }
+        }}
+        inputsearchselector=".manok"
+      />
+      {/* <div
         ref={refParent}
         style={{
           marginTop: "10px",
@@ -967,7 +1039,7 @@ export default function Client() {
             }}
           />
         </Box>
-      </div>
+      </div> */}
     </div>
   );
 }
