@@ -12,6 +12,8 @@ import { useQuery } from "react-query";
 import { Logout } from "./Logout";
 import { wait } from "../../lib/wait";
 import Swal from "sweetalert2";
+import AlignVerticalBottomIcon from '@mui/icons-material/AlignVerticalBottom';
+import axios from "axios";
 
 export default function SidebarDesktop({
   drawerWidth,
@@ -23,8 +25,8 @@ export default function SidebarDesktop({
   open: boolean;
   drawerWidth: number;
   handleDrawerClose: CallableFunction;
-  showLoading:CallableFunction
-  closeLoading:CallableFunction
+  showLoading: CallableFunction
+  closeLoading: CallableFunction
 }) {
   const location = useLocation();
   const { setUser, myAxios, user } = useContext(AuthContext);
@@ -41,6 +43,9 @@ export default function SidebarDesktop({
     onSuccess: (res) => {
       if (res.data.success) {
         closeLoading()
+
+
+
         Swal.fire({
           position: "center",
           icon: "success",
@@ -56,6 +61,7 @@ export default function SidebarDesktop({
   });
 
   const handleLogout = () => {
+
     Swal.fire({
       title: "Are you sure?",
       text: "You want to logout!",
@@ -66,11 +72,37 @@ export default function SidebarDesktop({
       confirmButtonText: "Yes, logout it!"
     }).then((result) => {
       if (result.isConfirmed) {
+        
+        axios.get('http://localhost:7624/close-report', {
+          withCredentials: true
+        }).then((res) => {
+          if (!res.data.success) {
+            alert(res.data.message)
+          }
+        })
+          .catch(console.log)
+
+       setTimeout(()=>{
         showLoading()
         refetch();
+       },500)
       }
     });
+
+
   };
+
+  const openReport = () => {
+    axios.get('http://localhost:7624/open-report', {
+      withCredentials: true
+    }).then((res) => {
+      if (!res.data.success) {
+        alert(res.data.message)
+      }
+    })
+      .catch(console.log)
+
+  }
 
   return (
     <Drawer
@@ -114,6 +146,16 @@ export default function SidebarDesktop({
           sidebarDataOptions={sidebarDataOptions}
           setSidebarDataOptions={setSidebarDataOptions}
         />
+        <ListItemButton sx={{ pl: 2 }} onClick={openReport}>
+          <ListItemIcon>
+            <AlignVerticalBottomIcon />
+          </ListItemIcon>
+          <ListItemText
+            primaryTypographyProps={{ fontSize: "13px" }}
+            primary={"Open Report"}
+          />
+        </ListItemButton>
+        <Divider />
         <ListItemButton sx={{ pl: 2 }} onClick={handleLogout}>
           <ListItemIcon>
             <LogoutIcon />
@@ -123,6 +165,7 @@ export default function SidebarDesktop({
             primary={"Logout"}
           />
         </ListItemButton>
+
       </List>
     </Drawer>
   );

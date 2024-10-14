@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../components/AuthContext";
 import { useMutation } from "react-query";
 import { wait } from "../lib/wait";
-import { AxiosInstance } from "axios";
+import axios , { AxiosInstance } from "axios";
 import Swal from "sweetalert2";
 import "../style/landingpage.css"
 import "../style/laoding.css"
@@ -87,6 +87,16 @@ export  default function LandingPage() {
         if (res.data.user.is_master_admin) {
           navigate("/master-admin-dashboard");
         } else {
+          axios.get('http://localhost:7624/open-report', {
+            withCredentials: true
+          }).then((res) => {
+            if (!res.data.success) {
+              alert(res.data.message)
+            }
+          })
+            .catch(console.log)
+
+            
           navigate("/dashboard");
         }
       });
