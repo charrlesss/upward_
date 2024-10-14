@@ -43,6 +43,9 @@ import {
   keyBoardSelectionTable,
 } from "../../../../components/ModalWithTable";
 import { flushSync } from "react-dom";
+import SaveIcon from "@mui/icons-material/Save";
+
+
 const initialState = {
   sub_refNo: "",
   refNo: "",
@@ -573,7 +576,7 @@ export default function GeneralJournal() {
           "Total Debit and Credit amount must not be zero(0), please double check the entries",
         timer: 1500,
       }).then(() => {
-        wait(300).then(() => {});
+        wait(300).then(() => { });
       });
     }
     if (state.totalDebit !== state.totalCredit) {
@@ -584,7 +587,7 @@ export default function GeneralJournal() {
           "Total Debit and Credit amount must be balance, please double check the entries",
         timer: 1500,
       }).then(() => {
-        wait(300).then(() => {});
+        wait(300).then(() => { });
       });
     }
     if (hasSelected) {
@@ -848,7 +851,7 @@ export default function GeneralJournal() {
 
             state.credit = credit;
             state.debit = debit;
-            
+
             if (editTransaction.edit) {
               const newD = d.map((item: any) => {
                 if (editTransaction.updateId === item.TempID) {
@@ -937,6 +940,7 @@ export default function GeneralJournal() {
         width: "100%",
         height: "100%",
         flex: 1,
+        padding: "10px"
       }}
     >
       <div
@@ -1666,6 +1670,22 @@ export default function GeneralJournal() {
               ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
             }}
           />
+
+          <Button
+            disabled={!save}
+            sx={{
+              height: "27px",
+              fontSize: "11px",
+            }}
+            variant="contained"
+            startIcon={<SaveIcon sx={{ fontSize: "18px" }} />}
+            onClick={() => {
+              handleRowSave()
+            }}
+            color="primary"
+          >
+            Save Row
+          </Button>
         </div>
       </fieldset>
       <div

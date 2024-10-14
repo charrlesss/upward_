@@ -40,6 +40,7 @@ import {
 } from "../../../../lib/confirmationAlert";
 import ReactDOMServer from "react-dom/server";
 import { flushSync } from "react-dom";
+import SaveIcon from "@mui/icons-material/Save";
 
 const initialState = {
   sub_refNo: "",
@@ -617,7 +618,7 @@ export default function CashDisbursement() {
           "Total Debit and Credit amount must not be zero(0), please double check the entries",
         timer: 1500,
       }).then(() => {
-        wait(300).then(() => {});
+        wait(300).then(() => { });
       });
     }
     if (state.totalDebit !== state.totalCredit) {
@@ -628,7 +629,7 @@ export default function CashDisbursement() {
           "Total Debit and Credit amount must be balance, please double check the entries",
         timer: 1500,
       }).then(() => {
-        wait(300).then(() => {});
+        wait(300).then(() => { });
       });
     }
     if (state.cashMode === "edit") {
@@ -1897,6 +1898,21 @@ export default function CashDisbursement() {
               ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
             }}
           />
+          <Button
+            disabled={isDisableField}
+            sx={{
+              height: "27px",
+              fontSize: "11px",
+            }}
+            variant="contained"
+            startIcon={<SaveIcon sx={{ fontSize: "18px" }} />}
+            onClick={() => {
+              handleRowSave()
+            }}
+            color="primary"
+          >
+            Save Row
+          </Button>
         </div>
       </fieldset>
       <div

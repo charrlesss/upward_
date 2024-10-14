@@ -12,19 +12,10 @@ import { useMutation, useQuery, useQueryClient } from "react-query";
 import { AuthContext } from "../../../../components/AuthContext";
 import {
   Box,
-  TextField,
-  FormControl,
-  InputLabel,
-  OutlinedInput,
-  InputAdornment,
-  IconButton,
   Button,
 } from "@mui/material";
-import CustomDatePicker from "../../../../components/DatePicker";
 import useQueryModalTable from "../../../../hooks/useQueryModalTable";
-import PolicyIcon from "@mui/icons-material/Policy";
 import LoadingButton from "@mui/lab/LoadingButton";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import AddIcon from "@mui/icons-material/Add";
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
@@ -40,6 +31,7 @@ import { TextInput } from "../../../../components/UpwardFields";
 import { format } from 'date-fns'
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+
 const defaultCashBreakDown = [
   { value1: "1,000.00", value2: "", value3: "0.00" },
   { value1: "500.00", value2: "", value3: "0.00" },
@@ -186,8 +178,8 @@ export default function Deposit() {
     <CollectionForDeposit />,
   ]);
 
-  const [cashCollection, setCashCollection] = useState([])
-  const [checkCollection, setCheckCollection] = useState([])
+  const [cashCollection, setCashCollection] = useState<any>([])
+  const [checkCollection, setCheckCollection] = useState<any>([])
   const [selectedRows, setSelectedRows] = useState<any>([])
   const [collectionForDeposit, setCollectionForDeposit] = useState<any>([]);
   const [tableRowsInputValue, setTableRowsInputValue] =
@@ -195,8 +187,6 @@ export default function Deposit() {
       defaultCashBreakDown
     );
   const [depositMode, setDepositMode] = useState('')
-
-
   const [total, setTotal] = useState("0.00");
   const TotalCashForDeposit = selectedRows
     .reduce((accumulator: number, currentValue: any) => {
@@ -293,8 +283,6 @@ export default function Deposit() {
     searchRef: bankDepositSearch,
   });
 
-
-
   const { mutate: addDepositMutation, isLoading: addDepositMutationLoading } =
     useMutation({
       mutationKey: "add-deposit",
@@ -328,6 +316,7 @@ export default function Deposit() {
         });
       },
     });
+
   const {
     mutate: updateDepositMutation,
     isLoading: updateDepositMutationLoading,
@@ -363,6 +352,7 @@ export default function Deposit() {
       });
     },
   });
+
   const { mutate: searchByDepositSlip, isLoading: loadingSearchByDepositSlip } =
     useMutation({
       mutationKey: "search-deposit-cash-check",
@@ -378,28 +368,102 @@ export default function Deposit() {
         );
       },
       onSuccess: (res) => {
-        const response = res as any;
-        console.log("asdasd", response);
+        const obj = res.data.data.obj
+        const cash = res.data.data.cash
+        const check = res.data.data.checks
+        const cash_breakdown = res.data.data.cash_breakdown
 
-        setCashCollection(response.data.cash);
-        setCheckCollection(response.data.check);
-        setSelectedRows([
-          ...response.data.cash.filter((items: any) => items.SlipCode !== ""),
-          ...response.data.check.filter((items: any) => items.SlipCode !== ""),
-        ]);
-        setCollectionForDeposit([
-          ...response.data.check.filter((items: any) => items.SlipCode !== ""),
-        ]);
-        setTableRowsInputValue(response.data.cashBreakDownToArray);
-        // setNewStateValue(dispatch, {
-        //   ...state,
-        //   ...response.data.getBankFromDeposit[0],
-        // });
-        setTotal(response.data.cashBreakDownTotal);
+        wait(100).then(() => {
+          if (refBankAcctCode.current)
+            refBankAcctCode.current.value = obj.refBankAcctCode
+          if (refBankAcctName.current)
+            refBankAcctName.current.value = obj.refBankAcctName
+          if (refDateDepo.current)
+            refDateDepo.current.value = format(new Date(obj.refDate), "yyyy-MM-dd")
+
+
+
+          refBankAcctCodeTag.current = obj?.refBankAcctCodeTag
+          refBankAcctNameTag.current = obj?.refBankAcctNameTag
+          refAcctID.current = obj?.refAcctID
+          refAcctName.current = obj?.refAcctName
+          refShortName.current = obj?.client_name
+          refClassification.current = obj?.refClassification
+          refSubAccount.current = obj?.refSubAccount
+
+          setCashCollection(cash);
+          setCheckCollection(check);
+
+          const filteredCash = cash.filter((itm: any) => itm.SlipCode !== '' && itm.SlipCode === refSlipCode.current?.value)
+          const filteredCheck = check.filter((itm: any) => itm.SlipCode !== '' && itm.SlipCode === refSlipCode.current?.value)
+          if (filteredCash.length > 0) {
+            filteredCash.forEach((rowSelected: any) => {
+              setSelectedRows((d: any) => {
+
+                const newSelected: any = {
+                  Deposit: "Cash",
+                  Check_No: "",
+                  Check_Date: "",
+                  Bank: "",
+                  Amount: rowSelected.Amount,
+                  Name: rowSelected.Client_Name,
+                  RowIndex: d.length + 1,
+                  DRCode: rowSelected.DRCode,
+                  ORNo: rowSelected.OR_No,
+                  DRRemarks: "",
+                  IDNo: rowSelected.ID_No,
+                  TempOR: rowSelected.Temp_OR,
+                  Short: rowSelected.Short,
+                };
+
+                d = [...d, newSelected];
+                return d;
+              });
+            });
+          }
+          if (filteredCheck.length > 0) {
+            filteredCheck.forEach((rowSelected: any) => {
+              setSelectedRows((d: any) => {
+                const newSelected: any = {
+                  Deposit: "Check",//0
+                  Check_No: rowSelected.Check_No,//1
+                  Check_Date: rowSelected.Check_Date,//2
+                  Bank: rowSelected.Bank_Branch,//3
+                  Amount: rowSelected.Amount,//4
+                  Name: rowSelected.Client_Name,//5
+                  RowIndex: d.length + 1,//6
+                  DRCode: rowSelected.DRCode,//7
+                  ORNo: rowSelected.OR_No,//8
+                  DRRemarks: rowSelected.DRRemarks,//9
+                  IDNo: rowSelected.ID_No,//10
+                  TempOR: rowSelected.Temp_OR,//11
+                  Short: rowSelected.Short,//12
+                };
+                d = [...d, newSelected];
+                return d;
+              });
+
+
+              setCollectionForDeposit((d: any) => {
+                const newSelectedCheckForDeposit: any = {
+                  Bank: rowSelected.Bank_Branch,
+                  Check_No: rowSelected.Check_No,
+                  Amount: rowSelected.Amount,
+                  TempOR: rowSelected.Temp_OR,
+                };
+                d = [...d, newSelectedCheckForDeposit];
+                return d;
+              });
+            });
+          }
+          setTableRowsInputValue(cash_breakdown)
+        })
+
         setDepositMode('edit')
-        // handleInputChange({ target: { name: "depositMode", value: "edit" } });
+
       },
     });
+
   const {
     ModalComponent: ModalDeposit,
     openModal: openDeposit,
@@ -429,12 +493,13 @@ export default function Deposit() {
     responseDataKey: "deposit",
     onSelected: (selectedRowData) => {
       const SlipCode = selectedRowData[0].SlipCode;
-      const BankAccount = selectedRowData[0].BankAccount;
-      searchByDepositSlip({ SlipCode, BankAccount });
+      searchByDepositSlip({ SlipCode });
 
-      if (refSlipCode.current) {
-        refSlipCode.current.value = SlipCode
-      }
+      wait(100).then(() => {
+        if (refSlipCode.current) {
+          refSlipCode.current.value = SlipCode
+        }
+      })
 
       closeDeposit();
     },
@@ -445,6 +510,38 @@ export default function Deposit() {
     },
     searchRef: depositSearch,
   });
+
+  const { isLoading: loadingCashCollection , refetch:refetchCashCollection} =
+    useQuery({
+      queryKey: "get-cash-collection",
+      queryFn: async () =>
+        await myAxios.get(`/task/accounting/get-cash-collection`, {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }),
+      refetchOnWindowFocus: false,
+      onSuccess: (data) => {
+        const response = data as any;
+        setCashCollection(response.data.cash)
+      },
+    });
+
+  const { isLoading: loadingCheckCollection,refetch:refetchCheckCollection } =
+    useQuery({
+      queryKey: "get-check-collection",
+      queryFn: async () =>
+        await myAxios.get(`/task/accounting/get-check-collection`, {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }),
+      refetchOnWindowFocus: false,
+      onSuccess: (data) => {
+        const response = data as any;
+        setCheckCollection(response.data.check)
+      },
+    });
 
   const handleOnSave = (e: any) => {
     e.preventDefault();
@@ -541,6 +638,7 @@ export default function Deposit() {
     refSubAccount.current = ''
     refShortName.current = ''
   }
+ 
   const disabledFields = depositMode === "";
   if (loadingSearchByDepositSlip) {
     return <div>Laoding ....</div>
@@ -655,7 +753,8 @@ export default function Deposit() {
                   RefetchDepositSlipCode();
                   setTableRowsInputValue(defaultCashBreakDown);
                   resetRefs()
-
+                  refetchCheckCollection()
+                  refetchCashCollection()
 
                 }
               });
@@ -665,8 +764,6 @@ export default function Deposit() {
           </Button>
         )}
       </div>
-
-
       <br />
       <form
         onKeyDown={(e) => {
@@ -690,7 +787,7 @@ export default function Deposit() {
             },
           }}
           input={{
-            disabled:disabledFields,
+            disabled: disabledFields,
             className: "search-input-up-on-key-down",
             type: "text",
             style: { width: "200px" },
@@ -716,7 +813,7 @@ export default function Deposit() {
             className: "search-input-up-on-key-down",
             type: "date",
             style: { width: "200px" },
-            disabled:disabledFields
+            disabled: disabledFields
           }}
           inputRef={refDateDepo}
         />
@@ -744,7 +841,7 @@ export default function Deposit() {
                 }
 
               },
-              disabled:disabledFields
+              disabled: disabledFields
             }}
             inputRef={refBankAcctCode}
             icon={<AccountBalanceIcon sx={{ fontSize: "18px" }} />}
@@ -768,7 +865,7 @@ export default function Deposit() {
             type: "text",
             style: { width: "200px" },
             readOnly: true,
-            disabled:disabledFields
+            disabled: disabledFields
 
           }}
           inputRef={refBankAcctName}
@@ -848,7 +945,9 @@ export default function Deposit() {
           TotalCashForDeposit,
           tableRows: tableRowsInputValue,
           setTableRowsInputValue,
-          updateTableRowsInput
+          updateTableRowsInput,
+          loadingCheckCollection,
+          loadingCashCollection
         }}
       >
         <div
@@ -875,34 +974,13 @@ function slideAnimation(activeButton: number, idx: number) {
   }
 }
 
-
 function CashCollection() {
   const {
-    myAxios,
-    user,
     cashCollection,
-    setCashCollection,
     selectedRows,
-    setSelectedRows
+    setSelectedRows,
+    loadingCashCollection
   } = useContext(DepositContext);
-
-  const { isLoading: loadingCashCollection } =
-    useQuery({
-      queryKey: "get-cash-collection",
-      queryFn: async () =>
-        await myAxios.get(`/task/accounting/get-cash-collection`, {
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
-        }),
-      refetchOnWindowFocus: false,
-      onSuccess: (data) => {
-        const response = data as any;
-        setCashCollection(response.data.cash)
-      },
-    });
-
-
 
   const table = useRef<any>(null);
   const cashColumns = [
@@ -1010,30 +1088,12 @@ function CashCollection() {
 }
 function CheckCollection() {
   const {
-    myAxios,
-    user,
     checkCollection,
-    setCheckCollection,
     selectedRows,
     setSelectedRows,
-    setCollectionForDeposit
+    setCollectionForDeposit,
+    loadingCheckCollection
   } = useContext(DepositContext)
-
-  const { isLoading: loadingCheckCollection } =
-    useQuery({
-      queryKey: "get-check-collection",
-      queryFn: async () =>
-        await myAxios.get(`/task/accounting/get-check-collection`, {
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
-        }),
-      refetchOnWindowFocus: false,
-      onSuccess: (data) => {
-        const response = data as any;
-        setCheckCollection(response.data.check)
-      },
-    });
 
 
   const checkColumns = [
