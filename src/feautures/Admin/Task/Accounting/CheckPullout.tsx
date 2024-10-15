@@ -21,7 +21,7 @@ import { useMutation, useQuery } from "react-query";
 import Table from "../../../../components/Table";
 import useMultipleComponent from "../../../../hooks/useMultipleComponent";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import UpwardTable from "../../../../components/UpwardTable";
+import { UpwardTable } from "../../../../components/UpwardTable";
 const reasonList = [
   "",
   "Fully Paid",

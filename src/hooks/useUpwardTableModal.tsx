@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback, useId } from "react";
 import "../style/upwardtablemodel.css";
 import { TextInput } from "../components/UpwardFields";
-import UpwardTable from "../components/UpwardTable";
+import { UpwardTable } from "../components/UpwardTable";
 import { throttle } from "lodash";
 import { AxiosInstance } from "axios";
 import { User } from "../components/AuthContext";
@@ -26,7 +26,7 @@ export const useUpwardTableModal = ({
   link,
   onSelectionChange,
   responseDataKey,
-  onModalClose = () => {},
+  onModalClose = () => { },
 }: UseUpwardTableModalProps) => {
   const id = useId();
   const inputSearchRef = useRef<HTMLInputElement>(null);
@@ -92,7 +92,7 @@ export const useUpwardTableModal = ({
       onKeyDown={(e) => {
         if (e.key === "Escape") {
           closeModal();
-       
+
         }
       }}
     >

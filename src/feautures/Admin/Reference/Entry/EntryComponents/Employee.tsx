@@ -30,7 +30,7 @@ import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../../../lib/confirmationAlert";
-import UpwardTable from "../../../../../components/UpwardTable";
+import { UpwardTable } from "../../../../../components/UpwardTable";
 
 const initialState = {
   firstname: "",
@@ -266,7 +266,7 @@ export default function Employee() {
     });
   }
   const width = window.innerWidth - 40;
-  const height = window.innerHeight  - 140;
+  const height = window.innerHeight - 140;
   return (
     <div
       style={{
@@ -307,7 +307,7 @@ export default function Employee() {
             onChange={handleInputChange}
             InputProps={{
               style: { height: "27px", fontSize: "14px" },
-              className:"manok"
+              className: "manok"
             }}
             onKeyDown={(e) => {
               if (e.code === "Enter" || e.code === "NumpadEnter") {
@@ -687,7 +687,7 @@ export default function Employee() {
         }}
         inputsearchselector=".manok"
       />
-      
+
       {/* <div
         ref={refParent}
         style={{

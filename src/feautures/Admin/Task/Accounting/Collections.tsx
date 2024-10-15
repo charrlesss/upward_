@@ -38,11 +38,11 @@ import useQueryModalTable from "../../../../hooks/useQueryModalTable";
 import useMutationModalTable from "../../../../hooks/useMutationModalTable";
 import { flushSync } from "react-dom";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import Table from "../../../../components/Table";
 import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../../lib/confirmationAlert";
+import {UpwardTable} from "../../../../components/UpwardTable";
 
 const CollectionContext = createContext<{
   debit: Array<any>;
@@ -74,7 +74,7 @@ const initialState = {
 const initialStateDeposit = {
   cashID: "",
   cashMode: "add",
-  payamentType: "CHK",
+  payamentType: "CSH",
   amount: "",
   transaction_desc: [],
   debitHasSelected: false,
@@ -120,39 +120,39 @@ export const reducer = (state: any, action: any) => {
 const addCollectionQueryKey = "add-collection";
 const queryMutationKeyCollectionDataSearch = "collection-data-search";
 export const debitColumn = [
-  { field: "Payment", headerName: "Payment", flex: 1, minWidth: 170 },
+  { field: "Payment", headerName: "Payment", flex: 1, width: 170 },
   {
     field: "Amount",
     headerName: "Amount",
     flex: 1,
-    minWidth: 170,
+    width: 170,
     type: "number",
   },
-  { field: "Check_No", headerName: "Check No", flex: 1, minWidth: 170 },
-  { field: "Check_Date", headerName: "Check Date", flex: 1, minWidth: 170 },
-  { field: "Bank_Branch", headerName: "Bank/Branch", flex: 1, minWidth: 300 },
-  { field: "Acct_Code", headerName: "DR Code", flex: 1, minWidth: 170 },
-  { field: "Acct_Title", headerName: "DR Title", flex: 1, minWidth: 300 },
-  { field: "Deposit_Slip", headerName: "Deposit Slip", flex: 1, minWidth: 170 },
-  { field: "Cntr", headerName: "Cntr", flex: 1, minWidth: 170 },
-  { field: "Remarks", headerName: "Remarks", flex: 1, minWidth: 300 },
-  { field: "TC", headerName: "TC", flex: 1, minWidth: 170 },
-  { field: "temp_id", headerName: "temp_id", flex: 1, hide: true },
-  { field: "Bank", headerName: "Bank", flex: 1, hide: true },
-  { field: "BankName", headerName: "BankName", flex: 1, hide: true },
+  { field: "Check_No", headerName: "Check No", width: 170 },
+  { field: "Check_Date", headerName: "Check Date", width: 170 },
+  { field: "Bank_Branch", headerName: "Bank/Branch", width: 300 },
+  { field: "Acct_Code", headerName: "DR Code", width: 170 },
+  { field: "Acct_Title", headerName: "DR Title", width: 300 },
+  { field: "Deposit_Slip", headerName: "Deposit Slip", width: 170 },
+  { field: "Cntr", headerName: "Cntr", width: 170 },
+  { field: "Remarks", headerName: "Remarks", width: 300 },
+  { field: "TC", headerName: "TC", width: 170 },
+  { field: "temp_id", headerName: "temp_id", hide: true },
+  { field: "Bank", headerName: "Bank", hide: true },
+  { field: "BankName", headerName: "BankName", hide: true },
 ];
 export const creditColumn = [
-  { field: "temp_id", headerName: "temp_id", flex: 1, hide: true },
-  { field: "transaction", headerName: "Transaction", minWidth: 200 },
-  { field: "amount", headerName: "Amount", minWidth: 150, type: "number" },
-  { field: "Remarks", headerName: "Remarks", minWidth: 350 },
-  { field: "Code", headerName: "Code", minWidth: 150 },
-  { field: "Title", headerName: "Title", minWidth: 350 },
-  { field: "TC", headerName: "TC", minWidth: 200 },
-  { field: "Account_No", headerName: "Accoount No.", minWidth: 180 },
-  { field: "Name", headerName: "Name", minWidth: 350 },
-  { field: "VATType", headerName: "VAT Type", minWidth: 150 },
-  { field: "invoiceNo", headerName: "Invoice No", minWidth: 250 },
+  { field: "temp_id", headerName: "temp_id", hide: true },
+  { field: "transaction", headerName: "Transaction", width: 200 },
+  { field: "amount", headerName: "Amount", width: 150, type: "number" },
+  { field: "Remarks", headerName: "Remarks", width: 350 },
+  { field: "Code", headerName: "Code", width: 150 },
+  { field: "Title", headerName: "Title", width: 350 },
+  { field: "TC", headerName: "TC", width: 200 },
+  { field: "Account_No", headerName: "Accoount No.", width: 180 },
+  { field: "Name", headerName: "Name", width: 350 },
+  { field: "VATType", headerName: "VAT Type", width: 150 },
+  { field: "invoiceNo", headerName: "Invoice No", width: 250 },
 ];
 const queryKeyPaymentType = "payment-type-code";
 const queryKeyNewORNumber = "new-or-number";
@@ -785,7 +785,7 @@ export default function Collections() {
     }
   }
   // debit select Row
-  function DebitSelectedChange(rowSelected: any, code: string | null) {
+  function DebitSelectedChange(rowSelected: any) {
     if (rowSelected.Payment === "Cash") {
       modalDispatch({
         type: "UPDATE_FIELD",
@@ -858,9 +858,9 @@ export default function Collections() {
       CheckMode: "edit",
     };
 
-    if (code === "Delete" || code === "Backspace") {
-      return DebitDeleteRow(rowSelected);
-    }
+    // if (code === "Delete" || code === "Backspace") {
+    //   return DebitDeleteRow(rowSelected);
+    // }
 
     setNewStateValue(modalDispatch, newState);
     flushSync(() => {
@@ -900,7 +900,7 @@ export default function Collections() {
         field: "amount",
         value: "0.00",
       });
-      tableDebit.current?.removeSelection();
+      tableDebit.current?.resetTableSelected();
     });
   }
 
@@ -930,7 +930,7 @@ export default function Collections() {
       localStorage.setItem("paper-height", "11in");
       localStorage.setItem("module", "collection");
       if (user?.department === "UMIS") {
-        localStorage.setItem("title",user?.department === 'UMIS' ? "UPWARD MANAGEMENT INSURANCE SERVICES" : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.");
+        localStorage.setItem("title", user?.department === 'UMIS' ? "UPWARD MANAGEMENT INSURANCE SERVICES" : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.");
       } else {
         localStorage.setItem(
           "title",
@@ -940,6 +940,9 @@ export default function Collections() {
     });
     window.open("/dashboard/print", "_blank");
   }
+
+  const width = window.innerWidth - 70;
+  const height = window.innerHeight - 500;
 
   return (
     <div
@@ -1338,13 +1341,13 @@ export default function Collections() {
                 border: "1px solid #cbd5e1",
                 borderRadius: "5px",
                 position: "relative",
-                height: "500px",
+                height: "420px",
                 display: "flex",
                 flexDirection: "column",
               }}
             >
               <legend>Particulars (Debit)</legend>
-              <div style={{ display: "flex" }}>
+              <div style={{ display: "flex", marginBottom: "10px" }}>
                 <FormControl
                   sx={{
                     width: "150px",
@@ -1512,7 +1515,7 @@ export default function Collections() {
                         onClick={() => {
                           if (
                             parseFloat(debitState.amount.replace(/,/g, "")) <=
-                              0 ||
+                            0 ||
                             isNaN(
                               parseFloat(debitState.amount.replace(/,/g, ""))
                             )
@@ -1612,7 +1615,7 @@ export default function Collections() {
                                 field: "cashMode",
                                 value: "add",
                               });
-                              tableDebit.current?.removeSelection();
+                              tableDebit.current?.resetTableSelected();
                             });
                         }}
                       >
@@ -1622,7 +1625,75 @@ export default function Collections() {
                   </div>
                 )}
               </div>
-              <div
+              <UpwardTable
+                isLoading={loadingAddNew || loadingCollectionDataSearch}
+                ref={tableDebit}
+                rows={debit}
+                column={debitColumn}
+                width={width}
+                height={height}
+                dataReadOnly={true}
+                onSelectionChange={(selectedRow) => {
+                  const rowSelected = selectedRow[0];
+                  if (selectedRow.length > 0) {
+                    DebitSelectedChange(rowSelected);
+                  } else {
+                    modalDispatch({
+                      type: "UPDATE_FIELD",
+                      field: "CheckIdx",
+                      value: "",
+                    });
+                    modalDispatch({
+                      type: "UPDATE_FIELD",
+                      field: "CheckMode",
+                      value: "",
+                    });
+                    debitDispatch({
+                      type: "UPDATE_FIELD",
+                      field: "cashID",
+                      value: "",
+                    });
+                    debitDispatch({
+                      type: "UPDATE_FIELD",
+                      field: "cashMode",
+                      value: "",
+                    });
+                    debitDispatch({
+                      type: "UPDATE_FIELD",
+                      field: "amount",
+                      value: "0.00",
+                    });
+                  }
+                }}
+                onKeyDown={(row, key) => {
+                  if (key === "Delete" || key === "Backspace") {
+                    const rowSelected = row[0];
+                    Swal.fire({
+                      title: "Are you sure?",
+                      text: `You won't to delete this?`,
+                      icon: "warning",
+                      showCancelButton: true,
+                      confirmButtonColor: "#3085d6",
+                      cancelButtonColor: "#d33",
+                      confirmButtonText: "Yes, delete it!",
+                    }).then((result) => {
+                      if (result.isConfirmed) {
+                        return setDebit((d) => {
+                          d = d.filter((item: any) => {
+                            return item.temp_id !== rowSelected.temp_id;
+                          });
+                          return d;
+                        });
+                      }
+                    });
+                  }
+                }}
+                inputsearchselector=".manok"
+              />
+              <div style={{ width: "100%", marginTop: "20px" }}>
+                <DebitFooterComponent />
+              </div>
+              {/* <div
                 style={{
                   marginTop: "10px",
                   width: "100%",
@@ -1631,13 +1702,17 @@ export default function Collections() {
               >
                 <Box
                   style={{
-                    height: "410px",
+                    height: "320px",
                     width: "100%",
                     overflowX: "scroll",
                     position: "absolute",
+                  //  paddingLeft:"70px"
                   }}
                 >
-                  <Table
+               
+
+
+                  {/* <Table
                     ref={tableDebit}
                     isLoading={loadingAddNew || loadingCollectionDataSearch}
                     columns={debitColumn}
@@ -1682,35 +1757,16 @@ export default function Collections() {
                       }
                       DebitSelectedChange(rowSelected, code);
 
-                      if (code === "Delete" || code === "Backspace") {
-                        Swal.fire({
-                          title: "Are you sure?",
-                          text: `You won't to delete this?`,
-                          icon: "warning",
-                          showCancelButton: true,
-                          confirmButtonColor: "#3085d6",
-                          cancelButtonColor: "#d33",
-                          confirmButtonText: "Yes, delete it!",
-                        }).then((result) => {
-                          if (result.isConfirmed) {
-                            return setDebit((d) => {
-                              d = d.filter((item: any) => {
-                                return item.temp_id !== rowSelected.temp_id;
-                              });
-                              return d;
-                            });
-                          }
-                        });
-                      }
+
                     }}
                     footerChildren={() => {
                       return <DebitFooterComponent />;
                     }}
                     footerPaginationPosition={"left-right"}
                     showFooterSelectedCount={false}
-                  />
+                  /> 
                 </Box>
-              </div>
+              </div> */}
             </fieldset>
             <br />
             <fieldset
@@ -1719,7 +1775,7 @@ export default function Collections() {
                 border: "1px solid #cbd5e1",
                 borderRadius: "5px",
                 position: "relative",
-                height: "530px",
+                height: "460px",
                 display: "flex",
                 flexDirection: "column",
               }}
@@ -1730,6 +1786,7 @@ export default function Collections() {
                   display: "flex",
                   gap: "10px",
                   flexDirection: "column",
+                  marginBottom: "10px"
                 }}
               >
                 <div style={{ display: "flex", gap: "10px" }}>
@@ -2045,6 +2102,8 @@ export default function Collections() {
                       </Button>
                     ) : (
                       <Button
+                        disabled={!addNew || creditState.creditMode === ""}
+
                         ref={creditSaveButton}
                         sx={{
                           height: "30px",
@@ -2085,7 +2144,7 @@ export default function Collections() {
                           }
                           if (
                             parseFloat(creditState.amount.replace(/,/g, "")) <=
-                              0 ||
+                            0 ||
                             isNaN(
                               parseFloat(creditState.amount.replace(/,/g, ""))
                             )
@@ -2123,25 +2182,25 @@ export default function Collections() {
                           if (creditState.invoice.length >= 200) {
                             return CustomSwalAlertWarning(
                               "Invoice is too long!",
-                              () => {}
+                              () => { }
                             );
                           }
                           if (creditState.FAO_ID.length >= 200) {
                             return CustomSwalAlertWarning(
                               "ID is too long!",
-                              () => {}
+                              () => { }
                             );
                           }
                           if (creditState.remarks.length >= 200) {
                             return CustomSwalAlertWarning(
                               "Remarks is too long!",
-                              () => {}
+                              () => { }
                             );
                           }
                           if (creditState.amount.length >= 200) {
                             return CustomSwalAlertWarning(
                               "Amount is too long!",
-                              () => {}
+                              () => { }
                             );
                           }
 
@@ -2226,7 +2285,7 @@ export default function Collections() {
                                 creditDispatch,
                                 initialStateCredit
                               );
-                              tableCredit.current.removeSelection();
+                              tableCredit.current.resetTableSelected();
                             });
                           }
                           if (creditState.creditMode === "edit") {
@@ -2254,7 +2313,73 @@ export default function Collections() {
                   </div>
                 </div>
               </div>
-              <div
+              <UpwardTable
+                isLoading={loadingAddNew || loadingCollectionDataSearch}
+                ref={tableCredit}
+                rows={credit}
+                column={creditColumn}
+                width={width}
+                height={height}
+                dataReadOnly={true}
+                onSelectionChange={(selectedRow) => {
+                  const rowSelected = selectedRow[0];
+                  if (selectedRow.length > 0) {
+                    const updateData = {
+                      creditMode: "edit",
+                      creditId: rowSelected.temp_id,
+                      transaction: rowSelected.transaction,
+                      amount: rowSelected.amount,
+                      remarks: rowSelected.Remarks,
+                      Code: rowSelected.Code,
+                      Title: rowSelected.Title,
+                      TC: rowSelected.TC,
+                      FAO_ID: rowSelected.Account_No,
+                      FAO_Name: rowSelected.Name,
+                      option: rowSelected.VATType,
+                      invoice: rowSelected.invoiceNo,
+                    };
+                    setNewStateValue(creditDispatch, updateData);
+                  } else {
+                    Object.entries(initialStateCredit).forEach(
+                      ([field, value]) => {
+                        creditDispatch({
+                          type: "UPDATE_FIELD",
+                          field,
+                          value,
+                        });
+                      }
+                    );
+                  }
+                }}
+                onKeyDown={(row, key) => {
+                  if (key === "Delete" || key === "Backspace") {
+                    const rowSelected = row[0];
+                    Swal.fire({
+                      title: "Are you sure?",
+                      text: `You won't to delete this?`,
+                      icon: "warning",
+                      showCancelButton: true,
+                      confirmButtonColor: "#3085d6",
+                      cancelButtonColor: "#d33",
+                      confirmButtonText: "Yes, delete it!",
+                    }).then((result) => {
+                      if (result.isConfirmed) {
+                        return setCredit((d) => {
+                          d = d.filter((item: any) => {
+                            return item.temp_id !== rowSelected.temp_id;
+                          });
+                          return d;
+                        });
+                      }
+                    });
+                  }
+                }}
+                inputsearchselector=".manok"
+              />
+              <div style={{ width: "100%", marginTop: "10px" }}>
+                <CreditFooterComponent />
+              </div>
+              {/* <div
                 style={{
                   marginTop: "10px",
                   width: "100%",
@@ -2340,7 +2465,7 @@ export default function Collections() {
                     showFooterSelectedCount={false}
                   />
                 </Box>
-              </div>
+              </div> */}
             </fieldset>
           </div>
         </div>
@@ -2352,7 +2477,7 @@ export default function Collections() {
           open={openPdcInputModal}
           onClose={() => {
             setOpenPdcInputModal(false);
-            tableDebit.current?.removeSelection();
+            tableDebit.current?.resetTableSelected();
           }}
           aria-labelledby="modal-modal-title"
           aria-describedby="modal-modal-description"
@@ -2825,7 +2950,7 @@ export default function Collections() {
                               setOpenPdcInputModal(true);
                             });
                             checkModalSaveActionButtonRef.current?.focusVisible();
-                            tableDebit.current?.removeSelection();
+                            tableDebit.current?.resetTableSelected();
                           },
                         });
                       }
@@ -2868,7 +2993,7 @@ export default function Collections() {
                           setOpenPdcInputModal(false);
                         });
                         checkModalSaveActionButtonRef.current?.focusVisible();
-                        tableDebit.current?.removeSelection();
+                        tableDebit.current?.resetTableSelected();
                       },
                     });
                     return;
@@ -2882,7 +3007,7 @@ export default function Collections() {
                 variant="contained"
                 onClick={() => {
                   setOpenPdcInputModal(false);
-                  tableDebit.current?.removeSelection();
+                  tableDebit.current?.resetTableSelected();
                 }}
               >
                 Cancel
@@ -2908,6 +3033,8 @@ export default function Collections() {
           </Box>
         </Modal>
       </CollectionContext.Provider>
+      {loadingAddNew || isLoadingModalSearchCollection && <div className="loading-component"><div className="loader"></div></div>}
+
     </div>
   );
 }
@@ -2921,14 +3048,11 @@ function DebitFooterComponent() {
   return (
     <Box
       sx={{
-        px: 2,
-        py: 1,
         display: "flex",
         justifyContent: "flex-end",
-        borderTop: "2px solid #e2e8f0",
       }}
     >
-      <strong>
+      <strong style={{ fontSize: "14px" }}>
         Total:{" "}
         {debit
           .reduce(
@@ -2952,10 +3076,9 @@ function CreditFooterComponent() {
         py: 1,
         display: "flex",
         justifyContent: "flex-end",
-        borderTop: "2px solid #e2e8f0",
       }}
     >
-      <strong>
+      <strong style={{ fontSize: "14px" }}>
         Total:{" "}
         {credit
           .reduce(

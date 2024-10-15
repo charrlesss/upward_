@@ -32,7 +32,7 @@ import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../../../lib/confirmationAlert";
-import UpwardTable from "../../../../../components/UpwardTable";
+import { UpwardTable } from "../../../../../components/UpwardTable";
 
 const initialState = {
   firstname: "",
@@ -321,7 +321,7 @@ export default function Client() {
     });
   }
   const width = window.innerWidth - 40;
-  const height = window.innerHeight  - 190;
+  const height = window.innerHeight - 190;
   return (
     <div
       style={{
@@ -374,7 +374,7 @@ export default function Client() {
             }}
             InputProps={{
               style: { height: "27px", fontSize: "14px" },
-              className:"manok"
+              className: "manok"
             }}
             sx={{
               height: "27px",
@@ -611,16 +611,16 @@ export default function Client() {
                   marginBottom: "10px",
                 })}
 
-                // sx={{
-                //   width: "130px",
-                //   ".MuiFormLabel-root": {
-                //     fontSize: "14px",
-                //     background: "white",
-                //     zIndex: 99,
-                //     padding: "0 3px",
-                //   },
-                //   ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                // }}
+              // sx={{
+              //   width: "130px",
+              //   ".MuiFormLabel-root": {
+              //     fontSize: "14px",
+              //     background: "white",
+              //     zIndex: 99,
+              //     padding: "0 3px",
+              //   },
+              //   ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              // }}
               >
                 <InputLabel id="option_id">Option</InputLabel>
                 <Select
@@ -903,27 +903,27 @@ export default function Client() {
         column={user?.department === " UMIS"
           ? clientColumn
           : clientColumn.concat([
-              {
-                field: "chassis",
-                headerName: "Chassis No.",
-                width: 200,
-              },
-              {
-                field: "engine",
-                headerName: "Engine",
-                width: 200,
-              },
-              {
-                field: "client_mortgagee",
-                headerName: "Mortgagee",
-                width: 300,
-              },
-              {
-                field: "client_branch",
-                headerName: "Branch",
-                width: 300,
-              },
-            ])}
+            {
+              field: "chassis",
+              headerName: "Chassis No.",
+              width: 200,
+            },
+            {
+              field: "engine",
+              headerName: "Engine",
+              width: 200,
+            },
+            {
+              field: "client_mortgagee",
+              headerName: "Mortgagee",
+              width: 300,
+            },
+            {
+              field: "client_branch",
+              headerName: "Branch",
+              width: 300,
+            },
+          ])}
         width={width}
         height={height}
         dataReadOnly={true}

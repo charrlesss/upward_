@@ -28,7 +28,7 @@ import { AnyPtrRecord } from "dns";
 import CustomDatePicker from "../../../../components/DatePicker";
 import { format } from "date-fns";
 import { flushSync } from "react-dom";
-import UpwardTable from "../../../../components/UpwardTable";
+import { UpwardTable } from "../../../../components/UpwardTable";
 
 const warehouseColumns = [
   { field: "PNo", headerName: "PN No.", width: 130 },

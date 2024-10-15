@@ -34,7 +34,7 @@ import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../../../lib/confirmationAlert";
-import UpwardTable from "../../../../../components/UpwardTable";
+import { UpwardTable } from "../../../../../components/UpwardTable";
 
 const initialState = {
   firstname: "",
@@ -285,7 +285,7 @@ export default function Agent() {
     });
   }
   const width = window.innerWidth - 40;
-  const height = window.innerHeight  - 180;
+  const height = window.innerHeight - 180;
   return (
     <div
       style={{
@@ -341,7 +341,7 @@ export default function Agent() {
             }}
             InputProps={{
               style: { height: "27px", fontSize: "14px" },
-              className:"manok"
+              className: "manok"
             }}
             sx={{
               width: "500px",
@@ -748,7 +748,7 @@ export default function Agent() {
           }}
         />
       </form>
-      <br/>
+      <br />
       <UpwardTable
         ref={table}
         isLoading={isLoading || loadingDelete || loadingEdit || loadingAdd}

@@ -27,7 +27,7 @@ import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../../../lib/confirmationAlert";
-import UpwardTable from "../../../../../components/UpwardTable";
+import { UpwardTable } from "../../../../../components/UpwardTable";
 
 const initialState = {
   description: "",
@@ -220,7 +220,7 @@ export default function FixedAssets() {
     });
   }
   const width = window.innerWidth - 40;
-  const height = window.innerHeight  - 100;
+  const height = window.innerHeight - 100;
   return (
     <div
       style={{
@@ -275,7 +275,7 @@ export default function FixedAssets() {
             }}
             InputProps={{
               style: { height: "27px", fontSize: "14px" },
-              className:"manok"
+              className: "manok"
             }}
             sx={{
               width: "500px",

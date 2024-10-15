@@ -1,11 +1,13 @@
 .table-frame-color {
-  border-radius: 5px;
   padding: 5px;
   box-sizing: border-box;
   width: auto !important;
   display: inline-block;
   position: relative;
   border: 1px solid rgba(86, 85, 85, 0.731);
+
+  border-top-right-radius: 5px;
+  border-top-left-radius: 5px;
 }
 
 .table-frame {
@@ -30,12 +32,17 @@
   height: 25px;
   font-size: 11px;
   font-weight: bold;
-  border-top: 1px solid rgb(126, 125, 150);
+  border-bottom: 1px solid rgb(126, 125, 150);
+  border-right: 1px solid rgb(126, 125, 150);
+  border-left: 1px solid rgb(126, 125, 150);
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
   padding: 0 5px;
   background-color: white;
   line-height: 28px;
   display: flex;
   justify-content: space-between;
+  width: 100%;
 }
 
 .grid-container {

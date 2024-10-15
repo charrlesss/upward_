@@ -36,7 +36,7 @@ import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
 import { DisplayFile, checkFile } from "../Claims/Claims";
 import ReactDOMServer from "react-dom/server";
 import { grey } from "@mui/material/colors";
-import UpwardTable from "../../../../components/UpwardTable";
+import { UpwardTable } from "../../../../components/UpwardTable";
 import { useUpwardTableModal } from "../../../../hooks/useUpwardTableModal";
 
 const initialState = {
@@ -227,6 +227,7 @@ export default function PostDateChecks() {
     },
   });
   //selecte search
+
   const { mutate: mutateSelectedSearch, isLoading: isLoadingSelectedSearch } =
     useMutation({
       mutationKey: queryKey,
@@ -1256,6 +1257,7 @@ export default function PostDateChecks() {
         </Box>
       </form>
       <UpwardTable
+        isLoading={isLoadingSelectedSearch}
         ref={tableRef}
         rows={pdcDataRows}
         column={pdcColumn}
@@ -1794,10 +1796,10 @@ export default function PostDateChecks() {
                         let CheckIdx = (
                           pdcDataRows.length > 0
                             ? parseInt(
-                                (pdcDataRows[pdcDataRows.length - 1] as any)
-                                  .CheckIdx
-                              ) +
-                              (i + 1)
+                              (pdcDataRows[pdcDataRows.length - 1] as any)
+                                .CheckIdx
+                            ) +
+                            (i + 1)
                             : i
                         ).toString();
 
@@ -2204,6 +2206,9 @@ export default function PostDateChecks() {
           </div>
         </div>
       </div>
+      {loadingAddNew ||
+        isLoadingSelectedSearch && <div className="loading-component"><div className="loader"></div></div>}
+
     </div>
   );
 }

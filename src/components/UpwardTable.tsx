@@ -1,10 +1,11 @@
+
+
 import React, {
   useState,
   useRef,
   useEffect,
   forwardRef,
   useImperativeHandle,
-  useId,
 } from "react";
 
 import "../style/datagridview.css";
@@ -16,7 +17,7 @@ interface UpwardTablePropsType {
   width: number;
   height: number;
   dataReadOnly: boolean;
-  onSelectionChange?: (row: Array<any>) => void;
+  onSelectionChange?: (row: Array<any>, rowIndex: number) => void;
   onKeyDown?: (row: Array<any>, key: string) => void;
   isMultipleSelect?: boolean;
   freeze?: boolean;
@@ -55,6 +56,7 @@ const UpwardTable = forwardRef(
     const [lastSelectedRowIndex, setLastSelectedRowIndex] = useState(0);
     const [selectedItems, setSelectedItems] = useState<Array<number>>([]);
     const divRef = useRef<HTMLDivElement>(null);
+    const [_clickTimeout, _setClickTimeout] = useState(null);
 
 
     useEffect(() => {
@@ -138,7 +140,7 @@ const UpwardTable = forwardRef(
             getIndexAndData(selectedRowData);
 
           setSelectedItems(newSelectedRowsFiltered);
-          onSelectionChangeRef.current(data);
+          // onSelectionChangeRef.current(data, rowIndex);
         } else if (event.ctrlKey || event.metaKey) {
           // Ctrl (or Cmd on macOS) + Click: Toggle row selection
           if (selectedRows.includes(rowIndex) && !freeze) {
@@ -155,7 +157,7 @@ const UpwardTable = forwardRef(
             );
 
             setSelectedItems(selectedItemsParams);
-            onSelectionChangeRef.current(selectedRowData);
+            // onSelectionChangeRef.current(selectedRowData, rowIndex);
           } else {
             setSelectedRows([...selectedRows, rowIndex]);
             setSelectedItems((d) => {
@@ -172,7 +174,7 @@ const UpwardTable = forwardRef(
             );
 
             setSelectedItems(selectedItemsParams);
-            onSelectionChangeRef.current(selectedRowData);
+            // onSelectionChangeRef.current(selectedRowData, rowIndex);
           }
         } else {
           // Regular click in multiple selection mode: Single click to select a row
@@ -189,58 +191,29 @@ const UpwardTable = forwardRef(
       if (unSelectable(row)) return;
       if (!isRowSelectable) return;
 
+
       let selectedItemsParams: Array<number> = [];
-
-      if (selectedItems.includes(rowIndex) && !freeze) {
-        selectedItemsParams = selectedItems.filter((i) => i !== rowIndex);
-        setSelectedItems(selectedItemsParams);
-        const selectedRowData = rows.filter((d, idx) =>
-          selectedItemsParams.includes(idx)
-        );
-        onSelectionChangeRef.current(selectedRowData);
-
-        return;
-      }
-
       if (isMultipleSelect) {
-        selectedItemsParams = [...selectedItems, rowIndex];
+        selectedItemsParams = [...selectedItems, ...selectedRows];
       } else {
         selectedItemsParams = [rowIndex];
       }
 
+
+      if (selectedItems.includes(rowIndex) && !freeze) {
+        selectedItemsParams = selectedItems.filter((i) => i !== rowIndex);
+        setSelectedItems(selectedItemsParams);
+        onSelectionChangeRef.current([], rowIndex);
+        return;
+      }
+
       setSelectedItems(selectedItemsParams);
-      const selectedRowData = rows.filter((d, idx) =>
-        selectedItemsParams.includes(idx)
-      );
-      onSelectionChangeRef.current(selectedRowData);
+      onSelectionChangeRef.current([row], rowIndex);
     };
     const handleKeyDown = (e: any) => {
-      if (e.key === "Enter" || e.key === "NumpadEnter") {
-        e.preventDefault();
-        if (!isRowSelectable) return;
+      e.stopPropagation()
 
-        let selectedItemsParams: Array<number> = [];
-        const rowIndex = selectedRows[selectedRows.length - 1];
-        if (isMultipleSelect) {
-          selectedItemsParams = [...selectedItems, ...selectedRows];
-        } else {
-          selectedItemsParams = [rowIndex];
-        }
-        const row = rows[selectedItemsParams[selectedItemsParams.length - 1]];
-        if (unSelectable(row)) {
-          return;
-        }
-
-        if (selectedItems.includes(rowIndex) && !freeze) {
-          selectedItemsParams = selectedItems.filter((i) => i !== rowIndex);
-          setSelectedItems(selectedItemsParams);
-          onSelectionChangeRef.current([]);
-          return;
-        }
-
-        setSelectedItems(selectedItemsParams);
-        onSelectionChangeRef.current([row]);
-      } else if (e.key === "ArrowDown") {
+      if (e.key === "ArrowDown") {
         e.preventDefault();
         setSelectedRows((prevIndex: any) => {
           if (prevIndex[prevIndex.length - 1] === null) return [0];
@@ -281,6 +254,37 @@ const UpwardTable = forwardRef(
           row?.querySelector("input")?.focus();
           return [newPrevIndex];
         });
+      }
+
+    };
+    const handleRowKeyDown = (e: any) => {
+      e.stopPropagation()
+
+      if (e.key === "Enter" || e.key === "NumpadEnter") {
+        e.preventDefault();
+        if (!isRowSelectable) return;
+
+        let selectedItemsParams: Array<number> = [];
+        const rowIndex = selectedRows[selectedRows.length - 1];
+        if (isMultipleSelect) {
+          selectedItemsParams = [...selectedItems, ...selectedRows];
+        } else {
+          selectedItemsParams = [rowIndex];
+        }
+        const row = rows[selectedItemsParams[selectedItemsParams.length - 1]];
+        if (unSelectable(row)) {
+          return;
+        }
+
+        if (selectedItems.includes(rowIndex) && !freeze) {
+          selectedItemsParams = selectedItems.filter((i) => i !== rowIndex);
+          setSelectedItems(selectedItemsParams);
+          onSelectionChangeRef.current([], rowIndex);
+          return;
+        }
+
+        setSelectedItems(selectedItemsParams);
+        onSelectionChangeRef.current([row], rowIndex);
       } else if (e.key === "Delete" || e.key === "Backspace") {
         if (!isRowSelectable) return;
 
@@ -292,7 +296,7 @@ const UpwardTable = forwardRef(
           onKeyDownRef?.current(selectedRowData, e.key);
         }
       }
-    };
+    }
     useImperativeHandle(UpwardTableRef, () => ({
       resetTableSelected: () => {
         setSelectedRows([0]);
@@ -306,7 +310,15 @@ const UpwardTable = forwardRef(
       getSelectedRows: () => {
         return rows.filter((d, idx) => selectedItems.includes(idx));
       },
+      setSelectRows: (selectRows: any) => {
+        setSelectedItems(selectRows)
+      }
     }));
+
+
+
+
+
     return (
       <div
         style={{
@@ -315,92 +327,48 @@ const UpwardTable = forwardRef(
         }}
         onKeyDown={handleKeyDown}
       >
-        <div className="table-frame-color">
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              width: `${width - 10}px        `,
-              height: `${height - 135}px`,
-            }}
-            className="table-frame"
-          >
-            <div className="table-panel">
-              <div ref={divRef} className={`grid-container `} tabIndex={-1}>
-                <div
-                  className="grid-row grid-header"
-                  style={{
-                    position: "sticky",
-                    zIndex: "10",
-                    top: "-1px",
-                    background: "white",
-                  }}
-                >
-                  {columns.map((col: any, index: number) => (
-                    <div
-                      key={index}
-                      className={`grid-cell header-cell ${hoveredColumn === index ? `highlight-column` : ""
-                        }`} // Add the class if hovered
-                      style={{ width: col.width, height: "20px" }}
-                    >
-                      <input
-                        style={{ fontWeight: "bold" }}
-                        defaultValue={col.headerName}
-                        readOnly
-                        onChange={(e) => { }}
-                      />
-                      <div
-                        className="resize-handle"
-                        onMouseDown={(e) => startResize(index, e)}
-                        onMouseEnter={(e) => {
-                          e.preventDefault();
-                          handleMouseEnter(index);
-                        }} // On hover
-                        onMouseLeave={(e) => {
-                          e.preventDefault();
-                          handleMouseLeave();
-                        }} // On mouse leave
-                      />
-                    </div>
-                  ))}
-                </div>
-                {pages[pageNumber]?.map((row: any, rowIndex: any) => (
+        <div >
+          <div className="table-frame-color">
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                width: `${width - 10}px        `,
+                height: `${height - 135}px`,
+                minHeight: "270px"
+              }}
+              className="table-frame"
+            >
+              <div className="table-panel">
+                <div ref={divRef} className={`grid-container `} tabIndex={-1}>
                   <div
-                    className={`grid-row row-${rowIndex}`} // Highlight selected row
-                    key={rowIndex}
-                    onClick={(e) => handleRowClick(rowIndex, e)}
-                    onDoubleClick={(e) => handleRowDoubleClick(rowIndex, e)}
+                    className="grid-row grid-header"
+                    style={{
+                      position: "sticky",
+                      zIndex: "10",
+                      top: "-1px",
+                      background: "white",
+                    }}
                   >
-                    {columns.map((col: any, colIndex: number) => (
+                    {columns.map((col: any, index: number) => (
                       <div
-                        key={colIndex}
-                        style={{ width: col.width }}
-                        className={`grid-cell ${hoveredColumn === colIndex ? `highlight-column` : ""
-                          }`}
+                        key={index}
+                        className={`grid-cell header-cell ${hoveredColumn === index ? `highlight-column` : ""
+                          }`} // Add the class if hovered
+                        style={{ width: col.width, height: "20px", }}
                       >
                         <input
-                          value={row[col.field]}
+                          style={{ fontWeight: "bold" }}
+                          defaultValue={col.headerName}
+                          readOnly
                           onChange={(e) => { }}
-                          readOnly={dataReadOnly}
-                          className={`${selectedRows.includes(rowIndex)
-                            ? "selected-row"
-                            : ""
-                            } ${selectedItems.includes(rowIndex)
-                              ? "selected-items"
-                              : ""
-                            }
-                          ${col.type === "number" ? "number" : "text"}
-                          `}
                         />
                         <div
                           className="resize-handle"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            startResize(colIndex, e);
-                          }}
+                          onMouseDown={(e) => startResize(index, e)}
                           onMouseEnter={(e) => {
                             e.preventDefault();
-                            handleMouseEnter(colIndex);
+                            handleMouseEnter(index);
                           }} // On hover
                           onMouseLeave={(e) => {
                             e.preventDefault();
@@ -410,20 +378,101 @@ const UpwardTable = forwardRef(
                       </div>
                     ))}
                   </div>
-                ))}
+                  {pages[pageNumber]?.map((row: any, rowIndex: any) => (
+                    <div
+                      className={`grid-row row-${rowIndex}`} // Highlight selected row
+                      key={rowIndex}
+                      onClick={(e) => handleRowClick(rowIndex, e)}
+                      onDoubleClick={(e) => {
+                        e.stopPropagation()
+
+                        if (_clickTimeout) {
+                          clearTimeout(_clickTimeout);
+                          _setClickTimeout(null);
+                        }
+
+                        const timeoutId: any = setTimeout(() => {
+                          handleRowDoubleClick(rowIndex, e)
+                        }, 500);
+
+                        _setClickTimeout(timeoutId);
+
+
+
+                      }}
+                      onKeyDown={(e) => {
+
+                        e.stopPropagation()
+
+                        if (_clickTimeout) {
+                          clearTimeout(_clickTimeout);
+                          _setClickTimeout(null);
+                        }
+
+                        const timeoutId: any = setTimeout(() => {
+                          handleRowKeyDown(e)
+                        }, 500);
+
+                        _setClickTimeout(timeoutId);
+
+
+                      }}
+                    >
+                      {columns.map((col: any, colIndex: number) => (
+                        <div
+                          key={colIndex}
+                          style={{ width: col.width }}
+                          className={`grid-cell ${hoveredColumn === colIndex ? `highlight-column` : ""
+                            }`}
+                        >
+                          <input
+                            value={row[col.field]}
+                            onChange={(e) => { }}
+                            readOnly={dataReadOnly}
+                            className={`${selectedRows.includes(rowIndex)
+                              ? "selected-row"
+                              : ""
+                              } ${selectedItems.includes(rowIndex)
+                                ? "selected-items"
+                                : ""
+                              }
+                          ${col.type === "number" ? "number" : "text"}
+                          `}
+                          />
+                          <div
+                            className="resize-handle"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              startResize(colIndex, e);
+                            }}
+                            onMouseEnter={(e) => {
+                              e.preventDefault();
+                              handleMouseEnter(colIndex);
+                            }} // On hover
+                            onMouseLeave={(e) => {
+                              e.preventDefault();
+                              handleMouseLeave();
+                            }} // On mouse leave
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
+
+            {isLoading && <div className="table-loading">
+              <div className="loader"></div>
+            </div>}
           </div>
-          <div className="table-panel-footer">
+          <div className="table-panel-footer" >
             <div>Records : {rows.length}</div>
             <div><Pagination count={pages.length} onChange={(e, value) => {
               setPageNumber(value - 1)
             }} />
             </div>
           </div>
-          {isLoading && <div className="table-loading">
-            <div className="loader"></div>
-          </div>}
         </div>
       </div>
     );
@@ -442,4 +491,6 @@ function formatArrayIntoChunks(arr: Array<any>, chunkSize = 100) {
 
 
 
-export default UpwardTable;
+
+
+export { UpwardTable, };

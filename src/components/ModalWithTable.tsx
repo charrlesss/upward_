@@ -8,7 +8,7 @@ import {
 import { Modal, Box, Typography, IconButton, TextField } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import Table from "./Table";
-import UpwardTable from "./UpwardTable";
+
 interface ModalWithTableParams {
   height: number;
   isLoading: boolean;
@@ -22,16 +22,16 @@ interface ModalWithTableParams {
   onClickCloseIcon: () => void;
   showModal: boolean;
   searchOnChange:
-    | React.ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement>
-    | undefined;
+  | React.ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement>
+  | undefined;
   title?: string;
   searchRef?: React.RefObject<HTMLInputElement>;
   onCellKeyDown?: any;
   onSearchKeyEnter?: (search: string) => void;
   isRowSelectable?: ((params: GridRowParams<any>) => boolean) | undefined;
   getCellClassName?:
-    | ((params: GridCellParams<any, any, any, GridTreeNode>) => string)
-    | undefined;
+  | ((params: GridCellParams<any, any, any, GridTreeNode>) => string)
+  | undefined;
 }
 
 const style = {
@@ -62,7 +62,7 @@ export default function ModalWithTable({
   title = "",
   searchRef,
   onCellKeyDown,
-  onSearchKeyEnter = () => {},
+  onSearchKeyEnter = () => { },
   isRowSelectable,
   getCellClassName,
 }: ModalWithTableParams) {

@@ -32,7 +32,7 @@ import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../../../lib/confirmationAlert";
-import UpwardTable from "../../../../../components/UpwardTable";
+import { UpwardTable } from "../../../../../components/UpwardTable";
 
 const initialState = {
   firstname: "",
@@ -318,7 +318,7 @@ export default function Supplier() {
     });
   }
   const width = window.innerWidth - 40;
-  const height = window.innerHeight  - 140;
+  const height = window.innerHeight - 140;
   return (
     <div
       style={{
@@ -372,7 +372,7 @@ export default function Supplier() {
             }}
             InputProps={{
               style: { height: "27px", fontSize: "14px" },
-              className:"manok"
+              className: "manok"
             }}
             sx={{
               width: "500px",

@@ -27,7 +27,7 @@ import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../../../lib/confirmationAlert";
-import UpwardTable from "../../../../../components/UpwardTable";
+import { UpwardTable } from "../../../../../components/UpwardTable";
 
 const initialState = {
   description: "",
@@ -47,7 +47,7 @@ export default function Others() {
   const table = useRef<any>(null);
   const queryKey = "entry_others_id";
 
-  const { data: subAccountData, isLoading: subAccountLoading, refetch:refetchSubAcct } = useQuery({
+  const { data: subAccountData, isLoading: subAccountLoading, refetch: refetchSubAcct } = useQuery({
     queryKey: "sub-accounts",
     queryFn: async () =>
       await myAxios.get(`/reference/sub-account`, {
@@ -195,7 +195,7 @@ export default function Others() {
     });
   }
   const width = window.innerWidth - 40;
-  const height = window.innerHeight  - 100;
+  const height = window.innerHeight - 100;
 
   return (
     <div
@@ -251,7 +251,7 @@ export default function Others() {
             }}
             InputProps={{
               style: { height: "27px", fontSize: "14px" },
-              className:"manok"
+              className: "manok"
 
             }}
             sx={{

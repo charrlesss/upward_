@@ -7,7 +7,7 @@ import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../lib/confirmationAlert";
-import UpwardTable from "../../../components/UpwardTable";
+import {UpwardTable} from "../../../components/UpwardTable";
 import {
   ButtonField,
   SelectInput,
