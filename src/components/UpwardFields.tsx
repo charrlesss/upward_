@@ -8,7 +8,8 @@ interface TextInputProps {
   inputRef?: React.RefObject<HTMLInputElement>;
   icon?: ReactNode; // New prop for the icon
   iconPosition?: 'start' | 'end'; // New prop to choose icon position
-  onIconClick?: React.MouseEventHandler<HTMLDivElement> | undefined
+  onIconClick?: React.MouseEventHandler<HTMLDivElement> | undefined,
+  disableIcon?:boolean
 }
 
 export function TextInput({
@@ -17,6 +18,7 @@ export function TextInput({
   inputRef,
   icon,
   iconPosition = 'end', // Default position is 'end'
+  disableIcon = false,
   onIconClick = (e) => { }
 }: TextInputProps) {
   const id = useId();
@@ -54,11 +56,12 @@ export function TextInput({
             top: "50%",
             transform: "translateY(-50%)",
             zIndex: 1,
-            cursor: "pointer",
+            cursor: disableIcon ? "none" : "pointer",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            background:"white"
+            background:"white",
+            pointerEvents: disableIcon ? "none" : "auto"
           }}>
           {icon}
         </div>

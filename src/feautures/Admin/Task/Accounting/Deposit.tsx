@@ -251,6 +251,10 @@ export default function Deposit() {
           RefetchDepositSlipCode();
           setTableRowsInputValue(defaultCashBreakDown);
           resetRefs()
+          refetchCashCollection()
+          refetchCheckCollection()
+          setSelectedRowsCashIndex([])
+          setSelectedRowsCheckedIndex([])
           return Swal.fire({
             position: "center",
             icon: "success",
@@ -287,6 +291,11 @@ export default function Deposit() {
         setCollectionForDeposit([]);
         RefetchDepositSlipCode();
         setTableRowsInputValue(defaultCashBreakDown);
+        resetRefs()
+        refetchCashCollection()
+        refetchCheckCollection()
+        setSelectedRowsCashIndex([])
+        setSelectedRowsCheckedIndex([])
         return Swal.fire({
           position: "center",
           icon: "success",
@@ -341,11 +350,24 @@ export default function Deposit() {
           refClassification.current = obj?.refClassification
           refSubAccount.current = obj?.refSubAccount
 
+          const cashIndex = cash
+            .map((obj: any, index: number) => obj.SlipCode !== null && obj.SlipCode !== '' ? index : null)
+            .filter((index: number) => index !== null);
+
+          const checkIndex = check
+            .map((obj: any, index: number) => obj.SlipCode !== null && obj.SlipCode !== '' ? index : null)
+            .filter((index: number) => index !== null);
+
+
+          setSelectedRowsCashIndex(cashIndex)
+          setSelectedRowsCheckedIndex(checkIndex)
           setCashCollection(cash);
           setCheckCollection(check);
 
+
           const filteredCash = cash.filter((itm: any) => itm.SlipCode !== '' && itm.SlipCode === refSlipCode.current?.value)
           const filteredCheck = check.filter((itm: any) => itm.SlipCode !== '' && itm.SlipCode === refSlipCode.current?.value)
+
           if (filteredCash.length > 0) {
             filteredCash.forEach((rowSelected: any) => {
               setSelectedRows((d: any) => {
@@ -550,7 +572,7 @@ export default function Deposit() {
         cb: (userCodeConfirmation) => {
 
           updateDepositMutation({
-
+            ...state,
             userCodeConfirmation,
             selectedCollection: JSON.stringify(selectedRows),
             tableRowsInputValue: JSON.stringify(tableRowsInputValue),
@@ -792,11 +814,12 @@ export default function Deposit() {
               disabled: disabledFields
             }}
             inputRef={refBankAcctCode}
-            icon={<AccountBalanceIcon sx={{ fontSize: "18px" }} />}
+            icon={<AccountBalanceIcon sx={{ fontSize: "18px", color: disabledFields ? "gray" : "black" }} />}
             onIconClick={(e) => {
               e.preventDefault()
               openDepositBanks(refBankAcctCode.current?.value)
             }}
+            disableIcon={disabledFields}
           />)}
 
         <TextInput
@@ -1005,27 +1028,27 @@ function CashCollection() {
             if (selectedRowsCashIndex?.includes(rowIndex)) {
               return
             }
-              setSelectedRowsCashIndex((d: any) => [...d, rowIndex])
-              setSelectedRows((d: any) => {
-                const newSelected: any = {
-                  Deposit: "Cash",
-                  Check_No: "",
-                  Check_Date: "",
-                  Bank: "",
-                  Amount: rowSelected.Amount,
-                  Name: rowSelected.Client_Name,
-                  RowIndex: d.length + 1,
-                  DRCode: rowSelected.DRCode,
-                  ORNo: rowSelected.OR_No,
-                  DRRemarks: "",
-                  IDNo: rowSelected.ID_No,
-                  TempOR: rowSelected.Temp_OR,
-                  Short: rowSelected.Short,
-                };
+            setSelectedRowsCashIndex((d: any) => [...d, rowIndex])
+            setSelectedRows((d: any) => {
+              const newSelected: any = {
+                Deposit: "Cash",
+                Check_No: "",
+                Check_Date: "",
+                Bank: "",
+                Amount: rowSelected.Amount,
+                Name: rowSelected.Client_Name,
+                RowIndex: d.length + 1,
+                DRCode: rowSelected.DRCode,
+                ORNo: rowSelected.OR_No,
+                DRRemarks: "",
+                IDNo: rowSelected.ID_No,
+                TempOR: rowSelected.Temp_OR,
+                Short: rowSelected.Short,
+              };
 
-                d = [...d, newSelected];
-                return d;
-              });
+              d = [...d, newSelected];
+              return d;
+            });
 
           } else {
 
@@ -1339,7 +1362,11 @@ function SelectedCollection() {
   const {
     selectedRows,
     setSelectedRows,
-    setCollectionForDeposit
+    setCollectionForDeposit,
+    setSelectedRowsCheckedIndex,
+    setSelectedRowsCashIndex,
+    checkCollection,
+    cashCollection
   } = useContext(DepositContext);
 
   const table = useRef<any>(null);
@@ -1366,10 +1393,8 @@ function SelectedCollection() {
   ];
 
 
-  useEffect(() => {
-
-  }, [selectedRows])
-
+  const width = window.innerWidth - 70;
+  const height = window.innerHeight - 200;
   return (
     <div
       style={{
@@ -1379,7 +1404,50 @@ function SelectedCollection() {
         flex: 1,
       }}
     >
-      <Box
+      <UpwardTable
+        isLoading={false}
+        ref={table}
+        rows={selectedRows}
+        column={selectedCollectionColumns}
+        width={width}
+        height={height}
+        dataReadOnly={true}
+        freeze={true}
+        isMultipleSelect={true}
+        onSelectionChange={(selectedRow, rowIndex) => {
+          const rowSelected = selectedRow[0];
+          if (selectedRow.length > 0) {
+            if (rowSelected.Deposit === "Check") {
+              const getRowIndex = checkCollection.findIndex((d: any) => d.Temp_OR === rowSelected.TempOR)
+
+              setSelectedRowsCheckedIndex((d: any) => {
+                const r = d.filter((d: any) => d !== getRowIndex)
+                return r
+              })
+            } else {
+              const getRowIndex = cashCollection.findIndex((d: any) => d.Temp_OR === rowSelected.TempOR)
+              setSelectedRowsCashIndex((d: any) => {
+                console.log(d, rowIndex)
+                const r = d.filter((d: any) => d !== getRowIndex)
+                return r
+              })
+
+            }
+            setSelectedRows((d: any) => {
+              return d.filter((item: any) => item.TempOR !== rowSelected.TempOR);
+            });
+            setCollectionForDeposit((d: any) => {
+              return d.filter((item: any) => item.TempOR !== rowSelected.TempOR);
+            });
+
+          } else {
+
+          }
+        }}
+        inputsearchselector=".manok"
+      />
+
+      {/* <Box
         style={{
           height: `${document.getElementById("concatiner")?.getBoundingClientRect()
             .height
@@ -1422,7 +1490,7 @@ function SelectedCollection() {
             }
           }}
         />
-      </Box>
+      </Box> */}
     </div>
   );
 
@@ -1451,7 +1519,8 @@ function CollectionForDeposit() {
         })
     );
   }, [tableRows, setTotal]);
-
+  const width = 600;
+  const height = window.innerHeight - 200;
   return (
     <div
       style={{
@@ -1464,7 +1533,6 @@ function CollectionForDeposit() {
         style={{
           flexDirection: "column",
           gap: "10px",
-          padding: "15px",
           border: "1px solid #cbd5e1",
           borderRadius: "5px",
           width: "60%",
@@ -1472,7 +1540,41 @@ function CollectionForDeposit() {
         }}
       >
         <legend>Checks</legend>
-        <div style={{ marginTop: "10px", width: "100%", position: "relative" }}>
+
+        <UpwardTable
+          isLoading={false}
+          ref={table}
+          rows={collectionForDeposit}
+          column={[
+            {
+              field: "Bank",
+              headerName: "Bank/Branch",
+              flex: 1,
+              width: 170,
+            },
+            {
+              field: "Check_No",
+              headerName: "Check No",
+              flex: 1,
+              width: 170,
+            },
+            {
+              field: "Amount",
+              headerName: "Amount",
+              flex: 1,
+              width: 300,
+            },
+          ]}
+          width={width}
+          height={height}
+          dataReadOnly={true}
+          freeze={true}
+          isMultipleSelect={true}
+          onSelectionChange={() => { }}
+          inputsearchselector=".manok"
+        />
+
+        {/* <div style={{ marginTop: "10px", width: "100%", position: "relative" }}>
           <Box
             style={{
               height: "530px",
@@ -1517,7 +1619,7 @@ function CollectionForDeposit() {
               showFooterSelectedCount={false}
             />
           </Box>
-        </div>
+        </div> */}
       </fieldset>
       <fieldset
         style={{
@@ -1546,11 +1648,7 @@ function CollectionForDeposit() {
             width: "100%",
           }}
         >
-          <colgroup>
-            <col style={{ width: "140px" }} />
-            <col style={{ width: "100px" }} />
-            <col style={{ width: "140px" }} />
-          </colgroup>
+        
           <thead>
             <tr
               style={{
@@ -1651,7 +1749,7 @@ function TrComponent({ value1, value2, value3, idx }: any) {
   const [input3, setInput3] = useState(value3);
   const InputStyle: CSSProperties = {
     textAlign: "right",
-    height: "28px",
+    height: "20px",
     borderRight: "none",
     borderLeft: "none",
     borderTop: "none",
@@ -1659,13 +1757,16 @@ function TrComponent({ value1, value2, value3, idx }: any) {
     borderBottom: "1px solid #cbd5e1",
     padding: "0 8px",
     width: "100%",
+    fontSize: "11px",
+    margin: "0",
+
   };
 
   return (
-    <tr>
+    <tr style={{ margin: "0", padding: "0 !important" }} >
       <td
         style={{
-          borderRight: "2px solid black",
+          borderRight: "2px solid black", margin: "0", padding: "0"
         }}
       >
         <input
@@ -1674,12 +1775,13 @@ function TrComponent({ value1, value2, value3, idx }: any) {
           value={input1}
           onChange={(e) => setInput1(e.target.value)}
           readOnly={true}
+
         />
       </td>
       <td
         style={{
           borderRight: "2px solid black",
-          overflow: "hidden",
+          overflow: "hidden", margin: 0, padding: "0 !important"
         }}
       >
         <input
@@ -1713,7 +1815,7 @@ function TrComponent({ value1, value2, value3, idx }: any) {
       </td>
       <td
         style={{
-          borderRight: "2px solid black",
+          borderRight: "2px solid black", margin: "0", padding: "0 !important"
         }}
       >
         <input

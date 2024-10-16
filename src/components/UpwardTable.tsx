@@ -211,7 +211,6 @@ const UpwardTable = forwardRef(
       onSelectionChangeRef.current([row], rowIndex);
     };
     const handleKeyDown = (e: any) => {
-      e.stopPropagation()
 
       if (e.key === "ArrowDown") {
         e.preventDefault();
@@ -327,7 +326,7 @@ const UpwardTable = forwardRef(
         }}
         onKeyDown={handleKeyDown}
       >
-        <div >
+        <div>
           <div className="table-frame-color">
             <div
               style={{
@@ -393,7 +392,7 @@ const UpwardTable = forwardRef(
 
                         const timeoutId: any = setTimeout(() => {
                           handleRowDoubleClick(rowIndex, e)
-                        }, 500);
+                        }, 300);
 
                         _setClickTimeout(timeoutId);
 
@@ -402,7 +401,7 @@ const UpwardTable = forwardRef(
                       }}
                       onKeyDown={(e) => {
 
-                        e.stopPropagation()
+                        // e.stopPropagation()
 
                         if (_clickTimeout) {
                           clearTimeout(_clickTimeout);
@@ -411,7 +410,7 @@ const UpwardTable = forwardRef(
 
                         const timeoutId: any = setTimeout(() => {
                           handleRowKeyDown(e)
-                        }, 500);
+                        }, 300);
 
                         _setClickTimeout(timeoutId);
 
