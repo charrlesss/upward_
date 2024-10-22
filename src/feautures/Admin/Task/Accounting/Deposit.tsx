@@ -213,7 +213,6 @@ export default function Deposit() {
     responseDataKey: "banks",
     onSelected: (selectedRowData) => {
       if (selectedRowData.length > 0) {
-        console.log(selectedRowData[0])
         if (refBankAcctCode.current)
           refBankAcctCode.current.value = selectedRowData[0].Account_No
         if (refBankAcctName.current)

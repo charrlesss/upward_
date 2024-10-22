@@ -326,6 +326,7 @@ export default function CashDisbursement() {
       ),
     onSuccess: (res) => {
       const response = res as any;
+      console.log(response)
       const selected = response.data.selectedCashDisbursement;
       const { explanation, dateEntry, refNo, particulars } = selected[0];
       dispatch({
@@ -966,6 +967,7 @@ export default function CashDisbursement() {
     window.open("/dashboard/print", "_blank");
   }
   const isDisableField = state.cashMode === "";
+  
   return (
     <div
       style={{
@@ -1137,17 +1139,17 @@ export default function CashDisbursement() {
             justifyContent: "center",
           }}
         >
-          <p>
-            <span>Total Rows:</span> <strong>{cashDisbursement.length}</strong>
+          <p style={{ margin: 0, padding: 0, color: "black" }}>
+            <span style={{ fontSize: "12px" }}>Total Rows:</span> <strong>{cashDisbursement.length}</strong>
           </p>
-          <p>
-            <span>Total Debit:</span> <strong>{state.totalDebit}</strong>
+          <p style={{ margin: 0, padding: 0, color: "black" }}>
+            <span style={{ fontSize: "12px" }}>Total Debit:</span> <strong>{state.totalDebit}</strong>
           </p>
-          <p>
-            <span>Total Credit:</span> <strong>{state.totalCredit}</strong>
+          <p style={{ margin: 0, padding: 0, color: "black" }}>
+            <span style={{ fontSize: "12px" }}>Total Credit:</span> <strong>{state.totalCredit}</strong>
           </p>
-          <p>
-            <span>Balance:</span>{" "}
+          <p style={{ margin: 0, padding: 0, color: "black" }}>
+            <span style={{ fontSize: "12px" }}>Balance:</span>{" "}
             <strong
               style={{
                 color:

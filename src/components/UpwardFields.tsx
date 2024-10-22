@@ -1,4 +1,4 @@
-import { HtmlHTMLAttributes, InputHTMLAttributes, useId, ReactNode } from "react";
+import { HtmlHTMLAttributes, InputHTMLAttributes, useId, ReactNode, useState } from "react";
 import "../style/design.css";
 
 
@@ -9,8 +9,159 @@ interface TextInputProps {
   icon?: ReactNode; // New prop for the icon
   iconPosition?: 'start' | 'end'; // New prop to choose icon position
   onIconClick?: React.MouseEventHandler<HTMLDivElement> | undefined,
-  disableIcon?:boolean
+  disableIcon?: boolean
 }
+
+
+interface TextFormatedInputProps extends TextInputProps {
+  onChange?: React.ChangeEventHandler<HTMLInputElement> | undefined
+}
+export function TextFormatedInput({
+  input,
+  label,
+  inputRef,
+  icon,
+  iconPosition = 'end', // Default position is 'end'
+  disableIcon = false,
+  onIconClick = (e) => { },
+  onChange = (e) => { }
+}: TextFormatedInputProps) {
+  // const [inputValue, setInputValue] = useState('');
+  const id = useId();
+
+
+  // Helper function to format numbers with commas
+  const formatNumber = (value: string) => {
+    if (!value) return value;
+
+    // Split the value into integer and decimal parts
+    const parts = value.split('.');
+
+    // Add commas to the integer part only
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+    // Join the integer and decimal parts if decimal exists
+    return parts.join('.');
+  };
+
+  // Helper function to remove commas
+  const unformatNumber = (value: string) => {
+    return value.replace(/,/g, '');
+  };
+
+  // Function to ensure two decimal places
+  const ensureTwoDecimals = (value: string) => {
+    // If the value has no decimal part, append '.00'
+    if (!value.includes('.')) {
+      if(value === ''){
+        return   '0.00';
+      }else{
+
+        return value + '.00';
+      }
+    }
+
+    // If the value has one decimal place, append '0'
+    const parts = value.split('.');
+    if (parts[1].length === 1) {
+      return value + '0';
+    }
+
+    // If it already has two decimal places, return as is
+    return value;
+  };
+
+  const handleChange = (e: any) => {
+    let value = e.target.value;
+
+    // Remove commas for processing
+    value = unformatNumber(value);
+
+    // Allow only numbers, commas, and one decimal point
+    const regex = /^-?\d+(,\d{3})*(\.\d*)?$/;
+
+    // Remove commas for processing
+    value = unformatNumber(value);
+
+    // Check if the value is valid
+    if (value === '' || regex.test(value)) {
+      // Set the formatted value back in the input field
+
+      //setInputValue(formatNumber(value));
+      e.target.value = formatNumber(value)
+
+    }
+  };
+
+  const handleBlur = (e: any) => {
+    let value = unformatNumber(e.target.value);
+
+    // Ensure the value has two decimal places
+    value = ensureTwoDecimals(value);
+
+    // Set the value with commas and .00 (if needed)
+    // setInputValue(formatNumber(value));
+    e.target.value = formatNumber(value)
+  };
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        position: 'relative', // Enable absolute positioning for icon
+      }}
+    >
+      <label {...label} htmlFor={id}>
+        {label.title}
+      </label>
+      {icon && iconPosition === 'start' && (
+        <div style={{ position: 'absolute', left: '8px', zIndex: 1 }}>
+          {icon}
+        </div>
+      )}
+      <input
+        ref={inputRef}
+        id={id}
+        {...input}
+        type="text"
+        style={{
+          height: '100%',
+          ...input.style,
+        }}
+        onChange={(e) => {
+          handleChange(e)
+          onChange(e)
+        }}
+        onBlur={(e) => {
+          handleBlur(e)
+        }}  // Add .00 on blur
+
+      />
+      {icon && iconPosition === 'end' && (
+        <div onClick={onIconClick}
+          style={{
+            position: 'absolute',
+            right: '2px',
+            top: "50%",
+            transform: "translateY(-50%)",
+            zIndex: 1,
+            cursor: disableIcon ? "none" : "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "white",
+            pointerEvents: disableIcon ? "none" : "auto"
+          }}>
+          {icon}
+        </div>
+
+      )
+      }
+    </div >
+  );
+}
+
 
 export function TextInput({
   input,
@@ -60,7 +211,7 @@ export function TextInput({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            background:"white",
+            background: "white",
             pointerEvents: disableIcon ? "none" : "auto"
           }}>
           {icon}

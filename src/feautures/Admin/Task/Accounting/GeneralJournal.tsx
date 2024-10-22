@@ -44,28 +44,15 @@ import {
 } from "../../../../components/ModalWithTable";
 import { flushSync } from "react-dom";
 import SaveIcon from "@mui/icons-material/Save";
-
+import { UpwardTable } from "../../../../components/UpwardTable";
+import { SelectInput, TextFormatedInput, TextInput } from "../../../../components/UpwardFields";
+import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import { format } from "date-fns";
 
 const initialState = {
-  sub_refNo: "",
-  refNo: "",
-  dateEntry: new Date(),
-  explanation: "",
 
-  code: "",
-  acctName: "",
-  subAcct: "",
-  subAcctName: "",
-  IDNo: "",
-  ClientName: "",
-  credit: "",
-  debit: "",
-  TC_Code: "",
-  TC_Desc: "",
-  remarks: "",
-  vatType: "NON-VAT",
-  invoice: "",
-  BranchCode: "HO",
   totalDebit: "",
   totalCredit: "",
   totalBalance: "",
@@ -89,69 +76,84 @@ export const reducer = (state: any, action: any) => {
 };
 
 const selectedCollectionColumns = [
-  { field: "code", headerName: "Code", minWidth: 150 },
-  { field: "acctName", headerName: "Account Name", minWidth: 300 },
+  { field: "code", headerName: "Code", width: 150 },
+  { field: "acctName", headerName: "Account Name", width: 300 },
   {
     field: "subAcctName",
     headerName: "Sub Account",
-    flex: 1,
-    minWidth: 170,
+    width: 170,
   },
-  { field: "ClientName", headerName: "Name", flex: 1, minWidth: 300 },
-  { field: "debit", headerName: "Debit", minWidth: 80 },
-  { field: "credit", headerName: "Credit", minWidth: 100 },
+  { field: "ClientName", headerName: "Name", width: 300 },
+  { field: "debit", headerName: "Debit", width: 120, type: "number" },
+  { field: "credit", headerName: "Credit", width: 120, type: "number" },
   // hide
-  { field: "TC_Code", headerName: "TC", minWidth: 100 },
+  { field: "TC_Code", headerName: "TC", width: 120 },
   {
     field: "remarks",
     headerName: "Remarks",
     flex: 1,
-    minWidth: 300,
+    width: 300,
   },
-  { field: "vatType", headerName: "Vat Type", minWidth: 100 },
-  { field: "invoice", headerName: "Invoice", flex: 1, minWidth: 200 },
+  { field: "vatType", headerName: "Vat Type", width: 120 },
+  { field: "invoice", headerName: "Invoice", width: 200 },
   { field: "TempID", headerName: "TempId", hide: true },
-  { field: "IDNo", headerName: "I.D.", flex: 1, minWidth: 300, hide: true },
+  { field: "IDNo", headerName: "I.D.", width: 300, hide: true },
   {
     field: "BranchCode",
     headerName: "BranchCode",
-    flex: 1,
-    minWidth: 300,
+    width: 300,
     hide: true,
   },
 ];
 
 export default function GeneralJournal() {
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
+  const [mode, setMode] = useState<"update" | "add" | "">("")
+
+  const refRefNo = useRef<HTMLInputElement>(null)
+  const _refSubRefNo = useRef<HTMLInputElement>(null)
+  const refDate = useRef<HTMLInputElement>(null)
+  const refExplanation = useRef<HTMLInputElement>(null)
+
+  const refCode = useRef<HTMLInputElement>(null)
+  const refAccountName = useRef<HTMLInputElement>(null)
+  const refSubAccount = useRef<HTMLInputElement>(null)
+  const refName = useRef<HTMLInputElement>(null)
+
+  const refDebit = useRef<HTMLInputElement>(null)
+  const refCredit = useRef<HTMLInputElement>(null)
+  const refTC = useRef<HTMLInputElement>(null)
+  const refRemarks = useRef<HTMLInputElement>(null)
+  const refVat = useRef<HTMLSelectElement>(null)
+  const refInvoice = useRef<HTMLInputElement>(null)
+
+  //client details 
+  const refIDNo = useRef<string>('')
+  const refSubAcct = useRef<string>('')
+
+  //TC details
+  const refTCDesc = useRef<string>('')
+
   const mainId = generateRandomClass();
   const { myAxios, user } = useContext(AuthContext);
   const [state, dispatch] = useReducer(reducer, initialState);
-  const [save, setSave] = useState(false);
   const [openJobs, setOpenJobs] = useState(false);
-  const [hasSelected, setHasSelected] = useState(false);
-  const [searchSelected, setSearchSelected] = useState(false);
-  const [editTransaction, setEditTransaction] = useState({
-    edit: false,
-    updateId: "",
-  });
   const [generalJournal, setGeneralJournal] = useState<GridRowSelectionModel>(
     []
   );
-  const queryClient = useQueryClient();
-  const datePickerRef = useRef<HTMLElement>(null);
-  const reloadIDButtonRef = useRef<HTMLButtonElement>(null);
-  const explanationInputRef = useRef<HTMLInputElement>(null);
 
-  const idInputRef = useRef<HTMLInputElement>(null);
-  const debitInputRef = useRef<HTMLInputElement>(null);
-  const tcInputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
+  const explanationInputRef = useRef<HTMLInputElement>(null);
 
   const chartAccountSearchInput = useRef<HTMLInputElement>(null);
   const IdsSearchInput = useRef<HTMLInputElement>(null);
-  const codeInputRef = useRef<HTMLInputElement>(null);
   const table = useRef<any>(null);
-
-  const invoiceRef = useRef<HTMLInputElement>(null);
   const refParent = useRef<HTMLDivElement>(null);
+
+  const modeAdd = mode === 'add'
+  const modeUpdate = mode === 'update'
+  const modeDefault = mode === ''
+
 
   const {
     isLoading: loadingGeneralJournalGenerator,
@@ -170,7 +172,7 @@ export default function GeneralJournal() {
     refetchOnWindowFocus: false,
     onSuccess: (data) => {
       const response = data as any;
-      if (hasSelected) {
+      if (modeUpdate) {
         dispatch({
           type: "UPDATE_FIELD",
           field: "refNo",
@@ -178,20 +180,24 @@ export default function GeneralJournal() {
         });
         return;
       }
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "refNo",
-        value:
-          response.data.generateGeneralJournalID[0].general_journal_id ?? "",
-      });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "sub_refNo",
-        value:
-          response.data.generateGeneralJournalID[0].general_journal_id ?? "",
-      });
+      wait(100).then(() => {
+        if (refRefNo.current) {
+          refRefNo.current.value = response.data.generateGeneralJournalID[0].general_journal_id
+        }
+        if (_refSubRefNo.current) {
+          _refSubRefNo.current.value = response.data.generateGeneralJournalID[0].general_journal_id
+        }
+        if (refDate.current) {
+          refDate.current.value = format(new Date(), "yyyy-MM-dd")
+        }
+        if (refVat.current) {
+          refVat.current.value = 'Non-VAT'
+        }
+      })
     },
+
   });
+
   const {
     mutate: addGeneralJournalMutate,
     isLoading: loadingGeneralJournalMutate,
@@ -211,15 +217,12 @@ export default function GeneralJournal() {
       const response = res as any;
       if (response.data.success) {
         queryClient.invalidateQueries("search-general-journal");
-        setSave(false);
-        setHasSelected(false);
+
         setNewStateValue(dispatch, initialState);
         refetchGeneralJournalGenerator();
         setGeneralJournal([]);
-        setEditTransaction({
-          edit: false,
-          updateId: "",
-        });
+        setMode('')
+
         return Swal.fire({
           position: "center",
           icon: "success",
@@ -247,8 +250,9 @@ export default function GeneralJournal() {
       const response = res as any;
       setGeneralJournal([]);
       setGeneralJournal(response.data.jobs);
-      setSave(true);
       setOpenJobs(false);
+      setMode('')
+
     },
   });
   const {
@@ -270,15 +274,10 @@ export default function GeneralJournal() {
       const response = res as any;
       if (response.data.success) {
         queryClient.invalidateQueries("search-general-journal");
-        setSave(false);
-        setHasSelected(false);
-        setNewStateValue(dispatch, initialState);
         refetchGeneralJournalGenerator();
         setGeneralJournal([]);
-        setEditTransaction({
-          edit: false,
-          updateId: "",
-        });
+        setMode('')
+
         return Swal.fire({
           position: "center",
           icon: "success",
@@ -314,29 +313,19 @@ export default function GeneralJournal() {
       const selected = response.data.getSelectedSearchGeneralJournal;
       const { explanation, dateEntry, refNo } = selected[0];
 
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "sub_refNo",
-        value: refNo,
-      });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "refNo",
-        value: refNo,
-      });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "dateEntry",
-        value: dateEntry,
-      });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "explanation",
-        value: explanation,
-      });
+      if (refRefNo.current) {
+        refRefNo.current.value = refNo
+      }
+      if (refDate.current) {
+        refDate.current.value = format(new Date(dateEntry), "yyyy-MM-dd")
+      }
+      if (refExplanation.current) {
+        refExplanation.current.value = explanation
+      }
       setGeneralJournal(selected);
     },
   });
+
   const {
     ModalComponent: ModalSearchGeneralJounal,
     openModal: openSearchGeneralJounal,
@@ -363,22 +352,19 @@ export default function GeneralJournal() {
       getSearchSelectedGeneralJournal({
         Source_No: selectedRowData[0].Source_No,
       });
-      setSearchSelected(true);
-      setSave(true);
-      setHasSelected(true);
+      setMode("update")
       setGeneralJournal([]);
-      setEditTransaction({
-        edit: false,
-        updateId: "",
-      });
-
+      table.current.resetTableSelected()
       closeSearchGeneralJounal();
+      resetRow()
     },
     onCloseFunction: (value: any) => {
       dispatch({ type: "UPDATE_FIELD", field: "search", value });
     },
     searchRef: chartAccountSearchInput,
   });
+
+  // fields
   const {
     ModalComponent: ModalChartAccountSearch,
     openModal: openChartAccountSearch,
@@ -402,19 +388,16 @@ export default function GeneralJournal() {
     uniqueId: "Acct_Code",
     responseDataKey: "getChartOfAccount",
     onSelected: (selectedRowData, data) => {
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "code",
-        value: selectedRowData[0].Acct_Code,
-      });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "acctName",
-        value: selectedRowData[0].Acct_Title,
-      });
+      if (refCode.current) {
+        refCode.current.value = selectedRowData[0].Acct_Code
+      }
+      if (refAccountName.current) {
+        refAccountName.current.value = selectedRowData[0].Acct_Title
+      }
+
       closeChartAccountSearch();
       setTimeout(() => {
-        idInputRef.current?.focus();
+        refName.current?.focus();
       }, 250);
     },
     searchRef: chartAccountSearchInput,
@@ -447,32 +430,18 @@ export default function GeneralJournal() {
     uniqueId: "IDNo",
     responseDataKey: "clientsId",
     onSelected: (selectedRowData) => {
-      console.log(selectedRowData);
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "ClientName",
-        value: selectedRowData[0].Name ?? "",
-      });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "IDNo",
-        value: selectedRowData[0].IDNo ?? "",
-      });
-
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "subAcct",
-        value: selectedRowData[0].sub_account,
-      });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "subAcctName",
-        value: selectedRowData[0].ShortName ?? "",
-      });
+      if (refName.current) {
+        refName.current.value = selectedRowData[0].Name ?? ""
+      }
+      if (refSubAccount.current) {
+        refSubAccount.current.value = selectedRowData[0].ShortName ?? ""
+      }
+      refIDNo.current = selectedRowData[0].IDNo
+      refSubAcct.current = selectedRowData[0].sub_account
 
       closePolicyIdClientIdRefId();
       setTimeout(() => {
-        debitInputRef.current?.focus();
+        refDebit.current?.focus();
       }, 200);
     },
     searchRef: IdsSearchInput,
@@ -499,53 +468,25 @@ export default function GeneralJournal() {
     uniqueId: "Code",
     responseDataKey: "getTransactionAccount",
     onSelected: (selectedRowData) => {
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "TC_Code",
-        value: selectedRowData[0].Code,
-      });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "TC_Desc",
-        value: selectedRowData[0].Description,
-      });
+      if (refTC.current) {
+        refTC.current.value = selectedRowData[0].Code
+      }
+      refTCDesc.current = selectedRowData[0].Description
       closeTransactionAccount();
       setTimeout(() => {
-        tcInputRef.current?.focus();
+        refRemarks.current?.focus();
       }, 200);
     },
     searchRef: IdsSearchInput,
   });
-  useEffect(() => {
-    const debit = generalJournal.reduce((a: number, item: any) => {
-      return a + parseFloat(item.debit.replace(/,/g, ""));
-    }, 0);
-    const credit = generalJournal.reduce((a: number, item: any) => {
-      return a + parseFloat(item.credit.replace(/,/g, ""));
-    }, 0);
-    dispatch({
-      type: "UPDATE_FIELD",
-      field: "totalDebit",
-      value: debit.toFixed(2),
-    });
-    dispatch({
-      type: "UPDATE_FIELD",
-      field: "totalCredit",
-      value: credit.toFixed(2),
-    });
-    dispatch({
-      type: "UPDATE_FIELD",
-      field: "totalBalance",
-      value: (debit - credit).toFixed(2),
-    });
-  }, [generalJournal]);
+
+
   const handleInputChange = (e: any) => {
     const { name, value } = e.target;
     dispatch({ type: "UPDATE_FIELD", field: name, value });
   };
-
   function handleOnSave() {
-    if (state.refNo === "") {
+    if (refRefNo.current?.value === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -553,7 +494,7 @@ export default function GeneralJournal() {
         timer: 1500,
       });
     }
-    if (state.explanation === "") {
+    if (refExplanation.current?.value === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -590,15 +531,15 @@ export default function GeneralJournal() {
         wait(300).then(() => { });
       });
     }
-    if (hasSelected) {
+    if (modeUpdate) {
       codeCondfirmationAlert({
         isUpdate: true,
         cb: (userCodeConfirmation) => {
           addGeneralJournalMutate({
-            hasSelected,
-            refNo: state.refNo,
-            dateEntry: state.dateEntry,
-            explanation: state.explanation,
+            hasSelected: true,
+            refNo: refRefNo.current?.value,
+            dateEntry: refDate.current?.value,
+            explanation: refExplanation.current?.value,
             generalJournal,
             userCodeConfirmation,
           });
@@ -608,10 +549,10 @@ export default function GeneralJournal() {
       saveCondfirmationAlert({
         isConfirm: () => {
           addGeneralJournalMutate({
-            hasSelected,
-            refNo: state.refNo,
-            dateEntry: state.dateEntry,
-            explanation: state.explanation,
+            hasSelected: false,
+            refNo: refRefNo.current?.value,
+            dateEntry: refDate.current?.value,
+            explanation: refExplanation.current?.value,
             generalJournal,
           });
         },
@@ -631,8 +572,44 @@ export default function GeneralJournal() {
       },
     });
   }
+  function resetRow() {
+    if (refCode.current) {
+      refCode.current.value = ""
+    }
+    if (refAccountName.current) {
+      refAccountName.current.value = ""
+    }
+    if (refName.current) {
+      refName.current.value = ""
+    }
+    if (refSubAccount.current) {
+      refSubAccount.current.value = ""
+    }
+    if (refTC.current) {
+      refTC.current.value = ""
+    }
+    if (refDebit.current) {
+      refDebit.current.value = ""
+    }
+    if (refCredit.current) {
+      refCredit.current.value = ""
+    }
+    if (refRemarks.current) {
+      refRemarks.current.value = ""
+    }
+    if (refVat.current) {
+      refVat.current.value = ""
+    }
+    if (refInvoice.current) {
+      refInvoice.current.value = ""
+    }
+
+    refTCDesc.current = ""
+    refIDNo.current = ""
+    refSubAcct.current = ""
+  }
   function handleRowSave() {
-    if (state.code === "") {
+    if (refCode.current && refCode.current.value === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -643,18 +620,18 @@ export default function GeneralJournal() {
       });
     }
 
-    if (state.ClientName === "") {
+    if (refName.current && refName.current.value === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
         title: "ID is required!",
         timer: 1500,
       }).then(() => {
-        return openPolicyIdClientIdRefId(state.ClientName);
+        return openPolicyIdClientIdRefId(refName.current?.value);
       });
     }
 
-    if (isNaN(parseFloat(state.debit.replace(/,/g, "")))) {
+    if (refDebit.current && isNaN(parseFloat(refDebit.current?.value.replace(/,/g, "")))) {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -662,7 +639,7 @@ export default function GeneralJournal() {
         timer: 1500,
       });
     }
-    if (isNaN(parseFloat(state.credit.replace(/,/g, "")))) {
+    if (refCredit.current && isNaN(parseFloat(refCredit.current?.value.replace(/,/g, "")))) {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -671,8 +648,10 @@ export default function GeneralJournal() {
       });
     }
     if (
-      parseFloat(state.credit.replace(/,/g, "")) === 0 &&
-      parseFloat(state.debit.replace(/,/g, "")) === 0
+      refDebit.current &&
+      refCredit.current &&
+      parseFloat(refCredit.current?.value.replace(/,/g, "")) === 0 &&
+      parseFloat(refDebit.current?.value.replace(/,/g, "")) === 0
     ) {
       return Swal.fire({
         position: "center",
@@ -681,8 +660,7 @@ export default function GeneralJournal() {
         timer: 1500,
       });
     }
-
-    if (state.TC_Code === "") {
+    if (refTC.current && refTC.current?.value === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -692,8 +670,7 @@ export default function GeneralJournal() {
         return openTransactionAccount(state.TC_Code);
       });
     }
-
-    if (state.code.length >= 200) {
+    if (refCode.current && refCode.current?.value.length >= 200) {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -701,7 +678,7 @@ export default function GeneralJournal() {
         timer: 1500,
       });
     }
-    if (state.ClientName.length >= 200) {
+    if (refName.current && refName.current?.value.length >= 200) {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -709,7 +686,7 @@ export default function GeneralJournal() {
         timer: 1500,
       });
     }
-    if (state.TC_Code.length >= 200) {
+    if (refTC.current && refTC.current.value.length >= 200) {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -717,7 +694,7 @@ export default function GeneralJournal() {
         timer: 1500,
       });
     }
-    if (state.invoice.length >= 200) {
+    if (refInvoice.current && refInvoice.current.value.length >= 200) {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -725,16 +702,6 @@ export default function GeneralJournal() {
         timer: 1500,
       });
     }
-
-    if (state.TC_Code.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "TC is too long!",
-        timer: 1500,
-      });
-    }
-
     function generateID(array: Array<any>) {
       const lastItem = array.length ? array[array.length - 1].TempID : "000";
       const numericPart = (parseInt(lastItem.toString().match(/\d+/)[0]) + 1)
@@ -742,8 +709,52 @@ export default function GeneralJournal() {
         .padStart(3, "0");
       return numericPart;
     }
+    const isUpdate = selectedIndex !== null && selectedIndex >= 0
+    function addEntryVat(Entry1: any, Entry2: any, debitNum: number, creditNum: number) {
+
+
+      let storage = []
+
+      let taxableamt = 0;
+      let inputTax = 0
+      if (creditNum !== 0) {
+        taxableamt = creditNum / 1.12
+        Entry1.credit = taxableamt.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+      } else {
+        taxableamt = debitNum / 1.12
+        Entry1.debit = taxableamt.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+      }
+      storage.push(Entry1)
+      inputTax = taxableamt * 0.12
+      Entry2.code = "1.06.02"
+      Entry2.acctName = "Input Tax"
+      if (parseFloat(Entry1.credit.replace(/,/g, '')) !== 0) {
+        Entry2.credit = inputTax.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+      } else {
+        Entry2.debit = inputTax.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+      }
+      storage.push(Entry2)
+
+      return storage
+
+
+
+    }
+
     Swal.fire({
-      title: editTransaction.edit
+      title: isUpdate
         ? `Are you sure you want to update row?`
         : `Are you sure you want to add new row?`,
       text: "You won't be able to revert this!",
@@ -751,157 +762,100 @@ export default function GeneralJournal() {
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
-      confirmButtonText: editTransaction.edit
+      confirmButtonText: isUpdate
         ? "Yes, update it!"
         : "Yes Add it",
     }).then((result) => {
       if (result.isConfirmed) {
-        setGeneralJournal((d: any) => {
-          if (state.debit === "") {
-            state.debit = "0.00";
+        if (
+          refCode.current &&
+          refAccountName.current &&
+          refSubAccount.current &&
+          refName.current &&
+          refDebit.current &&
+          refCredit.current &&
+          refTC.current &&
+          refRemarks.current &&
+          refVat.current &&
+          refInvoice.current
+        ) {
+
+          const Entry1: any = {
+            code: refCode.current.value,
+            acctName: refAccountName.current.value,
+            subAcctName: refSubAccount.current.value,
+            ClientName: refName.current.value,
+            debit: refDebit.current.value,
+            credit: refCredit.current.value,
+            TC_Code: refTC.current.value,
+            remarks: refRemarks.current.value,
+            vatType: refVat.current.value,
+            invoice: refInvoice.current.value,
+            TempID: generateID(generalJournal),
+            IDNo: refIDNo.current,
+            BranchCode: refSubAcct.current,
           }
-          if (state.credit === "") {
-            state.credit = "0.00";
-          }
 
-          if (state.vatType === "VAT" && state.code !== "1.06.02") {
-            let taxableamt;
-
-            if (parseFloat(state.debit.replace(/,/g, "")) !== 0) {
-              taxableamt = parseFloat(state.debit.replace(/,/g, "")) / 1.12;
-              state.debit = taxableamt.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
+          if (isUpdate) {
+            if (refVat.current?.value === "VAT" && refCode.current?.value !== "1.06.02") {
+              setGeneralJournal((d: any) => {
+                d = d.filter(
+                  (_: any, index: number) => index !== selectedIndex
+                );
+                return d
               });
             } else {
-              taxableamt = parseFloat(state.credit.replace(/,/g, "")) / 1.12;
-              state.credit = taxableamt.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
+              setGeneralJournal((d: any) => {
+                d = d.map(
+                  (item: any, index: number) => {
+                    if (index === selectedIndex) {
+                      item = Entry1
+                    }
+                    return item
+                  }
+                );
+                return d
               });
+
             }
-
-            const credit = parseFloat(
-              state.credit.toString().replace(/,/g, "")
-            ).toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            });
-            const debit = parseFloat(
-              state.debit.toString().replace(/,/g, "")
-            ).toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            });
-
-            state.credit = credit;
-            state.debit = debit;
-
-            if (editTransaction.edit) {
-              d = d.map((item: any) => {
-                if (editTransaction.updateId === item.TempID) {
-                  item = {
-                    ...item,
-                    ...state,
-                  };
-                }
-                return item;
-              });
-            } else {
-              d = [
-                ...d,
-                {
-                  ...state,
-                  TempID: generateID(d),
-                },
-              ];
-            }
-
-            let inputtax = taxableamt * 0.12;
-
-            if (parseFloat(state.debit.toString().replace(/,/g, "")) !== 0) {
-              state.debit = inputtax.toFixed(2);
-            } else {
-              state.credit = inputtax.toFixed(2);
-            }
-            d = [
-              ...d,
-              {
-                ...state,
-                code: "1.06.02",
-
-                acctName: "Input Tax",
-                TempID: generateID(d),
-              },
-            ];
           } else {
-
-            const credit = parseFloat(
-              state.credit.toString().replace(/,/g, "")
-            ).toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            });
-            const debit = parseFloat(
-              state.debit.toString().replace(/,/g, "")
-            ).toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            });
-
-            state.credit = credit;
-            state.debit = debit;
-
-            if (editTransaction.edit) {
-              const newD = d.map((item: any) => {
-                if (editTransaction.updateId === item.TempID) {
-                  item = {
-                    ...item,
-                    ...state,
-                  };
-                }
-                return item;
-              });
-              return newD;
+            if (refVat.current?.value !== "VAT" && refCode.current?.value !== "1.06.02") {
+              setGeneralJournal((_generalJournal: any) => [..._generalJournal, Entry1])
             }
-            d = [
-              ...d,
-              {
-                ...state,
-                TempID: generateID(d),
-              },
-            ];
           }
-          return d;
-        });
 
-        const resetValue = {
-          code: "",
-          acctName: "",
-          subAcct: "",
-          subAcctName: "",
-          IDNo: "",
-          ClientName: "",
-          credit: "",
-          debit: "",
-          TC_Code: "",
-          TC_Desc: "",
-          remarks: "",
-          vatType: "NON-VAT",
-          invoice: "",
-        };
-        setNewStateValue(dispatch, { ...state, ...resetValue });
-        setEditTransaction({ edit: false, updateId: "" });
-        wait(300).then(() => {
-          codeInputRef.current?.focus();
-        });
+          const debitNum = parseFloat(refDebit.current.value.replace(/,/g, ''))
+          const creditNum = parseFloat(refCredit.current.value.replace(/,/g, ''))
+          const Entry2: any = {
+            code: refCode.current.value,
+            acctName: refAccountName.current.value,
+            subAcctName: refSubAccount.current.value,
+            ClientName: refName.current.value,
+            debit: refDebit.current.value,
+            credit: refCredit.current.value,
+            TC_Code: refTC.current.value,
+            remarks: refRemarks.current.value,
+            vatType: refVat.current.value,
+            invoice: refInvoice.current.value,
+            TempID: generateID(generalJournal),
+            IDNo: refIDNo.current,
+            BranchCode: refSubAcct.current
+          }
+
+          if (refVat.current?.value === "VAT" && refCode.current?.value !== "1.06.02") {
+            const storage = addEntryVat(Entry1, Entry2, debitNum, creditNum)
+            setGeneralJournal((_generalJournal: any) => [..._generalJournal, ...storage])
+          }
+          resetRow()
+          table.current.resetTableSelected()
+        }
+
       }
     });
   }
   function handleJobs() {
     setOpenJobs((d) => !d);
   }
-
   function handleClickPrint() {
     flushSync(() => {
       localStorage.removeItem("printString");
@@ -931,6 +885,40 @@ export default function GeneralJournal() {
     });
     window.open("/dashboard/print", "_blank");
   }
+
+  function onCancel() {
+    setMode("")
+    refetchGeneralJournalGenerator();
+    setGeneralJournal([]);
+
+  }
+  const width = window.innerWidth - 60;
+  const height = window.innerHeight - 200;
+
+  useEffect(() => {
+    const debit = generalJournal.reduce((a: number, item: any) => {
+      return a + parseFloat(item.debit.replace(/,/g, ""));
+    }, 0);
+    const credit = generalJournal.reduce((a: number, item: any) => {
+      return a + parseFloat(item.credit.replace(/,/g, ""));
+    }, 0);
+    dispatch({
+      type: "UPDATE_FIELD",
+      field: "totalDebit",
+      value: debit.toFixed(2),
+    });
+    dispatch({
+      type: "UPDATE_FIELD",
+      field: "totalCredit",
+      value: credit.toFixed(2),
+    });
+    dispatch({
+      type: "UPDATE_FIELD",
+      field: "totalBalance",
+      value: (debit - credit).toFixed(2),
+    });
+  }, [generalJournal]);
+
 
   return (
     <div
@@ -973,9 +961,17 @@ export default function GeneralJournal() {
                     (e.target as HTMLInputElement).value
                   );
                 }
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  const datagridview = document.querySelector(
+                    ".grid-container"
+                  ) as HTMLDivElement;
+                  datagridview.focus();
+                }
               }}
               InputProps={{
                 style: { height: "27px", fontSize: "14px" },
+                className: "manok"
               }}
               sx={{
                 width: "300px",
@@ -985,7 +981,7 @@ export default function GeneralJournal() {
               }}
             />
           )}
-          {!save && (
+          {modeDefault && (
             <Button
               sx={{
                 height: "30px",
@@ -995,7 +991,7 @@ export default function GeneralJournal() {
               startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
               id="entry-header-save-button"
               onClick={() => {
-                setSave(true);
+                setMode('add')
               }}
               color="primary"
             >
@@ -1008,14 +1004,14 @@ export default function GeneralJournal() {
               fontSize: "11px",
             }}
             loading={loadingGeneralJournalMutate}
-            disabled={!save}
+            disabled={modeDefault}
             onClick={handleOnSave}
             color="success"
             variant="contained"
           >
             Save
           </LoadingButton>
-          {save && (
+          {(modeAdd || modeUpdate) && (
             <LoadingButton
               sx={{
                 height: "30px",
@@ -1035,20 +1031,11 @@ export default function GeneralJournal() {
                   confirmButtonText: "Yes, cancel it!",
                 }).then((result) => {
                   if (result.isConfirmed) {
-                    setSave(false);
-                    setHasSelected(false);
-                    setNewStateValue(dispatch, initialState);
-                    refetchGeneralJournalGenerator();
-                    setGeneralJournal([]);
-                    setSearchSelected(false);
-                    setEditTransaction({
-                      edit: false,
-                      updateId: "",
-                    });
+                    onCancel()
                   }
                 });
               }}
-              disabled={!save || loadingGeneralJournalMutate}
+              disabled={modeDefault}
             >
               Cancel
             </LoadingButton>
@@ -1064,7 +1051,7 @@ export default function GeneralJournal() {
             }}
             onClick={handleVoid}
             loading={loadingVoidGeneralJournalMutate}
-            disabled={!searchSelected}
+            disabled={modeDefault}
             variant="contained"
             startIcon={<NotInterestedIcon sx={{ width: 20, height: 20 }} />}
           >
@@ -1087,7 +1074,7 @@ export default function GeneralJournal() {
             Jobs
           </LoadingButton>
           <Button
-            disabled={!searchSelected}
+            disabled={modeDefault}
             id="basic-button"
             aria-haspopup="true"
             onClick={handleClickPrint}
@@ -1116,17 +1103,17 @@ export default function GeneralJournal() {
             justifyContent: "center",
           }}
         >
-          <p>
-            <span>Total Rows:</span> <strong>{generalJournal.length}</strong>
+          <p style={{ margin: 0, padding: 0, color: "black" }}>
+            <span style={{ fontSize: "12px" }}>Total Rows:</span> <strong>{generalJournal.length}</strong>
           </p>
-          <p>
-            <span>Total Debit:</span> <strong>{state.totalDebit}</strong>
+          <p style={{ margin: 0, padding: 0, color: "black" }}>
+            <span style={{ fontSize: "12px" }}>Total Debit:</span> <strong>{state.totalDebit}</strong>
           </p>
-          <p>
-            <span>Total Credit:</span> <strong>{state.totalCredit}</strong>
+          <p style={{ margin: 0, padding: 0, color: "black" }}>
+            <span style={{ fontSize: "12px" }}>Total Credit:</span> <strong>{state.totalCredit}</strong>
           </p>
-          <p>
-            <span>Balance:</span>{" "}
+          <p style={{ margin: 0, padding: 0, color: "black" }}>
+            <span style={{ fontSize: "12px" }}>Balance:</span>{" "}
             <strong
               style={{
                 color:
@@ -1140,133 +1127,71 @@ export default function GeneralJournal() {
           </p>
         </div>
       </div>
-      <fieldset
+      <div
         style={{
-          border: "1px solid #cbd5e1",
-          borderRadius: "5px",
           position: "relative",
           width: "100%",
           height: "auto",
           display: "flex",
           marginTop: "10px",
           gap: "10px",
-          padding: "15px",
+          padding: "5px",
         }}
       >
         {loadingGeneralJournalGenerator ? (
           <LoadingButton loading={loadingGeneralJournalGenerator} />
         ) : (
-          <FormControl
-            variant="outlined"
-            size="small"
-            disabled={!save || hasSelected}
-            sx={{
-              width: "170px",
-              ".MuiFormLabel-root": {
-                fontSize: "14px",
-                background: "white",
-                zIndex: 99,
-                padding: "0 3px",
-              },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-          >
-            <InputLabel htmlFor="return-check-id-field">Ref. No.</InputLabel>
-            <OutlinedInput
-              sx={{
-                height: "27px",
-                fontSize: "14px",
-              }}
-              disabled={!save || hasSelected}
-              fullWidth
-              label="Ref. No."
-              name="refNo"
-              value={state.refNo}
-              onChange={handleInputChange}
-              onKeyDown={(e) => {
-                if (e.code === "Enter" || e.code === "NumpadEnter") {
-                  e.preventDefault();
-                  return handleOnSave();
-                }
-              }}
-              readOnly={user?.department !== "UCSMI"}
-              id="return-check-id-field"
-              endAdornment={
-                <InputAdornment position="end">
-                  <IconButton
-                    ref={reloadIDButtonRef}
-                    disabled={!save || hasSelected}
-                    aria-label="search-client"
-                    color="secondary"
-                    edge="end"
-                    onClick={() => {
-                      refetchGeneralJournalGenerator();
-                    }}
-                  >
-                    <RestartAltIcon />
-                  </IconButton>
-                </InputAdornment>
-              }
-            />
-          </FormControl>
-        )}
-        <CustomDatePicker
-          fullWidth={false}
-          disabled={!save}
-          label="Date"
-          onChange={(value: any) => {
-            dispatch({
-              type: "UPDATE_FIELD",
-              field: "dateEntry",
-              value: value,
-            });
-          }}
-          value={new Date(state.dateEntry)}
-          onKeyDown={(e: any) => {
-            if (e.code === "Enter" || e.code === "NumpadEnter") {
-              const timeout = setTimeout(() => {
-                datePickerRef.current?.querySelector("button")?.click();
-                clearTimeout(timeout);
-              }, 150);
-            }
-          }}
-          datePickerRef={datePickerRef}
-          textField={{
-            InputLabelProps: {
+          <TextInput
+            label={{
+              title: "Ref. No. : ",
               style: {
-                fontSize: "14px",
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "70px",
               },
+            }}
+            input={{
+              disabled: modeDefault || modeUpdate,
+              type: "text",
+              style: { width: "190px" },
+              readOnly: true
+            }}
+            inputRef={refRefNo}
+          />
+        )}
+        <TextInput
+          label={{
+            title: "Date : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "50px",
             },
-            InputProps: {
-              style: { height: "27px", fontSize: "14px" },
+          }}
+          input={{
+            disabled: modeDefault,
+            type: "date",
+            style: { width: "190px" },
+          }}
+          inputRef={refDate}
+        />
+        <TextInput
+          label={{
+            title: "Explanation : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "90px",
             },
           }}
+          input={{
+            disabled: modeDefault,
+            type: "text",
+            style: { width: "600px" },
+          }}
+          inputRef={refExplanation}
         />
-        <TextField
-          disabled={!save}
-          label="Explanation"
-          size="small"
-          name="explanation"
-          value={state.explanation}
-          onChange={handleInputChange}
-          onKeyDown={(e) => {
-            if (e.code === "Enter" || e.code === "NumpadEnter") {
-              e.preventDefault();
-              return handleOnSave();
-            }
-          }}
-          inputRef={explanationInputRef}
-          InputProps={{
-            style: { height: "27px", fontSize: "14px" },
-          }}
-          sx={{
-            flex: 1,
-            height: "27px",
-            ".MuiFormLabel-root": { fontSize: "14px" },
-            ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-          }}
-        />
-      </fieldset>
+      </div>
       <fieldset
         style={{
           border: "1px solid #cbd5e1",
@@ -1288,170 +1213,111 @@ export default function GeneralJournal() {
           {isLoadingChartAccountSearch ? (
             <LoadingButton loading={isLoadingChartAccountSearch} />
           ) : (
-            <FormControl
-              variant="outlined"
-              size="small"
-              disabled={!save}
-              sx={{
-                width: "150px",
-                ".MuiFormLabel-root": {
-                  fontSize: "14px",
-                  background: "white",
-                  zIndex: 99,
-                  padding: "0 3px",
+            <TextInput
+              label={{
+                title: "Code : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "70px",
                 },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
               }}
-            >
-              <InputLabel htmlFor="chart-account-id">Code</InputLabel>
-              <OutlinedInput
-                sx={{
-                  height: "27px",
-                  fontSize: "14px",
-                }}
-                readOnly={true}
-                inputRef={codeInputRef}
-                disabled={!save}
-                fullWidth
-                label="Code"
-                name="code"
-                value={state.code}
-                onChange={handleInputChange}
-                onKeyDown={(e: any) => {
-                  if (e.code === "Enter" || e.code === "NumpadEnter") {
+              input={{
+                disabled: modeDefault,
+                type: "text",
+                style: { width: "190px" },
+                onKeyDown: (e) => {
+                  if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
-                    return openChartAccountSearch(state.code);
+                    if (refCode.current) {
+                      openChartAccountSearch(refCode.current.value)
+                    }
                   }
-                  keyBoardSelectionTable(e, mainId, e.target as HTMLElement);
-                }}
-                id="chart-account-id"
-                endAdornment={
-                  <InputAdornment position="end">
-                    <IconButton
-                      ref={reloadIDButtonRef}
-                      disabled={!save}
-                      aria-label="search-client"
-                      color="secondary"
-                      edge="end"
-                      onClick={() => {
-                        openChartAccountSearch(state.code);
-                      }}
-                    >
-                      <RestartAltIcon />
-                    </IconButton>
-                  </InputAdornment>
                 }
-              />
-            </FormControl>
+              }}
+              inputRef={refCode}
+              icon={<SupervisorAccountIcon sx={{ fontSize: "18px", color: modeDefault ? "gray" : "black" }} />}
+              onIconClick={(e) => {
+                e.preventDefault()
+                if (refCode.current) {
+                  openChartAccountSearch(refCode.current.value)
+                }
+              }}
+              disableIcon={modeDefault}
+            />
           )}
 
-          <TextField
-            disabled={!save}
-            label="Account Name"
-            size="small"
-            name="acctName"
-            value={state.acctName}
-            onChange={handleInputChange}
-            onKeyDown={(e) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                e.preventDefault();
-                return handleRowSave();
-              }
-              keyBoardSelectionTable(e, mainId, e.target as HTMLElement);
+          <TextInput
+            label={{
+              title: "Account Name : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "100px",
+              },
             }}
-            InputProps={{
-              readOnly: true,
-              style: { height: "27px", fontSize: "14px" },
+            input={{
+              disabled: modeDefault,
+              type: "text",
+              style: { width: "190px" },
+              readOnly: true
             }}
-            sx={{
-              flex: 1,
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
+            inputRef={refAccountName}
           />
 
-          <TextField
-            disabled={!save}
-            label="Sub Account"
-            size="small"
-            name="subAcctName"
-            value={state.subAcctName}
-            onChange={handleInputChange}
-            onKeyDown={(e) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                e.preventDefault();
-                return handleRowSave();
-              }
-              keyBoardSelectionTable(e, mainId, e.target as HTMLElement);
+          <TextInput
+            label={{
+              title: "Sub Account : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "100px",
+              },
             }}
-            InputProps={{
-              readOnly: true,
-              style: { height: "27px", fontSize: "14px" },
+            input={{
+              disabled: modeDefault,
+              type: "text",
+              style: { width: "190px" },
+              readOnly: true
             }}
-            sx={{
-              flex: 1,
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
+            inputRef={refSubAccount}
           />
+
           {isLoadingPolicyIdClientIdRefId ? (
             <LoadingButton loading={isLoadingPolicyIdClientIdRefId} />
           ) : (
-            <FormControl
-              variant="outlined"
-              size="small"
-              disabled={!save}
-              sx={{
-                flex: 1,
-                ".MuiFormLabel-root": {
-                  fontSize: "14px",
-                  background: "white",
-                  zIndex: 99,
-                  padding: "0 3px",
+            <TextInput
+              label={{
+                title: "I.D : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "70px",
                 },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
               }}
-            >
-              <InputLabel htmlFor="policy-client-ref-id">I.D</InputLabel>
-              <OutlinedInput
-                sx={{
-                  height: "27px",
-                  fontSize: "14px",
-                }}
-                readOnly={true}
-                inputRef={idInputRef}
-                disabled={!save}
-                fullWidth
-                label="I.D"
-                name="ClientName"
-                value={state.ClientName}
-                onChange={handleInputChange}
-                onKeyDown={(e: any) => {
-                  if (e.code === "Enter" || e.code === "NumpadEnter") {
+              input={{
+                disabled: modeDefault,
+                type: "text",
+                style: { width: "300px" },
+                onKeyDown: (e) => {
+                  if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
-                    return openPolicyIdClientIdRefId(state.ClientName);
+                    if (refName.current) {
+                      openPolicyIdClientIdRefId(refName.current.value)
+                    }
                   }
-                  keyBoardSelectionTable(e, mainId, e.target as HTMLElement);
-                }}
-                id="policy-client-ref-id"
-                endAdornment={
-                  <InputAdornment position="end">
-                    <IconButton
-                      ref={reloadIDButtonRef}
-                      disabled={!save}
-                      aria-label="search-client"
-                      color="secondary"
-                      edge="end"
-                      onClick={() => {
-                        openPolicyIdClientIdRefId(state.ClientName);
-                      }}
-                    >
-                      <RestartAltIcon />
-                    </IconButton>
-                  </InputAdornment>
                 }
-              />
-            </FormControl>
+              }}
+              inputRef={refName}
+              icon={<AccountCircleIcon sx={{ fontSize: "18px", color: modeDefault ? "gray" : "black" }} />}
+              onIconClick={(e) => {
+                e.preventDefault()
+                if (refName.current) {
+                  openPolicyIdClientIdRefId(refName.current.value)
+                }
+              }}
+              disableIcon={modeDefault}
+            />
           )}
         </div>
         <div
@@ -1461,224 +1327,143 @@ export default function GeneralJournal() {
             marginTop: "10px",
           }}
         >
-          <TextField
-            disabled={!save}
-            label="Debit"
-            size="small"
-            name="debit"
-            value={state.debit}
-            onChange={handleInputChange}
-            onKeyDown={(e) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                e.preventDefault();
-                handleInputChange({
-                  target: { name: "credit", value: "0.00" },
-                });
-
-                return handleRowSave();
-              }
-              keyBoardSelectionTable(e, mainId, e.target as HTMLElement);
+          <TextFormatedInput
+            label={{
+              title: "Debit : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "70px",
+              },
             }}
-            onBlur={() => {
-              dispatch({
-                type: "UPDATE_FIELD",
-                field: "debit",
-                value: parseFloat(
-                  (state.debit === "" ? "0" : state.debit).replace(/,/g, "")
-                ).toFixed(2),
-              });
+            input={{
+              disabled: modeDefault,
+              type: "text",
+              style: { width: "190px" },
             }}
-            InputProps={{
-              inputComponent: NumericFormatCustom as any,
-              inputRef: debitInputRef,
-              style: { height: "27px", fontSize: "14px" },
-            }}
-            sx={{
-              width: "160px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
+            inputRef={refDebit}
           />
-          <TextField
-            disabled={!save}
-            label="Credit"
-            size="small"
-            name="credit"
-            value={state.credit}
-            onChange={handleInputChange}
-            onKeyDown={(e) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                e.preventDefault();
-                return handleRowSave();
-              }
-              keyBoardSelectionTable(e, mainId, e.target as HTMLElement);
+          <TextFormatedInput
+            label={{
+              title: "Credit : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "100px",
+              },
             }}
-            InputProps={{
-              inputComponent: NumericFormatCustom as any,
-              style: { height: "27px", fontSize: "14px" },
+            input={{
+              disabled: modeDefault,
+              type: "text",
+              style: { width: "190px" },
             }}
-            sx={{
-              width: "160px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-            onBlur={(e) => {
-              e.preventDefault();
-              dispatch({
-                type: "UPDATE_FIELD",
-                field: "credit",
-                value: parseFloat(
-                  (state.credit === "" ? "0" : state.credit).replace(/,/g, "")
-                ).toFixed(2),
-              });
-            }}
+            inputRef={refCredit}
           />
           {isLoadingTransactionAccount ? (
             <LoadingButton loading={isLoadingTransactionAccount} />
           ) : (
-            <FormControl
-              variant="outlined"
-              size="small"
-              disabled={!save}
-              sx={{
-                width: "130px",
-                ".MuiFormLabel-root": {
-                  fontSize: "14px",
-                  background: "white",
-                  zIndex: 99,
-                  padding: "0 3px",
+            <TextInput
+              label={{
+                title: "TC : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
                 },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
               }}
-            >
-              <InputLabel htmlFor="tc">TC</InputLabel>
-              <OutlinedInput
-                sx={{
-                  height: "27px",
-                  fontSize: "14px",
-                }}
-                readOnly={true}
-                fullWidth
-                label="TC"
-                name="TC_Code"
-                value={state.TC_Code}
-                onChange={handleInputChange}
-                onKeyDown={(e: any) => {
-                  if (e.code === "Enter" || e.code === "NumpadEnter") {
+              input={{
+                disabled: modeDefault,
+                type: "text",
+                style: { width: "190px" },
+                onKeyDown: (e) => {
+                  if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
-                    return openTransactionAccount(state.TC_Code);
+                    if (refTC.current) {
+                      openTransactionAccount(refTC.current.value)
+                    }
                   }
-                  keyBoardSelectionTable(e, mainId, e.target as HTMLElement);
-                }}
-                id="tc"
-                endAdornment={
-                  <InputAdornment position="end">
-                    <IconButton
-                      ref={reloadIDButtonRef}
-                      disabled={!save}
-                      aria-label="search-client"
-                      color="secondary"
-                      edge="end"
-                      onClick={() => {
-                        openTransactionAccount(state.TC_Code);
-                      }}
-                    >
-                      <RestartAltIcon />
-                    </IconButton>
-                  </InputAdornment>
                 }
-              />
-            </FormControl>
-          )}
-          <TextField
-            disabled={!save}
-            label="Remarks"
-            size="small"
-            name="remarks"
-            value={state.remarks}
-            onChange={handleInputChange}
-            onKeyDown={(e) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                e.preventDefault();
-                return handleRowSave();
-              }
-              keyBoardSelectionTable(e, mainId, e.target as HTMLElement);
-            }}
-            InputProps={{
-              style: { height: "27px", fontSize: "14px" },
-              inputRef: tcInputRef,
-            }}
-            sx={{
-              flex: 1,
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-          />
-          <FormControl
-            size="small"
-            variant="outlined"
-            sx={{
-              width: "120px",
-              ".MuiFormLabel-root": {
-                fontSize: "14px",
-                background: "white",
-                zIndex: 99,
-                padding: "0 3px",
-              },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-          >
-            <InputLabel id="label-selection-reason">Vat Type</InputLabel>
-            <Select
-              labelId="label-selection-reason"
-              value={state.vatType}
-              name="vatType"
-              onChange={handleInputChange}
-              autoWidth
-              sx={{
-                height: "27px",
-                fontSize: "14px",
               }}
-              disabled={!save}
-            >
-              <MenuItem value=""></MenuItem>
-              <MenuItem value="VAT">VAT</MenuItem>
-              <MenuItem value={"NON-VAT"}>NON-VAT</MenuItem>
-            </Select>
-          </FormControl>
-          <TextField
-            disabled={!save}
-            label="OR/Invoice No."
-            size="small"
-            name="invoice"
-            value={state.invoice}
-            onChange={handleInputChange}
-            onKeyDown={(e) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                e.preventDefault();
-                return handleRowSave();
-              }
-              keyBoardSelectionTable(e, mainId, e.target as HTMLElement);
+              inputRef={refTC}
+              icon={<AccountBalanceWalletIcon sx={{ fontSize: "18px", color: modeDefault ? "gray" : "black" }} />}
+              onIconClick={(e) => {
+                e.preventDefault()
+                if (refTC.current) {
+                  openTransactionAccount(refTC.current.value)
+                }
+              }}
+              disableIcon={modeDefault}
+            />
+          )}
+          <TextInput
+            label={{
+              title: "Remarks : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "70px",
+              },
             }}
-            InputProps={{
-              style: { height: "27px", fontSize: "14px" },
-              inputRef: invoiceRef,
+            input={{
+              disabled: modeDefault,
+              type: "text",
+              style: { width: "300px" },
             }}
-            sx={{
-              width: "200px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+            inputRef={refRemarks}
+          />
+        </div>
+        <div style={{
+          display: "flex",
+          gap: "10px",
+          marginTop: "10px",
+        }}>
+
+          <SelectInput
+            label={{
+              title: "Vat Type : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "70px",
+              },
             }}
+            selectRef={refVat}
+            select={{
+              disabled: modeDefault,
+              style: { width: "190px", height: "22px" },
+            }}
+            datasource={[
+              { key: "VAT" },
+              { key: "Non-VAT" },
+            ]}
+            values={"key"}
+            display={"key"}
+          />
+          <TextInput
+            label={{
+              title: "OR/Invoice No. : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "100px",
+              },
+            }}
+            input={{
+              disabled: modeDefault,
+              type: "text",
+              style: { width: "300px" },
+            }}
+            inputRef={refInvoice}
           />
 
           <Button
-            disabled={!save}
+            disabled={modeDefault}
             sx={{
-              height: "27px",
+              height: "22px",
               fontSize: "11px",
             }}
             variant="contained"
-            startIcon={<SaveIcon sx={{ fontSize: "18px" }} />}
+            startIcon={<SaveIcon sx={{ fontSize: "12px", }} />}
             onClick={() => {
               handleRowSave()
             }}
@@ -1698,88 +1483,85 @@ export default function GeneralJournal() {
           flex: 1,
         }}
       >
-        <Box
-          style={{
-            height: `${refParent.current?.getBoundingClientRect().height}px`,
-            width: "100%",
-            overflowX: "scroll",
-            position: "absolute",
-          }}
-        >
-          <Table
-            ref={table}
-            isLoading={
-              loadingGeneralJournalMutate ||
-              loadingGetSearchSelectedGeneralJournal ||
-              isLoadingJob
-            }
-            columns={selectedCollectionColumns}
-            rows={generalJournal}
-            table_id={"TempID"}
-            isSingleSelection={true}
-            isRowFreeze={false}
-            dataSelection={(selection, data, code) => {
-              const rowSelected = data.filter(
-                (item: any) => item.TempID === selection[0]
-              )[0];
-              if (rowSelected === undefined || rowSelected.length <= 0) {
-                const resetValue = {
-                  code: "",
-                  acctName: "",
-                  subAcct: "",
-                  subAcctName: "",
-                  IDNo: "",
-                  ClientName: "",
-                  credit: "",
-                  debit: "",
-                  TC_Code: "",
-                  TC_Desc: "",
-                  remarks: "",
-                  vatType: "NON-VAT",
-                  invoice: "",
-                };
-                setNewStateValue(dispatch, { ...state, ...resetValue });
-                setEditTransaction({ edit: false, updateId: "" });
-                return;
+        <UpwardTable
+          isLoading={loadingGeneralJournalMutate ||
+            loadingGetSearchSelectedGeneralJournal ||
+            isLoadingJob}
+          ref={table}
+          rows={generalJournal}
+          column={selectedCollectionColumns}
+          width={width}
+          height={height}
+          dataReadOnly={true}
+          onSelectionChange={(selected, rowIndex) => {
+            const rowSelected = selected[0]
+            if (selected.length > 0) {
+              refIDNo.current = rowSelected.IDNo
+              refSubAcct.current = rowSelected.BranchCode
+
+              if (refName.current) {
+                refName.current.value = rowSelected.ClientName
               }
-              if (code === "Delete" || code === "Backspace") {
-                Swal.fire({
-                  title: `Are you sure you want to delete?`,
-                  text: "You won't be able to revert this!",
-                  icon: "warning",
-                  showCancelButton: true,
-                  confirmButtonColor: "#3085d6",
-                  cancelButtonColor: "#d33",
-                  confirmButtonText: "Yes, delete it!",
-                }).then((result) => {
-                  if (result.isConfirmed) {
-                    return setGeneralJournal((d) => {
-                      return d.filter(
-                        (items: any) => items.TempID !== selection[0]
-                      );
-                    });
-                  }
-                });
-                return;
+              if (refTC.current) {
+                refTC.current.value = rowSelected.TC_Code
+              }
+              if (refAccountName.current) {
+                refAccountName.current.value = rowSelected.acctName
+              }
+              if (refCode.current) {
+                refCode.current.value = rowSelected.code
+              }
+              if (refCredit.current) {
+                refCredit.current.value = rowSelected.credit
+              }
+              if (refDebit.current) {
+                refDebit.current.value = rowSelected.debit
+              }
+              if (refInvoice.current) {
+                refInvoice.current.value = rowSelected.invoice
+              }
+              if (refRemarks.current) {
+                refRemarks.current.value = rowSelected.remarks
+              }
+              if (refSubAccount.current) {
+                refSubAccount.current.value = rowSelected.subAcctName
+              }
+              if (refVat.current) {
+                refVat.current.value = rowSelected.vatType
               }
 
-              setNewStateValue(dispatch, {
-                ...rowSelected,
-                sub_refNo: state.sub_refNo,
-                refNo: state.refNo,
-                dateEntry: state.dateEntry,
-                explanation: state.explanation,
-                totalDebit: state.totalDebit,
-                totalCredit: state.totalCredit,
-                totalBalance: state.totalBalance,
+              setSelectedIndex(rowIndex)
+            } else {
+              setSelectedIndex(null)
+              resetRow()
+            }
+          }}
+          onKeyDown={(row, key, rowIndex) => {
+            if (key === "Delete" || key === "Backspace") {
+              Swal.fire({
+                title: `Are you sure you want to delete?`,
+                text: "You won't be able to revert this!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, delete it!",
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  return setGeneralJournal((d: any) => {
+                    return d.filter(
+                      (items: any, index: number) => index !== rowIndex
+                    );
+                  });
+                }
               });
-              setEditTransaction({
-                edit: true,
-                updateId: rowSelected.TempID,
-              });
-            }}
-          />
-        </Box>
+              return;
+            }
+          }}
+          inputsearchselector=".manok"
+        />
+
+
       </div>
       <Modal open={openJobs} onClose={() => setOpenJobs(false)}>
         <Box

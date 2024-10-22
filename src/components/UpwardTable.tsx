@@ -18,7 +18,7 @@ interface UpwardTablePropsType {
   height: number;
   dataReadOnly: boolean;
   onSelectionChange?: (row: Array<any>, rowIndex: number) => void;
-  onKeyDown?: (row: Array<any>, key: string) => void;
+  onKeyDown?: (row: Array<any>, key: string , rowIndex: number) => void;
   isMultipleSelect?: boolean;
   freeze?: boolean;
   inputsearchselector?: string;
@@ -286,13 +286,14 @@ const UpwardTable = forwardRef(
         onSelectionChangeRef.current([row], rowIndex);
       } else if (e.key === "Delete" || e.key === "Backspace") {
         if (!isRowSelectable) return;
+        const rowIndex = selectedRows[selectedRows.length - 1];
 
         const selectedRowData = rows.filter((d, idx) =>
           selectedRows.includes(idx)
         );
 
         if (onKeyDownRef?.current) {
-          onKeyDownRef?.current(selectedRowData, e.key);
+          onKeyDownRef?.current(selectedRowData, e.key, rowIndex);
         }
       }
     }
@@ -383,7 +384,7 @@ const UpwardTable = forwardRef(
                       key={rowIndex}
                       onClick={(e) => handleRowClick(rowIndex, e)}
                       onDoubleClick={(e) => {
-                        e.stopPropagation()
+                       // e.stopPropagation()
 
                         if (_clickTimeout) {
                           clearTimeout(_clickTimeout);
@@ -392,7 +393,7 @@ const UpwardTable = forwardRef(
 
                         const timeoutId: any = setTimeout(() => {
                           handleRowDoubleClick(rowIndex, e)
-                        }, 300);
+                        }, 200);
 
                         _setClickTimeout(timeoutId);
 
@@ -410,7 +411,7 @@ const UpwardTable = forwardRef(
 
                         const timeoutId: any = setTimeout(() => {
                           handleRowKeyDown(e)
-                        }, 300);
+                        }, 200);
 
                         _setClickTimeout(timeoutId);
 
