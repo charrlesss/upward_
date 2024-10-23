@@ -82,7 +82,6 @@ export  default function LandingPage() {
           })
           .then((res) => {
             console.log(res);
-            window.location.href = "myreport://run";
           });
         if (res.data.user.is_master_admin) {
           navigate("/master-admin-dashboard");
