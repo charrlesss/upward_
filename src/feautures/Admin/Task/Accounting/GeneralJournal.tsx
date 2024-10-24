@@ -869,7 +869,6 @@ export default function GeneralJournal() {
         JSON.stringify([
           { datakey: "code", header: "ACCT #", width: "100px" },
           { datakey: "acctName", header: "ACCOUNT TITLE", width: "200px" },
-          { datakey: "subAcctName", header: "SUB ACCOUNT", width: "120px" },
           { datakey: "IDNo", header: "ID NO.", width: "150px" },
           { datakey: "ClientName", header: "IDENTITY", width: "200px" },
           { datakey: "debit", header: "DEBIT", width: "100px" },

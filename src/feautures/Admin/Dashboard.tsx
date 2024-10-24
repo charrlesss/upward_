@@ -6,6 +6,32 @@ import { AuthContext } from "../../components/AuthContext";
 import "../../style/dashboard.css";
 import _ from "lodash";
 
+const comColumn = [
+  { field: "code", headerName: "Code", width: 150 },
+  { field: "code", headerName: "Code", width: 150 },
+  { field: "code", headerName: "Code", width: 150 },
+  { field: "code", headerName: "Code", width: 150 },
+  { field: "code", headerName: "Code", width: 150 },
+]
+
+function groupByHeader(arr:Array<any>) {
+  // Create an object to hold groups by 'header'
+  const grouped = arr.reduce((acc, obj) => {
+    const key = obj.header;
+    // If this header doesn't exist in acc, initialize it with an empty array
+    if (!acc[key]) {
+      acc[key] = [];
+    }
+    // Push the current object into the appropriate group
+    acc[key].push(obj);
+    return acc;
+  }, {});
+
+  // Convert the grouped object to an array of arrays
+  return Object.values(grouped);
+}
+
+
 
 export default function Dashboard() {
   const { user } = useContext(AuthContext);
@@ -17,6 +43,10 @@ export default function Dashboard() {
           Authorization: `Bearer ${user?.accessToken}`,
         },
       }),
+      onSuccess(data) {
+        const rr = groupByHeader(data.data.renewal)
+        console.log(rr)
+      },
   });
   const { data: claimsData, isLoading: isLoadingClaims } = useQuery({
     queryKey: "claims-notice",
@@ -27,7 +57,7 @@ export default function Dashboard() {
         },
       }),
   });
-   // style={{border:"1px solid red" ,height:"500px" ,background:"#D3D3D3"}}
+  // style={{border:"1px solid red" ,height:"500px" ,background:"#D3D3D3"}}
   return (
     <div id="main" >
 

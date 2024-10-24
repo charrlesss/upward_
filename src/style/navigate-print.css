@@ -13,3 +13,21 @@ body{
     font-family: "Roboto", sans-serif;
 
 }
+
+
+
+
+.table {
+    display: table;
+    width: 100%; /* Table takes full width */
+    border-collapse: collapse; /* Collapses borders */
+}
+.row {
+    display: table-row; /* Acts like a table row */
+}
+.cell {
+    display: table-cell; /* Acts like a table cell */
+    overflow: hidden; /* Prevents overflow */
+    white-space: nowrap; /* Prevents text wrapping */
+    text-overflow: ellipsis; /* Adds ellipsis for overflow text */
+}

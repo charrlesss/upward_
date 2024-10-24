@@ -76,7 +76,7 @@ export const useUpwardTableModal = ({
   };
 
   const width = 460;
-  const height = 560;
+  const height = 530;
 
   useEffect(() => {
     if (show && parentRef.current) {

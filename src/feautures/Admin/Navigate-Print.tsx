@@ -59,7 +59,7 @@ export default function NavigatePrint() {
         setRows(rows);
       }
       if (module.current === "general-journal") {
-        const rows = chunkArray(data.current, 13);
+        const rows = chunkArray(data.current, 32);
         setRows(rows);
       }
       if (module.current === "warehouse") {
@@ -700,7 +700,7 @@ export default function NavigatePrint() {
                                             fontWeight: "bold",
                                             textAlign:
                                               itm.datakey === "debit" ||
-                                              itm.datakey === "credit"
+                                                itm.datakey === "credit"
                                                 ? "right"
                                                 : "left",
                                             padding: "5px 0px",
@@ -740,7 +740,7 @@ export default function NavigatePrint() {
                                                   fontWeight: "bold",
                                                   textAlign:
                                                     colItem.datakey ===
-                                                    "Check_Amnt"
+                                                      "Check_Amnt"
                                                       ? "right"
                                                       : "left",
                                                   height: "35px",
@@ -1140,7 +1140,7 @@ export default function NavigatePrint() {
                                     fontWeight: "bold",
                                     textAlign:
                                       itm.datakey === "SEQ" ||
-                                      itm.datakey === "Check_Amnt"
+                                        itm.datakey === "Check_Amnt"
                                         ? "center"
                                         : "left",
                                     paddingLeft:
@@ -1191,21 +1191,21 @@ export default function NavigatePrint() {
                                           width: `${colItem.width} !important`,
                                           textAlign:
                                             colItem.datakey === "Check_Amnt" ||
-                                            colItem.datakey === "SEQ"
+                                              colItem.datakey === "SEQ"
                                               ? "right"
                                               : "left",
                                         }}
                                       >
                                         {colItem.datakey === "Check_Amnt"
                                           ? parseFloat(
-                                              rowItem[colItem.datakey]
-                                                .toString()
-                                                .replace(/,/g, "")
-                                            ).toLocaleString("en-US", {
-                                              style: "decimal",
-                                              minimumFractionDigits: 2,
-                                              maximumFractionDigits: 2,
-                                            })
+                                            rowItem[colItem.datakey]
+                                              .toString()
+                                              .replace(/,/g, "")
+                                          ).toLocaleString("en-US", {
+                                            style: "decimal",
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2,
+                                          })
                                           : rowItem[colItem.datakey]}
                                       </td>
                                     );
@@ -3247,7 +3247,7 @@ export default function NavigatePrint() {
                                   fontWeight: "bold",
                                   textAlign:
                                     itm.datakey === "debit" ||
-                                    itm.datakey === "credit"
+                                      itm.datakey === "credit"
                                       ? "right"
                                       : "left",
                                   padding: "5px 0px",
@@ -3278,7 +3278,7 @@ export default function NavigatePrint() {
                                         width: `${colItem.width} !important`,
                                         textAlign:
                                           colItem.datakey === "debit" ||
-                                          colItem.datakey === "credit"
+                                            colItem.datakey === "credit"
                                             ? "right"
                                             : "left",
                                         padding: "5px",
@@ -3551,7 +3551,7 @@ export default function NavigatePrint() {
                   boxShadow: "10px 10px 34px -6px rgba(0,0,0,0.44)",
                   width: localStorage.getItem("paper-width") as string,
                   height: localStorage.getItem("paper-height") as string,
-                  padding: "50px 20px",
+                  padding: "50px",
                 }}
                 key={RowNumber}
               >
@@ -3560,222 +3560,153 @@ export default function NavigatePrint() {
                     flex: 1,
                   }}
                 >
+                  {RowNumber === 0 && <>
+                    {title.current
+                      .split("\n")
+                      .map((t: string, idx: number) => {
+                        return (
+                          <div className="row " key={idx}>
+                            <div className="cell " style={{ fontSize: "18px", width: "100%", fontWeight: "bold" }}>{t}</div>
+                          </div>
+                        );
+                      })}
+
+                    <div style={{ height: "10px", }}></div>
+                    <div style={{ fontWeight: "bold" }}>Journal Voucher</div> </>}
                   {
-                    <table
-                      style={{ width: "100%", borderCollapse: "collapse" }}
-                    >
-                      <thead>
-                        {title.current
-                          .split("\n")
-                          .map((t: string, idx: number) => {
-                            return (
-                              <tr key={idx}>
-                                <th
+                    <div className="table">
+                      {RowNumber === 0 &&
+                        <>
+                          <div className="row" style={{ height: "30px" }}></div>
+                          <div className="row" style={{ borderTop: "1px solid black", borderBottom: "1px solid black" }}>
+                            {column.current.map((itm: any, rowIdx: number) => {
+                              return (
+                                <div className="cell" key={rowIdx}
                                   style={{
-                                    fontSize: "22px",
+                                    width: itm.width,
+                                    fontSize: "12px",
                                     fontWeight: "bold",
-                                    textAlign: "left",
+                                    textAlign:
+                                      itm.datakey === "debit" ||
+                                        itm.datakey === "credit"
+                                        ? "right"
+                                        : "left",
+                                    padding: "5px 0px",
                                   }}
-                                  colSpan={column.current.length}
-                                >
-                                  {t}
-                                </th>
-                              </tr>
-                            );
-                          })}
-                        <tr>
-                          <td
-                            style={{ fontSize: "16px", fontWeight: "bold" }}
-                            colSpan={column.current.length}
-                          >
-                            Journal Voucher
-                          </td>
-                        </tr>
-                        <tr style={{ height: "40px" }}></tr>
-                        <tr
+                                >{itm.header}</div>
+                              );
+                            })}
+                          </div>
+                          <div style={{ height: "10px", }}></div>
+                        </>
+                      }
+                      {pages.map((rowItem: any, rowIdx: number) => {
+                        return (
+                          <div key={rowIdx} className="row" >
+                            {column.current.map(
+                              (colItem: any, colIdx: number) => {
+                                return (
+                                  <div
+                                    className={`cell  `}
+                                    key={colIdx}
+                                    style={{
+                                      fontSize: "11px",
+                                      fontWeight: "bold",
+                                      width: `${colItem.width}`,
+                                      textAlign:
+                                        colItem.datakey === "debit" ||
+                                          colItem.datakey === "credit"
+                                          ? "right"
+                                          : "left",
+                                      padding: "5px",
+                                    }}
+                                  >
+                                    {rowItem[colItem.datakey]}
+                                  </div>
+                                );
+                              }
+                            )}
+                          </div>
+
+                        );
+                      })}
+                    </div>
+
+                  }
+
+                  {RowNumber === row.length - 1 && (
+                    <>
+                      <div className="row" style={{ height: "15px", }}></div>
+                      <div style={{ border: "1px solid black" }}></div>
+                      <div className="row">
+                        <div
+                          className="cell"
                           style={{
-                            borderBottom: "1px solid black",
-                            borderTop: "1px solid black",
+                            padding: "10px",
+                            textAlign: "right",
+                            paddingRight: "50px",
+                            fontWeight: "bold",
+                            fontSize: "11px",
+                            width: "600px"
                           }}
                         >
-                          {column.current.map((itm: any, rowIdx: number) => {
-                            return (
-                              <th
-                                style={{
-                                  width: itm.width,
-                                  fontSize: "12px",
-                                  fontWeight: "bold",
-                                  textAlign:
-                                    itm.datakey === "debit" ||
-                                    itm.datakey === "credit"
-                                      ? "right"
-                                      : "left",
-                                  padding: "5px 0px",
-                                }}
-                                key={rowIdx}
-                              >
-                                {itm.header}
-                              </th>
-                            );
+                          TOTAL:
+                        </div>
+                        <div
+                          className="cell"
+                          style={{
+                            fontSize: "11px",
+                            fontWeight: "bold",
+                            textAlign: "right",
+                            padding: "10px",
+                            width: "80px"
+                          }}
+                        >
+                          {data.current
+                            .reduce((d: number, aa: any) => {
+                              return (
+                                d +
+                                parseFloat(
+                                  aa.debit.toString().replace(/,/g, "")
+                                )
+                              );
+                            }, 0)
+                            .toLocaleString("en-US", {
+                              style: "decimal",
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                        </div>
+                        <div
+                          className="cell"
+                          style={{
+                            fontSize: "11px",
+                            fontWeight: "bold",
+                            textAlign: "right",
+                            width: "80px"
+                          }}
+                        >
+                          {totalCredit.toLocaleString("en-US", {
+                            style: "decimal",
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
                           })}
-                        </tr>
-                        <tr style={{ height: "5px" }}></tr>
-                      </thead>
-                      <tbody>
-                        <tr style={{ height: "10px" }}></tr>
-                        {pages.map((rowItem: any, rowIdx: number) => {
-                          return (
-                            <tr key={rowIdx}>
-                              {column.current.map(
-                                (colItem: any, colIdx: number) => {
-                                  return (
-                                    <td
-                                      className={`editable not-looking  `}
-                                      key={colIdx}
-                                      style={{
-                                        fontSize: "12px",
-                                        fontWeight: "bold",
-                                        width: `${colItem.width} !important`,
-                                        textAlign:
-                                          colItem.datakey === "debit" ||
-                                          colItem.datakey === "credit"
-                                            ? "right"
-                                            : "left",
-                                        padding: "5px",
-                                      }}
-                                    >
-                                      {rowItem[colItem.datakey]}
-                                    </td>
-                                  );
-                                }
-                              )}
-                            </tr>
-                          );
-                        })}
-                        {RowNumber === row.length - 1 && (
-                          <>
-                            <tr style={{ height: "10px" }}></tr>
-                            <tr
-                              style={{
-                                borderTop: "1px solid black",
-                                borderBottom: "1px solid black",
-                              }}
-                            >
-                              <td
-                                colSpan={5}
-                                style={{
-                                  padding: "10px",
-                                  textAlign: "right",
-                                  paddingRight: "50px",
-                                  fontWeight: "bold",
-                                  fontSize: "12px",
-                                }}
-                              >
-                                TOTAL:
-                              </td>
-                              <td
-                                style={{
-                                  fontSize: "12px",
-                                  fontWeight: "bold",
-                                  textAlign: "right",
-                                  padding: "10px",
-                                }}
-                              >
-                                {data.current
-                                  .reduce((d: number, aa: any) => {
-                                    return (
-                                      d +
-                                      parseFloat(
-                                        aa.debit.toString().replace(/,/g, "")
-                                      )
-                                    );
-                                  }, 0)
-                                  .toLocaleString("en-US", {
-                                    style: "decimal",
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2,
-                                  })}
-                              </td>
-                              <td
-                                style={{
-                                  fontSize: "12px",
-                                  fontWeight: "bold",
-                                  textAlign: "right",
-                                }}
-                              >
-                                {totalCredit.toLocaleString("en-US", {
-                                  style: "decimal",
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })}
-                              </td>
-                            </tr>
-                            <tr style={{ borderBottom: "1px solid black" }}>
-                              <td
-                                colSpan={column.current.length}
-                                style={{
-                                  fontSize: "12px",
-                                  fontWeight: "bold",
-                                  textAlign: "center",
-                                  padding: "5px 0",
-                                }}
-                              >
-                                EXPLANATION
-                              </td>
-                            </tr>
-                            <tr>
-                              <td
-                                colSpan={column.current.length}
-                                style={{
-                                  fontSize: "12px",
-                                  fontWeight: "bold",
-                                  textAlign: "left",
-                                  padding: "5px 0",
-                                }}
-                              >
-                                {state.current.explanation}
-                              </td>
-                            </tr>
-                            <tr style={{ height: "15px" }}></tr>
-                            <tr>
-                              <td
-                                colSpan={2}
-                                style={{
-                                  fontSize: "12px",
-                                  fontWeight: "bold",
-                                  textAlign: "left",
-                                  padding: "5px 0",
-                                }}
-                              >
-                                Prepared By:
-                              </td>
-                              <td
-                                colSpan={2}
-                                style={{
-                                  fontSize: "12px",
-                                  fontWeight: "bold",
-                                  textAlign: "left",
-                                  padding: "5px 0",
-                                }}
-                              >
-                                Checked By:
-                              </td>
-                              <td
-                                style={{
-                                  fontSize: "12px",
-                                  fontWeight: "bold",
-                                  textAlign: "center",
-                                  padding: "5px 0",
-                                }}
-                              >
-                                Approved By:
-                              </td>
-                            </tr>
-                          </>
-                        )}
-                      </tbody>
-                    </table>
-                  }
+                        </div>
+                      </div>
+                      <div style={{ border: "1px solid black" }}></div>
+                      <div style={{ textAlign: "center", width: "100%", fontSize: "11px", fontWeight: "bold", padding: "3px 0" }}>EXPLANATION</div>
+                      <div style={{ border: "1px solid black" }}></div>
+                      <div style={{ width: "100%", fontSize: "11px", fontWeight: "bold", padding: "3px 0" }}>loadingGetSearc qwehSelectedGeneralJournqw ql qweqwwee</div>
+                      <div style={{ height: "50px", }}></div>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <div style={{ fontSize: "11px", borderTop: "1px solid black", width: "200px", textAlign: "center", padding: "2px 0", fontWeight: "bold" }}>Prepared By</div>
+                        <div style={{ fontSize: "11px", borderTop: "1px solid black", width: "200px", textAlign: "center", padding: "2px 0", fontWeight: "bold" }}>Checked By</div>
+                        <div style={{ fontSize: "11px", borderTop: "1px solid black", width: "200px", textAlign: "center", padding: "2px 0", fontWeight: "bold" }}>Approved By</div>
+                      </div>
+
+                    </>
+                  )}
+
                 </div>
                 <div
                   className="footer"
@@ -3878,7 +3809,7 @@ export default function NavigatePrint() {
                               fontWeight: "bold",
                               textAlign:
                                 itm.datakey === "debit" ||
-                                itm.datakey === "credit"
+                                  itm.datakey === "credit"
                                   ? "right"
                                   : "left",
                               padding: "5px 0px",
@@ -3984,6 +3915,6 @@ export default function NavigatePrint() {
           </div>
         )}
       </div>
-    </main>
+    </main >
   );
 }
