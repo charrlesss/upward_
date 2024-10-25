@@ -127,15 +127,33 @@ export default function NavigatePrint() {
                 font-weight: 700;
                 padding: 0px 5px;
               }
-           
+
+                  ${module.current === "general-journal" ||
+          module.current === "cash-disbursement" ?
+          ` .table {
+                      display: table;
+                      width: 100%; 
+                      border-collapse: collapse; 
+                  }
+                  .row {
+                      display: table-row; 
+                  }
+                  .cell {
+                      display: table-cell; 
+                      overflow: hidden; 
+                      white-space: nowrap; 
+                      text-overflow: ellipsis; 
+                  }` : ''
+
+        }
+      
             </style> 
           </svg>`
       );
     return dataURL;
   }
   const captureElement = async (page: Element) => {
-    console.log(page.querySelector("table"));
-    const imgData = convertElementToURL(page.querySelector("table") as Element);
+    const imgData = convertElementToURL(page.querySelector("#table") as Element);
     const tableIamge = '<img src="' + imgData + '" />';
     const content = `<div class="content">${tableIamge}</div>`;
     const footer = page.querySelector(".footer") as Element;
@@ -252,6 +270,20 @@ export default function NavigatePrint() {
 
     return c.toUpperCase().trim();
   }
+
+  function toNumber(amount: string) {
+    const rr = amount.replace(/,/g, '')
+    if (isNaN(parseFloat(rr))) {
+      return '0.00'
+    }
+    return parseFloat(rr).toLocaleString("en-US", {
+      style: "decimal",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+  }
+
+  console.log(state)
 
   return (
     <main
@@ -588,6 +620,9 @@ export default function NavigatePrint() {
                           width: 100vw;
                           box-shadow: none;
                       }
+
+                 
+
                       .content{
                           flex: 1;
                           block-size: fit-content;
@@ -995,6 +1030,7 @@ export default function NavigatePrint() {
                   >
                     {
                       <table
+                        id="table"
                         style={{ width: "100%", borderCollapse: "collapse" }}
                       >
                         <thead>
@@ -3013,11 +3049,6 @@ export default function NavigatePrint() {
         )}
         {module.current === "cash-disbursement" &&
           row?.map((pages, RowNumber) => {
-            const totalCredit = parseFloat(
-              data.current.reduce((a: number, itm: any) => {
-                return a + parseFloat(itm.credit.toString().replace(/,/g, ""));
-              }, 0)
-            );
 
             return (
               <div
@@ -3029,312 +3060,184 @@ export default function NavigatePrint() {
                   boxShadow: "10px 10px 34px -6px rgba(0,0,0,0.44)",
                   width: localStorage.getItem("paper-width") as string,
                   height: localStorage.getItem("paper-height") as string,
-                  padding: "50px 20px",
+                  padding: "50px",
                 }}
                 key={RowNumber}
               >
                 <div
+                  id="table"
                   style={{
                     flex: 1,
                   }}
                 >
-                  {
-                    <table
-                      style={{ width: "100%", borderCollapse: "collapse" }}
-                    >
-                      <thead>
-                        {title.current
-                          .split("\n")
-                          .map((t: string, idx: number) => {
-                            return (
-                              <tr key={idx}>
-                                <th
-                                  style={{
-                                    fontSize: "22px",
-                                    fontWeight: "bold",
-                                    textAlign: "center",
-                                  }}
-                                  colSpan={column.current.length}
-                                >
-                                  {t}
-                                </th>
-                              </tr>
-                            );
-                          })}
-                        <tr>
-                          <td
-                            colSpan={column.current.length}
-                            style={{
-                              textAlign: "center",
-                              fontSize: "13px",
-                              fontWeight: "bold",
-                            }}
-                          >
-                            1197 Edsa Katipunan Quezon City
-                          </td>
-                        </tr>
-                        <tr>
-                          <td
-                            colSpan={column.current.length}
-                            style={{
-                              textAlign: "center",
-                              fontSize: "13px",
-                              fontWeight: "bold",
-                            }}
-                          >
-                            Tel 374-0472 / 441-8977-78
-                          </td>
-                        </tr>
-                        <tr style={{ height: "50px" }}></tr>
-                        <tr>
-                          <td
-                            colSpan={3}
-                            style={{
-                              textAlign: "left",
-                              fontSize: "12px",
-                              fontWeight: "bold",
-                            }}
-                          >
-                            Pay to: {"         " + data.current[0].Payto}
-                          </td>
-                          <td
-                            colSpan={3}
-                            style={{
-                              textAlign: "left",
-                              fontSize: "12px",
-                              fontWeight: "bold",
-                            }}
-                          >
-                            CV No: {"         " + data.current[0].refNo}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td
-                            colSpan={3}
-                            style={{
-                              textAlign: "left",
-                              fontSize: "12px",
-                              fontWeight: "bold",
-                            }}
-                          >
-                            Address: {"         " + data.current[0].address}
-                          </td>
-                          <td
-                            colSpan={2}
-                            style={{
-                              textAlign: "left",
-                              fontSize: "12px",
-                              fontWeight: "bold",
-                            }}
-                          >
-                            Date Created:{" "}
-                            {"         " +
-                              format(
-                                new Date(data.current[0].dateEntry),
-                                "dd-MMMM-yyyy"
-                              )}
-                          </td>
-                        </tr>
-                        <tr style={{ height: "15px" }}></tr>
-                        <tr>
-                          <td
-                            colSpan={3}
-                            style={{
-                              textAlign: "center",
-                              fontSize: "12px",
-                              fontWeight: "bold",
-                              padding: "5px 0px",
-                              borderTop: "1px solid black",
-                              borderBottom: "1px solid black",
-                            }}
-                          >
-                            PARTICULARs
-                          </td>
-                          <td
-                            colSpan={2}
-                            style={{
-                              borderLeft: "1px solid black",
-                              borderTop: "1px solid black",
-                              textAlign: "right",
-                              fontSize: "12px",
-                              fontWeight: "bold",
-                              borderBottom: "1px solid black",
-                            }}
-                          >
-                            AMOUNT
-                          </td>
-                        </tr>
-                        <tr>
-                          <td
-                            colSpan={3}
-                            style={{
-                              textAlign: "left",
-                              fontSize: "12px",
-                              fontWeight: "bold",
-                              height: "auto",
-                              padding: "5px 0",
-                            }}
-                          >
-                            <span>
-                              In Payment for : &nbsp;&nbsp;&nbsp;&nbsp;
-                            </span>
-                            <span>{state.current.particulars}</span>
-                          </td>
-                          <td
-                            colSpan={2}
-                            style={{
-                              borderLeft: "1px solid black",
-                            }}
-                          ></td>
-                        </tr>
-                        <tr>
-                          <td
-                            colSpan={3}
-                            style={{
-                              textAlign: "left",
-                              fontSize: "12px",
-                              fontWeight: "bold",
-                              height: "auto",
-                            }}
-                          >
-                            <span>
-                              Printed Check : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                            </span>
-                            <span>
-                              {
-                                data.current.filter(
-                                  (itm: any) =>
-                                    itm.checkNo !== "" &&
-                                    itm.checkNo !== null &&
-                                    itm.checkNo !== undefined
-                                )[0].checkNo
-                              }
-                            </span>
-                          </td>
-                          <td
-                            colSpan={2}
-                            style={{
-                              textAlign: "left",
-                              fontSize: "12px",
-                              fontWeight: "bold",
-                              borderLeft: "1px solid black",
-                            }}
-                          >
-                            <span style={{ width: "100px", padding: "0 10px" }}>
-                              PHP
-                            </span>
-                            <span style={{ float: "right" }}>
-                              {totalCredit.toLocaleString("en-US", {
-                                style: "decimal",
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })}
-                            </span>
-                          </td>
-                        </tr>
-                        <tr
+                  {title.current
+                    .split("\n")
+                    .map((t: string, idx: number) => {
+                      return (
+                        <div key={idx}>
+                          <div style={{ fontSize: "22px", width: "100%", fontWeight: "bold", textAlign: "center" }}>{t}</div>
+                        </div>
+                      );
+                    })}
+
+                  <div style={{ height: "10px" }}></div>
+                  <div style={{ fontWeight: "bold", fontSize: "12px", textAlign: "center" }}>1197 Edsa Katipunan Quezon City</div>
+                  <div style={{ fontWeight: "bold", fontSize: "12px", textAlign: "center" }}> Tel 374-0472 / 441-8977-78</div>
+                  <div style={{ height: "20px" }}></div>
+                  <div style={{ width: "100%", display: "flex" }}>
+                    <div style={{ width: "100%", display: "flex" }}>
+                      <div style={{ width: "60px", fontSize: "12px", fontWeight: "bold", }}>Pay to:</div>
+                      <div style={{ width: "280px", fontSize: "12px", fontWeight: "bold", height: "auto", wordWrap: "break-word" }}>{state.current[0].PayeeName}</div>
+                    </div>
+                    <div style={{ width: "100%", display: "flex" }}>
+                      <div style={{ width: "230px", boxSizing: "border-box", paddingRight: "20px", textAlign: "right", fontSize: "12px", fontWeight: "bold", }}>CV No.:</div>
+                      <div style={{ width: "125px", fontSize: "12px", fontWeight: "bold" }}>{state.current[0].CvNo}</div>
+                    </div>
+                  </div>
+                  <div style={{ height: "5px" }}></div>
+                  <div style={{ width: "100%", display: "flex" }}>
+                    <div style={{ width: "100%", display: "flex" }}>
+                      <div style={{ width: "60px", fontSize: "12px", fontWeight: "bold", }}>Address:</div>
+                      <div style={{ width: "280px", fontSize: "12px", fontWeight: "bold", height: "auto", wordWrap: "break-word" }}>{state.current[0].Address}</div>
+                    </div>
+                    <div style={{ width: "100%", display: "flex" }}>
+                      <div style={{ width: "230px", boxSizing: "border-box", paddingRight: "32px", textAlign: "right", fontSize: "12px", fontWeight: "bold", }}>Date:</div>
+                      <div style={{ width: "125px", fontSize: "12px", fontWeight: "bold" }}>{format(new Date(state.current[0].DateApproved), 'MM/dd/yyyy')}</div>
+                    </div>
+                  </div>
+                  <div style={{ height: "20px" }}></div>
+                  <div style={{ display: "flex", borderBottom: "1px solid black" }}>
+                    <div style={{ display: "flex", flex: 1, flexDirection: "column", }}>
+                      <div style={{ paddingBottom: "10px", height: "auto", borderTop: "1px solid black", display: 'flex', flexDirection: "column", maxHeight: "200px" }}>
+                        <div style={{ fontSize: "12px", fontWeight: "bold", height: "20px", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", borderBottom: "1px solid black" }}>PARTICULARS</div>
+                        <div style={{ flex: 1, }}>
+                          <div style={{ height: "5px" }}></div>
+                          <div style={{ width: "100%", display: "flex" }}>
+                            <div style={{ width: "100px", fontSize: "12px", fontWeight: "bold", }}>In Payment for :</div>
+                            <div style={{ width: "400px", fontSize: "12px", fontWeight: "bold", height: "auto", wordWrap: "break-word" }}>{state.current[0].Particulars}</div>
+                          </div>
+                          <div style={{ height: "5px" }}></div>
+                          <div style={{ width: "100%", display: "flex" }}>
+                            <div style={{ width: "100px", fontSize: "12px", fontWeight: "bold", }}>Printed Check :</div>
+                            <div style={{ width: "400px", fontSize: "12px", fontWeight: "bold", height: "auto", wordWrap: "break-word" }}>{`${state.current[0].CheckNo} (${format(new Date(state.current[0].CheckDate), 'MM/dd/yyyy')})`}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", width: "200px", flexDirection: "column", }}>
+                      <div style={{ paddingBottom: "10px", height: "100%", borderTop: "1px solid black", borderLeft: "1px solid black", display: 'flex', flexDirection: "column", maxHeight: "200px" }}>
+                        <div style={{ fontSize: "12px", fontWeight: "bold", textAlign: "center", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", width: "100%", borderBottom: "1px solid black" }}>AMOUNT</div>
+                        <div style={{ flex: 1, display: "flex", alignItems: "flex-end", justifyContent: "center", textAlign: "center" }}>
+                          <div style={{ width: "100%", display: "flex", }}>
+                            <div style={{ width: "80px", fontSize: "12px", fontWeight: "bold", textAlign: "right", paddingRight: "10px" }}>PHP</div>
+                            <div style={{ width: "100px", fontSize: "12px", fontWeight: "bold", textAlign: "left" }}>{toNumber(state.current[0].Credit)}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ width: "100%" }}>
+                    {column.current.map((colItem: any, colIdx: number) => {
+                      return (
+                        <div
+                          className={`cell  `}
+                          key={colIdx}
                           style={{
                             borderBottom: "1px solid black",
-                            borderTop: "1px solid black",
+                            fontSize: "12px",
+                            fontWeight: "bold",
+                            width: `${colItem.width} `,
+                            minWidth: `${colItem.width} `,
+                            maxWidth: `${colItem.width} `,
+                            textAlign:
+                              colItem.datakey === "debit" ||
+                                colItem.datakey === "credit"
+                                ? "right"
+                                : "left",
+                            padding: "5px",
                           }}
                         >
-                          {column.current.map((itm: any, rowIdx: number) => {
+                          {colItem.header}
+                        </div>
+                      );
+                    }
+                    )}
+                  </div>
+                  {pages.map((rowItem: any, rowIdx: number) => {
+                    return (
+                      <div className="row" key={rowIdx}>
+                        {column.current.map(
+                          (colItem: any, colIdx: number) => {
                             return (
-                              <th
+                              <div
+                                className={`cell  `}
+                                key={colIdx}
                                 style={{
-                                  width: itm.width,
-                                  fontSize: "12px",
+                                  fontSize: "11px",
                                   fontWeight: "bold",
+                                  width: `${colItem.width} `,
+                                  minWidth: `${colItem.width} `,
+                                  maxWidth: `${colItem.width} `,
                                   textAlign:
-                                    itm.datakey === "debit" ||
-                                      itm.datakey === "credit"
+                                    colItem.datakey === "Debit" ||
+                                      colItem.datakey === "Credit"
                                       ? "right"
                                       : "left",
-                                  padding: "5px 0px",
+                                  padding: "5px",
                                 }}
-                                key={rowIdx}
                               >
-                                {itm.header}
-                              </th>
+                                {colItem.datakey === 'Credit' || colItem.datakey === 'Debit' ? toNumber(rowItem[colItem.datakey]) : rowItem[colItem.datakey]}
+                              </div>
                             );
-                          })}
-                        </tr>
-                        <tr style={{ height: "5px" }}></tr>
-                      </thead>
-                      <tbody>
-                        <tr style={{ height: "10px" }}></tr>
-                        {pages.map((rowItem: any, rowIdx: number) => {
-                          return (
-                            <tr key={rowIdx}>
-                              {column.current.map(
-                                (colItem: any, colIdx: number) => {
-                                  return (
-                                    <td
-                                      className={`editable not-looking  `}
-                                      key={colIdx}
-                                      style={{
-                                        fontSize: "12px",
-                                        fontWeight: "bold",
-                                        width: `${colItem.width} !important`,
-                                        textAlign:
-                                          colItem.datakey === "debit" ||
-                                            colItem.datakey === "credit"
-                                            ? "right"
-                                            : "left",
-                                        padding: "5px",
-                                      }}
-                                    >
-                                      {rowItem[colItem.datakey]}
-                                    </td>
-                                  );
-                                }
-                              )}
-                            </tr>
-                          );
-                        })}
-                        <tr style={{ height: "10px" }}></tr>
-                        <tr style={{ borderTop: "1px solid black" }}>
-                          <td colSpan={3} style={{ padding: "10px" }}></td>
-                          <td
-                            style={{
-                              fontSize: "12px",
-                              fontWeight: "bold",
-                              textAlign: "right",
-                              padding: "10px",
-                            }}
-                          >
-                            {data.current
-                              .reduce((d: number, aa: any) => {
-                                return (
-                                  d +
-                                  parseFloat(
-                                    aa.debit.toString().replace(/,/g, "")
-                                  )
-                                );
-                              }, 0)
-                              .toLocaleString("en-US", {
-                                style: "decimal",
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })}
-                          </td>
-                          <td
-                            style={{
-                              fontSize: "12px",
-                              fontWeight: "bold",
-                              textAlign: "right",
-                            }}
-                          >
-                            {totalCredit.toLocaleString("en-US", {
-                              style: "decimal",
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  }
+                          }
+                        )}
+                      </div>
+                    );
+                  })}
+                  <div style={{ height: "10px", borderBottom: "1px solid black" }}></div>
+                  <div className="roow">
+                    <div className={`cell  `} style={{
+                      width: `200px`,
+                      minWidth: `200px`,
+                      maxWidth: `200px`,
+                      padding: "5px",
+                    }}></div>
+                    <div className={`cell  `} style={{
+                      width: `277px `,
+                      minWidth: `277px `,
+                      maxWidth: `277px `,
+                      padding: "5px",
+
+                    }}></div>
+                    <div
+                      className={`cell  `}
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: "bold",
+                        width: `100px `,
+                        minWidth: `100px `,
+                        maxWidth: `100px `,
+                        textAlign: "right",
+                        padding: "5px",
+                      }}
+                    >
+                      {toNumber(state.current[0].DebitTotal)}
+                    </div>
+                    <div
+                      className={`cell  `}
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: "bold",
+                        width: `100px `,
+                        minWidth: `100px `,
+                        maxWidth: `100px `,
+                        textAlign: "right",
+                        padding: "5px",
+                      }}
+                    >
+                      {toNumber(state.current[0].DebitTotal)}
+                    </div>
+                  </div>
                 </div>
                 <div
                   className="footer"
@@ -3355,7 +3258,7 @@ export default function NavigatePrint() {
                   >
                     <div
                       style={{
-                        width: "250px",
+                        width: "200px",
                         padding: "0px 10px",
                       }}
                     >
@@ -3388,7 +3291,7 @@ export default function NavigatePrint() {
                       style={{
                         borderLeft: "1px solid black",
                         borderRight: "1px solid black",
-                        width: "150px",
+                        width: "140px",
                       }}
                     >
                       <p
@@ -3407,7 +3310,7 @@ export default function NavigatePrint() {
                         Prepared By :
                       </p>
                     </div>
-                    <div style={{ width: "400px", padding: "10px" }}>
+                    <div style={{ width: "440px", padding: "10px" }}>
                       <p
                         style={{
                           margin: 0,
@@ -3430,12 +3333,8 @@ export default function NavigatePrint() {
                           paddingTop: "5px",
                         }}
                       >
-                        {AmountToWords(totalCredit)}&nbsp;&nbsp;{" "}
-                        {`(P${totalCredit.toLocaleString("en-US", {
-                          style: "decimal",
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })})`}
+                        {AmountToWords(parseFloat(state.current[0].CreditTotal.replace(/,/g, '')))}&nbsp;&nbsp;{" "}
+                        {`(P${toNumber(state.current[0].CreditTotal)})`}
                       </p>
 
                       <div style={{ marginTop: "40px", display: "flex" }}>
@@ -3458,7 +3357,7 @@ export default function NavigatePrint() {
                             borderBottom: "1px solid black",
                             width: "170px",
                           }}
-                        ></p>{" "}
+                        ></p>
                         <p
                           style={{
                             margin: 0,
@@ -3469,7 +3368,16 @@ export default function NavigatePrint() {
                           }}
                         ></p>
                       </div>
-                      <div style={{ display: "flex" }}>
+                      <div style={{ display: "flex", position: "relative" }}>
+                        <div style={{ 
+                          textAlign: "center", 
+                          width: "170px", 
+                          position: "absolute", 
+                          top: state.current[0].PayeeName.length >= 23 ? "-30px" : "-20px", 
+                          left: "75px", 
+                          fontSize: "11px", 
+                          fontWeight: "bold" }}
+                          >{state.current[0].PayeeName}</div>
                         <p
                           style={{
                             margin: 0,
@@ -3556,6 +3464,7 @@ export default function NavigatePrint() {
                 key={RowNumber}
               >
                 <div
+                  id="table"
                   style={{
                     flex: 1,
                   }}
@@ -3572,7 +3481,10 @@ export default function NavigatePrint() {
                       })}
 
                     <div style={{ height: "10px", }}></div>
-                    <div style={{ fontWeight: "bold" }}>Journal Voucher</div> </>}
+                    <div style={{ fontWeight: "bold" }}>Journal Voucher</div>
+                    <div style={{ display: "flex", fontSize: "12px", fontWeight: "bold", width: "100%", justifyContent: "flex-end" }}><div style={{ width: "50px" }}>JV No.</div><div>:</div><div style={{ marginLeft: "10px", width: "100px" }}>{state.current.JVNo}</div></div>
+                    <div style={{ display: "flex", fontSize: "12px", fontWeight: "bold", width: "100%", justifyContent: "flex-end" }}><div style={{ width: "50px" }}>Date  </div><div>:</div><div style={{ marginLeft: "10px", width: "100px" }}>{state.current.JVDate}</div></div>
+                  </>}
                   {
                     <div className="table">
                       {RowNumber === 0 &&
@@ -3613,6 +3525,8 @@ export default function NavigatePrint() {
                                       fontSize: "11px",
                                       fontWeight: "bold",
                                       width: `${colItem.width}`,
+                                      maxWidth: `${colItem.width}`,
+                                      minWidth: `${colItem.width}`,
                                       textAlign:
                                         colItem.datakey === "debit" ||
                                           colItem.datakey === "credit"
@@ -3633,7 +3547,6 @@ export default function NavigatePrint() {
                     </div>
 
                   }
-
                   {RowNumber === row.length - 1 && (
                     <>
                       <div className="row" style={{ height: "15px", }}></div>
@@ -3696,7 +3609,7 @@ export default function NavigatePrint() {
                       <div style={{ border: "1px solid black" }}></div>
                       <div style={{ textAlign: "center", width: "100%", fontSize: "11px", fontWeight: "bold", padding: "3px 0" }}>EXPLANATION</div>
                       <div style={{ border: "1px solid black" }}></div>
-                      <div style={{ width: "100%", fontSize: "11px", fontWeight: "bold", padding: "3px 0" }}>loadingGetSearc qwehSelectedGeneralJournqw ql qweqwwee</div>
+                      <div style={{ width: "100%", fontSize: "11px", fontWeight: "bold", padding: "3px 0", textAlign: "center" }}>{state.current.JVExp}</div>
                       <div style={{ height: "50px", }}></div>
                       <div style={{ display: "flex", justifyContent: "space-between" }}>
                         <div style={{ fontSize: "11px", borderTop: "1px solid black", width: "200px", textAlign: "center", padding: "2px 0", fontWeight: "bold" }}>Prepared By</div>
@@ -3769,6 +3682,7 @@ export default function NavigatePrint() {
             >
               {
                 <table
+                  id="table"
                   style={{
                     borderCollapse: "collapse",
                     width: "100%",

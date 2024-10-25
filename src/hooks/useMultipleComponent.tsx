@@ -22,6 +22,7 @@ export default function useMultipleComponent(steps: ReactElement[]) {
   function goTo(index: number) {
     setCurrentStepIndex(index);
   }
+  
   return {
     step: steps[currentStepIndex],
     goTo,

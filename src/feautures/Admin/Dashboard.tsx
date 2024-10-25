@@ -5,14 +5,10 @@ import { useContext } from "react";
 import { AuthContext } from "../../components/AuthContext";
 import "../../style/dashboard.css";
 import _ from "lodash";
+import useMultipleComponent from "../../hooks/useMultipleComponent";
+import { flushSync } from "react-dom";
+import { UpwardTable } from "../../components/UpwardTable";
 
-const comColumn = [
-  { field: "code", headerName: "Code", width: 150 },
-  { field: "code", headerName: "Code", width: 150 },
-  { field: "code", headerName: "Code", width: 150 },
-  { field: "code", headerName: "Code", width: 150 },
-  { field: "code", headerName: "Code", width: 150 },
-]
 
 function groupByHeader(arr:Array<any>) {
   // Create an object to hold groups by 'header'
@@ -31,23 +27,49 @@ function groupByHeader(arr:Array<any>) {
   return Object.values(grouped);
 }
 
+const policyColumn = [
+  { field: "AssuredName", headerName: "Assured Name", width: 300 },
+  { field: "PolicyNo", headerName: "Policy No.", width: 200 },
+  { field: "InsuredValue", headerName: "Insured Value", width: 120 ,type:"number"},
+  { field: "unit", headerName: "Unit", width: 270 },
+  { field: "ChassisNo", headerName: "Chassis No.", width: 160 },
+  { field: "DateExpired", headerName: "Date Expired", width: 100 },
+]
 
+const claimColumn = [
+  { field: "claims_id", headerName: "Claims ID.", width: 300 },
+  { field: "AssuredName", headerName: "Assured Name", width: 200 },
+  { field: "PolicyNo", headerName: "Policy No.", width: 120 ,type:"number"},
+  { field: "dateAccident", headerName: "Date Accident", width: 270 },
+  { field: "dateReported", headerName: "Date Reported", width: 160 },
+  { field: "status", headerName: "Status", width: 100 },
+]
+
+const buttons = [
+  {text:"TPL"},
+  {text:"COM"},
+  {text:"CGL"},
+  {text:"FIRE"},
+  {text:"MAR"},
+  {text:"PA"},
+]
 
 export default function Dashboard() {
+  const [buttonShadowPostion, setButtonShadowPostion] = useState(0);
+  const [showbuttonShadowPostion, setShowbuttonShadowPostion] = useState(false);
+
+  const [currButtonClick, setCurrButtonClick] = useState(0);
+  const { step, goTo } = useMultipleComponent([
+    <POLICYTABLE policy={'TPL'} column={policyColumn} />,
+    <POLICYTABLE policy={'COM'} column={policyColumn} />,
+    <POLICYTABLE policy={'CGL'} column={policyColumn} />,
+    <POLICYTABLE policy={'FIRE'} column={policyColumn} />,
+    <POLICYTABLE policy={'MAR'} column={policyColumn} />,
+    <POLICYTABLE policy={'PA'} column={policyColumn} />,
+  ]);
+  
   const { user } = useContext(AuthContext);
-  const { data: renewalData, isLoading: isLoadingRenewal } = useQuery({
-    queryKey: "renewal-by-month",
-    queryFn: async () =>
-      await myAxios.get("/get-renewal-this-month", {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      }),
-      onSuccess(data) {
-        const rr = groupByHeader(data.data.renewal)
-        console.log(rr)
-      },
-  });
+
   const { data: claimsData, isLoading: isLoadingClaims } = useQuery({
     queryKey: "claims-notice",
     queryFn: async () =>
@@ -57,124 +79,157 @@ export default function Dashboard() {
         },
       }),
   });
+
+
+  const handleIncrement = (index:number ,e:any) => {
+    flushSync(()=>{
+      setShowbuttonShadowPostion(true)
+    })
+    setCurrButtonClick(index);
+    goTo(index)
+    
+    setButtonShadowPostion(e.target.getBoundingClientRect().left )
+   
+  };
+
+  const width = window.innerWidth - 50;
+  const height = window.innerHeight - 145;
+
   // style={{border:"1px solid red" ,height:"500px" ,background:"#D3D3D3"}}
   return (
     <div id="main" >
-
-   {(user?.userAccess === "PRODUCTION" ||
-        user?.userAccess === "ACCOUNTING" ||
-        user?.userAccess === "PRODUCTION_ACCOUNTING" ||
-        user?.userAccess === "ADMIN") && (
-        <div className="section-content">
-          <h1 className="first">RENEWAL</h1>
-          <div id="content">
-            {isLoadingRenewal ? (
-              <div>Loading...</div>
-            ) : (
-              <table id="table">
-                <tbody>
-                  {renewalData?.data.renewal?.length <= 0 && (
-                    <tr className="header first">
-                      <td>Name</td>
-                      <td>POLICY NO</td>
-                      <td>SUM INSURED</td>
-                      <td>DATE TO</td>
-                      <td>CHASSIS</td>
-                      <td>UNIT</td>
-                    </tr>
-                  )}
-                  {renewalData?.data.renewal?.map((itm: any, idx: number) => {
-                    return (
-                      <React.Fragment key={idx}>
-                        {itm.isHeader ? (
-                          <>
-                            <tr className="heading first">
-                              <td colSpan={6}>{itm.header}</td>
-                            </tr>
-                            <tr className="header first">
-                              <td colSpan={itm.isVPolicy === "1" ? 1 : 2}>
-                                Name
-                              </td>
-                              <td colSpan={itm.isVPolicy === "1" ? 1 : 2}>
-                                POLICY NO
-                              </td>
-                              <td>SUM INSURED</td>
-                              <td>DATE TO</td>
-                              {itm.isVPolicy === "1" && (
-                                <>
-                                  <td>CHASSIS</td>
-                                  <td>UNIT</td>
-                                </>
-                              )}
-                            </tr>
-                          </>
-                        ) : (
-                          <tr>
-                            <td colSpan={itm.isVPolicy === "1" ? 1 : 2}>
-                              {itm.AssuredName}
-                            </td>
-                            <td colSpan={itm.isVPolicy === "1" ? 1 : 2}>
-                              {itm.PolicyNo}
-                            </td>
-                            <td>{itm.InsuredValue}</td>
-                            <td>{itm.DateExpired}</td>
-                            {itm.isVPolicy === "1" && (
-                              <>
-                                <td>{itm.ChassisNo}</td>
-                                <td>{itm.unit}</td>
-                              </>
-                            )}
-                          </tr>
-                        )}
-                      </React.Fragment>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
-          </div>
+      {
+        (user?.userAccess === "PRODUCTION" ||
+          user?.userAccess === "ACCOUNTING" ||
+          user?.userAccess === "PRODUCTION_ACCOUNTING" ||
+          user?.userAccess === "ADMIN") &&
+          <div style={{position:"relative",width:"100%",height:"auto"}}>
+          <h3 style={{padding:0,margin:0,fontWeight:"bold" ,position:"absolute"}}>RENEWAL NOTICE</h3>
+        <div style={{position:"relative" ,textAlign:"center",width:"100%" ,marginBottom:"10px"}}>
+          {buttons.map((itm,index)=>{
+              return (<ButtonComponent 
+                key={index} 
+                text={itm.text} 
+                index={index}  
+                handleIncrement={handleIncrement}
+                curr={currButtonClick}
+                />)
+          })}
+            <span 
+            onTransitionEnd={(e)=>{
+                setShowbuttonShadowPostion(false); // Hide element when transition is complete
+            }}
+            style={{
+            position:"absolute",
+            background:"rgba(0, 0, 0, 0.524)",
+            top:0,
+            left:`${buttonShadowPostion}px`,
+            width:"60px",
+            height:"40px",
+            transition:"all 200ms",
+            display:showbuttonShadowPostion ? "block" :"none"
+          }}
+          ></span>
         </div>
-      )}
-      {(user?.userAccess === "CLAIMS" || user?.userAccess === "ADMIN") && (
-        <div className="section-content">
-          <h1 className="second">CLAIMS</h1>
-          <div id="content">
+      <div style={{ width:"100%",height:"360px"}}>
+          {step}
+      </div>
+      </div>
+      }
+
+ {(user?.userAccess === "CLAIMS" || user?.userAccess === "ADMIN") && ( 
+            <div>
+               <h3 style={{padding:0,fontWeight:"bold"}}>CLAIMS</h3>
             {isLoadingClaims ? (
               <div>Loading...</div>
             ) : (
-              <table id="table">
-                <tbody>
-                  <tr className="header second">
-                    <td>Claims ID.</td>
-                    <td>Name</td>
-                    <td>Policy No.</td>
-                    <td>Date Accident</td>
-                    <td>Date Reported</td>
-                    <td>Claim Type</td>
-                    <td>Status</td>
-                  </tr>
-                  {claimsData?.data.claims?.map((itm: any, idx: number) => {
-                    return (
-                      <tr key={idx}>
-                        <td>{itm.claims_id}</td>
-                        <td>{itm.AssuredName}</td>
-                        <td>{itm.PolicyNo}</td>
-                        <td>{itm.dateAccident}</td>
-                        <td>{itm.dateReported}</td>
-                        <td>{itm.claim_type}</td>
-                        <td>{itm.status}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <UpwardTable
+              isLoading={isLoadingClaims}
+              ref={null}
+              rows={claimsData?.data.claims}
+              column={claimColumn}
+              width={width}
+              height={height}
+              dataReadOnly={true}
+              onSelectionChange={()=>{}}
+              onKeyDown={() => {}}
+              inputsearchselector=".manok"
+            />
             )}
-          </div>
-        </div>
-      )} 
+            </div>
+         )} 
+  
     </div>
   );
 }
+
+const ButtonComponent =({text = 'unknown',index = 0 ,handleIncrement ,curr }:any)=>{
+
+  return (
+
+    <button 
+    disabled={curr === index}
+      style={{
+        border:"none",
+        borderRadius:"0",
+        cursor:"pointer",
+        color:'white',
+        background:(curr === index)    ? "" :"#008CBA",
+        width:"80px",
+        height:"40px",
+        padding:0
+      }}
+
+    onClick={(e)=>{
+      handleIncrement(index ,e)
+    }}>{text}</button>
+
+   
+  )
+}
+
+const POLICYTABLE = ({policy,column}:any)=>{
+  const tableRef = useRef()
+  const [laoding,setLoading] = useState(false)
+  const [data,setData] = useState([])
+  const { user } = useContext(AuthContext);
+
+
+  useEffect(()=>{
+    setLoading(true)
+    myAxios.get(`/get-renewal-this-month?policy=${policy}`, {
+      headers: {
+        Authorization: `Bearer ${user?.accessToken}`,
+      },
+    }).then((data)=>{
+      setLoading(false)
+      setData(data?.data.renewal)
+    })
+  },[policy])
+
+  const width = window.innerWidth - 50;
+  const height = window.innerHeight - 145;
+  if(laoding){
+    return <div style={{textAlign:"center"}}>Loading...</div>
+  }
+  return (
+    <div>
+      <UpwardTable
+        isLoading={laoding}
+        ref={tableRef}
+        rows={data}
+        column={column}
+        width={width}
+        height={height}
+        dataReadOnly={true}
+        onSelectionChange={()=>{}}
+        onKeyDown={() => {}}
+        inputsearchselector=".manok"
+      />
+    </div>
+  )
+}
+
 // function formatData(data: any) {
 //   return data.map((itm: any) => {
 //     itm.PrevBalance = parseFloat(itm.PrevBalance.toString().replace(/,/g, ""));

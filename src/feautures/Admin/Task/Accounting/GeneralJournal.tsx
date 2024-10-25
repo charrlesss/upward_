@@ -3,10 +3,8 @@ import {
   TextField,
   Button,
   FormControl,
-  InputAdornment,
   IconButton,
   InputLabel,
-  OutlinedInput,
   Select,
   MenuItem,
   Modal,
@@ -16,15 +14,12 @@ import {
   FormControlLabel,
 } from "@mui/material";
 import CardTravelIcon from "@mui/icons-material/CardTravel";
-import CustomDatePicker from "../../../../components/DatePicker";
 import LoadingButton from "@mui/lab/LoadingButton";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import Swal from "sweetalert2";
 import { AuthContext } from "../../../../components/AuthContext";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { useMutation, useQuery, useQueryClient } from "react-query";
-import { NumericFormatCustom } from "../../../../components/NumberFormat";
 import useQueryModalTable from "../../../../hooks/useQueryModalTable";
 import { wait } from "../../../../lib/wait";
 import { GridRowSelectionModel } from "@mui/x-data-grid";
@@ -33,7 +28,6 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DatePicker } from "@mui/x-date-pickers";
 import { brown, deepOrange, grey } from "@mui/material/colors";
-import Table from "../../../../components/Table";
 import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
@@ -863,16 +857,21 @@ export default function GeneralJournal() {
       localStorage.setItem("paper-width", "8.5in");
       localStorage.setItem("paper-height", "11in");
       localStorage.setItem("module", "general-journal");
-      localStorage.setItem("state", JSON.stringify(state));
+      localStorage.setItem("state", JSON.stringify({
+        JVNo: refRefNo.current?.value,
+        JVDate: refDate.current?.value,
+        JVExp: refExplanation.current?.value
+
+      }));
       localStorage.setItem(
         "column",
         JSON.stringify([
-          { datakey: "code", header: "ACCT #", width: "100px" },
-          { datakey: "acctName", header: "ACCOUNT TITLE", width: "200px" },
-          { datakey: "IDNo", header: "ID NO.", width: "150px" },
+          { datakey: "code", header: "ACCT #", width: "40px" },
+          { datakey: "acctName", header: "ACCOUNT TITLE", width: "130px" },
+          { datakey: "IDNo", header: "ID NO.", width: "120px" },
           { datakey: "ClientName", header: "IDENTITY", width: "200px" },
-          { datakey: "debit", header: "DEBIT", width: "100px" },
-          { datakey: "credit", header: "CREDIT", width: "100px" },
+          { datakey: "debit", header: "DEBIT", width: "65px" },
+          { datakey: "credit", header: "CREDIT", width: "65px" },
         ])
       );
       localStorage.setItem(
@@ -1153,7 +1152,12 @@ export default function GeneralJournal() {
               disabled: modeDefault || modeUpdate,
               type: "text",
               style: { width: "190px" },
-              readOnly: true
+              readOnly: true,
+              onKeyDown:(e)=>{
+                if(e.code === "NumpadEnter" || e.code === 'Enter'){
+                  refDate.current?.focus()
+                }
+              }
             }}
             inputRef={refRefNo}
           />
@@ -1171,6 +1175,11 @@ export default function GeneralJournal() {
             disabled: modeDefault,
             type: "date",
             style: { width: "190px" },
+            onKeyDown:(e)=>{
+              if(e.code === "NumpadEnter" || e.code === 'Enter'){
+                refExplanation.current?.focus()
+              }
+            }
           }}
           inputRef={refDate}
         />
@@ -1187,6 +1196,11 @@ export default function GeneralJournal() {
             disabled: modeDefault,
             type: "text",
             style: { width: "600px" },
+            onKeyDown:(e)=>{
+              if(e.code === "NumpadEnter" || e.code === 'Enter'){
+                refCode.current?.focus()
+              }
+            }
           }}
           inputRef={refExplanation}
         />
@@ -1259,7 +1273,12 @@ export default function GeneralJournal() {
               disabled: modeDefault,
               type: "text",
               style: { width: "190px" },
-              readOnly: true
+              readOnly: true,
+              onKeyDown:(e)=>{
+                if(e.code === "NumpadEnter" || e.code === 'Enter'){
+                  refSubAccount.current?.focus()
+                }
+              }
             }}
             inputRef={refAccountName}
           />
@@ -1277,7 +1296,12 @@ export default function GeneralJournal() {
               disabled: modeDefault,
               type: "text",
               style: { width: "190px" },
-              readOnly: true
+              readOnly: true,
+              onKeyDown:(e)=>{
+                if(e.code === "NumpadEnter" || e.code === 'Enter'){
+                  refName.current?.focus()
+                }
+              }
             }}
             inputRef={refSubAccount}
           />
@@ -1339,6 +1363,11 @@ export default function GeneralJournal() {
               disabled: modeDefault,
               type: "text",
               style: { width: "190px" },
+              onKeyDown:(e)=>{
+                if(e.code === "NumpadEnter" || e.code === 'Enter'){
+                  refCredit.current?.focus()
+                }
+              }
             }}
             inputRef={refDebit}
           />
@@ -1355,6 +1384,11 @@ export default function GeneralJournal() {
               disabled: modeDefault,
               type: "text",
               style: { width: "190px" },
+              onKeyDown:(e)=>{
+                if(e.code === "NumpadEnter" || e.code === 'Enter'){
+                  refTC.current?.focus()
+                }
+              }
             }}
             inputRef={refCredit}
           />
@@ -1407,6 +1441,11 @@ export default function GeneralJournal() {
               disabled: modeDefault,
               type: "text",
               style: { width: "300px" },
+              onKeyDown:(e)=>{
+                if(e.code === "NumpadEnter" || e.code === 'Enter'){
+                  refVat.current?.focus()
+                }
+              }
             }}
             inputRef={refRemarks}
           />
@@ -1430,6 +1469,12 @@ export default function GeneralJournal() {
             select={{
               disabled: modeDefault,
               style: { width: "190px", height: "22px" },
+              onKeyDown:(e)=>{
+                if(e.code === "NumpadEnter" || e.code === 'Enter'){
+                  e.preventDefault()
+                  refInvoice.current?.focus()
+                }
+              }
             }}
             datasource={[
               { key: "VAT" },
@@ -1451,6 +1496,12 @@ export default function GeneralJournal() {
               disabled: modeDefault,
               type: "text",
               style: { width: "300px" },
+              onKeyDown:(e)=>{
+                if(e.code === "NumpadEnter" || e.code === 'Enter'){
+                  e.preventDefault()
+                  handleRowSave()
+                }
+              }
             }}
             inputRef={refInvoice}
           />

@@ -18,7 +18,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import Swal from "sweetalert2";
 import { AuthContext } from "../../../../components/AuthContext";
 import { useMutation, useQuery } from "react-query";
-import Table from "../../../../components/Table";
 import useMultipleComponent from "../../../../hooks/useMultipleComponent";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { UpwardTable } from "../../../../components/UpwardTable";
@@ -75,7 +74,6 @@ const pulloutApprovedColumns = [
   { field: "Status", headerName: "Status", width: 650 },
 ];
 export default function CheckPullout() {
-  const { user } = useContext(AuthContext);
   const { currentStepIndex, step, goTo } = useMultipleComponent([
     <CheckPulloutRequest />,
     <CheckPulloutResponse />,
@@ -541,8 +539,6 @@ function CheckPulloutRequest() {
                       field: "PNNo",
                       value: v,
                     });
-                    const options = pnno;
-                    const find = options.find((itm) => itm.PNo === state.PNNo);
                   }
                 }}
                 onInput={(e: any) => {
@@ -827,6 +823,7 @@ function CheckPulloutRequest() {
         }}
       >
         <UpwardTable
+          isLoading={loadingLoadChecks}
           ref={table}
           rows={pulloutRequest}
           column={pulloutRequestColumns}
@@ -1299,6 +1296,7 @@ function CheckPulloutResponse() {
                 row.Status
               );
             }}
+            isLoading={loadingLoadChecks}
             isMultipleSelect={true}
           />
           {/* <Table

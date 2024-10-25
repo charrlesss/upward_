@@ -116,6 +116,13 @@ export default function PettyCash() {
   const table = useRef<any>(null);
   const chartAccountSearchRef = useRef<HTMLInputElement>(null);
 
+
+  const dateRef = useRef<HTMLInputElement>(null);
+  const accountRef = useRef<HTMLInputElement>(null);
+  const usageRef = useRef<HTMLInputElement>(null);
+  const vatRef = useRef<HTMLInputElement>(null);
+  const invoiceRef = useRef<HTMLInputElement>(null);
+
   const {
     isLoading: loadingPettyCashIdGenerator,
     refetch: refetchettyCashIdGenerator,
@@ -241,6 +248,9 @@ export default function PettyCash() {
         value: selectedRowData[0].Short,
       });
       closeChartAccount();
+      wait(200).then(() => {
+        usageRef.current?.focus()
+      })
     },
 
     searchRef: chartAccountSearchRef,
@@ -286,6 +296,9 @@ export default function PettyCash() {
         value: selectedRowData[0].IDNo,
       });
       closeCliendIDsModal();
+      wait(200).then(() => {
+        vatRef.current?.focus()
+      })
     },
     searchRef: pdcSearchInput,
   });
@@ -478,7 +491,7 @@ export default function PettyCash() {
         FirstTempId = editTransaction.updateId;
       } else {
         FirstTempId = generateID(
-          d.length ? (d[d.length - 1] as any).TempID : "000"
+          d.length > 0 ? (d[d.length - 1] as any).TempID : "000"
         );
       }
 
@@ -694,6 +707,7 @@ export default function PettyCash() {
           >
             <InputLabel htmlFor="return-check-id-field">Ref. No.</InputLabel>
             <OutlinedInput
+
               sx={{
                 height: "27px",
                 fontSize: "14px",
@@ -706,7 +720,8 @@ export default function PettyCash() {
               onKeyDown={(e) => {
                 if (e.code === "Enter" || e.code === "NumpadEnter") {
                   e.preventDefault();
-                  return handleOnSave();
+                  // return handleOnSave();
+                  dateRef.current?.focus()
                 }
               }}
               readOnly={user?.department !== "UCSMI"}
@@ -744,12 +759,14 @@ export default function PettyCash() {
           value={new Date(state.datePetty)}
           onKeyDown={(e: any) => {
             if (e.code === "Enter" || e.code === "NumpadEnter") {
-              const timeout = setTimeout(() => {
-                datePickerRef.current?.querySelector("button")?.click();
-                clearTimeout(timeout);
-              }, 150);
+              // const timeout = setTimeout(() => {
+              //   datePickerRef.current?.querySelector("button")?.click();
+              //   clearTimeout(timeout);
+              // }, 150);
+              payeeInputRef.current?.focus()
             }
           }}
+          inputRef={dateRef}
           textField={{
             InputLabelProps: {
               style: {
@@ -772,7 +789,7 @@ export default function PettyCash() {
           onKeyDown={(e) => {
             if (e.code === "Enter" || e.code === "NumpadEnter") {
               e.preventDefault();
-              return handleOnSave();
+              explanationInputRef.current?.focus()
             }
           }}
           InputProps={{
@@ -794,7 +811,8 @@ export default function PettyCash() {
           onKeyDown={(e) => {
             if (e.code === "Enter" || e.code === "NumpadEnter") {
               e.preventDefault();
-              return handleOnSave();
+              // return handleOnSave();
+              accountRef.current?.focus()
             }
           }}
           InputProps={{
@@ -825,7 +843,7 @@ export default function PettyCash() {
             gap: "10px",
           }}
         >
-  
+
 
           {isLoadingChartAccount ? (
             <LoadingButton loading={isLoadingChartAccount} />
@@ -847,6 +865,7 @@ export default function PettyCash() {
             >
               <InputLabel htmlFor="chart-account-id">Account</InputLabel>
               <OutlinedInput
+                inputRef={accountRef}
                 sx={{
                   height: "27px",
                   fontSize: "14px",
@@ -907,6 +926,7 @@ export default function PettyCash() {
                   height: "27px",
                   fontSize: "14px",
                 }}
+                inputRef={usageRef}
                 disabled={isDisableField}
                 label="Usage"
                 name="clientName"
@@ -949,9 +969,24 @@ export default function PettyCash() {
               fontSize: "14px",
               width: "200px",
             }}
+            inputRef={vatRef}
           >
-            <MenuItem value="vat">VAT</MenuItem>
-            <MenuItem value={"non-vat"}>NON-VAT</MenuItem>
+            <MenuItem onKeyDown={(e) => {
+              if (e.code === "Enter" || e.code === "NumpadEnter") {
+                e.preventDefault();
+                wait(200).then(() => {
+                  amountRef.current?.focus()
+                })
+              }
+            }} value="vat">VAT</MenuItem>
+            <MenuItem onKeyDown={(e) => {
+              if (e.code === "Enter" || e.code === "NumpadEnter") {
+                e.preventDefault();
+                wait(200).then(() => {
+                  amountRef.current?.focus()
+                })
+              }
+            }} value={"non-vat"}>NON-VAT</MenuItem>
           </Select>
         </div>
         <div
@@ -988,7 +1023,7 @@ export default function PettyCash() {
             onKeyDown={(e) => {
               if (e.code === "Enter" || e.code === "NumpadEnter") {
                 e.preventDefault();
-                return handleAddTransaction();
+                invoiceRef.current?.focus()
               }
             }}
           />
@@ -998,7 +1033,7 @@ export default function PettyCash() {
               ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
             }}
             InputProps={{
-              inputRef: amountRef,
+              inputRef: invoiceRef,
               style: { height: "27px", fontSize: "14px", width: "300px" },
             }}
             disabled={isDisableField}

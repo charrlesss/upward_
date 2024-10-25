@@ -159,8 +159,13 @@ export default function CashDisbursement() {
     edit: false,
     updateId: "",
   });
+
+  const [PrintPayeeDetails, setPrintPayeeDetails] = useState([])
+  const [PrintTable, setPrintTable] = useState([])
   const [cashDisbursement, setCashDisbursement] =
     useState<GridRowSelectionModel>([]);
+
+
   const queryClient = useQueryClient();
   const datePickerRef = useRef<HTMLElement>(null);
   const checkDatePickerRef = useRef<HTMLElement>(null);
@@ -178,6 +183,67 @@ export default function CashDisbursement() {
   const IdsSearchInput = useRef<HTMLInputElement>(null);
   const codeInputRef = useRef<HTMLInputElement>(null);
   const table = useRef<any>(null);
+
+
+  const dateRef = useRef<HTMLInputElement>(null)
+  const accountNameRef = useRef<HTMLInputElement>(null)
+  const subAccountRef = useRef<HTMLInputElement>(null)
+  const creditRef = useRef<HTMLInputElement>(null)
+  const checkNoRef = useRef<HTMLInputElement>(null)
+  const checkDateRef = useRef<HTMLInputElement>(null)
+  const tcDateRef = useRef<HTMLInputElement>(null)
+  const paytoRef = useRef<HTMLInputElement>(null)
+  const invoiceRef = useRef<HTMLInputElement>(null)
+
+
+  const {
+    mutate: mutateOnPrint,
+    isLoading: isLoadingOnPrint,
+  } = useMutation({
+    mutationKey: "get-selected-search-general-journal",
+    mutationFn: async (variable: any) =>
+      await myAxios.post(
+        "/task/accounting/cash-disbursement/print",
+        variable,
+        {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }
+      ),
+    onSuccess: (res) => {
+      const response = res as any;
+      console.log(response)
+      flushSync(() => {
+        localStorage.removeItem("printString");
+        localStorage.setItem("dataString", JSON.stringify(response.data.print.PrintTable));
+        localStorage.setItem("paper-width", "8.5in");
+        localStorage.setItem("paper-height", "11in");
+        localStorage.setItem("module", "cash-disbursement");
+        localStorage.setItem("state", JSON.stringify(response.data.print.PrintPayeeDetails));
+        localStorage.setItem(
+          "column",
+          JSON.stringify([
+            { datakey: "Account", header: "ACCOUNT", width: "200px" },
+            { datakey: "Identity", header: "IDENTITY", width: "277px" },
+            { datakey: "Debit", header: "DEBIT", width: "100px" },
+            { datakey: "Credit", header: "CREDIT", width: "100px" },
+          ])
+        );
+        localStorage.setItem(
+          "title",
+          user?.department === "UMIS"
+            ? "UPWARD MANAGEMENT INSURANCE SERVICES\n"
+            : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.\n"
+        );
+      });
+      window.open("/dashboard/print", "_blank");
+
+
+
+    },
+  });
+
 
   const {
     isLoading: loadingGeneralJournalGenerator,
@@ -326,7 +392,6 @@ export default function CashDisbursement() {
       ),
     onSuccess: (res) => {
       const response = res as any;
-      console.log(response)
       const selected = response.data.selectedCashDisbursement;
       const { explanation, dateEntry, refNo, particulars } = selected[0];
       dispatch({
@@ -355,6 +420,9 @@ export default function CashDisbursement() {
         value: particulars,
       });
       setCashDisbursement(selected);
+
+
+
       setHasSelected(true);
     },
   });
@@ -940,34 +1008,10 @@ export default function CashDisbursement() {
   }
 
   function handleClickPrint() {
-    flushSync(() => {
-      localStorage.removeItem("printString");
-      localStorage.setItem("dataString", JSON.stringify(cashDisbursement));
-      localStorage.setItem("paper-width", "8.5in");
-      localStorage.setItem("paper-height", "11in");
-      localStorage.setItem("module", "cash-disbursement");
-      localStorage.setItem("state", JSON.stringify(state));
-      localStorage.setItem(
-        "column",
-        JSON.stringify([
-          { datakey: "acctName", header: "ACCOUNT", width: "200px" },
-          { datakey: "subAcctName", header: "SUB-ACCOUNT", width: "100px" },
-          { datakey: "ClientName", header: "IDENTITY", width: "200px" },
-          { datakey: "debit", header: "DEBIT", width: "100px" },
-          { datakey: "credit", header: "CREDIT", width: "100px" },
-        ])
-      );
-      localStorage.setItem(
-        "title",
-        user?.department === "UMIS"
-          ? "UPWARD MANAGEMENT INSURANCE SERVICES\n"
-          : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.\n"
-      );
-    });
-    window.open("/dashboard/print", "_blank");
+    mutateOnPrint({ Source_No: state.refNo })
   }
   const isDisableField = state.cashMode === "";
-  
+
   return (
     <div
       style={{
@@ -1109,7 +1153,8 @@ export default function CashDisbursement() {
           >
             Void
           </LoadingButton>
-          <Button
+          <LoadingButton
+            loading={isLoadingOnPrint}
             disabled={state.cashMode !== "edit"}
             id="basic-button"
             aria-haspopup="true"
@@ -1125,7 +1170,7 @@ export default function CashDisbursement() {
             }}
           >
             Print
-          </Button>
+          </LoadingButton>
         </div>
         <div
           style={{
@@ -1211,7 +1256,8 @@ export default function CashDisbursement() {
               onKeyDown={(e) => {
                 if (e.code === "Enter" || e.code === "NumpadEnter") {
                   e.preventDefault();
-                  return handleOnSave();
+                  dateRef.current?.focus()
+                  // return handleOnSave();
                 }
               }}
               readOnly={user?.department !== "UCSMI"}
@@ -1247,12 +1293,14 @@ export default function CashDisbursement() {
             });
           }}
           value={new Date(state.dateEntry)}
+          inputRef={dateRef}
           onKeyDown={(e: any) => {
             if (e.code === "Enter" || e.code === "NumpadEnter") {
-              const timeout = setTimeout(() => {
-                datePickerRef.current?.querySelector("button")?.click();
-                clearTimeout(timeout);
-              }, 150);
+              // const timeout = setTimeout(() => {
+              //   datePickerRef.current?.querySelector("button")?.click();
+              //   clearTimeout(timeout);
+              // }, 150);
+              explanationInputRef.current?.focus()
             }
           }}
           datePickerRef={datePickerRef}
@@ -1277,12 +1325,12 @@ export default function CashDisbursement() {
           onKeyDown={(e) => {
             if (e.code === "Enter" || e.code === "NumpadEnter") {
               e.preventDefault();
-              return handleOnSave();
+              particularsInputRef.current?.focus()
             }
           }}
-          inputRef={explanationInputRef}
           InputProps={{
             style: { height: "27px", fontSize: "14px" },
+            inputRef:explanationInputRef
           }}
           sx={{
             flex: 1,
@@ -1301,11 +1349,11 @@ export default function CashDisbursement() {
           onKeyDown={(e) => {
             if (e.code === "Enter" || e.code === "NumpadEnter") {
               e.preventDefault();
-              return handleOnSave();
+              codeInputRef.current?.focus()
             }
           }}
-          inputRef={particularsInputRef}
           InputProps={{
+            inputRef:particularsInputRef,
             style: { height: "27px", fontSize: "14px" },
           }}
           sx={{
@@ -1405,18 +1453,13 @@ export default function CashDisbursement() {
                 (e.code === "NumpadEnter" && state.acctName !== "")
               ) {
                 e.preventDefault();
-                return handleRowSave();
+                subAccountRef.current?.focus()
               }
-              if (
-                e.code === "Enter" ||
-                (e.code === "NumpadEnter" && state.acctName === "")
-              ) {
-                e.preventDefault();
-                return openChartAccountSearch(state.code);
-              }
+
             }}
             InputProps={{
               style: { height: "27px", fontSize: "14px" },
+              inputRef: accountNameRef
             }}
             sx={{
               flex: 1,
@@ -1437,18 +1480,13 @@ export default function CashDisbursement() {
                 (e.code === "NumpadEnter" && state.subAcctName !== "")
               ) {
                 e.preventDefault();
-                return handleRowSave();
+                idInputRef.current?.focus()
               }
-              if (
-                e.code === "Enter" ||
-                (e.code === "NumpadEnter" && state.subAcctName === "")
-              ) {
-                e.preventDefault();
-                return openPolicyIdClientIdRefId(state.ClientName);
-              }
+
             }}
             InputProps={{
               style: { height: "27px", fontSize: "14px" },
+              inputRef: subAccountRef
             }}
             sx={{
               width: "150px",
@@ -1525,7 +1563,7 @@ export default function CashDisbursement() {
             onKeyDown={(e) => {
               if (e.code === "Enter" || e.code === "NumpadEnter") {
                 e.preventDefault();
-                return handleRowSave();
+                creditRef.current?.focus()
               }
             }}
             onBlur={(e) => {
@@ -1561,7 +1599,11 @@ export default function CashDisbursement() {
             onKeyDown={(e) => {
               if (e.code === "Enter" || e.code === "NumpadEnter") {
                 e.preventDefault();
-                return handleRowSave();
+                if (state.code === "1.01.10") {
+                  checkNoRef.current?.focus()
+                } else {
+                  tcDateRef.current?.focus()
+                }
               }
             }}
             onFocus={(e) => {
@@ -1589,6 +1631,7 @@ export default function CashDisbursement() {
             InputProps={{
               inputComponent: NumericFormatCustom as any,
               style: { height: "27px", fontSize: "14px" },
+              inputRef: creditRef
             }}
             sx={{
               width: "160px",
@@ -1606,11 +1649,11 @@ export default function CashDisbursement() {
             onKeyDown={(e) => {
               if (e.code === "Enter" || e.code === "NumpadEnter") {
                 e.preventDefault();
-                return handleRowSave();
+                checkDateRef.current?.focus()
               }
             }}
             InputProps={{
-              // inputRef: debitInputRef,
+              inputRef: checkNoRef,
               style: { height: "27px", fontSize: "14px" },
             }}
             sx={{
@@ -1642,15 +1685,17 @@ export default function CashDisbursement() {
               value={state.checkDate}
               onKeyDown={(e: any) => {
                 if (e.code === "Enter" || e.code === "NumpadEnter") {
-                  const timeout = setTimeout(() => {
-                    checkDatePickerRef.current
-                      ?.querySelector("button")
-                      ?.click();
-                    clearTimeout(timeout);
-                  }, 150);
+                  // const timeout = setTimeout(() => {
+                  //   checkDatePickerRef.current
+                  //     ?.querySelector("button")
+                  //     ?.click();
+                  //   clearTimeout(timeout);
+                  // }, 150);
+                  tcDateRef.current?.focus()
                 }
               }}
               datePickerRef={checkDatePickerRef}
+              inputRef={checkDateRef}
               textField={{
                 InputLabelProps: {
                   style: {
@@ -1698,6 +1743,7 @@ export default function CashDisbursement() {
             >
               <InputLabel htmlFor="tc">TC</InputLabel>
               <OutlinedInput
+                inputRef={tcDateRef}
                 sx={{
                   height: "27px",
                   fontSize: "14px",
@@ -1744,7 +1790,11 @@ export default function CashDisbursement() {
             onKeyDown={(e) => {
               if (e.code === "Enter" || e.code === "NumpadEnter") {
                 e.preventDefault();
-                return handleRowSave();
+                if (state.code === "1.01.10") {
+                  idInputRefPayTo.current?.focus()
+                } else {
+                  vatRef.current?.focus()
+                }
               }
             }}
             InputProps={{
@@ -1773,7 +1823,7 @@ export default function CashDisbursement() {
               }}
               InputProps={{
                 readOnly: true,
-                // inputRef: debitInputRef,
+                inputRef: paytoRef,
                 style: { height: "27px", fontSize: "14px" },
               }}
               sx={{
@@ -1873,9 +1923,25 @@ export default function CashDisbursement() {
               }}
               inputRef={vatRef}
               disabled={isDisableField}
+
             >
-              <MenuItem value="VAT">VAT</MenuItem>
-              <MenuItem value={"NON-VAT"}>NON-VAT</MenuItem>
+              <MenuItem value="VAT" onKeyDown={(e) => {
+                if (e.code === "Enter" || e.code === "NumpadEnter") {
+                  e.preventDefault();
+                  wait(300).then(() => {
+                    invoiceRef.current?.focus()
+                  })
+
+                }
+              }}>VAT</MenuItem>
+              <MenuItem value={"NON-VAT"} onKeyDown={(e) => {
+                if (e.code === "Enter" || e.code === "NumpadEnter") {
+                  e.preventDefault();
+                  wait(300).then(() => {
+                    invoiceRef.current?.focus()
+                  })
+                }
+              }}>NON-VAT</MenuItem>
             </Select>
           </FormControl>
           <TextField
@@ -1888,11 +1954,12 @@ export default function CashDisbursement() {
             onKeyDown={(e) => {
               if (e.code === "Enter" || e.code === "NumpadEnter") {
                 e.preventDefault();
-                return handleRowSave();
+                handleRowSave()
               }
             }}
             InputProps={{
               style: { height: "27px", fontSize: "14px" },
+              inputRef: invoiceRef
             }}
             sx={{
               width: "200px",

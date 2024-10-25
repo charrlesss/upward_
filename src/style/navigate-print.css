@@ -19,15 +19,15 @@ body{
 
 .table {
     display: table;
-    width: 100%; /* Table takes full width */
-    border-collapse: collapse; /* Collapses borders */
+    width: 100%; 
+    border-collapse: collapse; 
 }
 .row {
-    display: table-row; /* Acts like a table row */
+    display: table-row; 
 }
 .cell {
-    display: table-cell; /* Acts like a table cell */
-    overflow: hidden; /* Prevents overflow */
-    white-space: nowrap; /* Prevents text wrapping */
-    text-overflow: ellipsis; /* Adds ellipsis for overflow text */
+    display: table-cell; 
+    overflow: hidden; 
+    white-space: nowrap; 
+    text-overflow: ellipsis; 
 }
