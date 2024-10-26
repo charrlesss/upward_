@@ -34,7 +34,6 @@ import {
 } from "../../../../lib/confirmationAlert";
 import {
   generateRandomClass,
-  keyBoardSelectionTable,
 } from "../../../../components/ModalWithTable";
 import { flushSync } from "react-dom";
 import SaveIcon from "@mui/icons-material/Save";
@@ -890,7 +889,7 @@ export default function GeneralJournal() {
     setGeneralJournal([]);
 
   }
-  const width = window.innerWidth - 60;
+  const width = window.innerWidth - 50;
   const height = window.innerHeight - 200;
 
   useEffect(() => {

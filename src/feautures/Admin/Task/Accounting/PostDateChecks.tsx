@@ -153,6 +153,13 @@ export default function PostDateChecks() {
   const queryClient = useQueryClient();
   const table = useRef<any>(null);
 
+  const dateRef = useRef<HTMLButtonElement>(null);
+  const remakrsRef = useRef<HTMLButtonElement>(null);
+  const pnRef = useRef<HTMLButtonElement>(null);
+  const branchRef = useRef<HTMLButtonElement>(null);
+  const clientnameRef = useRef<HTMLButtonElement>(null);
+
+
   const { isLoading: newRefNumberLoading, refetch: refetchNewRefNumber } =
     useQuery({
       queryKey: "new-ref-number",
@@ -1025,7 +1032,7 @@ export default function PostDateChecks() {
                       onChange={handleInputChange}
                       onKeyDown={(e) => {
                         if (e.code === "Enter" || e.code === "NumpadEnter") {
-                          return savePDCButtonRef.current?.click();
+                          dateRef.current?.focus()
                         }
                       }}
                       id="pdc-id-field"
@@ -1055,10 +1062,12 @@ export default function PostDateChecks() {
                       value: value,
                     });
                   }}
+                  inputRef={dateRef}
                   value={new Date(state.Date)}
                   onKeyDown={(e: any) => {
                     if (e.code === "Enter" || e.code === "NumpadEnter") {
-                      savePDCButtonRef.current?.click();
+                       // savePDCButtonRef.current?.click();
+                       remakrsRef.current?.focus()
                     }
                   }}
                   textField={{
@@ -1088,11 +1097,12 @@ export default function PostDateChecks() {
                 disabled={isDisableField}
                 onKeyDown={(e) => {
                   if (e.code === "Enter" || e.code === "NumpadEnter") {
-                    savePDCButtonRef.current?.click();
+                    pnRef.current?.focus()
                   }
                 }}
                 InputProps={{
                   style: { height: "27px", fontSize: "14px" },
+                  inputRef:remakrsRef
                 }}
                 sx={{
                   fieldset: { borderColor: "black" },
@@ -1140,6 +1150,7 @@ export default function PostDateChecks() {
                       PN/Client ID
                     </InputLabel>
                     <OutlinedInput
+                    inputRef={pnRef}
                       sx={{
                         fieldset: { borderColor: "black" },
 
@@ -1188,12 +1199,13 @@ export default function PostDateChecks() {
                   disabled={isDisableField}
                   onKeyDown={(e) => {
                     if (e.code === "Enter" || e.code === "NumpadEnter") {
-                      savePDCButtonRef.current?.click();
+                      clientnameRef.current?.focus();
                     }
                   }}
                   InputProps={{
                     style: { height: "27px", fontSize: "14px" },
                     readOnly: true,
+                    inputRef:branchRef
                   }}
                   sx={{
                     fieldset: { borderColor: "black" },
@@ -1228,6 +1240,7 @@ export default function PostDateChecks() {
                   InputProps={{
                     style: { height: "27px", fontSize: "14px" },
                     readOnly: true,
+                    inputRef:clientnameRef
                   }}
                   sx={{
                     fieldset: { borderColor: "black" },
@@ -2206,8 +2219,8 @@ export default function PostDateChecks() {
           </div>
         </div>
       </div>
-      {loadingAddNew ||
-        isLoadingSelectedSearch && <div className="loading-component"><div className="loader"></div></div>}
+      {(loadingAddNew ||
+        isLoadingSelectedSearch) && <div className="loading-component"><div className="loader"></div></div>}
 
     </div>
   );

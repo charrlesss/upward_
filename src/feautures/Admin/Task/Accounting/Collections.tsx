@@ -13,9 +13,6 @@ import {
   Select,
   MenuItem,
   Modal,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
   Autocomplete,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
@@ -42,7 +39,7 @@ import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../../lib/confirmationAlert";
-import {UpwardTable} from "../../../../components/UpwardTable";
+import { UpwardTable } from "../../../../components/UpwardTable";
 
 const CollectionContext = createContext<{
   debit: Array<any>;
@@ -87,7 +84,7 @@ const initialStateCredit = {
   FAO_Name: "",
   FAO_ID: "",
   remarks: "",
-  option: "nonVAT",
+  option: "Non-Vat",
   invoice: "",
   Code: "",
   Title: "",
@@ -210,8 +207,16 @@ export default function Collections() {
   const queryClient = useQueryClient();
   // client IDs search table modal
 
+
+  const dateRef = useRef<HTMLInputElement>(null);
+  const pdcAddbtnRef = useRef<HTMLButtonElement>(null);
+
+
+
   const tableDebit = useRef<any>(null);
   const tableCredit = useRef<any>(null);
+  const creditRemarksRef = useRef<any>(null);
+  const vatRef = useRef<any>(null);
 
   const {
     ModalComponent: ModalClientIDs,
@@ -242,38 +247,78 @@ export default function Collections() {
     uniqueId: "IDNo",
     responseDataKey: "clientsId",
     onSelected: (selectedRowData, data) => {
-      if (state.isFao) {
-        creditDispatch({
-          type: "UPDATE_FIELD",
-          field: "FAO_ID",
-          value: selectedRowData[0].IDNo,
-        });
-        creditDispatch({
-          type: "UPDATE_FIELD",
-          field: "FAO_Name",
-          value: selectedRowData[0].Name ?? "",
-        });
-      } else {
-        dispatch({
-          type: "UPDATE_FIELD",
-          field: "PNo",
-          value: selectedRowData[0].IDNo,
-        });
-        dispatch({
-          type: "UPDATE_FIELD",
-          field: "IDNo",
-          value: selectedRowData[0].ID,
-        });
-        dispatch({
-          type: "UPDATE_FIELD",
-          field: "Name",
-          value: selectedRowData[0].Name ?? "",
-        });
-      }
+      dispatch({
+        type: "UPDATE_FIELD",
+        field: "PNo",
+        value: selectedRowData[0].IDNo,
+      });
+      dispatch({
+        type: "UPDATE_FIELD",
+        field: "IDNo",
+        value: selectedRowData[0].ID,
+      });
+      dispatch({
+        type: "UPDATE_FIELD",
+        field: "Name",
+        value: selectedRowData[0].Name ?? "",
+      });
       closeCliendIDsModal();
+      wait(50).then(() => {
+        paymentTypeRef.current?.focus()
+      })
     },
     searchRef: pdcSearchInput,
   });
+
+  //CREDIT CLIENT
+
+  const {
+    ModalComponent: ModalCreditClientIDs,
+    openModal: openCreditCliendIDsModal,
+    isLoading: isLoadingCreditClientIdsModal,
+    closeModal: closeCreditCliendIDsModal,
+  } = useQueryModalTable({
+    link: {
+      url: "/task/accounting/search-pdc-policy-id",
+      queryUrlName: "searchPdcPolicyIds",
+    },
+    columns: [
+      { field: "Type", headerName: "Type", width: 130 },
+      { field: "IDNo", headerName: "ID No.", width: 200 },
+      {
+        field: "Name",
+        headerName: "Name",
+        flex: 1,
+      },
+      {
+        field: "ID",
+        headerName: "ID",
+        flex: 1,
+        hide: true,
+      },
+    ],
+    queryKey: "collection-polidy-ids",
+    uniqueId: "IDNo",
+    responseDataKey: "clientsId",
+    onSelected: (selectedRowData, data) => {
+      creditDispatch({
+        type: "UPDATE_FIELD",
+        field: "FAO_ID",
+        value: selectedRowData[0].IDNo,
+      });
+      creditDispatch({
+        type: "UPDATE_FIELD",
+        field: "FAO_Name",
+        value: selectedRowData[0].Name ?? "",
+      });
+      closeCreditCliendIDsModal();
+      wait(50).then(() => {
+        creditRemarksRef.current?.focus()
+      })
+    },
+    searchRef: pdcSearchInput,
+  });
+
   // collection search table modal
   const {
     ModalComponent: ModalSearchCollection,
@@ -1178,7 +1223,7 @@ export default function Collections() {
                       onChange={handleInputChange}
                       onKeyDown={(e) => {
                         if (e.code === "Enter" || e.code === "NumpadEnter") {
-                          saveCollectionButtonRef.current?.click();
+                          dateRef.current?.focus();
                         }
                       }}
                       id="collection-id-field"
@@ -1211,6 +1256,7 @@ export default function Collections() {
                       style: { height: "27px", fontSize: "14px" },
                     },
                   }}
+                  inputRef={dateRef}
                   fullWidth={false}
                   disabled={!addNew}
                   label="OR Date"
@@ -1224,9 +1270,11 @@ export default function Collections() {
                   value={new Date(state.Date)}
                   onKeyDown={(e: any) => {
                     if (e.code === "Enter" || e.code === "NumpadEnter") {
-                      saveCollectionButtonRef.current?.click();
+                      //saveCollectionButtonRef.current?.click();
+                      pnClientORRef.current?.focus()
                     }
                   }}
+
                 />
                 {paymentTypeLoading || isLoadingClientIdsModal ? (
                   <LoadingButton
@@ -1307,7 +1355,7 @@ export default function Collections() {
                   }}
                   onKeyDown={(e) => {
                     if (e.code === "Enter" || e.code === "NumpadEnter") {
-                      saveCollectionButtonRef.current?.click();
+                      return openCliendIDsModal(state.PNo);
                     }
                   }}
                   sx={{
@@ -1378,8 +1426,35 @@ export default function Collections() {
                       fontSize: "14px",
                     }}
                   >
-                    <MenuItem value={"CHK"}>Check</MenuItem>
-                    <MenuItem value={"CSH"}>Cash</MenuItem>
+                    <MenuItem
+                      value={"CHK"}
+                      onKeyDown={(e) => {
+                        if (e.code === "Enter" || e.code === "NumpadEnter") {
+                          if (debitState.payamentType === "CHK") {
+                            wait(150).then(() => {
+                              pdcAddbtnRef.current?.focus()
+                            })
+                          } else {
+                            wait(150).then(() => {
+                              amountRef.current?.focus()
+                            })
+                          }
+                        }
+                      }}
+                    >Check</MenuItem>
+                    <MenuItem value={"CSH"} onKeyDown={(e) => {
+                      if (e.code === "Enter" || e.code === "NumpadEnter") {
+                        if (debitState.payamentType === "CHK") {
+                          wait(150).then(() => {
+                            pdcAddbtnRef.current?.focus()
+                          })
+                        } else {
+                          wait(150).then(() => {
+                            amountRef.current?.focus()
+                          })
+                        }
+                      }
+                    }}>Cash</MenuItem>
                   </Select>
                 </FormControl>
                 {debitState.payamentType === "CHK" ? (
@@ -1411,6 +1486,7 @@ export default function Collections() {
                         });
                         checkNoRef.current?.focus();
                       }}
+                      ref={pdcAddbtnRef}
                     >
                       Add PDC Check
                     </Button>
@@ -1619,7 +1695,7 @@ export default function Collections() {
                             });
                         }}
                       >
-                        Submit
+                        Save Debit
                       </LoadingButton>
                     )}
                   </div>
@@ -1693,80 +1769,7 @@ export default function Collections() {
               <div style={{ width: "100%", marginTop: "20px" }}>
                 <DebitFooterComponent />
               </div>
-              {/* <div
-                style={{
-                  marginTop: "10px",
-                  width: "100%",
-                  position: "relative",
-                }}
-              >
-                <Box
-                  style={{
-                    height: "320px",
-                    width: "100%",
-                    overflowX: "scroll",
-                    position: "absolute",
-                  //  paddingLeft:"70px"
-                  }}
-                >
-               
 
-
-                  {/* <Table
-                    ref={tableDebit}
-                    isLoading={loadingAddNew || loadingCollectionDataSearch}
-                    columns={debitColumn}
-                    rows={debit}
-                    table_id={"temp_id"}
-                    isSingleSelection={true}
-                    isRowFreeze={false}
-                    dataSelection={(selection, data, code) => {
-                      const rowSelected = data.filter(
-                        (item: any) => item.temp_id === selection[0]
-                      )[0];
-                      if (
-                        rowSelected === undefined ||
-                        rowSelected.length <= 0
-                      ) {
-                        modalDispatch({
-                          type: "UPDATE_FIELD",
-                          field: "CheckIdx",
-                          value: "",
-                        });
-                        modalDispatch({
-                          type: "UPDATE_FIELD",
-                          field: "CheckMode",
-                          value: "",
-                        });
-                        debitDispatch({
-                          type: "UPDATE_FIELD",
-                          field: "cashID",
-                          value: "",
-                        });
-                        debitDispatch({
-                          type: "UPDATE_FIELD",
-                          field: "cashMode",
-                          value: "",
-                        });
-                        debitDispatch({
-                          type: "UPDATE_FIELD",
-                          field: "amount",
-                          value: "0.00",
-                        });
-                        return;
-                      }
-                      DebitSelectedChange(rowSelected, code);
-
-
-                    }}
-                    footerChildren={() => {
-                      return <DebitFooterComponent />;
-                    }}
-                    footerPaginationPosition={"left-right"}
-                    showFooterSelectedCount={false}
-                  /> 
-                </Box>
-              </div> */}
             </fieldset>
             <br />
             <fieldset
@@ -1878,6 +1881,13 @@ export default function Collections() {
                           position: "absolute",
                         },
                       }}
+                      onKeyDown={(e) => {
+                        if (e.code === "Enter" || e.code === "NumpadEnter") {
+                          wait(150).then(() => {
+                            creditAmountRef.current?.focus()
+                          })
+                        }
+                      }}
                       size="small"
                       disabled={!addNew}
                     />
@@ -1906,10 +1916,7 @@ export default function Collections() {
                     }}
                     onKeyDown={(e) => {
                       if (e.code === "Enter" || e.code === "NumpadEnter") {
-                        const timeout = setTimeout(() => {
-                          creditSaveButton.current?.click();
-                          clearTimeout(timeout);
-                        }, 100);
+                        creditFaoRef.current?.focus()
                       }
                     }}
                     sx={{
@@ -1918,64 +1925,67 @@ export default function Collections() {
                       ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
                     }}
                   />
-                  <FormControl
-                    sx={{
-                      width: "150px",
-                      ".MuiFormLabel-root": {
-                        fontSize: "14px",
-                        background: "white",
-                        zIndex: 99,
-                        padding: "0 3px",
-                      },
-                      ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                    }}
-                    variant="outlined"
-                    size="small"
-                    disabled={!addNew}
-                  >
-                    <InputLabel htmlFor="fao">FAO</InputLabel>
-                    <OutlinedInput
+                  {isLoadingCreditClientIdsModal ?
+                    <LoadingButton loading={isLoadingCreditClientIdsModal} />
+                    :
+                    <FormControl
                       sx={{
-                        height: "27px",
-                        fontSize: "14px",
+                        width: "150px",
+                        ".MuiFormLabel-root": {
+                          fontSize: "14px",
+                          background: "white",
+                          zIndex: 99,
+                          padding: "0 3px",
+                        },
+                        ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
                       }}
-                      inputRef={creditFaoRef}
-                      name="FAO_Name"
-                      value={creditState.FAO_Name}
-                      onChange={handleCreditInputChange}
-                      id="fao"
-                      onKeyDown={(e) => {
-                        if (e.code === "Enter" || e.code === "NumpadEnter") {
-                          dispatch({
-                            type: "UPDATE_FIELD",
-                            field: "isFao",
-                            value: true,
-                          });
-                          return openCliendIDsModal(creditState.FAO_Name);
+                      variant="outlined"
+                      size="small"
+                      disabled={!addNew}
+                    >
+                      <InputLabel htmlFor="fao">FAO</InputLabel>
+                      <OutlinedInput
+                        sx={{
+                          height: "27px",
+                          fontSize: "14px",
+                        }}
+                        inputRef={creditFaoRef}
+                        name="FAO_Name"
+                        value={creditState.FAO_Name}
+                        onChange={handleCreditInputChange}
+                        id="fao"
+                        onKeyDown={(e) => {
+                          if (e.code === "Enter" || e.code === "NumpadEnter") {
+                            dispatch({
+                              type: "UPDATE_FIELD",
+                              field: "isFao",
+                              value: true,
+                            });
+                            return openCreditCliendIDsModal(creditState.FAO_Name);
+                          }
+                        }}
+                        endAdornment={
+                          <InputAdornment position="end">
+                            <IconButton
+                              disabled={!addNew}
+                              onClick={() => {
+                                dispatch({
+                                  type: "UPDATE_FIELD",
+                                  field: "isFao",
+                                  value: true,
+                                });
+                                openCreditCliendIDsModal(creditState.FAO_Name);
+                              }}
+                              edge="end"
+                              color="secondary"
+                            >
+                              <PersonSearchIcon />
+                            </IconButton>
+                          </InputAdornment>
                         }
-                      }}
-                      endAdornment={
-                        <InputAdornment position="end">
-                          <IconButton
-                            disabled={!addNew}
-                            onClick={() => {
-                              dispatch({
-                                type: "UPDATE_FIELD",
-                                field: "isFao",
-                                value: true,
-                              });
-                              openCliendIDsModal(creditState.FAO_Name);
-                            }}
-                            edge="end"
-                            color="secondary"
-                          >
-                            <PersonSearchIcon />
-                          </IconButton>
-                        </InputAdornment>
-                      }
-                      label="FAO"
-                    />
-                  </FormControl>
+                        label="FAO"
+                      />
+                    </FormControl>}
                   <TextField
                     disabled={!addNew}
                     name="remarks"
@@ -1985,14 +1995,12 @@ export default function Collections() {
                     onChange={handleCreditInputChange}
                     onKeyDown={(e) => {
                       if (e.code === "Enter" || e.code === "NumpadEnter") {
-                        const timeout = setTimeout(() => {
-                          creditSaveButton.current?.click();
-                          clearTimeout(timeout);
-                        }, 100);
+                        vatRef.current.focus()
                       }
                     }}
                     InputProps={{
                       style: { height: "27px", fontSize: "14px" },
+                      inputRef: creditRemarksRef
                     }}
                     sx={{
                       width: "160px",
@@ -2015,43 +2023,56 @@ export default function Collections() {
                       columnGap: "10px",
                     }}
                   >
-                    <RadioGroup
-                      value={creditState.option}
-                      row
-                      aria-labelledby="option"
-                      name="option"
-                      onChange={handleCreditInputChange}
+                    <FormControl
                       sx={{
-                        height: "27px",
-                        display: "flex",
-                        alignItems: "center",
-                        margin: "auto",
-                        width: "170px",
-                        "& .MuiSvgIcon-root": {
-                          height: 15,
-                          width: 15,
+                        width: "150px",
+                        marginRight: "10px",
+                        minWidth: 150,
+                        ".MuiFormLabel-root": {
+                          fontSize: "14px",
+                          background: "white",
+                          zIndex: 99,
+                          padding: "0 3px",
                         },
-                        "& .MuiTypography-root ": {
-                          fontSize: "14px !important",
-                        },
-                        "& .MuiFormControlLabel-root  ": {
-                          height: "27px",
-                        },
+                        ".MuiFormLabel-root[data-shrink=false]": { top: "-1px" },
                       }}
                     >
-                      <FormControlLabel
-                        disabled={!addNew || creditState.creditMode === ""}
-                        value="Vat"
-                        control={<Radio size="small" />}
-                        label="VAT"
-                      />
-                      <FormControlLabel
-                        disabled={!addNew || creditState.creditMode === ""}
-                        value="nonVAT"
-                        control={<Radio size="small" />}
-                        label="Non-VAT"
-                      />
-                    </RadioGroup>
+                      <InputLabel id="payment-check">VAT Type</InputLabel>
+                      <Select
+                        inputRef={vatRef}
+                        disabled={!addNew}
+                        labelId="payment-check"
+                        value={creditState.option}
+                        onChange={handleCreditInputChange}
+                        autoWidth
+                        label="VAT Type"
+                        size="small"
+                        name="option"
+                        sx={{
+                          height: "27px",
+                          fontSize: "14px",
+                        }}
+                      >
+                        <MenuItem
+                          value={"Vat"}
+                          onKeyDown={(e) => {
+                            if (e.code === "Enter" || e.code === "NumpadEnter") {
+                              wait(150).then(() => {
+                                creditInvoiceRef.current?.focus()
+                              })
+                            }
+                          }}
+                        >VAT</MenuItem>
+                        <MenuItem value={"Non-Vat"} onKeyDown={(e) => {
+                          if (e.code === "Enter" || e.code === "NumpadEnter") {
+                            wait(150).then(() => {
+                              creditInvoiceRef.current?.focus()
+                            })
+                          }
+                        }}>Non-VAT</MenuItem>
+                      </Select>
+                    </FormControl>
+
                     <TextField
                       disabled={!addNew || creditState.creditMode === ""}
                       name="invoice"
@@ -2307,7 +2328,7 @@ export default function Collections() {
                           }
                         }}
                       >
-                        Save
+                        Save Credit
                       </Button>
                     )}
                   </div>
@@ -2473,6 +2494,7 @@ export default function Collections() {
         {ModalSearchCollection}
         {ModalSearchBanks}
         {ModalSearchCheckList}
+        {ModalCreditClientIDs}
         <Modal
           open={openPdcInputModal}
           onClose={() => {
@@ -3033,7 +3055,7 @@ export default function Collections() {
           </Box>
         </Modal>
       </CollectionContext.Provider>
-      {loadingAddNew || isLoadingModalSearchCollection && <div className="loading-component"><div className="loader"></div></div>}
+      {(loadingAddNew || isLoadingModalSearchCollection) && <div className="loading-component"><div className="loader"></div></div>}
 
     </div>
   );
