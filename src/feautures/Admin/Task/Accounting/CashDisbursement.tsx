@@ -41,6 +41,7 @@ import {
 import ReactDOMServer from "react-dom/server";
 import { flushSync } from "react-dom";
 import SaveIcon from "@mui/icons-material/Save";
+import { UpwardTable } from "../../../../components/UpwardTable";
 
 const initialState = {
   sub_refNo: "",
@@ -149,6 +150,12 @@ function formatDebitCredit(arr: Array<any>) {
   });
 }
 export default function CashDisbursement() {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  const [rigthClickSelected, setRigthClickSelected] = useState<any>(null);
+
+
   const refParent = useRef<HTMLDivElement>(null);
   const { myAxios, user } = useContext(AuthContext);
   const [state, dispatch] = useReducer(reducer, initialState);
@@ -1010,10 +1017,38 @@ export default function CashDisbursement() {
   function handleClickPrint() {
     mutateOnPrint({ Source_No: state.refNo })
   }
+  function handleClickPrintCheck() {
+    setRigthClickSelected(null)
+    if (rigthClickSelected) {
+      localStorage.removeItem("printString");
+      localStorage.setItem("paper-width", "8.27in");
+      localStorage.setItem("paper-height", "11.69in");
+      localStorage.setItem("module", "cash-disbursement-check");
+      localStorage.setItem("state", JSON.stringify(rigthClickSelected));
+      localStorage.setItem("dataString", JSON.stringify([]));
+      localStorage.setItem("column",JSON.stringify([]));
+      localStorage.setItem( "title", "");
+    }
+    window.open("/dashboard/print", "_blank");
+  }
+  // mutateOnPrint({ Source_No: state.refNo })
   const isDisableField = state.cashMode === "";
+  const width = window.innerWidth - 50;
+  const height = window.innerHeight - 145;
+
+  const closeModal = () => {
+    setModalVisible(false);
+  };
+
 
   return (
     <div
+      onClick={() => {
+        closeModal()
+        if (rigthClickSelected) {
+          setRigthClickSelected(null)
+        }
+      }}
       style={{
         display: "flex",
         flexDirection: "column",
@@ -1330,7 +1365,7 @@ export default function CashDisbursement() {
           }}
           InputProps={{
             style: { height: "27px", fontSize: "14px" },
-            inputRef:explanationInputRef
+            inputRef: explanationInputRef
           }}
           sx={{
             flex: 1,
@@ -1353,7 +1388,7 @@ export default function CashDisbursement() {
             }
           }}
           InputProps={{
-            inputRef:particularsInputRef,
+            inputRef: particularsInputRef,
             style: { height: "27px", fontSize: "14px" },
           }}
           sx={{
@@ -1984,7 +2019,7 @@ export default function CashDisbursement() {
           </Button>
         </div>
       </fieldset>
-      <div
+      {/* <div
         ref={refParent}
         style={{
           marginTop: "10px",
@@ -2079,7 +2114,133 @@ export default function CashDisbursement() {
             }}
           />
         </Box>
-      </div>
+      </div> */}
+
+      <UpwardTable
+        isLoading={loadingCashDisbursementMutate ||
+          loadingGetSearchSelectedCashDisbursement ||
+          isLoadingJob}
+        ref={table}
+        rows={formatDebitCredit(cashDisbursement)}
+        column={selectedCollectionColumns}
+        width={width}
+        height={height}
+        dataReadOnly={true}
+        onSelectionChange={(selected) => {
+          const rowSelected = selected[0]
+          if (selected.length > 0) {
+            setNewStateValue(dispatch, {
+              ...rowSelected,
+              checkDate: new Date(rowSelected.checkDate),
+              sub_refNo: state.sub_refNo,
+              refNo: state.refNo,
+              dateEntry: state.dateEntry,
+              explanation: state.explanation,
+              particulars: state.particulars,
+              totalDebit: state.totalDebit,
+              totalCredit: state.totalCredit,
+              totalBalance: state.totalBalance,
+            });
+            setEditTransaction({
+              edit: true,
+              updateId: rowSelected.TempID,
+            });
+          } else {
+            const resetValue = {
+              code: "",
+              acctName: "",
+              subAcct: "",
+              subAcctName: "",
+              IDNo: "",
+              ClientName: "",
+              credit: "",
+              debit: "",
+              TC_Code: "",
+              TC_Desc: "",
+              remarks: "",
+              vatType: "NON-VAT",
+              invoice: "",
+              checkNo: "",
+              checkDate: new Date(),
+            };
+            setNewStateValue(dispatch, { ...state, ...resetValue });
+            setEditTransaction({ edit: false, updateId: "" });
+            return;
+          }
+        }}
+        onKeyDown={(row, key) => {
+
+          if (key === "Delete" || key === "Backspace") {
+            const rowSelected = row[0];
+
+            Swal.fire({
+              title: `Are you sure you want to delete?`,
+              text: "You won't be able to revert this!",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Yes, delete it!",
+            }).then((result) => {
+              if (result.isConfirmed) {
+                return setCashDisbursement((d) => {
+                  return d.filter(
+                    (items: any) => items.TempID !== rowSelected.TempID
+                  );
+                });
+              }
+            });
+            return;
+          }
+
+          // if (key === "Delete" || key === "Backspace") {
+          //   const rowSelected = row[0];
+          //   if (
+          //     (rowSelected.Deposit_Slip && rowSelected.Deposit_Slip !== "") ||
+          //     (rowSelected.DateDeposit && rowSelected.DateDeposit !== "") ||
+          //     (rowSelected.OR_No && rowSelected.OR_No !== "")
+          //   ) {
+          //     return Swal.fire({
+          //       position: "center",
+          //       icon: "warning",
+          //       title: `Unable to delete. Check No ${rowSelected.Check_No} is already ${rowSelected.OR_No} issued of OR!`,
+          //       showConfirmButton: false,
+          //       timer: 1500,
+          //     });
+          //   }
+          //   const timeout = setTimeout(() => {
+          //     Swal.fire({
+          //       title: "Are you sure?",
+          //       text: `You won't to delete this Check No. ${rowSelected.Check_No}`,
+          //       icon: "warning",
+          //       showCancelButton: true,
+          //       confirmButtonColor: "#3085d6",
+          //       cancelButtonColor: "#d33",
+          //       confirmButtonText: "Yes, delete it!",
+          //     }).then((result) => {
+          //       if (result.isConfirmed) {
+          //         return setPdcDataRows((dt) => {
+          //           return dt.filter(
+          //             (item: any) => item.CheckIdx !== rowSelected.CheckIdx
+          //           );
+          //         });
+          //       }
+          //       table.current?.removeSelection();
+          //     });
+          //     clearTimeout(timeout);
+          //   }, 250);
+          // }
+        }}
+        onRightClick={(rowSelected, event) => {
+          console.log(rowSelected)
+          event.stopPropagation()
+          setPosition({ x: event.pageX, y: event.pageY });
+          setModalVisible(true);
+          setRigthClickSelected(rowSelected)
+        }}
+        inputsearchselector=".manok"
+      />
+
       <Modal open={openJobs} onClose={() => setOpenJobs(false)}>
         <Box
           sx={{
@@ -2261,6 +2422,62 @@ export default function CashDisbursement() {
       {ModalPolicyIdClientIdRefId}
       {ModalTransactionAccount}
       {ModalSearchCashDisbursement}
+
+      {modalVisible && (
+        <div
+          style={{
+            position: 'absolute',
+            top: position.y,
+            left: position.x,
+            backgroundColor: 'white',
+            padding: '10px',
+            border: '1px solid black',
+            borderRadius: '4px',
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+            zIndex: 1000,
+            display: "flex",
+            flexDirection: "column",
+            rowGap: "5px"
+          }}
+        >
+          <Button
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+            }}
+            variant="contained"
+            onClick={() => {
+
+              if (rigthClickSelected) {
+                Swal.fire({
+                  title: `Are you sure you want to delete?`,
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, delete it!",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    setCashDisbursement((d) => {
+                      return d.filter(
+                        (items: any) => items.TempID !== rigthClickSelected.TempID
+                      );
+                    });
+                    setRigthClickSelected(null)
+                  }
+                });
+              }
+            }} >Delete Row</Button>
+          {(rigthClickSelected && rigthClickSelected.code === '1.01.10') &&
+            <Button variant="contained"
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              onClick={handleClickPrintCheck}>Print</Button>}
+        </div>
+      )}
     </div>
   );
 }

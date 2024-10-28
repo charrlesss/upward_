@@ -66,6 +66,7 @@ export default function NavigatePrint() {
         const rows = chunkArray(data.current, 15);
         setRows(rows);
       }
+
     }
   }, []);
 
@@ -109,7 +110,7 @@ export default function NavigatePrint() {
                 }
                 table {
                   border-collapse: collapse;
-                  border-spacing: 50px
+                  border-spacing: 20px
                 }
                 thead tr.headerColumn{
                     border-bottom: 1px solid black;
@@ -579,7 +580,6 @@ export default function NavigatePrint() {
                 </body>
                 </html>
             `;
-                console.log(htmlContent);
 
                 iframeDocument?.open();
                 iframeDocument?.write(htmlContent);
@@ -923,6 +923,76 @@ export default function NavigatePrint() {
               };
 
               WRComponent();
+            }
+            if (module.current === "cash-disbursement-check") {
+              getPaperToPrint().then((printString) => {
+                const htmlContent = `
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Printed HTML Content</title>
+                    <style>
+                    @import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+                    @media print {
+                      @page{
+                          margin-top: 0mm;
+                          margin-bottom: 0mm;
+                          margin-left: 0mm;
+                          margin-right: 0mm;
+                      }
+                      body {
+                            margin: 0;
+                            box-sizing:border-box;
+                        }
+                      .page{
+                          page-break-after: always;
+                          display: flex;
+                          flex-direction: column;
+                          height: 100vh;
+                          width: 100vw;
+                          box-shadow: none;
+                      }
+                      .content{
+                          flex: 1;
+                          block-size: fit-content;
+                          text-align: center;
+                          padding:30px !important;
+
+                      }
+                      .content img{
+                          width: 100%;
+                          height: 100%;
+                      }
+                      .footer, .header{
+                        padding-left: 30px;
+                        padding-right: 30px;
+                        padding-bottom:30px;
+                      }
+                      
+                        .page table td,.page table th{
+                          font-family: "Roboto", sans-serif;
+                          font-weight: 100;
+                          font-style: normal;
+                      }
+                    }
+
+                    </style>
+                </head>
+                <body>
+                      ${printString}
+                </body>
+                </html>
+                 `;
+                iframeDocument?.open();
+                iframeDocument?.write(htmlContent);
+                iframeDocument?.close();
+                setTimeout(function () {
+                  iframe.contentWindow?.print();
+                  iframe.parentNode?.removeChild(iframe);
+                }, 500);
+              });
             }
           }}
         >
@@ -2405,7 +2475,7 @@ export default function NavigatePrint() {
                       <span>{data.current[0].ORAmount}</span>
                     </p>
                   </div>
-                </div>
+ .               </div>
                 <div style={{ flex: 1, width: "100%" }}>
                   <div
                     style={{
@@ -3369,15 +3439,16 @@ export default function NavigatePrint() {
                         ></p>
                       </div>
                       <div style={{ display: "flex", position: "relative" }}>
-                        <div style={{ 
-                          textAlign: "center", 
-                          width: "170px", 
-                          position: "absolute", 
-                          top: state.current[0].PayeeName.length >= 23 ? "-30px" : "-20px", 
-                          left: "75px", 
-                          fontSize: "11px", 
-                          fontWeight: "bold" }}
-                          >{state.current[0].PayeeName}</div>
+                        <div style={{
+                          textAlign: "center",
+                          width: "170px",
+                          position: "absolute",
+                          top: state.current[0].PayeeName.length >= 23 ? "-30px" : "-20px",
+                          left: "75px",
+                          fontSize: "11px",
+                          fontWeight: "bold"
+                        }}
+                        >{state.current[0].PayeeName}</div>
                         <p
                           style={{
                             margin: 0,
@@ -3828,6 +3899,48 @@ export default function NavigatePrint() {
             </div>
           </div>
         )}
+
+        {
+          module.current === "cash-disbursement-check" && (
+            <div
+              className="page content"
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                background: "white",
+                boxShadow: "10px 10px 34px -6px rgba(0,0,0,0.44)",
+                width: localStorage.getItem("paper-width") as string,
+                height: localStorage.getItem("paper-height") as string,
+                padding: "50px 100px",
+              }}
+            >
+              <div
+                id="table"
+                style={{
+                  flex: 1,
+                  fontWeight: "bold",
+                }}
+              >
+                <div style={{ height: "5px" }}></div>
+                <div style={{ fontSize: "14px", display: "flex", columnGap: "10px", justifyContent: "flex-end", marginBottom: "20px",paddingRight:"15px",marginTop:"8px" }}>
+                  <span style={{ letterSpacing: "10px" }}>{format(new Date(state.current.checkDate), 'MM')}</span>
+                  <span style={{ letterSpacing: "10px" }}>{format(new Date(state.current.checkDate), 'dd')}</span>
+                  <span style={{ letterSpacing: "12px" }}>{format(new Date(state.current.checkDate), 'yyyy')}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: "space-between", marginBottom: "10px", }}>
+                  <div style={{ fontSize: "14px", paddingLeft: "95px" }}>{`**${state.current.Payto}**`}</div>
+                  <div style={{ fontSize: "14px" ,paddingRight:"80px"}}>{`**${state.current.credit}**`}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: "14px", paddingLeft: "75px" }}>{`**${AmountToWords(parseFloat(state.current.credit.replace(/,/g, '')))}**`}</div>
+                </div>
+              </div>
+              <div
+                className="footer">
+              </div>
+            </div>
+          )
+        }
       </div>
     </main >
   );

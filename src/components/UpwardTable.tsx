@@ -18,13 +18,14 @@ interface UpwardTablePropsType {
   height: number;
   dataReadOnly: boolean;
   onSelectionChange?: (row: Array<any>, rowIndex: number) => void;
-  onKeyDown?: (row: Array<any>, key: string , rowIndex: number) => void;
+  onKeyDown?: (row: Array<any>, key: string, rowIndex: number) => void;
   isMultipleSelect?: boolean;
   freeze?: boolean;
   inputsearchselector?: string;
   isRowSelectable?: boolean;
   unSelectable?: (row: any) => boolean;
-  isLoading?: boolean
+  isLoading?: boolean,
+  onRightClick?: (rowSelected: any,event: any) => any
 }
 
 const UpwardTable = forwardRef(
@@ -42,7 +43,8 @@ const UpwardTable = forwardRef(
       inputsearchselector = ".search-input-up-on-key-down",
       isRowSelectable = true,
       unSelectable = () => false,
-      isLoading
+      isLoading,
+      onRightClick
     }: UpwardTablePropsType,
     UpwardTableRef
   ) => {
@@ -315,7 +317,13 @@ const UpwardTable = forwardRef(
       }
     }));
 
-
+    const handleRightClick = (event: any, rowIndex: number) => {
+      event.preventDefault();
+      const rowSelected = rows[rowIndex]
+      if (onRightClick) {
+        onRightClick(rowSelected,event)
+      }
+    };
 
 
 
@@ -384,7 +392,7 @@ const UpwardTable = forwardRef(
                       key={rowIndex}
                       onClick={(e) => handleRowClick(rowIndex, e)}
                       onDoubleClick={(e) => {
-                       // e.stopPropagation()
+                        // e.stopPropagation()
 
                         if (_clickTimeout) {
                           clearTimeout(_clickTimeout);
@@ -417,6 +425,7 @@ const UpwardTable = forwardRef(
 
 
                       }}
+                      onContextMenu={(e) => handleRightClick(e, rowIndex)}
                     >
                       {columns.map((col: any, colIndex: number) => (
                         <div
