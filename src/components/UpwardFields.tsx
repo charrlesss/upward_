@@ -1,4 +1,4 @@
-import { HtmlHTMLAttributes, InputHTMLAttributes, useId, ReactNode, useState } from "react";
+import { HtmlHTMLAttributes, InputHTMLAttributes, useId, ReactNode, useState, LegacyRef, HTMLInputTypeAttribute, TextareaHTMLAttributes } from "react";
 import "../style/design.css";
 
 
@@ -12,6 +12,15 @@ interface TextInputProps {
   disableIcon?: boolean
 }
 
+interface TextAreaPrps {
+  textarea:TextareaHTMLAttributes<HTMLTextAreaElement>
+  label: HtmlHTMLAttributes<HTMLLabelElement>;
+  _inputRef:LegacyRef<HTMLTextAreaElement>
+  icon?: ReactNode; // New prop for the icon
+  iconPosition?: 'start' | 'end'; // New prop to choose icon position
+  onIconClick?: React.MouseEventHandler<HTMLDivElement> | undefined,
+  disableIcon?: boolean
+}
 
 interface TextFormatedInputProps extends TextInputProps {
   onChange?: React.ChangeEventHandler<HTMLInputElement> | undefined
@@ -198,6 +207,69 @@ export function TextInput({
           height: '100%',
           ...input.style,
         }}
+      />
+      {icon && iconPosition === 'end' && (
+        <div onClick={onIconClick}
+          style={{
+            position: 'absolute',
+            right: '2px',
+            top: "50%",
+            transform: "translateY(-50%)",
+            zIndex: 1,
+            cursor: disableIcon ? "none" : "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "white",
+            pointerEvents: disableIcon ? "none" : "auto"
+          }}>
+          {icon}
+        </div>
+
+      )
+      }
+    </div >
+  );
+}
+
+
+
+export function TextAreaInput({
+  textarea,
+  label,
+  _inputRef,
+  icon,
+  iconPosition = 'end', // Default position is 'end'
+  disableIcon = false,
+  onIconClick = (e) => { }
+}: TextAreaPrps) {
+  const id = useId();
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        position: 'relative', // Enable absolute positioning for icon
+      }}
+    >
+      <label {...label} htmlFor={id}>
+        {label.title}
+      </label>
+      {icon && iconPosition === 'start' && (
+        <div style={{ position: 'absolute', left: '8px', zIndex: 1 }}>
+          {icon}
+        </div>
+      )}
+      <textarea
+        ref={_inputRef}
+        id={id}
+        {...textarea}
+        style={{
+          height: '100%',
+          ...textarea.style,
+        }}
+      
       />
       {icon && iconPosition === 'end' && (
         <div onClick={onIconClick}

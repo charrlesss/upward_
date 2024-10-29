@@ -284,7 +284,6 @@ export default function NavigatePrint() {
     })
   }
 
-  console.log(state)
 
   return (
     <main
@@ -3184,7 +3183,7 @@ export default function NavigatePrint() {
                           <div style={{ height: "5px" }}></div>
                           <div style={{ width: "100%", display: "flex" }}>
                             <div style={{ width: "100px", fontSize: "12px", fontWeight: "bold", }}>In Payment for :</div>
-                            <div style={{ width: "400px", fontSize: "12px", fontWeight: "bold", height: "auto", wordWrap: "break-word" }}>{state.current[0].Particulars}</div>
+                            <div style={{ width: "400px", fontSize: "12px", fontWeight: "bold", height: "auto", wordWrap: "break-word",minHeight:"50px" }}>{state.current[0].Particulars}</div>
                           </div>
                           <div style={{ height: "5px" }}></div>
                           <div style={{ width: "100%", display: "flex" }}>
@@ -3220,8 +3219,8 @@ export default function NavigatePrint() {
                             minWidth: `${colItem.width} `,
                             maxWidth: `${colItem.width} `,
                             textAlign:
-                              colItem.datakey === "debit" ||
-                                colItem.datakey === "credit"
+                              colItem.datakey === "Debit" ||
+                                colItem.datakey === "Credit"
                                 ? "right"
                                 : "left",
                             padding: "5px",
@@ -3265,7 +3264,7 @@ export default function NavigatePrint() {
                     );
                   })}
                   <div style={{ height: "10px", borderBottom: "1px solid black" }}></div>
-                  <div className="roow">
+                  <div className="row">
                     <div className={`cell  `} style={{
                       width: `200px`,
                       minWidth: `200px`,
@@ -3377,7 +3376,7 @@ export default function NavigatePrint() {
                           fontSize: "12px",
                         }}
                       >
-                        Prepared By :
+                        Approved By :
                       </p>
                     </div>
                     <div style={{ width: "440px", padding: "10px" }}>

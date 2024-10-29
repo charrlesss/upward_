@@ -10,7 +10,18 @@ input:focus{
     outline: 2px solid #3b82f6;
     border: 1px solid white;
 }
-
+textarea{
+    color: black;
+    font-size: 12px;
+    padding: 2.5px 5px;
+    border: 1px solid black;
+    border-radius: 2.5px;
+    font-family: 'Roboto', sans-serif;
+}
+textarea:focus{
+    outline: 2px solid #3b82f6;
+    border: 1px solid white;
+}
 .select{
     border: 1px solid black;
     font-family: 'Roboto', sans-serif;
