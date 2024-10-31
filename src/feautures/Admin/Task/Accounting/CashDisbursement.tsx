@@ -186,10 +186,10 @@ const EditableTable = () => {
   // Initial data state
   const [mode ,setMode] = useState('add')
   const [data, setData] = useState([
-    {0:{  Branch_Code: "HO", dateEntry: "2024-10-23", refNo: "2410-10561", explanation: "BIR Form 2551Q" }},
-    {1:{  Branch_Code: "HO", dateEntry: "2024-10-24", refNo: "2410-10562", explanation: "Tax Payment" }},
-    {2:{  Branch_Code: "HO", dateEntry: "2024-10-24", refNo: "2410-10563", explanation: "SSS Payment" }},
-    {3:{  Branch_Code: "HO", dateEntry: "2024-10-24", refNo: "2410-10564", explanation: "Phil Health Payment" }},
+    // {0:{  Branch_Code: "HO", dateEntry: "2024-10-23", refNo: "2410-10561", explanation: "BIR Form 2551Q" }},
+    // {1:{  Branch_Code: "HO", dateEntry: "2024-10-24", refNo: "2410-10562", explanation: "Tax Payment" }},
+    // {2:{  Branch_Code: "HO", dateEntry: "2024-10-24", refNo: "2410-10563", explanation: "SSS Payment" }},
+    // {3:{  Branch_Code: "HO", dateEntry: "2024-10-24", refNo: "2410-10564", explanation: "Phil Health Payment" }},
   ]);
   const column = [
     {key:"Branch_Code",label:'Branch_Code',width:100},
@@ -216,7 +216,63 @@ const EditableTable = () => {
   const onBlur = (row:any)=>{
     setRowEdited(row)
   }
-  const onColumnEnter = (row:any,col:any,RowIndex:any,colIdx:any,e:any)=>{
+
+  async function GoToNextRow(RowIndex:any){
+    const newRowIndex:any = parseInt(RowIndex)  +1
+    const nextRow:any  = Object.entries(data).filter((dd:any)=>{
+      return dd[0] === newRowIndex.toString()
+    })
+    console.log(newRowIndex)
+    console.log(nextRow)
+      if(nextRow.length > 0){
+            setRowEdited(nextRow[0][1])
+            setIsEdited(newRowIndex.toString())
+
+            setTimeout(()=>{
+
+            const input = document.querySelector(`.row-${newRowIndex}.col-0`) as HTMLInputElement
+            if(input){
+                input.focus()
+              }
+          },100)
+      }
+  }
+
+  async function SaveRow(RowIndex:any){
+    const keys = Object.keys(data)
+    const LastRowIndex = keys[keys.length -1]
+    if(mode === 'add' && RowIndex ===  LastRowIndex){
+      let userConfirmed = window.confirm("Add Row?");
+      if(userConfirmed){
+        AddRow()
+      }
+    }
+  
+
+  }
+
+  function AddRow(){
+    const keys = Object.keys(data)
+    const NewRowIndex:any = String(isNaN(parseInt(keys[keys.length - 1]) + 1) ? 0 : parseInt(keys[keys.length - 1]) + 1)
+    const dd:any = [...data,{
+      [NewRowIndex]:{
+        Branch_Code: "", dateEntry: "", refNo: "", explanation: "" 
+      }
+    }]
+    setData(dd)
+    wait(2000).then(()=>{
+      setRowEdited(dd)
+      setIsEdited(NewRowIndex)
+      setTimeout(()=>{
+        const input = document.querySelector(`.row-${NewRowIndex}.col-0`) as HTMLInputElement
+        if(input){
+            input.focus()
+          }
+      },100)
+    })
+  }
+
+  const onColumnEnter = async (row:any,col:any,RowIndex:any,colIdx:any,e:any)=>{
     if(e.code === 'Enter' || e.code === 'NumpadEnter'){
       e.preventDefault()
         setData((d:any)=> {
@@ -231,35 +287,31 @@ const EditableTable = () => {
             })
             return d
           })
+
             const input = document.querySelector(`.row-${RowIndex}.col-${colIdx + 1}`) as HTMLInputElement
+
             if(input){
               setTimeout(()=>{
-                input.focus()
+                input.focus()    
               },100)
 
-            }else{
-              // row ending
-
-              const newRowIndex:any = parseInt(RowIndex)  +1
-              const nextRow:any  = Object.entries(data).filter((dd:any)=>{
-                return dd[0] === newRowIndex.toString()
-              })
-           
-              if(nextRow.length > 0){
-                setRowEdited(nextRow[0][1])
-                setIsEdited(newRowIndex.toString())
-  
-                setTimeout(()=>{
-  
-                const input = document.querySelector(`.row-${newRowIndex}.col-0`) as HTMLInputElement
-                console.log(input)
-                if(input){
-                    input.focus()
-                  }
-                },100)
+            }else{ 
+              const keys = Object.keys(data)
+              const LastRowIndex = keys[keys.length -1]
+              // console.log(RowIndex,LastRowIndex)
+              if(RowIndex === LastRowIndex){
+                if(col.key === 'explanation'){
+                  wait(2000).then(async()=>{
+                    await SaveRow(RowIndex)
+                  })
+                }
               }else{
-                // limit row
+                if(col.key === 'explanation'){
+                  await SaveRow(RowIndex)
+                  await GoToNextRow(RowIndex)
+                }
               }
+           
             }
       return
     }
@@ -269,7 +321,20 @@ const EditableTable = () => {
     setIsEdited(RowIndex)
   }
 
-  console.log(isEdited)
+  useEffect(()=>{
+    if(mode === 'add'){
+      const keys = Object.keys(data)
+      const NewRowIndex = String(isNaN(parseInt(keys[keys.length - 1]) + 1) ? 0 : parseInt(keys[keys.length - 1]) + 1)
+      const dd:any = [...data,{
+        [NewRowIndex]:{
+          Branch_Code: "", dateEntry: "", refNo: "", explanation: "" 
+        }
+      }]
+      setData(dd)
+    }
+  },[mode])
+
+  console.log(data)
   return (
     <div>
         <table>
@@ -284,7 +349,7 @@ const EditableTable = () => {
           </thead>
           <tbody>
             {
-              data.map((row:any,rowIdx)=>{
+              data?.map((row:any,rowIdx)=>{
                 const RowIndex = keys[rowIdx]
                 return <tr  key={rowIdx}>
                   {
@@ -344,41 +409,7 @@ const EditableTable = () => {
                 </tr>
               })
             }
-             {/* <tr>
-              {
-                column.map((col,colIdx)=>{
-                  const RowIndex = String(parseInt( Object.keys(data)[data.length -1]) + 1)
-                  const row = {  Branch_Code: "", dateEntry: "", refNo: "", explanation: "" }
-                  return (
-                    <td  
-                    key={colIdx} 
-                    id={`${col.key}_RowIndex`}
-                    style={{
-                      width:col.width,
-                      border:"1px solid black"
-                    }}>
-                        <input
-                        className={`row-${RowIndex} col-${colIdx}`}
-                        onDoubleClick={(e)=>{
-                          doubleClick(RowIndex,row,col,e)
-                        }}
-                          value={rowEdited[RowIndex][col.key]  || ""}
-                          onChange={(e)=>{
-                            handleInputchange(RowIndex,col,e)
-                          }}
-                          onBlur={(e)=>{
-                            onBlur(row)
-                          }}
-                          onKeyDown={(e)=>{
-                            onColumnEnter(row,col,RowIndex,colIdx,e)
-                          }}
-                        /> 
-                    </td>
-                  )
-                })
-              }
-
-            </tr>  */}
+           
           </tbody>
         </table>
     </div>
