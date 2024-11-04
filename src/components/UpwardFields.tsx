@@ -327,7 +327,7 @@ export function SelectInput({
       <select
         {...select}
         ref={selectRef}
-        className="select"
+        className={`select ${select.className}`}
         style={{
           height: "18px",
           ...select.style,
