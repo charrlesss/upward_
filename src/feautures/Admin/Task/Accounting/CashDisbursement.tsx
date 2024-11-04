@@ -1,49 +1,24 @@
-import { useReducer, useContext, useState, useRef, useEffect, useMemo } from "react";
+import { useReducer, useContext, useState, useRef, useEffect, useCallback } from "react";
 import {
   TextField,
   Button,
-  FormControl,
-  InputAdornment,
-  IconButton,
-  InputLabel,
-  OutlinedInput,
-  Select,
-  MenuItem,
-  Modal,
-  Typography,
-  Box,
-  Checkbox,
-  FormControlLabel,
+  Pagination,
 } from "@mui/material";
-import CustomDatePicker from "../../../../components/DatePicker";
 import LoadingButton from "@mui/lab/LoadingButton";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import Swal from "sweetalert2";
 import { AuthContext } from "../../../../components/AuthContext";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import { useMutation, useQuery, useQueryClient } from "react-query";
-import { NumericFormatCustom } from "../../../../components/NumberFormat";
+import {  useMutation, useQuery } from "react-query";
 import useQueryModalTable from "../../../../hooks/useQueryModalTable";
 import { wait } from "../../../../lib/wait";
-import { GridRowSelectionModel } from "@mui/x-data-grid";
 import NotInterestedIcon from "@mui/icons-material/NotInterested";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { DatePicker } from "@mui/x-date-pickers";
 import { deepOrange, grey } from "@mui/material/colors";
-import formatDate from "../../../../lib/formatDate";
-import Table from "../../../../components/Table";
-import {
-  codeCondfirmationAlert,
-  saveCondfirmationAlert,
-} from "../../../../lib/confirmationAlert";
-import { flushSync } from "react-dom";
-import SaveIcon from "@mui/icons-material/Save";
-import { UpwardTable } from "../../../../components/UpwardTable";
 import { SelectInput, TextAreaInput, TextFormatedInput, TextInput } from "../../../../components/UpwardFields";
 import { format } from "date-fns";
 import "../../../../style/datagridview.css"
+import { setNewStateValue } from "./PostDateChecks";
+import { codeCondfirmationAlert, saveCondfirmationAlert } from "../../../../lib/confirmationAlert";
 
 const initialState = {
   sub_refNo: "",
@@ -99,7 +74,7 @@ const columns = [
     key: "code", label: "Code", width: 150, type: 'text'
   },
   {
-    key: "acctName", label: "Account Name", width: 300, type: 'text'
+    key: "acctName", label: "Account Name", width: 400, type: 'text'
   },
   {
     key: "subAcctName",
@@ -109,36 +84,36 @@ const columns = [
 
   },
   {
-    key: "ClientName", label: "Name", width: 300, type: 'text'
+    key: "ClientName", label: "Name", width: 400, type: 'text'
 
   },
   {
-    key: "debit", label: "Debit", width: 80, type: 'number'
+    key: "debit", label: "Debit", width: 120, type: 'number'
 
   },
   {
-    key: "credit", label: "Credit", width: 100, type: 'number'
+    key: "credit", label: "Credit", width: 120, type: 'number'
   },
   {
-    key: "checkNo", label: "Check No", width: 80, type: 'text'
+    key: "checkNo", label: "Check No", width: 120, type: 'text'
   },
   {
-    key: "checkDate", label: "Check Date", width: 100, type: 'date'
+    key: "checkDate", label: "Check Date", width: 120, type: 'date'
   },
   {
-    key: "TC_Code", label: "TC", width: 100, type: 'text'
+    key: "TC_Code", label: "TC", width: 120, type: 'text'
   },
   {
     key: "remarks",
     label: "Remarks",
-    width: 300,
+    width: 400,
     type: 'text'
   },
   {
-    key: "Payto", label: "Payto", width: 300, type: 'text'
+    key: "Payto", label: "Payto", width: 400, type: 'text'
   },
   {
-    key: "vatType", label: "Vat Type", width: 100, type: 'select', options: ['NON-VAT', 'VAT', '']
+    key: "vatType", label: "Vat Type", width: 100, type: 'select', options: [{key:'NON-VAT'},{key:'VAT'}]
   },
   {
     key: "invoice", label: "Invoice", width: 200, type: 'text'
@@ -164,7 +139,7 @@ const columns = [
 ];
 
 
-const EditableTable = () => {
+export default function  CashDisbursement() {
   const { myAxios, user } = useContext(AuthContext);
   const [state, dispatch] = useReducer(reducer, initialState);
 
@@ -172,27 +147,21 @@ const EditableTable = () => {
   const dateRef = useRef<HTMLInputElement>(null)
   const expRef = useRef<HTMLInputElement>(null)
   const particularRef = useRef<HTMLTextAreaElement>(null)
-
   const IdsSearchInput = useRef<HTMLInputElement>(null)
   const chartAccountSearchInput = useRef<HTMLInputElement>(null)
+
   const [showDialog ,setShowDialog] = useState(false)
   const [mode ,setMode] = useState('add')
   const [cashDMode ,setCashDMode] = useState('')
-  const [data, setData] = useState([]);
-  const column = columns.filter((itm)=>!itm.hide)
-  const defaultValue = columns.reduce((a:any,b)=>{
-    a[b.key] = ''
-    return a
-  },{})
-
-
+  const [data, setData] = useState<any>([]);
   const [rowEdited,setRowEdited] = useState<any>(null)
   const [isEdited,setIsEdited] = useState(null)
-  const keys = Object.keys(data)
 
-    const {
-    isLoading: loadingGeneralJournalGenerator,
-    refetch: refetchGeneralJournalGenerator,
+  const [openJobs, setOpenJobs] = useState(false);
+
+  const {
+  isLoading: loadingGeneralJournalGenerator,
+  refetch: refetchGeneralJournalGenerator,
   } = useQuery({
     queryKey: "general-journal-id-generator",
     queryFn: async () =>
@@ -440,6 +409,73 @@ const EditableTable = () => {
   });
   
 
+  const {
+    mutate: getSearchSelectedCashDisbursement,
+    isLoading: loadingGetSearchSelectedCashDisbursement,
+  } = useMutation({
+    mutationKey: "get-selected-search-general-journal",
+    mutationFn: async (variable: any) =>
+      await myAxios.post(
+        "/task/accounting/cash-disbursement/get-selected-search-cash-disbursement",
+        variable,
+        {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }
+      ),
+    onSuccess: (res) => {
+      const response = res as any;
+      const selected = response.data.selectedCashDisbursement;
+      const { explanation, dateEntry, refNo, particulars } = selected[0];
+      dispatch({
+        type: "UPDATE_FIELD",
+        field: "sub_refNo",
+        value: refNo,
+      });
+      dispatch({
+        type: "UPDATE_FIELD",
+        field: "refNo",
+        value: refNo,
+      });
+      dispatch({
+        type: "UPDATE_FIELD",
+        field: "dateEntry",
+        value: dateEntry,
+      });
+      dispatch({
+        type: "UPDATE_FIELD",
+        field: "explanation",
+        value: explanation,
+      });
+      dispatch({
+        type: "UPDATE_FIELD",
+        field: "particulars",
+        value: particulars,
+      });
+      const SearchData = selected.map((itm:any,idx:number)=>{
+        itm.credit = parseFloat(itm.credit.replace(/,/g,'')).toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+        itm.debit = parseFloat(itm.debit.replace(/,/g,'')).toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+
+        if(itm.code === '1.01.10'){
+          itm.checkDate =  format(new Date(itm.checkDate), "MM/dd/yyyy") 
+
+        }else{
+          itm.checkDate = ''
+        }
+        return {[idx]:itm}
+      })
+     setData(SearchData);
+
+    },
+  });
+
     const {
     ModalComponent: ModalSearchCashDisbursement,
     openModal: openSearchCashDisbursement,
@@ -463,18 +499,11 @@ const EditableTable = () => {
     uniqueId: "Source_No",
     responseDataKey: "search",
     onSelected: (selectedRowData, data) => {
-      // getSearchSelectedCashDisbursement({
-      //   Source_No: selectedRowData[0].Source_No,
-      // });
-      // handleInputChange({
-      //   target: { value: "edit", name: "cashMode" },
-      // });
-      // setCashDisbursement([]);
-      // setEditTransaction({
-      //   edit: false,
-      //   updateId: "",
-      // });
-
+      console.log(selectedRowData)
+      getSearchSelectedCashDisbursement({
+        Source_No: selectedRowData[0].Source_No,
+      });
+      setCashDMode('update')
       closeSearchCashDisbursement();
     },
     onCloseFunction: (value: any) => {
@@ -483,47 +512,197 @@ const EditableTable = () => {
     searchRef: chartAccountSearchInput,
   });
 
-  const handleInputchange = (RowIndex:any,col:any,e:any) =>{
-    setRowEdited((d:any)=>({
-      [RowIndex]:{
-        ...d[RowIndex],
-        [col.key]:e.target.value
+
+  const {
+        mutate: addCashDisbursementMutate,
+        isLoading: loadingCashDisbursementMutate,
+  } = useMutation({
+    mutationKey: "add-cash-disbursement",
+    mutationFn: async (variable: any) =>
+      await myAxios.post(
+        "/task/accounting/cash-disbursement/add-cash-disbursement",
+        variable,
+        {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }
+      ),
+    onSuccess: (res) => {
+      const response = res as any;
+      if (response.data.success) {
+        setNewStateValue(dispatch, initialState);
+        refetchGeneralJournalGenerator();
+        setData([]);
+
+        return Swal.fire({
+          position: "center",
+          icon: "success",
+          title: response.data.message,
+          timer: 1500,
+        });
       }
-    }))
-  }
-  const onBlur = (row:any)=>{
-    setRowEdited(row)
-  }
+      return Swal.fire({
+        position: "center",
+        icon: "warning",
+        title: response.data.message,
+        timer: 1500,
+      });
+    },
+  });
 
-  async function GoToNextRow(RowIndex:any){
-    const newRowIndex:any = parseInt(RowIndex)  +1
-    const nextRow:any  = Object.entries(data).filter((dd:any)=>{
-      return dd[0] === newRowIndex.toString()
-    })
- 
-      if(nextRow.length > 0){
-            setRowEdited(nextRow[0][1])
-            setIsEdited(newRowIndex.toString())
+  const { mutate: mutateJob, isLoading: isLoadingJob } = useMutation({
+    mutationKey: "jobs",
+    mutationFn: async (variable: any) =>
+      await myAxios.post("/task/accounting/general-journal/jobs", variable, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      }),
+    onSuccess: (res) => {
+      const response = res as any;
+      setData([]);
+      setData(response.data.jobs);
+      setOpenJobs(false);
+    },
+  });
 
-            setTimeout(()=>{
-            const input = document.querySelector(`.row-${newRowIndex}.col-0`) as HTMLInputElement
-            if(input){
-                input.focus()
-              }
-          },100)
+
+  const {
+    mutate: mutateVoidCashDisbursement,
+    isLoading: loadingVoidCashDisbursement,
+  } = useMutation({
+    mutationKey: "void-cash-disbursement",
+    mutationFn: async (variable: any) =>
+      await myAxios.post(
+        "/task/accounting/cash-disbursement/void-cash-disbursement",
+        variable,
+        {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }
+      ),
+    onSuccess: (res) => {
+      const response = res as any;
+      if (response.data.success) {
+        setNewStateValue(dispatch, initialState);
+        refetchGeneralJournalGenerator();
+        setData([]);
+        return Swal.fire({
+          position: "center",
+          icon: "success",
+          title: response.data.message,
+          timer: 1500,
+        });
       }
-  }
+      return Swal.fire({
+        position: "center",
+        icon: "warning",
+        title: response.data.message,
+        timer: 1500,
+      });
+    },
+  });
 
-  async function SaveRow(RowIndex:any){
-    const keys = Object.keys(data)
-    const LastRowIndex = keys[keys.length -1]
-    if(mode === 'add' && RowIndex ===  LastRowIndex){
-      setShowDialog(true)
+
+    function handleOnSave() {
+    if (state.refNo === "") {
+      return Swal.fire({
+        position: "center",
+        icon: "warning",
+        title: "Please provide reference number!",
+        timer: 1500,
+      });
+    }
+    if (state.explanation === "") {
+      return Swal.fire({
+        position: "center",
+        icon: "warning",
+        title: "Please provide explanation!",
+        timer: 1500,
+      }).then(() => {
+        wait(300).then(() => {
+          expRef.current?.focus();
+        });
+      });
+    }
+    if (
+      (state.totalDebit === "" && state.totalCredit === "") ||
+      (state.totalDebit === "0.00" && state.totalCredit === "0.00")
+    ) {
+      return Swal.fire({
+        position: "center",
+        icon: "warning",
+        title:
+          "Total Debit and Credit amount must not be zero(0), please double check the entries",
+        timer: 1500,
+      }).then(() => {
+        wait(300).then(() => { });
+      });
+    }
+    if (state.totalDebit !== state.totalCredit) {
+      return Swal.fire({
+        position: "center",
+        icon: "warning",
+        title:
+          "Total Debit and Credit amount must be balance, please double check the entries",
+        timer: 1500,
+      }).then(() => {
+        wait(300).then(() => { });
+      });
+    }
+    const dataValues = data.map((itm:any)=>Object.values(itm)[0])
+    const cashDisbursement = dataValues.filter((itm:any)=>itm.code !== '')
+    if (state.cashMode === "edit") {
+      codeCondfirmationAlert({
+        isUpdate: true,
+        cb: (userCodeConfirmation) => {
+          addCashDisbursementMutate({
+            hasSelected:cashDMode === 'update',
+            refNo: state.refNo,
+            dateEntry: state.dateEntry,
+            explanation: state.explanation,
+            particulars: state.particulars,
+            cashDisbursement,
+            userCodeConfirmation,
+          });
+        },
+      });
+    } else {
+      saveCondfirmationAlert({
+        isConfirm: () => {
+          addCashDisbursementMutate({
+            hasSelected:cashDMode === 'update',
+            refNo: state.refNo,
+            dateEntry: state.dateEntry,
+            explanation: state.explanation,
+            particulars: state.particulars,
+            cashDisbursement,
+          });
+        },
+      });
     }
   }
 
+  function handleVoid() {
+    codeCondfirmationAlert({
+      isUpdate: false,
+      text: `Are you sure you want to void ${state.refNo}`,
+      cb: (userCodeConfirmation) => {
+        mutateVoidCashDisbursement({
+          refNo: state.refNo,
+          dateEntry: state.dateEntry,
+          userCodeConfirmation,
+        });
+      },
+    });
+  }
   function AddRow(){
-
+    const defaultValue = columns.reduce((a:any,b:any)=>{
+      a[b.key] = ''
+      return a
+    },{})
     const keys = Object.keys(data)
     const NewRowIndex:any = String(isNaN(parseInt(keys[keys.length - 1]) + 1) ? 0 : parseInt(keys[keys.length - 1]) + 1)
     const dd:any = [...data,{
@@ -541,99 +720,214 @@ const EditableTable = () => {
       },100)
     })
   }
+  function handleRowSave(RowIndex:any) {
+    if(rowEdited[RowIndex].code === ''){
+      alert('Account Code is required')
+      const input = document.querySelector(`.row-${RowIndex}.col-0`) as HTMLInputElement
+      if(input){
+        input.focus()
+      }
+      return false
 
-  const onColumnEnter = async (row:any,col:any,RowIndex:any,colIdx:any,e:any)=>{
-    if(e.code === 'Enter' || e.code === 'NumpadEnter'){
-      e.preventDefault()
-            if(col.key === 'debit' || col.key === 'credit'){
-              if(isNaN(parseInt(e.target.value))){
-                e.target.value = "0.00"
-              }
-            }
-            setData((d:any)=> {
-                d = d.map((itm:any)=>{
-                  if(Object.keys(itm).includes(RowIndex)){
-                    itm = {[RowIndex]:{
-                      ...itm[RowIndex],
-                      [col.key]:e.target.value
-                    }}
-                  }
-                  return itm
+    }else if(rowEdited[RowIndex].ClientName === ''){
+      alert('Name is required')
+      const input = document.querySelector(`.row-${RowIndex}.col-3`) as HTMLInputElement
+      if(input){
+        input.focus()
+      }
+      return false
+
+    }else if(rowEdited[RowIndex].credit ===  rowEdited[RowIndex].debit){
+      alert('Credit and Debit cannot be the same. They must have a difference.')
+      const input = document.querySelector(`.row-${RowIndex}.col-4`) as HTMLInputElement
+      if(input){
+        input.focus()
+      }
+      return false
+
+    }else if(rowEdited[RowIndex].TC_Code === ''){
+      alert('TC is required')
+      const input = document.querySelector(`.row-${RowIndex}.col-8`) as HTMLInputElement
+      if(input){
+        input.focus()
+      }
+      return false
+    }
+
+    if(rowEdited[RowIndex].vatType === "VAT" &&  rowEdited[RowIndex].code !== "1.06.02"){
+      const credit = parseFloat(rowEdited[RowIndex].credit.replace(/,/g,''))
+      const debit = parseFloat(rowEdited[RowIndex].debit.replace(/,/g,''))
+      let taxableamt = 0
+      const newRowValue = columns.reduce((a:any,b:any)=>{
+        a[b.key] = ''
+        return a
+      },{})
+      
+      if(debit !== 0){
+        taxableamt =   debit / 1.12
+        setData((d:any)=> {
+          d = d.map((itm:any)=>{
+            if(Object.keys(itm).includes(RowIndex)){
+              itm = {[RowIndex]:{
+                ...itm[RowIndex],
+                debit: taxableamt.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
                 })
-                return d
-              })
-            if(col.key === 'code'){
-              openChartAccountSearch(e.target.value)
+              }}
             }
-            else if(col.key === 'ClientName'){
-              openPolicyIdClientIdRefId(e.target.value)
-            }else if(col.key === 'Payto'){
-              if(rowEdited[RowIndex].code === '1.01.10'){
-                openPolicyIdPayTo(e.target.value)
-              }
-            }else if(col.key === 'TC_Code'){
-              openTransactionAccount(e.target.value)
-            }else if(rowEdited[RowIndex].code !== '1.01.10' && col.key === 'credit'){
-              const input = document.querySelector(`.row-${RowIndex}.col-${colIdx + 3}`) as HTMLInputElement
-              if(input){
-                setTimeout(()=>{
-                  input.focus()    
-                },100)
-              }
-            }else if(rowEdited[RowIndex].code !== '1.01.10' && col.key === 'remarks'){
-              const input = document.querySelector(`.row-${RowIndex}.col-${colIdx + 2}`) as HTMLInputElement
-              if(input){
-                setTimeout(()=>{
-                  input.focus()    
-                },100)
-              }
-            }else{
-               const input = document.querySelector(`.row-${RowIndex}.col-${colIdx + 1}`) as HTMLInputElement
-                if(input){
-                  setTimeout(()=>{
-                    input.focus()    
-                  },100)
+            return itm
+          })
+          return d
+        })
+        setRowEdited((d:any)=>({
+          [RowIndex]:{
+            ...d[RowIndex],
+            debit: taxableamt.toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })
+          }
+        }))
 
-                }else{ 
-                  const keys = Object.keys(data)
-                  const LastRowIndex = keys[keys.length -1]
-                  if(RowIndex === LastRowIndex){
-                    if(col.key === 'invoice'){
-                        await SaveRow(RowIndex)
-                    }
-                  }else{
-                    if(col.key === 'invoice'){
-                      await SaveRow(RowIndex)
-                      await GoToNextRow(RowIndex)
-                    }
-                  }
-              
-                }
+      }else{
+        taxableamt =  credit / 1.12
+        setData((d:any)=> {
+          d = d.map((itm:any)=>{
+            if(Object.keys(itm).includes(RowIndex)){
+              itm = {[RowIndex]:{
+                ...itm[RowIndex],
+                credit: taxableamt.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })
+              }}
             }
-           
-      return
+            return itm
+          })
+          return d
+        })
+        setRowEdited((d:any)=>({
+          [RowIndex]:{
+            ...d[RowIndex],
+            credit: taxableamt.toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })
+          }
+        }))
+      }
+      
+      let inputtax = taxableamt  * 0.12
+
+      newRowValue.code = "1.06.02"
+      newRowValue.acctName  = "Input Tax"
+      newRowValue.subAcctName  = rowEdited[RowIndex].subAcctName
+      newRowValue.ClientName = rowEdited[RowIndex].ClientName
+
+      if(parseFloat(newRowValue.debit.replace(/,/g,'')) !== 0){
+        newRowValue.debit = inputtax.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+        newRowValue.credit = rowEdited[RowIndex].credit
+      }else{
+        newRowValue.credit =  inputtax.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+        newRowValue.debit = rowEdited[RowIndex].debit
+      }
+
+      newRowValue.checkNo = rowEdited[RowIndex].checkNo
+      newRowValue.checkDate = rowEdited[RowIndex].checkDate
+      newRowValue.TC_Code = rowEdited[RowIndex].TC_Code
+      newRowValue.remarks = rowEdited[RowIndex].remarks
+      newRowValue.Payto = rowEdited[RowIndex].Payto
+      newRowValue.vatType = rowEdited[RowIndex].vatType
+      newRowValue.invoice = rowEdited[RowIndex].invoice
+      newRowValue.TempID = rowEdited[RowIndex].TempID
+      newRowValue.IDNo = rowEdited[RowIndex].IDNo
+      newRowValue.BranchCode = rowEdited[RowIndex].BranchCode
+      newRowValue.addres = rowEdited[RowIndex].addres
+      newRowValue.subAcct = rowEdited[RowIndex].subAcct
+
+      setData((d:any)=>{
+        return insertRowAtIndex(d,parseInt(RowIndex),newRowValue)
+      })
+
     }
+    return true
+
   }
-  const doubleClick = (RowIndex:any,row:any,col:any,e:any)=>{
-    setRowEdited(row)
-    setIsEdited(RowIndex)
+  function insertRowAtIndex(data:any, index:any, newRow:any) {
+    // Step 1: Insert the new row at the specified index
+    const updatedData = [
+      ...data.slice(0, index + 1),
+      { [index + 1]: newRow },
+      ...data.slice(index + 1)
+    ];
+  
+    // Step 2: Update keys of subsequent rows
+    return updatedData.map((item, i) => {
+      const key = Object.keys(item)[0]; // Get the original key
+      const value = Object.values(item)[0]; // Get the value
+  
+      // Adjust the key to reflect the new order
+      return { [i]: value };
+    });
   }
 
-  useEffect(()=>{
-    if(mode === 'add'){
-      const keys = Object.keys(data)
-      const NewRowIndex = String(isNaN(parseInt(keys[keys.length - 1]) + 1) ? 0 : parseInt(keys[keys.length - 1]) + 1)
-      const dd:any = [...data,{
-        [NewRowIndex]:defaultValue
-      }]
-      setData(dd)
-    }
-  },[mode])
+    useEffect(() => {
+      const _data = data.map((itm:any)=>{
+        return Object.values(itm)[0]
+      })
 
+      const debit = _data.reduce((a: number, item: any) => {
+        let deb = 0
+        if(!isNaN(parseFloat(item.debit.replace(/,/g, "")))){
+          deb  =  parseFloat(item.debit.replace(/,/g, ""))
+        }
+        return a + deb;
+      }, 0);
+      const credit = _data.reduce((a: number, item: any) => {
+        let cred = 0
+        if(!isNaN(parseFloat(item.credit.replace(/,/g, "")))){
+          cred  =  parseFloat(item.credit.replace(/,/g, ""))
+        }
+        return a + cred;
+      }, 0);
+
+      
+      dispatch({
+        type: "UPDATE_FIELD",
+        field: "totalDebit",
+        value: debit.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+      });
+      dispatch({
+        type: "UPDATE_FIELD",
+        field: "totalCredit",
+        value: credit.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+      });
+      dispatch({
+        type: "UPDATE_FIELD",
+        field: "totalBalance",
+        value: (debit - credit).toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+      });
+  }, [data]);
 
   const isDisableField = cashDMode === "";
 
-  if(loadingGeneralJournalGenerator || isLoadingPolicyIdClientIdRefId || isLoadingChartAccountSearch || isLoadingPolicyIdPayTo || isLoadingTransactionAccount){
+  if(loadingCashDisbursementMutate || loadingGeneralJournalGenerator || isLoadingPolicyIdClientIdRefId || isLoadingChartAccountSearch || isLoadingPolicyIdPayTo || isLoadingTransactionAccount){
     return <div>Loading...</div>
   }
 
@@ -643,6 +937,7 @@ const EditableTable = () => {
     {
       showDialog && 
       <MyDialog 
+        title="Add New Row?"
         onConfirmed={()=>{
           AddRow()
           setShowDialog(false)
@@ -655,6 +950,7 @@ const EditableTable = () => {
         }} 
       />
     }
+     
      <div
         style={{
           display: "flex",
@@ -721,7 +1017,7 @@ const EditableTable = () => {
             }}
             loading={false}
             disabled={cashDMode === ""}
-            // onClick={handleOnSave}
+            onClick={handleOnSave}
             color="success"
             variant="contained"
           >
@@ -776,7 +1072,7 @@ const EditableTable = () => {
                 background: deepOrange[600],
               },
             }}
-            // onClick={handleVoid}
+            onClick={handleVoid}
             loading={false}
             disabled={cashDMode !== "edit"}
             variant="contained"
@@ -973,181 +1269,22 @@ const EditableTable = () => {
           </div>
         </fieldset>
       </div>
-      <div style={{width:"calc(100vw - 40px)",height:"300px", overflow:"auto",position:"relative"}}>
-        <table style={{position:"absolute"}}>
-          <thead>
-            <tr>
-            {
-                column.map((itm,idx)=>{
-                  return <th  key={idx} style={{width:itm.width ,border:"1px solid black"}}>{itm.label}</th>
-                })
-              }
-            </tr>
-          </thead>
-          <tbody>
-            {
-              data?.map((row:any,rowIdx)=>{
-                const RowIndex = keys[rowIdx]
-                return <tr  key={rowIdx}>
-                  {
-                    column.map((col,colIdx)=>{
-                      if(isEdited  === RowIndex) {
-                        if(col.type === 'number'){
-                          return (
-                            <td  
-                            key={colIdx} 
-                            id={`${col.key}_RowIndex`}
-                            style={{
-                              width:col.width,
-                              border:"1px solid black"
-                            }}>
-                              <TextFormatedInput
-                                label={{
-                                  title: "",
-                                  style: {
-                                    width: "0px",
-                                  },
-                                }}
-                                input={{
-                                  className:`row-${RowIndex} col-${colIdx}`,
-                                  type: "text",
-                                  style: { width: col.width },
-                                  onKeyDown:(e)=>{
-                                    if(e.code === "NumpadEnter" || e.code === 'Enter'){
-                                      onColumnEnter(row,col,RowIndex,colIdx,e)
-                                    }
-                                  },
-                                  onChange:(e)=>{
-                                    handleInputchange(RowIndex,col,e)
-                                  },
-                                  onBlur:(e)=>{
-                                    onBlur(row)
-                                  }
-                                }}
-                              />
-                            </td>
-                          )
-                        }else if(col.type === 'select'){
-                          return (
-                            <td  
-                            key={colIdx} 
-                            id={`${col.key}_RowIndex`}
-                            style={{
-                              width:col.width,
-                              border:"1px solid black"
-                            }}>
-                              <SelectInput
-                                label={{
-                                  title: "",
-                                  style: {
-                                    width: "0px",
-                                  },
-                                }}
-                                select={{
-                                  value:rowEdited[RowIndex][col.key] || "",
-                                  className:`row-${RowIndex} col-${colIdx}`,
-                                  style: { width:col.width, height: "22px" },
-                                  onKeyDown:(e)=>{
-                                    onColumnEnter(row,col,RowIndex,colIdx,e)
-                                  },
-                                  onBlur:(e)=>{
-                                    onBlur(row)
-                                  },
-                                  onChange:(e)=>{
-                                    handleInputchange(RowIndex,col,e)
-                                  }
-                                }}
-                                datasource={[
-                                  { key: "VAT" },
-                                  { key: "Non-VAT" },
-                                ]}
-                                values={"key"}
-                                display={"key"}
-                              />
-                            </td>
-                          )
-                        }else{
-                          return (
-                            <td  
-                            key={colIdx} 
-                            id={`${col.key}_RowIndex`}
-                            style={{
-                              width:col.width,
-                              border:"1px solid black"
-                            }}>
-                               <TextInput
-                                  label={{
-                                    title: "",
-                                    style: {
-                                      width: "0px",
-                                    },
-                                  }}
-                                  input={{
-                                    readOnly:
-                                      col.key === 'acctName' ||
-                                      col.key === 'subAcctName' ||
-                                      (col.key === 'checkNo' && rowEdited[RowIndex].code !== '1.01.10') ||
-                                      (col.key === 'checkDate' && rowEdited[RowIndex].code !== '1.01.10') ||
-                                      (col.key === 'Payto' && rowEdited[RowIndex].code !== '1.01.10') ,
-                                    className:`row-${RowIndex} col-${colIdx}`,
-                                    type:col.key === 'checkDate' && rowEdited[RowIndex].code === '1.01.10' ? "date" :"text",
-                                    style: { width: col.width },
-                                    onKeyDown: (e) => {
-                                      onColumnEnter(row,col,RowIndex,colIdx,e)
-                                    },
-                                    onChange:(e)=>{
-                                      handleInputchange(RowIndex,col,e)
-                                    },
-                                    onBlur:(e)=>{
-                                      onBlur(row)
-                                    },
-                                    value:rowEdited[RowIndex][col.key] || ""
-                                  }}
-                                />
-                            </td>
-                          )
-                        }
-                      
-                      }else{
-                        return (
-                          <td  
-                          key={colIdx} 
-                          id={`${col.key}_RowIndex`}
-                          style={{
-                            width:col.width,
-                            border:"1px solid black"
-                          }}>
-                            <TextInput
-                              label={{
-                                title: "",
-                                style: {
-                                  width: "0px",
-                                },
-                              }}
-                              input={{
-                                readOnly:true,
-                                onDoubleClick:(e)=>{
-                                  doubleClick(RowIndex,row,col,e)
-                                },
-                                defaultValue:row[RowIndex][col.key],
-                                style: { width: col.width },
-                              }}
-                            />
-                              
-                          </td>
-                        
-                  
-                      )
-                      }
-                      
-                    })
-                  }
-                </tr>
-              })
-            }
-          </tbody>
-        </table> 
-      </div>
+        <Table
+            isEdited={isEdited}
+            setIsEdited={setIsEdited}
+            rowEdited={rowEdited}
+            setRowEdited={setRowEdited}
+            mode={mode}
+            data={data}
+            setData={setData}
+            setShowDialog={setShowDialog}
+            columns={columns}
+            openTransactionAccount={openTransactionAccount}
+            openPolicyIdPayTo={openPolicyIdPayTo}
+            openPolicyIdClientIdRefId={openPolicyIdClientIdRefId}
+            openChartAccountSearch={openChartAccountSearch}
+            handleRowSave={handleRowSave}
+        /> 
   
       {ModalPolicyIdClientIdRefId}
       {ModalChartAccountSearch}
@@ -1158,7 +1295,501 @@ const EditableTable = () => {
   );
 };
 
-const MyDialog = ({onConfirmed,onDeclined,onClose}:any)=>{
+const Table = ({
+  isEdited,
+  setIsEdited,
+  rowEdited,
+  setRowEdited,
+  mode,
+  data,
+  setData,
+  setShowDialog,
+  columns:__columns,
+  openTransactionAccount,
+  openPolicyIdPayTo,
+  openPolicyIdClientIdRefId,
+  openChartAccountSearch,
+  handleRowSave,
+}:any)=>{
+  const inputsearchselector = ".search-input-up-on-key-down"
+  const [pages, setPages] = useState<Array<any>>([])
+  const [pageNumber, setPageNumber] = useState(0)
+  const [hoveredColumn, setHoveredColumn] = useState(null);
+  const [selectedRows, setSelectedRows] = useState<Array<number>>([0]);
+  const divRef = useRef<HTMLDivElement>(null);
+  const [_clickTimeout, _setClickTimeout] = useState(null);
+  const [columns, setColumns] = useState(__columns.filter((itm:any) => !itm.hide));
+
+  const _columns = useRef(columns)
+  const keys = Object.keys(data)
+  
+  const handleInputchange = (RowIndex:any,col:any,e:any) =>{
+    setRowEdited((d:any)=>({
+      [RowIndex]:{
+        ...d[RowIndex],
+        [col.key]:e.target.value
+      }
+    }))
+  }
+  const onBlur = (row:any)=>{
+    setRowEdited(row)
+  }
+
+  async function GoToNextRow(RowIndex:any){
+    const newRowIndex:any = parseInt(RowIndex)  +1
+    const nextRow:any  = Object.entries(data).filter((dd:any)=>{
+      return dd[0] === newRowIndex.toString()
+    })
+ 
+      if(nextRow.length > 0){
+            setRowEdited(nextRow[0][1])
+            setIsEdited(newRowIndex.toString())
+
+            setTimeout(()=>{
+            const input = document.querySelector(`.row-${newRowIndex}.col-0`) as HTMLInputElement
+            if(input){
+                input.focus()
+              }
+          },100)
+      }
+  }
+
+  async function SaveRow(RowIndex:any,LastRowIndex:any ){
+    if(handleRowSave(RowIndex)){
+      if(mode === 'add' && RowIndex === LastRowIndex){
+        setShowDialog(true)
+      }else{
+        await GoToNextRow(RowIndex)
+      }
+    }
+  
+  }
+
+  const addNewRow = useCallback(() => {
+    const defaultValue = _columns.current.reduce((a:any,b:any)=>{
+      a[b.key] = ''
+      return a
+    },{})
+
+    setData((prevData:any) => {
+      const keys = Object.keys(prevData);
+      const NewRowIndex = String(
+        isNaN(parseInt(keys[keys.length - 1]) + 1)
+          ? 0
+          : parseInt(keys[keys.length - 1]) + 1
+      );
+  
+      return [...prevData, { [NewRowIndex]: defaultValue }];
+    });
+  }, [setData]);
+
+  const onColumnEnter = async (row:any,col:any,RowIndex:any,colIdx:any,e:any)=>{
+    if(e.code === 'Enter' || e.code === 'NumpadEnter'){
+      e.preventDefault()
+            if(col.key === 'debit' || col.key === 'credit'){
+              if(isNaN(parseInt(e.target.value.replace(/,/g,'')))){
+                e.target.value = "0.00"
+              }
+            }
+            setData((d:any)=> {
+                d = d.map((itm:any)=>{
+                  if(Object.keys(itm).includes(RowIndex)){
+                    itm = {[RowIndex]:{
+                      ...itm[RowIndex],
+                      [col.key]:e.target.value
+                    }}
+                  }
+                  return itm
+                })
+                return d
+              })
+            if(col.key === 'code'){
+              openChartAccountSearch(e.target.value)
+            }
+            else if(col.key === 'ClientName'){
+              openPolicyIdClientIdRefId(e.target.value)
+            }else if(col.key === 'Payto'){
+              if(rowEdited[RowIndex].code === '1.01.10'){
+                openPolicyIdPayTo(e.target.value)
+              }
+            }else if(col.key === 'TC_Code'){
+              openTransactionAccount(e.target.value)
+            }else if(rowEdited[RowIndex].code !== '1.01.10' && col.key === 'credit'){
+              const input = document.querySelector(`.row-${RowIndex}.col-${colIdx + 3}`) as HTMLInputElement
+              if(input){
+                setTimeout(()=>{
+                  input.focus()    
+                },100)
+              }
+            }else if(rowEdited[RowIndex].code !== '1.01.10' && col.key === 'remarks'){
+              const input = document.querySelector(`.row-${RowIndex}.col-${colIdx + 2}`) as HTMLInputElement
+              if(input){
+                setTimeout(()=>{
+                  input.focus()    
+                },100)
+              }
+            }else{
+               const input = document.querySelector(`.row-${RowIndex}.col-${colIdx + 1}`) as HTMLInputElement
+                if(input){
+                  setTimeout(()=>{
+                    input.focus()    
+                  },100)
+
+                }else{ 
+                  const keys = Object.keys(data)
+                  const LastRowIndex = keys[keys.length -1]
+                  await SaveRow(RowIndex ,LastRowIndex)
+                }
+            }
+           
+      return
+    }
+  }
+  const doubleClick = (RowIndex:any,row:any,col:any,e:any)=>{
+    console.log(row)
+    setRowEdited(row)
+    setIsEdited(RowIndex)
+  }
+
+  useEffect(()=>{
+    if(mode === 'add'){
+      addNewRow()
+    }
+  },[mode, addNewRow])
+
+  useEffect(() => {
+    const _pages = formatArrayIntoChunks(data, 100)
+    setPages(_pages)
+  }, [data])
+
+  const startResize = (index: any, e: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const startX = e.clientX;
+    const startWidth = columns[index].width;
+
+    const doDrag = (moveEvent: any) => {
+      const newWidth = startWidth + (moveEvent.clientX - startX);
+      const updatedColumns = [...columns];
+      updatedColumns[index].width = newWidth > 50 ? newWidth : 50; // Set minimum column width
+      setColumns(updatedColumns);
+    };
+
+    const stopDrag = () => {
+      document.removeEventListener("mousemove", doDrag);
+      document.removeEventListener("mouseup", stopDrag);
+    };
+
+    document.addEventListener("mousemove", doDrag);
+    document.addEventListener("mouseup", stopDrag);
+  };
+  const handleMouseEnter = (index: any) => {
+    setHoveredColumn(index); // Set the hovered column index
+  };
+  const handleMouseLeave = () => {
+    setHoveredColumn(null); // Reset hovered column index
+  };
+
+  const handleKeyDown = (e: any) => {
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedRows((prevIndex: any) => {
+        if (prevIndex[prevIndex.length - 1] === null) return [0];
+        if (prevIndex[prevIndex.length - 1] >= data.length - 1) {
+          return [data.length - 1];
+        }
+        const newPrevIndex = prevIndex[prevIndex.length - 1] + 1;
+        const row = document.querySelector(`.row-${newPrevIndex}`);
+        row?.querySelector("input")?.focus();
+
+        row?.scrollIntoView({ block: "end", behavior: "smooth" });
+        return [newPrevIndex];
+      });
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+
+      if (selectedRows[selectedRows.length - 1] === 0) {
+        const input = document.querySelector(
+          inputsearchselector
+        ) as HTMLInputElement;
+        if (input && input.tagName === "INPUT") {
+          input?.focus();
+        } else if (input && input.tagName === "DIV") {
+          const divInput = document.querySelector(
+            `${inputsearchselector} input`
+          ) as HTMLInputElement;
+
+          divInput?.focus();
+        }
+      }
+
+      setSelectedRows((prevIndex: any) => {
+        if (prevIndex[prevIndex.length - 1] === 0) return [0];
+        const newPrevIndex = prevIndex[prevIndex.length - 1] - 1;
+        const row = document.querySelector(`.row-${newPrevIndex}`);
+
+        row?.scrollIntoView({ block: "end", behavior: "smooth" });
+        row?.querySelector("input")?.focus();
+        return [newPrevIndex];
+      });
+    }
+
+  };  
+
+
+  const width = window.innerWidth - 40
+  const height = window.innerHeight -250
+
+  return (
+    <div
+    style={{
+      display: "flex",
+      justifyContent: "center",
+    }}
+    onKeyDown={(e)=>{
+      e.stopPropagation()
+      handleKeyDown(e)
+    }}
+  >
+    <div>
+      <div className="table-frame-color">
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            width: `${width - 10}px        `,
+            height: `${height - 135}px`,
+            minHeight: "270px"
+          }}
+          className="table-frame"
+        >
+          <div className="table-panel">
+            <div ref={divRef} className={`grid-container `} tabIndex={-1}>
+              <div
+                className="grid-row grid-header"
+                style={{
+                  position: "sticky",
+                  zIndex: "10",
+                  top: "-1px",
+                  background: "white",
+                }}
+              >
+                {columns.map((col: any, index: number) => (
+                  <div
+                    key={index}
+                    className={`grid-cell header-cell ${hoveredColumn === index ? `highlight-column` : ""
+                      }`} // Add the class if hovered
+                    style={{ width: col.width, height: "20px", }}
+                  >
+                    <input
+                      style={{ fontWeight: "bold" }}
+                      defaultValue={col.label}
+                      readOnly
+                      onChange={(e) => { }}
+                    />
+                    <div
+                      className="resize-handle"
+                      onMouseDown={(e) => startResize(index, e)}
+                      onMouseEnter={(e) => {
+                        e.preventDefault();
+                        handleMouseEnter(index);
+                      }} // On hover
+                      onMouseLeave={(e) => {
+                        e.preventDefault();
+                        handleMouseLeave();
+                      }} // On mouse leave
+                    />
+                  </div>
+                ))}
+              </div>
+              {pages[pageNumber]?.map((row: any, rowIndex: any) => {
+                const RowIndex = keys[rowIndex]
+                return (
+                  <div
+                  className={`grid-row row-${rowIndex}`} // Highlight selected row
+                  key={rowIndex}
+              
+                >
+                  {columns.map((col: any, colIndex: number) =>{
+                        if(isEdited  === RowIndex) {
+                          if(col.type === 'number'){
+                            return (
+                              <div  
+                              className="grid-cell"
+                              key={colIndex} 
+                              id={`${col.key}_RowIndex`}
+                              style={{
+                                width:col.width,
+                                padding:'2px'
+                              }}>
+                                <TextFormatedInput
+                                  onChange={(e)=>{
+                                      handleInputchange(RowIndex,col,e)
+                                  }}
+                                  label={{
+                                    title: "",
+                                    style: {
+                                      width: "0px",
+                                    },
+                                  }}
+                                  input={{
+                                    className:`row-${RowIndex} col-${colIndex}`,
+                                    type: "text",
+                                    style: { width: col.width ,height:"18px" },
+                                    value:rowEdited[RowIndex][col.key] , 
+                                    onKeyDown:(e)=>{
+                                      if(e.code === "NumpadEnter" || e.code === 'Enter'){
+                                        onColumnEnter(row,col,RowIndex,colIndex,e)
+                                      }
+                                    },
+                                    
+                                    onBlur:(e)=>{
+                                      onBlur(row)
+                                    }
+                                  }}
+                                />
+                              </div>
+                            )
+                          }else if(col.type === 'select'){
+                            return (
+                              <div  
+                              className="grid-cell"
+                              key={colIndex} 
+                              id={`${col.key}_RowIndex`}
+                              style={{
+                                width:col.width,
+                                padding:'2px'
+                              }}>
+                                <SelectInput
+                                  label={{
+                                    title: "",
+                                    style: {
+                                      width: "0px",
+                                    },
+                                  }}
+                                  select={{
+                                    value:rowEdited[RowIndex][col.key] || "",
+                                    className:`row-${RowIndex} col-${colIndex}`,
+                                    style: { width:col.width, height: "18px" },
+                                    onKeyDown:(e)=>{
+                                      e.stopPropagation()
+                                      onColumnEnter(row,col,RowIndex,colIndex,e)
+                                    },
+                                    onBlur:(e)=>{
+                                      onBlur(row)
+                                    },
+                                    onChange:(e)=>{
+                                      handleInputchange(RowIndex,col,e)
+                                    }
+                                  }}
+                                  datasource={col.options}
+                                  values={"key"}
+                                  display={"key"}
+                                  
+                                />
+                              </div>
+                            )
+                          }else{
+                            return (
+                              <div  
+                               className="grid-cell"
+                              key={colIndex} 
+                              id={`${col.key}_RowIndex`}
+                              style={{
+                                width:col.width,
+                                padding:'2px'                              
+                              }}>
+                                 <TextInput
+                                    label={{
+                                      title: "",
+                                      style: {
+                                        width: "0px",
+                                      },
+                                    }}
+                                    input={{
+                                      readOnly:
+                                        col.key === 'acctName' ||
+                                        col.key === 'subAcctName' ||
+                                        (col.key === 'checkNo' && rowEdited[RowIndex].code !== '1.01.10') ||
+                                        (col.key === 'checkDate' && rowEdited[RowIndex].code !== '1.01.10') ||
+                                        (col.key === 'Payto' && rowEdited[RowIndex].code !== '1.01.10') ,
+                                      className:`row-${RowIndex} col-${colIndex}`,
+                                      type:col.key === 'checkDate' && rowEdited[RowIndex].code === '1.01.10' ? "date" :"text",
+                                      style: { width: col.width , height:"18px" },
+                                      onKeyDown: (e) => {
+                                        onColumnEnter(row,col,RowIndex,colIndex,e)
+                                      },
+                                      onChange:(e)=>{
+                                        handleInputchange(RowIndex,col,e)
+                                      },
+                                      onBlur:(e)=>{
+                                        onBlur(row)
+                                      },
+                                      value:rowEdited[RowIndex][col.key] || ""
+                                    }}
+                                  />
+                              </div>
+                            )
+                          }
+                        }else{
+                          return (
+                            <div  
+                            className="grid-cell"
+
+                            key={colIndex} 
+                            id={`${col.key}_RowIndex`}
+                            style={{
+                              width:col.width,
+                              padding:"2px"
+                            }}>
+                              <TextInput
+                                label={{
+                                  title: "",
+                                  style: {
+                                    width: "0px",
+                                  },
+                                }}
+                                input={{
+                                  readOnly:true,
+                                  onDoubleClick:(e)=>{
+                                    doubleClick(RowIndex,row,col,e)
+                                  },
+                                  defaultValue:row[RowIndex][col.key],
+                                  style: { width: col.width ,height:"18px"},
+                                }}
+                              />
+                                
+                            </div>
+                          
+                    
+                        )
+                        }
+                  })}
+                </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* {isLoading && <div className="table-loading">
+          <div className="loader"></div>
+        </div>} */}
+      </div>
+      <div className="table-panel-footer" >
+        <div>Records : {data.length}</div>
+        <div><Pagination count={pages.length} onChange={(e, value) => {
+          setPageNumber(value - 1)
+        }} />
+        </div>
+      </div>
+    </div>
+  </div>
+  )
+}
+const MyDialog = ({onConfirmed,onDeclined,onClose ,title}:any)=>{
   const confirmButtonRef = useRef<HTMLButtonElement>(null)
   const cancelButtonRef = useRef<HTMLButtonElement>(null)
   useEffect(()=>{
@@ -1180,7 +1811,7 @@ const MyDialog = ({onConfirmed,onDeclined,onClose}:any)=>{
     padding:"10px",
     borderRadius:"5px",
     boxShadow:"-1px 0px 10px -1px rgba(0,0,0,0.75)",
-    zIndex:"2",
+    zIndex:"299",
     background:"white"
     
   }}>
@@ -1205,7 +1836,7 @@ const MyDialog = ({onConfirmed,onDeclined,onClose}:any)=>{
           </g>
         </svg>
     </button>
-    <h2 style={{fontSize:"14px" ,textTransform:"uppercase", fontWeight:"bold"}}>Add New Row?</h2>
+    <h2 style={{fontSize:"14px" ,textTransform:"uppercase", fontWeight:"bold"}}>{title}</h2>
     <div>
       <button 
       ref={confirmButtonRef} 
@@ -1244,15 +1875,12 @@ const MyDialog = ({onConfirmed,onDeclined,onClose}:any)=>{
     </>
   )
 }
-
-
-export default  function CashDisbursement(){
-
-  return (
-    <div>
-       <EditableTable />
-    </div>
-  )
+function formatArrayIntoChunks(arr: Array<any>, chunkSize = 100) {
+  let result = [];
+  for (let i = 0; i < arr.length; i += chunkSize) {
+    result.push(arr.slice(i, i + chunkSize));
+  }
+  return result;
 }
 
 
