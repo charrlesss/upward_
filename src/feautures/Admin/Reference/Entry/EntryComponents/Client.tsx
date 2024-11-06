@@ -26,7 +26,6 @@ import SaveIcon from "@mui/icons-material/Save";
 import { wait } from "../../../../../lib/wait";
 import { setNewStateValue } from "../../../Task/Accounting/PostDateChecks";
 import { pink } from "@mui/material/colors";
-import Table from "../../../../../components/Table";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import {
   codeCondfirmationAlert,
@@ -61,7 +60,6 @@ const clientMortgagee = [
   "CAMFIN LENDING, INC.",
 ];
 export default function Client() {
-  const refParent = useRef<HTMLDivElement>(null);
   const form = useRef<HTMLFormElement>(null);
   const table = useRef<any>(null);
   const [rows, setRows] = useState([]);

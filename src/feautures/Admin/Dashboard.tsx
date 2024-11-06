@@ -1,31 +1,14 @@
-import React, { useEffect, useState, forwardRef, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useQuery } from "react-query";
 import { myAxios } from "../../lib/axios";
 import { useContext } from "react";
 import { AuthContext } from "../../components/AuthContext";
 import "../../style/dashboard.css";
-import _ from "lodash";
 import useMultipleComponent from "../../hooks/useMultipleComponent";
 import { flushSync } from "react-dom";
 import { UpwardTable } from "../../components/UpwardTable";
 
 
-function groupByHeader(arr:Array<any>) {
-  // Create an object to hold groups by 'header'
-  const grouped = arr.reduce((acc, obj) => {
-    const key = obj.header;
-    // If this header doesn't exist in acc, initialize it with an empty array
-    if (!acc[key]) {
-      acc[key] = [];
-    }
-    // Push the current object into the appropriate group
-    acc[key].push(obj);
-    return acc;
-  }, {});
-
-  // Convert the grouped object to an array of arrays
-  return Object.values(grouped);
-}
 
 const policyColumn = [
   { field: "AssuredName", headerName: "Assured Name", width: 300 },
@@ -205,10 +188,11 @@ const POLICYTABLE = ({policy,column}:any)=>{
       setLoading(false)
       setData(data?.data.renewal)
     })
-  },[policy])
+  },[policy ,user])
 
   const width = window.innerWidth - 50;
   const height = window.innerHeight - 145;
+  console.log('red')
   if(laoding){
     return <div style={{textAlign:"center"}}>Loading...</div>
   }

@@ -21,6 +21,7 @@ import { Badge } from "@mui/material";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import "../style/laoding.css"
+import Header from "./Header";
 const drawerWidth = 280;
 
 const Main = styled("main", { shouldForwardProp: (prop) => prop !== "open" })<{
@@ -32,7 +33,7 @@ const Main = styled("main", { shouldForwardProp: (prop) => prop !== "open" })<{
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
-  marginLeft: `-${drawerWidth}px`,
+//  marginLeft: `-${drawerWidth}px`,
   ...(open && {
     transition: theme.transitions.create("margin", {
       easing: theme.transitions.easing.easeOut,
@@ -68,7 +69,7 @@ const DrawerHeader = styled("div")(({ theme }) => {
     display: "flex",
     padding: theme.spacing(0, 1),
     minHeight: "40px",
-    border: "2px solid red",
+    border: "2px solid black",
     justifyContent: "flex-end",
     height: "40px",
     maxHeight: "40px",
@@ -102,36 +103,7 @@ export const addToSidebarOptions = [
   },
 ];
 
-function Clock() {
-  const [time, setTime] = useState(new Date());
 
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      setTime(new Date());
-    }, 500);
-
-    // Cleanup interval on component unmount
-    return () => clearInterval(intervalId);
-  }, []);
-
-  const formatTime = (date: Date) => {
-    let hours = date.getHours();
-    let minutes: any = date.getMinutes();
-    let seconds: any = date.getSeconds();
-    const ampm = hours >= 12 ? "PM" : "AM";
-
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-    minutes = minutes < 10 ? "0" + minutes : minutes;
-    seconds = seconds < 10 ? "0" + seconds : seconds;
-
-    return `${hours}:${minutes}:${seconds} ${ampm}`;
-  };
-
-  return (
-    <p style={{ fontSize: "13px", marginRight: "30px" }}>{formatTime(time)}</p>
-  );
-}
 
 export default function Layout() {
   const { user } = useContext(AuthContext);
@@ -184,9 +156,9 @@ export default function Layout() {
   }, []);
 
   return (
-    <Box sx={{ display: "flex" }}>
+    <Box sx={{ display: "flex" ,flexDirection:"column" }}>
       <CssBaseline />
-      {matchQuery ? (
+      {/* {matchQuery ? (
         <SidebarMobile
           open={open}
           drawerWidth={drawerWidth}
@@ -239,42 +211,13 @@ export default function Layout() {
                 },
               }}
             >
-              {/* <p style={{ fontSize: "13px", marginRight: "30px" }}>5:31 PM</p> */}
               <Clock />
-              {/* <IconButton
-                aria-label="show 17 new notifications"
-                color="inherit"
-              >
-                <Badge
-                  badgeContent={100}
-                  color="error"
-                  sx={{
-                    "& .MuiBadge-badge": {
-                      fontSize: 10,
-                      height: 15,
-                      minWidth: 15,
-                    },
-                  }}
-                >
-                  <NotificationsIcon sx={{ width: "20px", height: "20px" }} />
-                </Badge>
-              </IconButton>
-              <IconButton
-                edge="end"
-                aria-label="account of current user"
-                // aria-controls={menuId}
-                aria-haspopup="true"
-                // onClick={handleProfileMenuOpen}
-                color="inherit"
-              >
-                <AccountCircle />
-              </IconButton> */}
             </Box>
           </Box>
         </Toolbar>
-      </AppBar>
+      </AppBar> */}
+      <Header />
       <Main open={open}>
-        <DrawerHeader />
         <Box
           id="page-content"
           sx={(theme) => ({

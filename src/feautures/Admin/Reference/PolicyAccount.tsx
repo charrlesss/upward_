@@ -645,7 +645,7 @@ export default function PolicyAccount() {
       >
         <Box
           style={{
-            height: `${refParent.current?.getBoundingClientRect().height}px`,
+            height: `400px`,
             width: "100%",
             overflowX: "scroll",
             position: "absolute",

@@ -138,7 +138,7 @@ const UpwardTable = forwardRef(
           const selectedRowData = rows.filter((d, idx) =>
             selectedItemsParams.includes(idx)
           );
-          const { newSelectedRowsFiltered, data } =
+          const { newSelectedRowsFiltered } =
             getIndexAndData(selectedRowData);
 
           setSelectedItems(newSelectedRowsFiltered);
@@ -154,10 +154,7 @@ const UpwardTable = forwardRef(
             let selectedItemsParams: Array<number> = selectedItems.filter(
               (i) => i !== rowIndex
             );
-            const selectedRowData = rows.filter((d, idx) =>
-              selectedItemsParams.includes(idx)
-            );
-
+       
             setSelectedItems(selectedItemsParams);
             // onSelectionChangeRef.current(selectedRowData, rowIndex);
           } else {
@@ -170,10 +167,6 @@ const UpwardTable = forwardRef(
               ...selectedItems,
               rowIndex,
             ];
-
-            const selectedRowData = rows.filter((d, idx) =>
-              selectedItemsParams.includes(idx)
-            );
 
             setSelectedItems(selectedItemsParams);
             // onSelectionChangeRef.current(selectedRowData, rowIndex);

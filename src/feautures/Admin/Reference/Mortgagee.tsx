@@ -489,9 +489,7 @@ export default function Mortgagee() {
       >
         <Box
           style={{
-            height: `${
-              refParent.current?.getBoundingClientRect().height as number
-            }px`,
+            height:"500px",
             width: "100%",
             overflowX: "scroll",
             position: "absolute",

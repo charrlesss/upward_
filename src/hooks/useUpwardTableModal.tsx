@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback, useId } from "react";
+import { useEffect, useRef, useState, useId } from "react";
 import "../style/upwardtablemodel.css";
 import { TextInput } from "../components/UpwardFields";
 import { UpwardTable } from "../components/UpwardTable";
@@ -56,10 +56,8 @@ export const useUpwardTableModal = ({
     }
   };
   // Throttle the search function to limit it to once every 500ms
-  const throttledSearch = useCallback(
-    throttle((query) => performSearch(query), 500),
-    []
-  );
+  const throttledSearch = throttle((query) => performSearch(query), 500)
+
   const openModal = (search: string) => {
     mutate({ search: search });
     setShowModal(true);
