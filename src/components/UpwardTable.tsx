@@ -469,7 +469,7 @@ const UpwardTable = forwardRef(
             </div>}
           </div>
           <div className="table-panel-footer" >
-            <div>Records : {rows.length}</div>
+            <div>Records : {rows?.length}</div>
             <div><Pagination count={pages.length} onChange={(e, value) => {
               setPageNumber(value - 1)
             }} />

@@ -192,7 +192,6 @@ const POLICYTABLE = ({policy,column}:any)=>{
 
   const width = window.innerWidth - 50;
   const height = window.innerHeight - 145;
-  console.log('red')
   if(laoding){
     return <div style={{textAlign:"center"}}>Loading...</div>
   }

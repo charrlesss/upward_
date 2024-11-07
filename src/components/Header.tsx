@@ -10,16 +10,68 @@ import Swal from "sweetalert2";
 import axios from "axios";
 
 export default function Header() {
-  const { user , setUser, myAxios} = useContext(AuthContext);
+ 
+
+
+  const { user, setUser, myAxios } = useContext(AuthContext);
   const [openMenu, setOpenMenu] = useState(null);
   const [openUserMenu, setOpenUserMenu] = useState(false);
   const menuRef = useRef<any>(null); // Reference to the menu container
   const menuUserRef = useRef<any>(null); // Reference to the menu container
-
+  const [menuData, setMenuData] = useState([
+    {
+      name: "Dashboard",
+      path: "/dashboard",
+    },
+    {
+      name: "Claim",
+      path: "/dashboard/task/claims/claims",
+    },
+    {
+      name: "Reference",
+      subLinks: [
+        { name: "Policy Account", path: "/dashboard/reference/policy-account" },
+        { name: "Bank", path: "/dashboard/reference/bank" },
+        { name: "Bank Account", path: "/dashboard/reference/bank-account" },
+        { name: "Booklet", path: "/dashboard/reference/booklet" },
+        { name: "Chart of Accounts", path: "/dashboard/reference/chart-accounts" },
+        { name: "Sub Account", path: "/dashboard/reference/sub-account" },
+        { name: "Transaction Code", path: "/dashboard/reference/transaction-code" },
+        { name: "ID Entry", path: "/dashboard/reference/id-entry" },
+        { name: "Subline", path: "/dashboard/reference/subline" },
+        { name: "Rates", path: "/dashboard/reference/rates" },
+        { name: "CTPL", path: "/dashboard/reference/ctpl" },
+        { name: "Petty Cash Transaction", path: "/dashboard/reference/petty-cash-transaction" },
+        { name: "Mortgagee", path: "/dashboard/reference/mortgagee" },
+      ],
+    },
+    {
+      name: "Accounting",
+      subLinks: [
+        { name: "Post Dated Checks", path: "/dashboard/task/accounting/post-date-checks" },
+        { name: "Collections", path: "/dashboard/task/accounting/collections" },
+        { name: "Deposit", path: "/dashboard/task/accounting/deposit" },
+        { name: "Return Check", path: "/dashboard/task/accounting/return-check" },
+        { name: "Petty Cash", path: "/dashboard/task/accounting/petty-cash" },
+        { name: "General Journal", path: "/dashboard/task/accounting/general-journal" },
+        { name: "Cash Disbursement", path: "/dashboard/task/accounting/cash-disbursement" },
+        { name: "Treasury", path: "/dashboard/task/accounting/warehouse-checks" },
+        { name: "Check Pullout", path: "/dashboard/task/accounting/check-pullout" },
+        { name: "Check Postponement", path: "/dashboard/task/accounting/check-postponement" },
+      ],
+    },
+    {
+      name: "Production",
+      subLinks: [
+        { name: "Policy", path: "/dashboard/task/production/policy/" },
+        { name: "Statement of Account", path: "/dashboard/task/production/statement-of-account" },
+      ],
+    },
+  ])
 
   const navigate = useNavigate();
 
-  const { refetch , isLoading } = useQuery({
+  const { refetch, isLoading } = useQuery({
     queryKey: "logout",
     queryFn: async () =>
       wait(1200).then(async () => await Logout(myAxios, user)),
@@ -53,7 +105,7 @@ export default function Header() {
       confirmButtonText: "Yes, logout it!"
     }).then((result) => {
       if (result.isConfirmed) {
-        
+
         axios.get('http://localhost:7624/close-report', {
           withCredentials: true
         }).then((res) => {
@@ -65,17 +117,14 @@ export default function Header() {
         })
           .catch(console.log)
 
-       setTimeout(()=>{
-        refetch();
-       },500)
+        setTimeout(() => {
+          refetch();
+        }, 500)
       }
     });
 
 
   };
-
-
-  
 
   const handleMouseEnter = (menuItem: any) => {
     if (!menuItem.path && menuItem.subLinks) {
@@ -83,8 +132,6 @@ export default function Header() {
     }
     setOpenMenu(menuItem.name);
   };
-
-
 
   const handleClick = (menuItem: any) => {
     if (!menuItem.path && menuItem.subLinks) {
@@ -97,17 +144,196 @@ export default function Header() {
     setOpenMenu(null);
   };
 
-
-
+  useEffect(() => {
+    const _menuData = [
+      {
+        name: "Dashboard",
+        path: "/dashboard",
+      },
+      {
+        name: "Claim",
+        path: "/dashboard/task/claims/claims",
+      },
+      {
+        name: "Reference",
+        subLinks: [
+          { name: "Policy Account", path: "/dashboard/reference/policy-account" },
+          { name: "Bank", path: "/dashboard/reference/bank" },
+          { name: "Bank Account", path: "/dashboard/reference/bank-account" },
+          { name: "Booklet", path: "/dashboard/reference/booklet" },
+          { name: "Chart of Accounts", path: "/dashboard/reference/chart-accounts" },
+          { name: "Sub Account", path: "/dashboard/reference/sub-account" },
+          { name: "Transaction Code", path: "/dashboard/reference/transaction-code" },
+          { name: "ID Entry", path: "/dashboard/reference/id-entry" },
+          { name: "Subline", path: "/dashboard/reference/subline" },
+          { name: "Rates", path: "/dashboard/reference/rates" },
+          { name: "CTPL", path: "/dashboard/reference/ctpl" },
+          { name: "Petty Cash Transaction", path: "/dashboard/reference/petty-cash-transaction" },
+          { name: "Mortgagee", path: "/dashboard/reference/mortgagee" },
+        ],
+      },
+      {
+        name: "Accounting",
+        subLinks: [
+          { name: "Post Dated Checks", path: "/dashboard/task/accounting/post-date-checks" },
+          { name: "Collections", path: "/dashboard/task/accounting/collections" },
+          { name: "Deposit", path: "/dashboard/task/accounting/deposit" },
+          { name: "Return Check", path: "/dashboard/task/accounting/return-check" },
+          { name: "Petty Cash", path: "/dashboard/task/accounting/petty-cash" },
+          { name: "General Journal", path: "/dashboard/task/accounting/general-journal" },
+          { name: "Cash Disbursement", path: "/dashboard/task/accounting/cash-disbursement" },
+          { name: "Treasury", path: "/dashboard/task/accounting/warehouse-checks" },
+          { name: "Check Pullout", path: "/dashboard/task/accounting/check-pullout" },
+          { name: "Check Postponement", path: "/dashboard/task/accounting/check-postponement" },
+        ],
+      },
+      {
+        name: "Production",
+        subLinks: [
+          { name: "Policy", path: "/dashboard/task/production/policy/" },
+          { name: "Statement of Account", path: "/dashboard/task/production/statement-of-account" },
+        ],
+      },
+  
+    ];
+    if (user?.userAccess === 'PRODUCTION_ACCOUNTING') {
+      setMenuData([{
+        name: "Dashboard",
+        path: "/dashboard",
+      },
+      {
+        name: "Reference",
+        subLinks: [
+          { name: "Policy Account", path: "/dashboard/reference/policy-account" },
+          { name: "Bank", path: "/dashboard/reference/bank" },
+          { name: "Bank Account", path: "/dashboard/reference/bank-account" },
+          { name: "Booklet", path: "/dashboard/reference/booklet" },
+          { name: "Chart of Accounts", path: "/dashboard/reference/chart-accounts" },
+          { name: "Sub Account", path: "/dashboard/reference/sub-account" },
+          { name: "Transaction Code", path: "/dashboard/reference/transaction-code" },
+          { name: "ID Entry", path: "/dashboard/reference/id-entry" },
+          { name: "Subline", path: "/dashboard/reference/subline" },
+          { name: "Rates", path: "/dashboard/reference/rates" },
+          { name: "CTPL", path: "/dashboard/reference/ctpl" },
+          { name: "Petty Cash Transaction", path: "/dashboard/reference/petty-cash-transaction" },
+          { name: "Mortgagee", path: "/dashboard/reference/mortgagee" },
+        ],
+      },
+      {
+        name: "Accounting",
+        subLinks: [
+          { name: "Post Dated Checks", path: "/dashboard/task/accounting/post-date-checks" },
+          { name: "Collections", path: "/dashboard/task/accounting/collections" },
+          { name: "Deposit", path: "/dashboard/task/accounting/deposit" },
+          { name: "Return Check", path: "/dashboard/task/accounting/return-check" },
+          { name: "Petty Cash", path: "/dashboard/task/accounting/petty-cash" },
+          { name: "General Journal", path: "/dashboard/task/accounting/general-journal" },
+          { name: "Cash Disbursement", path: "/dashboard/task/accounting/cash-disbursement" },
+          { name: "Treasury", path: "/dashboard/task/accounting/warehouse-checks" },
+          { name: "Check Pullout", path: "/dashboard/task/accounting/check-pullout" },
+          { name: "Check Postponement", path: "/dashboard/task/accounting/check-postponement" },
+        ],
+      },
+      {
+        name: "Production",
+        subLinks: [
+          { name: "Policy", path: "/dashboard/task/production/policy/" },
+          { name: "Statement of Account", path: "/dashboard/task/production/statement-of-account" },
+        ],
+      },])
+    } else if (user?.userAccess === 'ACCOUNTING') {
+      setMenuData([
+        {
+          name: "Dashboard",
+          path: "/dashboard",
+        },
+        {
+          name: "Reference",
+          subLinks: [
+            { name: "Policy Account", path: "/dashboard/reference/policy-account" },
+            { name: "Bank", path: "/dashboard/reference/bank" },
+            { name: "Bank Account", path: "/dashboard/reference/bank-account" },
+            { name: "Booklet", path: "/dashboard/reference/booklet" },
+            { name: "Chart of Accounts", path: "/dashboard/reference/chart-accounts" },
+            { name: "Sub Account", path: "/dashboard/reference/sub-account" },
+            { name: "Transaction Code", path: "/dashboard/reference/transaction-code" },
+            { name: "ID Entry", path: "/dashboard/reference/id-entry" },
+            { name: "Subline", path: "/dashboard/reference/subline" },
+            { name: "Rates", path: "/dashboard/reference/rates" },
+            { name: "CTPL", path: "/dashboard/reference/ctpl" },
+            { name: "Petty Cash Transaction", path: "/dashboard/reference/petty-cash-transaction" },
+            { name: "Mortgagee", path: "/dashboard/reference/mortgagee" },
+          ],
+        },
+        {
+          name: "Accounting",
+          subLinks: [
+            { name: "Post Dated Checks", path: "/dashboard/task/accounting/post-date-checks" },
+            { name: "Collections", path: "/dashboard/task/accounting/collections" },
+            { name: "Deposit", path: "/dashboard/task/accounting/deposit" },
+            { name: "Return Check", path: "/dashboard/task/accounting/return-check" },
+            { name: "Petty Cash", path: "/dashboard/task/accounting/petty-cash" },
+            { name: "General Journal", path: "/dashboard/task/accounting/general-journal" },
+            { name: "Cash Disbursement", path: "/dashboard/task/accounting/cash-disbursement" },
+            { name: "Treasury", path: "/dashboard/task/accounting/warehouse-checks" },
+            { name: "Check Pullout", path: "/dashboard/task/accounting/check-pullout" },
+            { name: "Check Postponement", path: "/dashboard/task/accounting/check-postponement" },
+          ],
+        },
+      ])
+    } else if (user?.userAccess === 'PRODUCTION') {
+      setMenuData([{
+        name: "Dashboard",
+        path: "/dashboard",
+      },
+      {
+        name: "Reference",
+        subLinks: [
+          { name: "Policy Account", path: "/dashboard/reference/policy-account" },
+          { name: "Bank", path: "/dashboard/reference/bank" },
+          { name: "Bank Account", path: "/dashboard/reference/bank-account" },
+          { name: "Booklet", path: "/dashboard/reference/booklet" },
+          { name: "Chart of Accounts", path: "/dashboard/reference/chart-accounts" },
+          { name: "Sub Account", path: "/dashboard/reference/sub-account" },
+          { name: "Transaction Code", path: "/dashboard/reference/transaction-code" },
+          { name: "ID Entry", path: "/dashboard/reference/id-entry" },
+          { name: "Subline", path: "/dashboard/reference/subline" },
+          { name: "Rates", path: "/dashboard/reference/rates" },
+          { name: "CTPL", path: "/dashboard/reference/ctpl" },
+          { name: "Petty Cash Transaction", path: "/dashboard/reference/petty-cash-transaction" },
+          { name: "Mortgagee", path: "/dashboard/reference/mortgagee" },
+        ],
+      },
+      {
+        name: "Production",
+        subLinks: [
+          { name: "Policy", path: "/dashboard/task/production/policy/" },
+          { name: "Statement of Account", path: "/dashboard/task/production/statement-of-account" },
+        ],
+      },
+      ])
+    } else if (user?.userAccess === 'CLAIMS') {
+      setMenuData([{
+        name: "Dashboard",
+        path: "/dashboard",
+      },
+      {
+        name: "Claim",
+        path: "/dashboard/task/claims/claims",
+      },])
+    } else {
+      setMenuData(_menuData)
+    }
+  }, [user?.userAccess])
   // Add event listener to handle clicks outside the menu
   useEffect(() => {
     const handleClickOutside = (e: any) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setOpenMenu(null);
       }
-      
 
-      if(menuUserRef.current && !menuUserRef.current.contains(e.target)){
+
+      if (menuUserRef.current && !menuUserRef.current.contains(e.target)) {
         setOpenUserMenu(false)
       }
     };
@@ -153,14 +379,14 @@ export default function Header() {
         <span>{user?.department}</span>
       </div>
       <div className="header-ch">
-        <div ref={menuUserRef}  style={{ position: "relative", display: "flex", alignItems: "center" }}>
+        <div ref={menuUserRef} style={{ position: "relative", display: "flex", alignItems: "center" }}>
           <AccountCircle
             color="info"
             sx={{
               cursor: "pointer"
             }}
             onClick={() => {
-              setOpenUserMenu((d)=>!d)
+              setOpenUserMenu((d) => !d)
             }}
           />
           {openUserMenu && <ul className="user-menu">
@@ -168,7 +394,7 @@ export default function Header() {
               <span>Profile</span>
             </li>
             <li>
-              <span onClick={()=>{
+              <span onClick={() => {
                 handleLogout()
               }} >Logout</span>
             </li>
@@ -181,57 +407,6 @@ export default function Header() {
   );
 }
 
-const menuData = [
-  {
-    name: "Dashboard",
-    path: "/dashboard",
-  },
-  {
-    name: "Claim",
-    path: "/dashboard/task/claims/claims",
-  },
-  {
-    name: "Reference",
-    subLinks: [
-      { name: "Policy Account", path: "/dashboard/reference/policy-account" },
-      { name: "Bank", path: "/dashboard/reference/bank" },
-      { name: "Bank Account", path: "/dashboard/reference/bank-account" },
-      { name: "Booklet", path: "/dashboard/reference/booklet" },
-      { name: "Chart of Accounts", path: "/dashboard/reference/chart-accounts" },
-      { name: "Sub Account", path: "/dashboard/reference/sub-account" },
-      { name: "Transaction Code", path: "/dashboard/reference/transaction-code" },
-      { name: "ID Entry", path: "/dashboard/reference/id-entry" },
-      { name: "Subline", path: "/dashboard/reference/subline" },
-      { name: "Rates", path: "/dashboard/reference/rates" },
-      { name: "CTPL", path: "/dashboard/reference/ctpl" },
-      { name: "Petty Cash Transaction", path: "/dashboard/reference/petty-cash-transaction" },
-      { name: "Mortgagee", path: "/dashboard/reference/mortgagee" },
-    ],
-  },
-  {
-    name: "Accounting",
-    subLinks: [
-      { name: "Post Dated Checks", path: "/dashboard/task/accounting/post-date-checks" },
-      { name: "Collections", path: "/dashboard/task/accounting/collections" },
-      { name: "Deposit", path: "/dashboard/task/accounting/deposit" },
-      { name: "Return Check", path: "/dashboard/task/accounting/return-check" },
-      { name: "Petty Cash", path: "/dashboard/task/accounting/petty-cash" },
-      { name: "General Journal", path: "/dashboard/task/accounting/general-journal" },
-      { name: "Cash Disbursement", path: "/dashboard/task/accounting/cash-disbursement" },
-      { name: "Treasury", path: "/dashboard/task/accounting/warehouse-checks" },
-      { name: "Check Pullout", path: "/dashboard/task/accounting/check-pullout" },
-      { name: "Check Postponement", path: "/dashboard/task/accounting/check-postponement" },
-    ],
-  },
-  {
-    name: "Production",
-    subLinks: [
-      { name: "Policy", path: "/dashboard/task/production/policy/" },
-      { name: "Statement of Account", path: "/dashboard/task/production/statement-of-account" },
-    ],
-  },
-
-];
 
 function Clock() {
   const [time, setTime] = useState(new Date());

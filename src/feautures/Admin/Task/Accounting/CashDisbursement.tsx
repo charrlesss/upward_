@@ -404,7 +404,7 @@ export default function CashDisbursement() {
         })
 
         if (itm.code === '1.01.10') {
-          itm.checkDate = new Date().toISOString().split('T')[0];
+          itm.checkDate = new Date(itm.checkDate).toISOString().split('T')[0];
 
         } else {
           itm.checkDate = ''
@@ -733,7 +733,7 @@ export default function CashDisbursement() {
     const RowIndex = tableRef.current.getSelectedIndex()
     const tableData = tableRef.current.getData()
 
- 
+
     if (tableData[RowIndex][0] === '') {
       alert('Account Code is required')
 
@@ -746,7 +746,7 @@ export default function CashDisbursement() {
 
       return false
 
-    }else if(tableData[RowIndex][0] !== '' && tableData[RowIndex][0] === '1.01.10' && tableData[RowIndex][6] === ''){
+    } else if (tableData[RowIndex][0] !== '' && tableData[RowIndex][0] === '1.01.10' && tableData[RowIndex][6] === '') {
       alert('Check No is required')
       wait(500).then(() => {
         const input = document.querySelector(`.input.row-${RowIndex}.col-6`) as HTMLInputElement
@@ -757,7 +757,7 @@ export default function CashDisbursement() {
 
       return false
 
-    }else if(tableData[RowIndex][0] !== '' && tableData[RowIndex][0] === '1.01.10' && tableData[RowIndex][7] === ''){
+    } else if (tableData[RowIndex][0] !== '' && tableData[RowIndex][0] === '1.01.10' && tableData[RowIndex][7] === '') {
       alert('Check Date is required')
       wait(500).then(() => {
         const input = document.querySelector(`.input.row-${RowIndex}.col-7`) as HTMLInputElement
@@ -767,7 +767,7 @@ export default function CashDisbursement() {
       })
       return false
 
-    }else if(tableData[RowIndex][0] !== '' && tableData[RowIndex][0] === '1.01.10' && tableData[RowIndex][10] === ''){
+    } else if (tableData[RowIndex][0] !== '' && tableData[RowIndex][0] === '1.01.10' && tableData[RowIndex][10] === '') {
       alert('Pay To is required')
       wait(500).then(() => {
         const input = document.querySelector(`.input.row-${RowIndex}.col-10`) as HTMLInputElement
@@ -883,7 +883,6 @@ export default function CashDisbursement() {
 
     return true
   }
-
   function resetAll() {
     setCashDMode("")
     setNewStateValue(dispatch, initialState);
@@ -905,6 +904,75 @@ export default function CashDisbursement() {
 
   }
 
+  function printRow(rowItm: any) {
+    flushSync(() => {
+      localStorage.removeItem("printString");
+      localStorage.setItem("dataString", JSON.stringify([]));
+      localStorage.setItem("paper-width", "8.5in");
+      localStorage.setItem("paper-height", "11in");
+      localStorage.setItem("module", "cash-disbursement-check");
+      localStorage.setItem("state", JSON.stringify({
+        checkDate: rowItm[7],
+        Payto: rowItm[10],
+        credit: rowItm[5],
+      }));
+      localStorage.setItem(
+        "column",
+        JSON.stringify([])
+      );
+      localStorage.setItem(
+        "title",
+        user?.department === "UMIS"
+          ? "UPWARD MANAGEMENT INSURANCE SERVICES\n"
+          : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.\n"
+      );
+    });
+    window.open("/dashboard/print", "_blank");
+
+  }
+  function deleteRow() {
+    const tableData = tableRef.current.getData()
+    const SelectedIndex = tableRef.current?.getSelectedIndex()
+    if (
+      tableData[SelectedIndex][0] === '' ||
+      tableData[SelectedIndex][3] === '' ||
+      tableData[SelectedIndex][8] === '' ||
+      (tableData[SelectedIndex][0] === '1.01.10' && tableData[SelectedIndex][10] === '')
+    ) {
+      alert('invalid to delete')
+    } else {
+      Swal.fire({
+        title: "Are you sure?",
+        text: "Do you want Delete This Row",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, delete it!",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          if (tableData.length === 1) {
+            tableRef.current?.updateData([])
+            tableRef.current?.AddRow()
+            tableRef.current?.setNewRowIndex(0)
+            wait(250).then(() => {
+              const input = document.querySelector(`.input.row-${0}.col-0`) as HTMLInputElement
+              if (input) {
+                input.focus()
+              }
+            })
+          } else {
+            const indexToRemove = SelectedIndex;
+            if (indexToRemove > -1 && indexToRemove < tableData.length) {
+              tableData.splice(indexToRemove, 1);
+            }
+            const dd = tableData
+            tableRef.current?.updatePages(dd)
+          }
+        }
+      });
+    }
+  }
 
 
   if (loadingGetSearchSelectedCashDisbursement || loadingGeneralJournalGenerator || isLoadingPolicyIdClientIdRefId || isLoadingChartAccountSearch || isLoadingPolicyIdPayTo || isLoadingTransactionAccount) {
@@ -1291,10 +1359,41 @@ export default function CashDisbursement() {
 
             }
           }
-        }
-        }
+        }}
+        RightClickComponent={({ rowItm }: any) => {
+          const buttonStyle: any = {
+            padding: "5px 10px",
+            margin: "0px",
+            background: "transparent",
+            color: "black",
+            fontSize: "14px",
+            width: "100%",
+            borderRadius: "0px",
+            textAlign: "left"
+          }
+          return (
+            <div>
+              <button
+                className="button-r"
+                style={buttonStyle}
+                onClick={() => {
+                  deleteRow()
+                }}
+              >
+                Delete
+              </button>
+              {rowItm[0] === '1.01.10' && <button
+                className="button-r"
+                style={buttonStyle}
+                onClick={() => {
+                  printRow(rowItm)
+                }}>
+                Print
+              </button>}
+            </div>
+          )
+        }}
       />
-
       {ModalPolicyIdClientIdRefId}
       {ModalChartAccountSearch}
       {ModalPolicyIdPayTo}
@@ -1309,7 +1408,8 @@ const DataGridTableReact = forwardRef(({
   rows,
   columns,
   onInputKeyDown,
-  height
+  height,
+  RightClickComponent
 }: any, ref) => {
   const dataCellRef = useRef<any>(null)
   const mode = 'add'
@@ -1341,6 +1441,10 @@ const DataGridTableReact = forwardRef(({
     updateData: (data: any) => {
       setData(data)
     },
+    updatePages: (newData: any) => {
+      const _pages = formatArrayIntoChunks(newData, 100)
+      setPages(_pages)
+    },
     getData: () => {
       return data
     },
@@ -1362,7 +1466,6 @@ const DataGridTableReact = forwardRef(({
     const _pages = formatArrayIntoChunks(data, 100)
     setPages(_pages)
   }, [data])
-
 
   const startResize = (index: any, e: any) => {
     e.preventDefault();
@@ -1386,7 +1489,6 @@ const DataGridTableReact = forwardRef(({
     document.addEventListener("mousemove", doDrag);
     document.addEventListener("mouseup", stopDrag);
   };
-
   const DrawHeaderColumn = () => {
     return (
       <tr>
@@ -1412,6 +1514,7 @@ const DataGridTableReact = forwardRef(({
     )
   }
 
+
   const CellInput = forwardRef(({
     rowIdx,
     colIdx,
@@ -1421,12 +1524,20 @@ const DataGridTableReact = forwardRef(({
   }: any, ref: any) => {
     const [input, setInput] = useState(rowItm[colIdx])
     const prevValueRef = useRef(rowItm[colIdx]); // Use ref to store the previous value
+    const [contextMenu, setContextMenu] = useState(false);
+    const menuRef = useRef<any>(null);
 
+    const handleContextMenu = (event: any) => {
+      event.preventDefault();
+      setContextMenu(true)
+    };
+
+    let Component = null
 
 
     if (selectedRow === rowIdx) {
       if (colItm.type === 'select') {
-        return (
+        Component = (
           <SelectInput
             label={{
               title: "",
@@ -1461,7 +1572,8 @@ const DataGridTableReact = forwardRef(({
               },
               onBlur: () => {
                 setInput(prevValueRef.current)
-              }
+              },
+              onContextMenu: (e) => handleContextMenu(e)
             }}
             datasource={colItm.options}
             values={"key"}
@@ -1469,7 +1581,7 @@ const DataGridTableReact = forwardRef(({
           />
         )
       } else if (colItm.type === 'number') {
-        return (
+        Component = (
           <NumericFormat
             readOnly={colItm.readonly && colItm?.readonly(rowItm, colItm, rowIdx, colIdx)}
             className={`input row-${rowIdx} col-${colIdx} ${colItm.key}`}
@@ -1522,13 +1634,16 @@ const DataGridTableReact = forwardRef(({
             onBlur={(e) => {
               setInput(prevValueRef.current)
             }}
+            onContextMenu={(e: any) => {
+              handleContextMenu(e)
+            }}
             allowNegative={false}
             thousandSeparator
             valueIsNumericString
           />
         )
       } else if (colItm.type === 'date') {
-        return (
+        Component = (
           <input
             readOnly={colItm.readonly && colItm?.readonly(rowItm, colItm, rowIdx, colIdx)}
             className={`input row-${rowIdx} col-${colIdx} ${colItm.key}`}
@@ -1555,13 +1670,16 @@ const DataGridTableReact = forwardRef(({
 
               }
             }}
-            onBlur={()=>{
+            onBlur={() => {
               setInput(prevValueRef.current)
+            }}
+            onContextMenu={(e: any) => {
+              handleContextMenu(e)
             }}
           />
         )
       } else {
-        return (
+        Component = (
           <input
             readOnly={colItm.readonly && colItm?.readonly(rowItm, colItm, rowIdx, colIdx)}
             className={`input row-${rowIdx} col-${colIdx} ${colItm.key}`}
@@ -1590,11 +1708,14 @@ const DataGridTableReact = forwardRef(({
             onBlur={() => {
               setInput(prevValueRef.current)
             }}
+            onContextMenu={(e: any) => {
+              handleContextMenu(e)
+            }}
           />
         )
       }
     } else {
-      return (
+      Component = (
         <input
           readOnly={selectedRow !== rowIdx}
           className={`input row-${rowIdx} col-${colIdx} ${colItm.key}`}
@@ -1606,9 +1727,48 @@ const DataGridTableReact = forwardRef(({
           onDoubleClick={(e) => {
             setSelectedRow(rowIdx)
           }}
+          onContextMenu={(e: any) => {
+            e.preventDefault()
+          }}
         />
       )
     }
+
+    useEffect(() => {
+      const handleClickOutside = (event: any) => {
+        if (menuRef.current && !menuRef.current.contains(event.target)) {
+          setContextMenu(false);
+        }
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, []);
+
+
+    return (
+      <>
+        {Component}
+        {contextMenu && <div
+          ref={menuRef}
+          style={{
+            position: "absolute",
+            top: "110%",
+            left: "0px",
+            background: "#e2e8f0",
+            width: "80px",
+            height: "auto",
+            padding: "7px 0",
+            boxShadow: "-3px -1px 13px -8px rgba(0,0,0,0.75)",
+            border: "1px solid #cbd5e1",
+            zIndex: "99999"
+          }}>
+          <RightClickComponent rowItm={rowItm} colItm={colItm} rowIdx={rowIdx} colIdx={colIdx} />
+        </div>}
+      </>
+    )
   })
   const DrawDataColumn = forwardRef(({ parentRef }: any, ref) => {
     return (
@@ -1629,7 +1789,8 @@ const DataGridTableReact = forwardRef(({
                           width: colItm.width,
                           padding: "0",
                           margin: "0",
-                          background: selectedRow === rowIdx ? "#f0f9ff" : ""
+                          background: selectedRow === rowIdx ? "#f0f9ff" : "",
+                          position: "relative"
                         }}
                       >
                         <CellInput
@@ -1639,6 +1800,7 @@ const DataGridTableReact = forwardRef(({
                           rowItm={rowItm}
                           parentRef={parentRef}
                         />
+
                       </td>
                     )
                   })
@@ -1650,6 +1812,7 @@ const DataGridTableReact = forwardRef(({
       </tbody>
     )
   })
+
 
   return (
     <Fragment>

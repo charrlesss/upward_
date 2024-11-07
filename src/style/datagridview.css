@@ -161,3 +161,8 @@
   align-items: center;
   justify-content: center;
 }
+
+.button-r:hover{
+  background-color: #cbd5e1 !important;
+
+}

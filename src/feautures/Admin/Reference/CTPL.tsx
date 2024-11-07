@@ -117,15 +117,6 @@ export default function CTPL() {
     e.preventDefault();
     state.Cost = state.Cost === "" ? "0" : parseFloat(state.Cost).toFixed(2);
 
-    if (state.Prefix === "") {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Prefix is required!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
     if (state.Cost === "") {
       return Swal.fire({
         position: "center",
@@ -135,15 +126,7 @@ export default function CTPL() {
         timer: 1500,
       });
     }
-    if (state.Prefix.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Prefix is too long!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
+
     if (state.Cost.length >= 200) {
       return Swal.fire({
         position: "center",
