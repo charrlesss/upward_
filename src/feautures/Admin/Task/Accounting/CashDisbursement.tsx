@@ -64,11 +64,12 @@ const columns = [
     key: "subAcctName",
     label: "Sub Account",
     width: 170,
-    type: 'text'
+    type: 'text',
+    readonly: () => true
 
   },
   {
-    key: "ClientName", label: "Name", width: 400, type: 'text', readonly: () => true
+    key: "ClientName", label: "Name", width: 400, type: 'text'
 
   },
   {
@@ -974,7 +975,6 @@ export default function CashDisbursement() {
     }
   }
 
-
   if (loadingGetSearchSelectedCashDisbursement || loadingGeneralJournalGenerator || isLoadingPolicyIdClientIdRefId || isLoadingChartAccountSearch || isLoadingPolicyIdPayTo || isLoadingTransactionAccount) {
     return <div>Loading...</div>
   }
@@ -1492,6 +1492,9 @@ const DataGridTableReact = forwardRef(({
   const DrawHeaderColumn = () => {
     return (
       <tr>
+        <th className="header" style={{ width: '30px', border: "1px solid black", position: "sticky", top: 0, zIndex: 1, background: "white" }}
+        >
+        </th>
         {
           column.map((colItm: any, colIdx: any) => {
             return (
@@ -1513,8 +1516,42 @@ const DataGridTableReact = forwardRef(({
       </tr>
     )
   }
+  function onKeySelectionChange(rowIdx: any, colIdx: any, e: any) {
+    if (e.code === 'ArrowDown') {
+      setSelectedRow((d: any) => {
+        if (rowIdx >= pages[pageNumber].length - 1) {
+          return d
+        }
+
+        wait(150).then(() => {
+          const input = document.querySelector(`.input.row-${rowIdx + 1}.col-${colIdx}`) as HTMLInputElement
+          if (input) {
+            input.focus()
+          }
+        })
 
 
+        return rowIdx + 1
+      })
+    }
+    if (e.code === 'ArrowUp') {
+      setSelectedRow((d: any) => {
+        if (rowIdx <= 0) {
+          return d
+        }
+
+        wait(150).then(() => {
+          const input = document.querySelector(`.input.row-${rowIdx - 1}.col-${colIdx}`) as HTMLInputElement
+          if (input) {
+            input.focus()
+          }
+        })
+
+        return rowIdx - 1
+      })
+
+    }
+  }
   const CellInput = forwardRef(({
     rowIdx,
     colIdx,
@@ -1569,6 +1606,7 @@ const DataGridTableReact = forwardRef(({
                   }
 
                 }
+                onKeySelectionChange(rowIdx, colIdx, e)
               },
               onBlur: () => {
                 setInput(prevValueRef.current)
@@ -1630,6 +1668,8 @@ const DataGridTableReact = forwardRef(({
                   parentRef.current.onInputKeyDown(rowIdx, colIdx, input)
                 }
               }
+              onKeySelectionChange(rowIdx, colIdx, e)
+
             }}
             onBlur={(e) => {
               setInput(prevValueRef.current)
@@ -1669,6 +1709,8 @@ const DataGridTableReact = forwardRef(({
                 }
 
               }
+              onKeySelectionChange(rowIdx, colIdx, e)
+
             }}
             onBlur={() => {
               setInput(prevValueRef.current)
@@ -1704,6 +1746,8 @@ const DataGridTableReact = forwardRef(({
                 }
 
               }
+              onKeySelectionChange(rowIdx, colIdx, e)
+
             }}
             onBlur={() => {
               setInput(prevValueRef.current)
@@ -1729,6 +1773,9 @@ const DataGridTableReact = forwardRef(({
           }}
           onContextMenu={(e: any) => {
             e.preventDefault()
+          }}
+          onKeyDown={(e) => {
+            onKeySelectionChange(rowIdx, colIdx, e)
           }}
         />
       )
@@ -1770,6 +1817,7 @@ const DataGridTableReact = forwardRef(({
       </>
     )
   })
+
   const DrawDataColumn = forwardRef(({ parentRef }: any, ref) => {
     return (
       <tbody>
@@ -1778,6 +1826,26 @@ const DataGridTableReact = forwardRef(({
 
             return (
               <tr key={rowIdx} className={`tr row-${rowIdx}`}>
+                <td>
+                  <input
+                    style={{
+                      cursor: "pointer"
+                    }}
+                    readOnly={true}
+                    type="checkbox"
+                    checked={selectedRow === rowIdx}
+                    onClick={() => {
+                      setSelectedRow(rowIdx)
+                      wait(150).then(() => {
+                        const input = document.querySelector(`.input.row-${rowIdx}.col-0`) as HTMLInputElement
+                        if (input) {
+                          input.focus()
+                        }
+                      })
+                    }}
+
+                  />
+                </td>
                 {
                   column.map((colItm: any, colIdx: any) => {
                     return (
@@ -1789,8 +1857,8 @@ const DataGridTableReact = forwardRef(({
                           width: colItm.width,
                           padding: "0",
                           margin: "0",
-                          background: selectedRow === rowIdx ? "#f0f9ff" : "",
-                          position: "relative"
+                          background: selectedRow === rowIdx ? "#e0f2fe" : "",
+                          position: "relative",
                         }}
                       >
                         <CellInput
