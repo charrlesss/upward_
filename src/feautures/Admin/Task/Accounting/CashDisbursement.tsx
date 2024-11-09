@@ -934,45 +934,36 @@ export default function CashDisbursement() {
   function deleteRow() {
     const tableData = tableRef.current.getData()
     const SelectedIndex = tableRef.current?.getSelectedIndex()
-    if (
-      tableData[SelectedIndex][0] === '' ||
-      tableData[SelectedIndex][3] === '' ||
-      tableData[SelectedIndex][8] === '' ||
-      (tableData[SelectedIndex][0] === '1.01.10' && tableData[SelectedIndex][10] === '')
-    ) {
-      alert('invalid to delete')
-    } else {
-      Swal.fire({
-        title: "Are you sure?",
-        text: "Do you want Delete This Row",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Yes, delete it!",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          if (tableData.length === 1) {
-            tableRef.current?.updateData([])
-            tableRef.current?.AddRow()
-            tableRef.current?.setNewRowIndex(0)
-            wait(250).then(() => {
-              const input = document.querySelector(`.input.row-${0}.col-0`) as HTMLInputElement
-              if (input) {
-                input.focus()
-              }
-            })
-          } else {
-            const indexToRemove = SelectedIndex;
-            if (indexToRemove > -1 && indexToRemove < tableData.length) {
-              tableData.splice(indexToRemove, 1);
+    Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want Delete This Row",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        if (tableData.length === 1) {
+          tableRef.current?.updateData([])
+          tableRef.current?.AddRow()
+          tableRef.current?.setNewRowIndex(0)
+          wait(250).then(() => {
+            const input = document.querySelector(`.input.row-${0}.col-0`) as HTMLInputElement
+            if (input) {
+              input.focus()
             }
-            const dd = tableData
-            tableRef.current?.updatePages(dd)
+          })
+        } else {
+          const indexToRemove = SelectedIndex;
+          if (indexToRemove > -1 && indexToRemove < tableData.length) {
+            tableData.splice(indexToRemove, 1);
           }
+          const dd = tableData
+          tableRef.current?.updatePages(dd)
         }
-      });
-    }
+      }
+    });
   }
 
   if (loadingGetSearchSelectedCashDisbursement || loadingGeneralJournalGenerator || isLoadingPolicyIdClientIdRefId || isLoadingChartAccountSearch || isLoadingPolicyIdPayTo || isLoadingTransactionAccount) {
@@ -1557,17 +1548,30 @@ const DataGridTableReact = forwardRef(({
     colIdx,
     colItm,
     rowItm,
-    parentRef
+    parentRef,
   }: any, ref: any) => {
     const [input, setInput] = useState(rowItm[colIdx])
     const prevValueRef = useRef(rowItm[colIdx]); // Use ref to store the previous value
-    const [contextMenu, setContextMenu] = useState(false);
     const menuRef = useRef<any>(null);
+    const [contextMenu, setContextMenu] = useState(false);
 
     const handleContextMenu = (event: any) => {
       event.preventDefault();
       setContextMenu(true)
     };
+
+    useEffect(() => {
+      const handleClickOutside = (event: any) => {
+        if (menuRef.current && !menuRef.current.contains(event.target)) {
+          setContextMenu(false);
+        }
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, []);
 
     let Component = null
 
@@ -1781,18 +1785,7 @@ const DataGridTableReact = forwardRef(({
       )
     }
 
-    useEffect(() => {
-      const handleClickOutside = (event: any) => {
-        if (menuRef.current && !menuRef.current.contains(event.target)) {
-          setContextMenu(false);
-        }
-      };
 
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }, []);
 
 
     return (
@@ -1817,6 +1810,101 @@ const DataGridTableReact = forwardRef(({
       </>
     )
   })
+  const ColumnData = forwardRef(({
+    rowItm,
+    rowIdx,
+    parentRef
+  }: any, ref: any) => {
+    const menuCheckBoxRef = useRef<HTMLDivElement>(null)
+    const [menuCheckBox, setMenuCheckBox] = useState(false)
+
+    useEffect(() => {
+      const handleClickOutside = (event: any) => {
+        if (menuCheckBoxRef.current && !menuCheckBoxRef.current.contains(event.target)) {
+          setMenuCheckBox(false);
+        }
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, []);
+
+    return (
+      <>
+        <td style={{ position: "relative" }}>
+          <input
+            style={{
+              cursor: "pointer"
+            }}
+            readOnly={true}
+            type="checkbox"
+            checked={selectedRow === rowIdx}
+            onClick={() => {
+              setSelectedRow(rowIdx)
+              wait(150).then(() => {
+                const input = document.querySelector(`.input.row-${rowIdx}.col-0`) as HTMLInputElement
+                if (input) {
+                  input.focus()
+                }
+              })
+            }}
+            onContextMenu={(e) => {
+              e.preventDefault()
+              if (rowIdx === selectedRow) {
+
+                setMenuCheckBox(true)
+              }
+            }}
+          />
+          {menuCheckBox && <div
+            ref={menuCheckBoxRef}
+            style={{
+              position: "absolute",
+              top: "110%",
+              left: "0px",
+              background: "#e2e8f0",
+              width: "80px",
+              height: "auto",
+              padding: "7px 0",
+              boxShadow: "-3px -1px 13px -8px rgba(0,0,0,0.75)",
+              border: "1px solid #cbd5e1",
+              zIndex: "99999"
+            }}>
+            <RightClickComponent rowItm={rowItm} colItm={null} rowIdx={rowIdx} colIdx={null} />
+          </div>}
+        </td>
+        {
+          column.map((colItm: any, colIdx: any) => {
+            return (
+              <td
+
+                key={colIdx}
+                className={`td row-${rowIdx} col-${colIdx} ${colItm.key}`}
+                style={{
+                  width: colItm.width,
+                  padding: "0",
+                  margin: "0",
+                  background: selectedRow === rowIdx ? "#e0f2fe" : "",
+                  position: "relative",
+                }}
+              >
+                <CellInput
+                  rowIdx={rowIdx}
+                  colIdx={colIdx}
+                  colItm={colItm}
+                  rowItm={rowItm}
+                  parentRef={parentRef}
+                />
+              </td>
+            )
+          })
+        }
+
+      </>
+    )
+  })
 
   const DrawDataColumn = forwardRef(({ parentRef }: any, ref) => {
     return (
@@ -1826,53 +1914,8 @@ const DataGridTableReact = forwardRef(({
 
             return (
               <tr key={rowIdx} className={`tr row-${rowIdx}`}>
-                <td>
-                  <input
-                    style={{
-                      cursor: "pointer"
-                    }}
-                    readOnly={true}
-                    type="checkbox"
-                    checked={selectedRow === rowIdx}
-                    onClick={() => {
-                      setSelectedRow(rowIdx)
-                      wait(150).then(() => {
-                        const input = document.querySelector(`.input.row-${rowIdx}.col-0`) as HTMLInputElement
-                        if (input) {
-                          input.focus()
-                        }
-                      })
-                    }}
+                <ColumnData parentRef={parentRef} rowItm={rowItm} rowIdx={rowIdx} />
 
-                  />
-                </td>
-                {
-                  column.map((colItm: any, colIdx: any) => {
-                    return (
-                      <td
-
-                        key={colIdx}
-                        className={`td row-${rowIdx} col-${colIdx} ${colItm.key}`}
-                        style={{
-                          width: colItm.width,
-                          padding: "0",
-                          margin: "0",
-                          background: selectedRow === rowIdx ? "#e0f2fe" : "",
-                          position: "relative",
-                        }}
-                      >
-                        <CellInput
-                          rowIdx={rowIdx}
-                          colIdx={colIdx}
-                          colItm={colItm}
-                          rowItm={rowItm}
-                          parentRef={parentRef}
-                        />
-
-                      </td>
-                    )
-                  })
-                }
               </tr>
             )
           })

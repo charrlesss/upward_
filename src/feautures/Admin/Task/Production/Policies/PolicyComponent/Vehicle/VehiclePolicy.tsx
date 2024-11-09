@@ -304,7 +304,12 @@ export default function VehiclePolicy() {
 
       return formattedNumber;
     }
-
+    function formatNumber(num: number) {
+      return (num || 0).toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+    }
     function setFixValue(value: string) {
       const intVal = parseFloat(value);
       return intVal.toFixed(2);

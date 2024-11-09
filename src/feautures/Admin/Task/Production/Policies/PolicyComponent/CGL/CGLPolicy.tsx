@@ -402,6 +402,10 @@ export default function CGLPolicy() {
       sumInsured,
       cgl_address,
       sale_officer,
+      Vat,
+      DocStamp,
+      LGovTax,
+      TotalDue
     } = selectedRowData[0];
     customInputchange(SubAcct, "sub_account");
     customInputchange(IDNo, "client_id");
@@ -428,11 +432,25 @@ export default function CGLPolicy() {
 
     customInputchange(LimitA, "blPremium");
     customInputchange(LimitB, "pdPremium");
-    state.netPremium = TotalPremium;
-    computation();
+    console.log(selectedRowData)
+
+    customInputchange(formatNumber(parseFloat(TotalPremium)), "netPremium");
+    customInputchange(formatNumber(parseFloat(Vat)), "vat");
+    customInputchange(formatNumber(parseFloat(DocStamp)), "docStamp");
+    customInputchange(formatNumber(parseFloat(LGovTax)), "localGovTax");
+    customInputchange(formatNumber(parseFloat(TotalDue)), "totalDue");
 
     customInputchange("delete", "cglActioMode");
   }
+
+
+  function formatNumber(num: number) {
+    return (num || 0).toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+  }
+
   function keySave(event: any) {
     if (
       state.mode !== "" &&
@@ -476,7 +494,7 @@ export default function CGLPolicy() {
           },
         })}
       >
-       
+
         <div
           style={{
             display: "flex",

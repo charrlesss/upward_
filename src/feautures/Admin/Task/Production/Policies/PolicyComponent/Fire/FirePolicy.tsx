@@ -270,7 +270,7 @@ export default function FirePolicy() {
         "you missed the Client Id Field?",
       );
     }
-  
+
     if (state.PolicyAccount === "" || state.PolicyAccount === null) {
       return Swal.fire(
         "Unable to save! Please select Account.",
@@ -438,6 +438,12 @@ export default function FirePolicy() {
       address,
       agent_fullname,
       sale_officer,
+      TotalPremium,
+      Vat,
+      DocStamp,
+      LGovTax,
+      FireTax,
+      TotalDue
     } = selectedRowData[0];
 
     customInputchange(SubAcct, "sub_account");
@@ -466,9 +472,25 @@ export default function FirePolicy() {
     customInputchange(Mortgage, "mortgage");
     customInputchange(Warranties, "warranties");
 
-    state.insuredValue = InsuredValue;
-    state.percentagePremium = Percentage;
-    computation();
+    function formatNumber(num: number) {
+      return (num || 0).toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+    }
+
+    console.log(selectedRowData[0])
+
+    customInputchange(formatNumber(parseFloat(InsuredValue)), "insuredValue");
+    customInputchange(formatNumber(parseFloat(Percentage)), "percentagePremium");
+    customInputchange(formatNumber(parseFloat(TotalPremium)), "totalPremium");
+    customInputchange(formatNumber(parseFloat(Vat)), "vat");
+    customInputchange(formatNumber(parseFloat(DocStamp)), "docStamp");
+    customInputchange(formatNumber(parseFloat(LGovTax)), "localGovTax");
+    customInputchange(formatNumber(parseFloat(FireTax)), "fsTax");
+    customInputchange(formatNumber(parseFloat(TotalDue)), "totalDue");
+
+
 
     customInputchange("delete", "fireActioMode");
   }

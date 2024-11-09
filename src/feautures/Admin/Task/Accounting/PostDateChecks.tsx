@@ -248,6 +248,7 @@ export default function PostDateChecks() {
         if (!res?.data.success) {
           return alert(`Error : ${res?.data.message}`);
         }
+
         const response = res as any;
         const Ref_No = response.data.getSearchPDCCheck[0].Ref_No;
         if (response.data.upload[0]) {

@@ -474,6 +474,11 @@ export default function MSPRPolicy() {
       agent_fullname,
       address,
       sale_officer,
+      TotalPremium,
+      Vat,
+      DocStamp,
+      LGovTax,
+      TotalDue
     } = selectedRowData[0];
     customInputchange(SubAcct, "sub_account");
     customInputchange(IDNo, "client_id");
@@ -505,12 +510,25 @@ export default function MSPRPolicy() {
     customInputchange(SecIB, "sec2");
     customInputchange(SecII, "sec3");
 
-    state.prem1 = SecIPremium;
-    state.prem2 = SecIPremiumB;
-    state.prem3 = SecIIPremium;
-    computation();
+
+    customInputchange(SecIPremium, "prem1");
+    customInputchange(SecIPremiumB, "prem2");
+    customInputchange(SecIIPremium, "prem3");
+
+    customInputchange(formatNumber(parseFloat(TotalPremium)), "netPremium");
+    customInputchange(formatNumber(parseFloat(Vat)), "vat");
+    customInputchange(formatNumber(parseFloat(DocStamp)), "docStamp");
+    customInputchange(formatNumber(parseFloat(LGovTax)), "localGovTax");
+    customInputchange(formatNumber(parseFloat(TotalDue)), "totalDue");
 
     customInputchange("delete", "msprActioMode");
+  }
+
+  function formatNumber(num: number) {
+    return (num || 0).toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
   }
 
   function keySave(event: any) {

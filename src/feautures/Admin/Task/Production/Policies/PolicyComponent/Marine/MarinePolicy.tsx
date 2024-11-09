@@ -437,7 +437,12 @@ export default function MarinePolicy() {
       queryClient.invalidateQueries(queryKeyDeletePolicy),
     ]);
   }
-
+  function formatNumber(num: number) {
+    return (num || 0).toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+  }
   function onSearchSelected(selectedRowData: any) {
     const {
       Account,
@@ -462,6 +467,11 @@ export default function MarinePolicy() {
       agent_fullname,
       client_fullname,
       sale_officer,
+      TotalPremium,
+      Vat,
+      DocStamp,
+      LGovTax,
+      TotalDue
     } = selectedRowData[0];
 
     customInputchange(SubAcct, "sub_account");
@@ -489,9 +499,16 @@ export default function MarinePolicy() {
     customInputchange(PointOfOrigin, "point_orig");
     customInputchange(PointofDestination, "point_dis");
 
-    state.insuredValue = InsuredValue;
-    state.percentagePremium = Percentage;
-    computation();
+   
+
+    customInputchange(formatNumber(parseFloat(InsuredValue)), "insuredValue");
+    customInputchange(formatNumber(parseFloat(Percentage)), "percentagePremium");
+    customInputchange(formatNumber(parseFloat(TotalPremium)), "totalPremium");
+    customInputchange(formatNumber(parseFloat(Vat)), "vat");
+    customInputchange(formatNumber(parseFloat(DocStamp)), "docStamp");
+    customInputchange(formatNumber(parseFloat(LGovTax)), "localGovTax");
+    customInputchange(formatNumber(parseFloat(TotalDue)), "totalDue");
+
 
     customInputchange("delete", "marineActioMode");
   }

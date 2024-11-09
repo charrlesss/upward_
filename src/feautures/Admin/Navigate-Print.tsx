@@ -3183,7 +3183,7 @@ export default function NavigatePrint() {
                           <div style={{ height: "5px" }}></div>
                           <div style={{ width: "100%", display: "flex" }}>
                             <div style={{ width: "100px", fontSize: "12px", fontWeight: "bold", }}>In Payment for :</div>
-                            <div style={{ width: "400px", fontSize: "12px", fontWeight: "bold", height: "auto", wordWrap: "break-word",minHeight:"50px" }}>{state.current[0].Particulars}</div>
+                            <div style={{ width: "400px", fontSize: "13px", fontWeight: "bold", height: "auto", minHeight:"50px",fontFamily:"monospace" }}><pre>{state.current[0].Particulars}</pre></div>
                           </div>
                           <div style={{ height: "5px" }}></div>
                           <div style={{ width: "100%", display: "flex" }}>

@@ -467,7 +467,13 @@ export default function BondsPolicy() {
       agent_fullname,
       address,
       sale_officer,
+      TotalDue,
+      TotalPremium,
+      Vat,
+      DocStamp,
+      LGovTax
     } = selectedRowData[0];
+
     customInputchange(SubAcct, "sub_account");
     customInputchange(IDNo, "client_id");
     customInputchange(client_fullname, "client_name");
@@ -502,13 +508,28 @@ export default function BondsPolicy() {
     customInputchange(IssuedLoctCorp, "insuranceIssuedLoc");
     customInputchange(CIssued, "insuranceDateIssued");
 
-    state.insuredValue = BondValue;
-    state.percentagePremium = Percentage;
-    state.umis = Notarial;
-    state.principal = Misc;
-    computation();
+    customInputchange(formatNumber(parseFloat(BondValue)), "insuredValue");
+    customInputchange(formatNumber(parseFloat(Percentage)), "percentagePremium");
+    customInputchange(formatNumber(parseFloat(TotalPremium)), "totalPremium");
+    customInputchange(formatNumber(parseFloat(Vat)), "vat");
+    customInputchange(formatNumber(parseFloat(DocStamp)), "docStamp");
+    customInputchange(formatNumber(parseFloat(LGovTax)), "localGovTax");
+    customInputchange(formatNumber(parseFloat(Notarial)), "umis");
+    customInputchange(formatNumber(parseFloat(Misc)), "principal");
+    customInputchange(formatNumber(parseFloat(TotalDue)), "totalDue");
+
+
+
     customInputchange("delete", "bondActioMode");
   }
+
+  function formatNumber(num: number) {
+    return (num || 0).toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+  }
+
   function keySave(event: any) {
     if (
       state.mode !== "" &&

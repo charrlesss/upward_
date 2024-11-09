@@ -370,6 +370,13 @@ export default function PAPolicy() {
       queryClient.invalidateQueries(queryKeyDeletePolicy),
     ]);
   }
+
+  function formatNumber(num: number) {
+    return (num || 0).toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+  }
   function onSearchSelected(selectedRowData: any) {
     const {
       PolicyNo,
@@ -388,6 +395,10 @@ export default function PAPolicy() {
       address,
       sumInsured,
       sale_officer,
+      TotalDue,
+      LGovTax,
+      DocStamp,
+      Vat
     } = selectedRowData[0];
     customInputchange(SubAcct, "sub_account");
     customInputchange(IDNo, "client_id");
@@ -408,8 +419,16 @@ export default function PAPolicy() {
 
     customInputchange(Location, "propertyInsured");
     customInputchange(sumInsured, "sumInsured");
-    state.netPremium = TotalPremium;
-    computation();
+  
+    customInputchange(sumInsured, "sumInsured");
+    customInputchange(formatNumber(parseFloat(TotalPremium)), "netPremium");
+    customInputchange(formatNumber(parseFloat(Vat)), "vat");
+    customInputchange(formatNumber(parseFloat(DocStamp)), "docStamp");
+    customInputchange(formatNumber(parseFloat(LGovTax)), "localGovTax");
+    customInputchange(formatNumber(parseFloat(TotalDue)), "totalDue");
+    state.netPremium = parseFloat(TotalPremium).toFixed(2);
+
+    // computation();
 
     customInputchange("update", "paActioMode");
   }
@@ -455,7 +474,7 @@ export default function PAPolicy() {
           },
         })}
       >
-      
+
         <div
           style={{
             display: "flex",

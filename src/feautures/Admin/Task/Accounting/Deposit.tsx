@@ -760,7 +760,6 @@ export default function Deposit() {
             className: "search-input-up-on-key-down",
             type: "text",
             style: { width: "200px" },
-            readOnly: true
           }}
           inputRef={refSlipCode}
           icon={<AutorenewIcon sx={{ fontSize: "18px" }} />}
