@@ -349,7 +349,6 @@ export default function CashDisbursement() {
     },
     searchRef: IdsSearchInput,
   });
-
   const {
     mutate: getSearchSelectedCashDisbursement,
     isLoading: loadingGetSearchSelectedCashDisbursement,

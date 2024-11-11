@@ -2474,7 +2474,7 @@ export default function NavigatePrint() {
                       <span>{data.current[0].ORAmount}</span>
                     </p>
                   </div>
- .               </div>
+                  .               </div>
                 <div style={{ flex: 1, width: "100%" }}>
                   <div
                     style={{
@@ -3183,7 +3183,7 @@ export default function NavigatePrint() {
                           <div style={{ height: "5px" }}></div>
                           <div style={{ width: "100%", display: "flex" }}>
                             <div style={{ width: "100px", fontSize: "12px", fontWeight: "bold", }}>In Payment for :</div>
-                            <div style={{ width: "400px", fontSize: "13px", fontWeight: "bold", height: "auto", minHeight:"50px",fontFamily:"monospace" }}><pre>{state.current[0].Particulars}</pre></div>
+                            <div style={{ width: "400px", fontSize: "13px", fontWeight: "bold", height: "auto", minHeight: "50px", fontFamily: "monospace" }}><pre>{state.current[0].Particulars}</pre></div>
                           </div>
                           <div style={{ height: "5px" }}></div>
                           <div style={{ width: "100%", display: "flex" }}>
@@ -3731,7 +3731,6 @@ export default function NavigatePrint() {
               </div>
             );
           })}
-
         {module.current === "warehouse" && row.length > 0 && (
           <div
             className="page content"
@@ -3898,7 +3897,6 @@ export default function NavigatePrint() {
             </div>
           </div>
         )}
-
         {
           module.current === "cash-disbursement-check" && (
             <div
@@ -3918,21 +3916,68 @@ export default function NavigatePrint() {
                 style={{
                   flex: 1,
                   fontWeight: "bold",
+                  position: "relative",
+                  color:"black"
                 }}
               >
-                <div style={{ height: "5px" }}></div>
-                <div style={{ fontSize: "14px", display: "flex", columnGap: "10px", justifyContent: "flex-end", marginBottom: "20px",paddingRight:"15px",marginTop:"8px" }}>
+
+                <div style={{
+                  fontSize: "14px",
+                  display: "flex",
+                  columnGap: "10px",
+                  justifyContent: "flex-end",
+                  position: "absolute",
+                  right: "42px",
+                  top:"5px"
+                }}>
                   <span style={{ letterSpacing: "10px" }}>{format(new Date(state.current.checkDate), 'MM')}</span>
                   <span style={{ letterSpacing: "10px" }}>{format(new Date(state.current.checkDate), 'dd')}</span>
                   <span style={{ letterSpacing: "12px" }}>{format(new Date(state.current.checkDate), 'yyyy')}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: "space-between", marginBottom: "10px", }}>
-                  <div style={{ fontSize: "14px", paddingLeft: "95px" }}>{`**${state.current.Payto}**`}</div>
-                  <div style={{ fontSize: "14px" ,paddingRight:"80px"}}>{`**${state.current.credit}**`}</div>
+
+                <div style={{
+                  fontSize: "14px",
+                  display: "flex",
+                  columnGap: "10px",
+                  justifyContent: "flex-end",
+                  marginBottom: "20px",
+                  paddingRight: "15px",
+                  marginTop: "8px",
+
+                }}>
+                  <div style={{ height: "15px" }}></div>
                 </div>
-                <div>
-                  <div style={{ fontSize: "14px", paddingLeft: "75px" }}>{`**${AmountToWords(parseFloat(state.current.credit.replace(/,/g, '')))}**`}</div>
+                <div style={{ display: 'flex', justifyContent: "space-between", marginBottom: "10px", position: "relative" }}>
+                  <div style={{
+                    fontSize: "14px",
+                    position: "absolute",
+                    width: "320px",
+                    height: "auto",
+                    wordWrap: "break-word",
+                    left: "87px",
+                    top: "2px"
+                  }}>{`**${state.current.Payto}**`}</div>
+                  <div style={{
+                    fontSize: "14px",
+                    position: "absolute",
+                    width: "100px",
+                    height: "auto",
+                    wordWrap: "break-word",
+                    right: "73px",
+                    top: "2px"
+                  }}>{`**${state.current.credit}**`}</div>
+
+                  <div style={{
+                    fontSize: "14px",
+                    position: "absolute",
+                    width: "564px",
+                    height: "auto",
+                    wordWrap: "break-word",
+                    left: "62px",
+                    top: "35px"
+                  }}>{`**${AmountToWords(parseFloat(state.current.credit.replace(/,/g, '')))}**`}</div>
                 </div>
+
               </div>
               <div
                 className="footer">

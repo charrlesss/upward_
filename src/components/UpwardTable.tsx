@@ -25,7 +25,7 @@ interface UpwardTablePropsType {
   isRowSelectable?: boolean;
   unSelectable?: (row: any) => boolean;
   isLoading?: boolean,
-  onRightClick?: (rowSelected: any,event: any) => any
+  onRightClick?: (rowSelected: any, event: any) => any
 }
 
 const UpwardTable = forwardRef(
@@ -154,7 +154,7 @@ const UpwardTable = forwardRef(
             let selectedItemsParams: Array<number> = selectedItems.filter(
               (i) => i !== rowIndex
             );
-       
+
             setSelectedItems(selectedItemsParams);
             // onSelectionChangeRef.current(selectedRowData, rowIndex);
           } else {
@@ -302,19 +302,28 @@ const UpwardTable = forwardRef(
           row?.scrollIntoView({ block: "end", behavior: "smooth" });
         }
       },
+      getSelectedIndex: () => {
+        return selectedItems[0];
+      },
       getSelectedRows: () => {
         return rows.filter((d, idx) => selectedItems.includes(idx));
       },
-      setSelectRows: (selectRows: any) => {
-        setSelectedItems(selectRows)
-      }
+      getFirstColumn: () => {
+        return rows.filter((d, idx) => selectedItems.includes(idx));
+      },
+      getParentElement: () => {
+        return divRef.current
+      },
+      getSelectedRowsOnClick: () => {
+        return selectedRows[0];
+      },
     }));
 
     const handleRightClick = (event: any, rowIndex: number) => {
       event.preventDefault();
       const rowSelected = rows[rowIndex]
       if (onRightClick) {
-        onRightClick(rowSelected,event)
+        onRightClick(rowSelected, event)
       }
     };
 
@@ -424,8 +433,7 @@ const UpwardTable = forwardRef(
                         <div
                           key={colIndex}
                           style={{ width: col.width }}
-                          className={`grid-cell ${hoveredColumn === colIndex ? `highlight-column` : ""
-                            }`}
+                          className={`grid-cell ${hoveredColumn === colIndex ? `highlight-column` : ""} row-${rowIndex} col-${colIndex}`}
                         >
                           <input
                             value={row[col.field]}

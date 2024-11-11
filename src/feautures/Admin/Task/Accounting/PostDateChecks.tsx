@@ -1,4 +1,4 @@
-import React, { useContext, useState, useRef, useReducer } from "react";
+import React, { useContext, useState, useRef, useReducer, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -38,6 +38,11 @@ import ReactDOMServer from "react-dom/server";
 import { grey } from "@mui/material/colors";
 import { UpwardTable } from "../../../../components/UpwardTable";
 import { useUpwardTableModal } from "../../../../hooks/useUpwardTableModal";
+import { TextAreaInput, TextInput } from "../../../../components/UpwardFields";
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import { NumericFormat } from "react-number-format";
+import { format } from "date-fns";
+import { wait } from "@testing-library/user-event/dist/utils";
 
 const initialState = {
   Sub_Ref_No: "",
@@ -140,18 +145,31 @@ export default function PostDateChecks() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const savePDCButtonRef = useRef<HTMLButtonElement>(null);
   const openIdsButtonRef = useRef<HTMLButtonElement>(null);
+
+
   //check modal refs
-  const checkNoRef = useRef<HTMLInputElement>(null);
-  const checkBankRef = useRef<HTMLInputElement>(null);
-  const checkBranchRef = useRef<HTMLInputElement>(null);
-  const checkAmountRef = useRef<HTMLInputElement>(null);
-  const checkDateRef = useRef<HTMLInputElement>(null);
+
   const checkModalSaveButton = useRef<HTMLButtonElement>(null);
   const checkModalSaveButtonActionRef = useRef<any>(null);
   // search modal auto focus on load
+
+
+  // modal 
+  const _checknoRef = useRef<HTMLInputElement>(null);
+  const _bankRef = useRef<HTMLInputElement>(null);
+  const _branchRef = useRef<HTMLInputElement>(null);
+  const _remarksRef = useRef<HTMLTextAreaElement>(null);
+  const _chekdateRef = useRef<HTMLInputElement>(null);
+  const _amountRef = useRef<HTMLInputElement>(null);
+  const _checkcountRef = useRef<HTMLInputElement>(null);
+  const _bankCode = useRef('');
+  const _slipCodeRef = useRef('');
+  const _slipDateRef = useRef('');
+  const _checkOR = useRef('');
+
+
   const addRefButton = useRef<HTMLButtonElement>(null);
   const queryClient = useQueryClient();
-  const table = useRef<any>(null);
 
   const dateRef = useRef<HTMLButtonElement>(null);
   const remakrsRef = useRef<HTMLButtonElement>(null);
@@ -183,6 +201,7 @@ export default function PostDateChecks() {
           field: "Sub_Ref_No",
           value: response.data.RefNo[0].pdcID,
         });
+
       },
     });
   const { mutate, isLoading: loadingAddNew } = useMutation({
@@ -440,21 +459,17 @@ export default function PostDateChecks() {
     ],
     onSelectionChange: (selectedRow: any) => {
       if (selectedRow.length > 0) {
-        dispatchModalPdcCheck({
-          type: "UPDATE_FIELD",
-          field: "BankName",
-          value: selectedRow[0].Bank,
-        });
+        setTimeout(() => {
+          _bankCode.current = selectedRow[0].Bank_Code
+          if (_bankRef.current) {
+            _bankRef.current.value = selectedRow[0].Bank
+          }
+        }, 100)
 
-        dispatchModalPdcCheck({
-          type: "UPDATE_FIELD",
-          field: "BankCode",
-          value: selectedRow[0].Bank_Code,
-        });
         closeModalSearchBanks();
         setOpenPdcInputModal(true);
         setTimeout(() => {
-          checkBranchRef.current?.focus();
+          _branchRef.current?.focus()
         }, 100);
       }
     },
@@ -502,10 +517,6 @@ export default function PostDateChecks() {
   const handleInputChange = (e: any) => {
     const { name, value } = e.target;
     dispatch({ type: "UPDATE_FIELD", field: name, value });
-  };
-  const handleModalInputChange = (e: any) => {
-    const { name, value } = e.target;
-    dispatchModalPdcCheck({ type: "UPDATE_FIELD", field: name, value });
   };
   async function handleOnSave(e: any) {
     if (state.PNo === "") {
@@ -714,13 +725,33 @@ export default function PostDateChecks() {
   const onSelectionChange = (selectedRow: any) => {
     if (selectedRow.length > 0) {
       const rowSelected = selectedRow[0];
+      console.log(rowSelected)
+      setTimeout(() => {
+        if (
+          _checknoRef.current &&
+          _bankRef.current &&
+          _branchRef.current &&
+          _remarksRef.current &&
+          _chekdateRef.current &&
+          _amountRef.current &&
+          _checkcountRef.current
+        ) {
+          _checknoRef.current.value = rowSelected.Check_No
+          _bankRef.current.value = rowSelected.BankName
+          _branchRef.current.value = rowSelected.Branch
+          _remarksRef.current.value = rowSelected.Check_Remarks
+          _chekdateRef.current.value = rowSelected.Check_Date
+          _amountRef.current.value = formatNumber(parseFloat(rowSelected.Check_Amnt.replace(/,/g, '')))
+          _checkcountRef.current.value = '0'
+          _bankCode.current = rowSelected.BankCode
+          _slipCodeRef.current = rowSelected.Deposit_Slip
+          _slipDateRef.current = rowSelected.DateDeposit
+          _checkOR.current = rowSelected.Ref_No
+        }
+      }, 100)
 
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "checkMode",
-        value: "update",
-      });
-      setNewStateValue(dispatchModalPdcCheck, rowSelected);
+
+
       flushSync(() => {
         setOpenPdcInputModal(true);
       });
@@ -733,9 +764,169 @@ export default function PostDateChecks() {
       });
     }
   };
+  function formatNumber(num: number) {
+    return (num || 0).toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+  }
+  function handleCheckDetailsSave() {
+    function incrementStringNumbers(
+      str: string,
+      increment: number
+    ) {
+      let num = parseInt(str);
+      num = num + increment;
+      return num.toString().padStart(str.length, "0");
+    }
+    function incrementDate(dateString: any, i: number) {
+      const currentDate = new Date(
+        dateString
+      );
+      currentDate.setMonth(currentDate.getMonth() + i);
+
+      return format(currentDate, 'yyyy-MM-dd')
+    }
+    function isValidDate(dateString: string): boolean {
+      const date = new Date(dateString);
+      return date instanceof Date && !isNaN(date.getTime());
+    }
+
+    if (
+      _checknoRef.current &&
+      _bankRef.current &&
+      _branchRef.current &&
+      _remarksRef.current &&
+      _chekdateRef.current &&
+      _amountRef.current &&
+      _checkcountRef.current
+    ) {
+      const filteredChecks = pdcDataRows.filter((itm: any) => {
+        return _checknoRef.current && _checknoRef.current.value === itm.Check_No
+      })
+      if(filteredChecks.length > 0 ){
+        alert('check no. is already exist!')
+        _checknoRef.current.focus()
+        return
+      }
+      if (_checknoRef.current.value === '') {
+        alert('check no. is required!')
+        _checknoRef.current.focus()
+        return
+      } else if (_bankRef.current.value === '') {
+        alert('bank is required!')
+        _bankRef.current.focus()
+        return
+      } else if (_branchRef.current.value === '') {
+        alert('branch is required!')
+        _branchRef.current.focus()
+        return
+      } else if (!isValidDate(_chekdateRef.current.value)) {
+        alert('invalid date!')
+        _chekdateRef.current.focus()
+        return
+      } else if (parseFloat(_amountRef.current.value.replace(/,/g, '')) <= 0) {
+        alert('amount must be greater than 0!')
+        _amountRef.current.focus()
+        return
+      }
+
+
+      setPdcDataRows((d: any) => {
+        if (
+          _checknoRef.current &&
+          _bankRef.current &&
+          _branchRef.current &&
+          _remarksRef.current &&
+          _chekdateRef.current &&
+          _amountRef.current &&
+          _checkcountRef.current
+        ) {
+          const selectedIndex = tableRef.current.getSelectedIndex()
+
+          if (selectedIndex !== null && selectedIndex !== undefined) {
+            const newData = d.map((itm: any, idx: number) => {
+              if (
+                _checknoRef.current &&
+                _bankRef.current &&
+                _branchRef.current &&
+                _remarksRef.current &&
+                _chekdateRef.current &&
+                _amountRef.current &&
+                _checkcountRef.current &&
+                idx === selectedIndex
+              ) {
+                itm = {
+                  Check_No: _checknoRef.current.value,
+                  Check_Date: _chekdateRef.current.value,
+                  Check_Amnt: _amountRef.current.value,
+                  BankName: _bankRef.current.value,
+                  BankCode: _bankCode.current,
+                  Branch: _branchRef.current.value,
+                  Check_Remarks: _remarksRef.current.value,
+                  Deposit_Slip: _slipCodeRef.current,
+                  DateDeposit: _slipDateRef.current,
+                  OR_No: _checkOR.current,
+                }
+              }
+
+              return itm
+            })
+            return newData
+          } else {
+            const newData: any = []
+            for (
+              let i = 0;
+              i < parseInt(_checkcountRef.current.value);
+              i++
+            ) {
+              const data: any = {
+                Check_No: incrementStringNumbers(
+                  _checknoRef.current.value,
+                  i
+                ),
+                Check_Date: incrementDate(_chekdateRef.current.value, i),
+                Check_Amnt: _amountRef.current.value,
+                BankName: _bankRef.current.value,
+                BankCode: _bankCode.current,
+                Branch: _branchRef.current.value,
+                Check_Remarks: _remarksRef.current.value,
+                Deposit_Slip: _slipCodeRef.current,
+                DateDeposit: _slipDateRef.current,
+                OR_No: _checkOR.current,
+              };
+              newData.push(data)
+            }
+            return [...d, ...newData]
+          }
+
+        }
+        return d
+      })
+
+      setOpenPdcInputModal(false);
+      focusOnTable()
+    }
+
+  }
+
+  function focusOnTable() {
+    setTimeout(() => {
+      tableRef.current?.resetTableSelected();
+      const datagridview = tableRef.current.getParentElement().querySelector(
+        `.grid-container .row-0.col-0 input`
+      ) as HTMLDivElement;
+      setTimeout(() => {
+        if (datagridview)
+          datagridview.focus();
+      }, 100)
+    }, 100)
+  }
+
   const isDisableField = state.pdcMode === "";
   const width = window.innerWidth - 50;
   const height = window.innerHeight - 145;
+
 
   return (
     <div
@@ -748,9 +939,9 @@ export default function PostDateChecks() {
         backgroundColor: "#F8F8FF",
       }}
     >
+      {ModalSearchBanks}
       {UpwardPDCModal}
       {ModalSearchPdcIDs}
-      {ModalSearchBanks}
       <Box
         sx={(theme) => ({
           display: "flex",
@@ -907,9 +1098,7 @@ export default function PostDateChecks() {
                 setOpenPdcInputModal(true);
               });
 
-              if (state.checkMode !== "update") {
-                checkNoRef.current?.focus();
-              }
+              _checknoRef.current?.focus();
             }}
             ref={addRefButton}
           >
@@ -1067,8 +1256,8 @@ export default function PostDateChecks() {
                   value={new Date(state.Date)}
                   onKeyDown={(e: any) => {
                     if (e.code === "Enter" || e.code === "NumpadEnter") {
-                       // savePDCButtonRef.current?.click();
-                       remakrsRef.current?.focus()
+                      // savePDCButtonRef.current?.click();
+                      remakrsRef.current?.focus()
                     }
                   }}
                   textField={{
@@ -1103,7 +1292,7 @@ export default function PostDateChecks() {
                 }}
                 InputProps={{
                   style: { height: "27px", fontSize: "14px" },
-                  inputRef:remakrsRef
+                  inputRef: remakrsRef
                 }}
                 sx={{
                   fieldset: { borderColor: "black" },
@@ -1151,7 +1340,7 @@ export default function PostDateChecks() {
                       PN/Client ID
                     </InputLabel>
                     <OutlinedInput
-                    inputRef={pnRef}
+                      inputRef={pnRef}
                       sx={{
                         fieldset: { borderColor: "black" },
 
@@ -1206,7 +1395,7 @@ export default function PostDateChecks() {
                   InputProps={{
                     style: { height: "27px", fontSize: "14px" },
                     readOnly: true,
-                    inputRef:branchRef
+                    inputRef: branchRef
                   }}
                   sx={{
                     fieldset: { borderColor: "black" },
@@ -1241,7 +1430,7 @@ export default function PostDateChecks() {
                   InputProps={{
                     style: { height: "27px", fontSize: "14px" },
                     readOnly: true,
-                    inputRef:clientnameRef
+                    inputRef: clientnameRef
                   }}
                   sx={{
                     fieldset: { borderColor: "black" },
@@ -1295,27 +1484,27 @@ export default function PostDateChecks() {
                 timer: 1500,
               });
             }
-            const timeout = setTimeout(() => {
-              Swal.fire({
-                title: "Are you sure?",
-                text: `You won't to delete this Check No. ${rowSelected.Check_No}`,
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, delete it!",
-              }).then((result) => {
-                if (result.isConfirmed) {
-                  return setPdcDataRows((dt) => {
+            Swal.fire({
+              title: "Are you sure?",
+              text: `You won't to delete this Check No. ${rowSelected.Check_No}`,
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Yes, delete it!",
+            }).then((result) => {
+              if (result.isConfirmed) {
+                setTimeout(() => {
+                  const selectedIndex = tableRef.current.getSelectedRowsOnClick()
+                  setPdcDataRows((dt) => {
                     return dt.filter(
-                      (item: any) => item.CheckIdx !== rowSelected.CheckIdx
+                      (item: any, idx: number) => idx !== selectedIndex
                     );
                   });
-                }
-                table.current?.removeSelection();
-              });
-              clearTimeout(timeout);
-            }, 250);
+                  tableRef.current?.resetTableSelected();
+                }, 100)
+              }
+            });
           }
         }}
         inputsearchselector=".manok"
@@ -1324,8 +1513,9 @@ export default function PostDateChecks() {
       <Modal
         open={openPdcInputModal}
         onClose={() => {
-          table.current?.removeSelection();
+          tableRef.current?.resetTableSelected();
           setOpenPdcInputModal(false);
+          focusOnTable()
         }}
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
@@ -1358,143 +1548,105 @@ export default function PostDateChecks() {
                 gap: "10px",
               }}
             >
-              <TextField
-                variant="outlined"
-                size="small"
-                label="Check No."
-                name="Check_No"
-                value={stateModalPdcCheck.Check_No}
-                onChange={handleModalInputChange}
-                onKeyDown={(e: any) => {
-                  if (e.code === "Enter" || e.code === "NumpadEnter") {
-                    const timeout = setTimeout(() => {
-                      checkModalSaveButton.current?.click();
-                      clearTimeout(timeout);
-                    }, 100);
-                  }
+              <TextInput
+                label={{
+                  title: "Check No : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "70px",
+                  },
                 }}
-                InputProps={{
-                  style: { height: "27px", fontSize: "14px" },
-                  inputRef: checkNoRef,
+                input={{
+                  type: "text",
+                  style: { width: "190px" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                      _bankRef.current?.focus()
+                    }
+                  },
                 }}
-                sx={{
-                  flex: 1,
-                  height: "27px",
-                  ".MuiFormLabel-root": { fontSize: "14px" },
-                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                }}
+                inputRef={_checknoRef}
               />
               {isLoadingModalSearchbanks ? (
                 <LoadingButton loading={isLoadingModalSearchbanks} />
               ) : (
-                <FormControl
-                  sx={{
-                    width: "100%",
-                    ".MuiFormLabel-root": {
-                      fontSize: "14px",
-                      background: "white",
-                      zIndex: 99,
-                      padding: "0 3px",
+                <TextInput
+                  label={{
+                    title: "Bank : ",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "70px",
                     },
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
                   }}
-                  fullWidth
-                  variant="outlined"
-                  size="small"
-                >
-                  <InputLabel htmlFor="label-input-id">Bank</InputLabel>
-                  <OutlinedInput
-                    sx={{
-                      height: "27px",
-                      fontSize: "14px",
-                    }}
-                    inputRef={checkBankRef}
-                    fullWidth
-                    label="Bank"
-                    name="BankName"
-                    value={stateModalPdcCheck.BankName}
-                    onChange={handleModalInputChange}
-                    id="label-input-id"
-                    onKeyDown={(e) => {
-                      if (e.code === "Enter" || e.code === "NumpadEnter") {
-                        setOpenPdcInputModal(false);
-
+                  input={{
+                    type: "text",
+                    style: { width: "190px" },
+                    value: state.refNo,
+                    name: "refNo",
+                    onKeyDown: (e) => {
+                      if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                        // setOpenPdcInputModal(false);
                         return openModalSearchBanks(
-                          stateModalPdcCheck.BankName
+                          e.currentTarget.value
                         );
                       }
-                    }}
-                    endAdornment={
-                      <InputAdornment position="end">
-                        <IconButton
-                          aria-label="search-client"
-                          color="secondary"
-                          edge="end"
-                          onClick={() => {
-                            setOpenPdcInputModal(false);
-
-                            openModalSearchBanks(stateModalPdcCheck.BankName);
-                          }}
-                        >
-                          <PolicyIcon />
-                        </IconButton>
-                      </InputAdornment>
                     }
-                  />
-                </FormControl>
+                  }}
+                  icon={<AccountBalanceIcon sx={{ fontSize: "18px" }} />}
+                  onIconClick={(e) => {
+                    e.preventDefault()
+                    if (_bankRef.current) {
+                      openModalSearchBanks(
+                        _bankRef.current?.value
+                      );
+                    }
+                  }}
+                  inputRef={_bankRef}
+                />
               )}
-              <TextField
-                variant="outlined"
-                size="small"
-                label="Branch"
-                name="Branch"
-                value={stateModalPdcCheck.Branch}
-                onChange={handleModalInputChange}
-                onKeyDown={(e: any) => {
-                  if (e.code === "Enter" || e.code === "NumpadEnter") {
-                    const timeout = setTimeout(() => {
-                      checkModalSaveButton.current?.click();
-                      clearTimeout(timeout);
-                    }, 100);
-                  }
+
+              <TextInput
+                label={{
+                  title: "Branch : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "70px",
+                  },
                 }}
-                InputProps={{
-                  style: { height: "27px", fontSize: "14px" },
-                  inputRef: checkBranchRef,
+                input={{
+                  type: "text",
+                  style: { width: "190px" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                      _remarksRef.current?.focus()
+                    }
+                  },
                 }}
-                sx={{
-                  flex: 1,
-                  height: "27px",
-                  ".MuiFormLabel-root": { fontSize: "14px" },
-                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                }}
+                inputRef={_branchRef}
               />
-              <TextField
-                variant="outlined"
-                size="small"
-                label="Remarks"
-                name="Check_Remarks"
-                value={stateModalPdcCheck.Check_Remarks}
-                onChange={handleModalInputChange}
-                rows={4}
-                multiline
-                onKeyDown={(e: any) => {
-                  if (e.code === "Enter" || e.code === "NumpadEnter") {
-                    const timeout = setTimeout(() => {
-                      checkModalSaveButton.current?.click();
-                      clearTimeout(timeout);
-                    }, 100);
-                  }
+              <TextAreaInput
+                label={{
+                  title: "Remarks : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "70px",
+                  },
                 }}
-                InputProps={{
-                  style: { height: "auto", fontSize: "14px" },
+                textarea={{
+                  rows: 4,
+                  disabled: isDisableField,
+                  style: { flex: 1 },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                      _chekdateRef.current?.focus()
+                    }
+                  },
                 }}
-                sx={{
-                  flex: 1,
-                  height: "auto",
-                  ".MuiFormLabel-root": { fontSize: "14px" },
-                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                }}
+                _inputRef={_remarksRef}
               />
             </div>
             <div
@@ -1504,105 +1656,91 @@ export default function PostDateChecks() {
                 flexDirection: "column",
               }}
             >
-              <CustomDatePicker
-                label="Check Dated"
-                onChange={(value: any) => {
-                  dispatchModalPdcCheck({
-                    type: "UPDATE_FIELD",
-                    field: "Check_Date",
-                    value: value,
-                  });
-                }}
-                value={new Date(stateModalPdcCheck.Check_Date)}
-                inputRef={checkDateRef}
-                onKeyDown={(e: any) => {
-                  if (e.code === "Enter" || e.code === "NumpadEnter") {
-                    const timeout = setTimeout(() => {
-                      checkModalSaveButton.current?.click();
-                      clearTimeout(timeout);
-                    }, 100);
-                  }
-                }}
-                textField={{
-                  InputLabelProps: {
-                    style: {
-                      fontSize: "14px",
-                    },
-                  },
-                  InputProps: {
-                    style: { height: "27px", fontSize: "14px" },
+
+              <TextInput
+                label={{
+                  title: "Check Dated : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "90px",
                   },
                 }}
+                input={{
+                  disabled: isDisableField,
+                  type: "date",
+                  style: { width: "190px" },
+                  defaultValue: new Date().toISOString().split("T")[0],
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                      _amountRef.current?.focus()
+                    }
+                  },
+                }}
+                inputRef={_chekdateRef}
               />
-              <TextField
-                variant="outlined"
-                size="small"
-                label="Amount"
-                name="Check_Amnt"
-                value={stateModalPdcCheck.Check_Amnt}
-                onChange={handleModalInputChange}
-                placeholder="0.00"
-                onBlur={() => {
-                  dispatchModalPdcCheck({
-                    type: "UPDATE_FIELD",
-                    field: "Check_Amnt",
-                    value: parseFloat(
-                      stateModalPdcCheck.Check_Amnt.replace(/,/g, "")
-                    ).toFixed(2),
-                  });
-                }}
-                onKeyDown={(e: any) => {
-                  if (e.code === "Enter" || e.code === "NumpadEnter") {
-                    const timeout = setTimeout(() => {
-                      checkModalSaveButton.current?.click();
-                      clearTimeout(timeout);
-                    }, 100);
-                  }
-                }}
-                InputProps={{
-                  style: { height: "27px", fontSize: "14px" },
-                  inputComponent: NumericFormatCustom as any,
-                  inputRef: checkAmountRef,
-                }}
-                sx={{
-                  height: "27px",
-                  ".MuiFormLabel-root": { fontSize: "14px" },
-                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                }}
-              />
-              {state.checkMode !== "update" && (
-                <TextField
-                  type="number"
-                  variant="outlined"
-                  size="small"
-                  label="Check Count"
-                  name="Check_Count"
-                  value={stateModalPdcCheck.Check_Count}
-                  onChange={handleModalInputChange}
-                  placeholder="0"
-                  onKeyDown={(e: any) => {
-                    const validCode = ["Enter", "NumpadEnter"];
-                    if (validCode.includes(e.code)) {
-                      const timeout = setTimeout(() => {
-                        checkModalSaveButton.current?.click();
-                        clearTimeout(timeout);
-                      }, 100);
+
+              <div style={{
+                display: "flex"
+              }}>
+                <label style={{
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "90px",
+                }}>Amount :</label>
+                <NumericFormat
+                  style={{
+                    flex: 1
+                  }}
+                  value={_amountRef.current?.value ?? ""}
+                  getInputRef={_amountRef}
+                  allowNegative={false}
+                  thousandSeparator
+                  valueIsNumericString
+                  onKeyDown={(e) => {
+                    if (e.code === "Enter" || e.code === "NumpadEnter") {
+                      let currentValue = _amountRef.current?.value as string;
+                      let numericValue = parseFloat(currentValue.replace(/,/g, ''));
+                      if (_amountRef.current) {
+                        if (isNaN(numericValue)) {
+                          _amountRef.current.value = "0.00";
+                        } else {
+                          if (!currentValue.includes(".")) {
+                            _amountRef.current.value = `${formatNumber(numericValue)}`;
+                          } else {
+                            _amountRef.current.value = formatNumber(numericValue);
+                          }
+                        }
+                      }
+                      _checkcountRef.current?.focus()
                     }
                   }}
-                  InputProps={{
-                    style: { height: "27px", fontSize: "14px" },
-                    inputProps: {
-                      min: 1,
-                      type: "text",
-                      pattern: "[0-9]*",
+                />
+              </div>
+              {state.checkMode !== "update" && (
+                <TextInput
+                  label={{
+                    title: "Check Count : ",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "90px",
                     },
                   }}
-                  sx={{
-                    flex: 1,
-                    height: "27px",
-                    ".MuiFormLabel-root": { fontSize: "14px" },
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                  input={{
+                    disabled: isDisableField,
+                    type: "number",
+                    style: { width: "190px" },
+                    onKeyDown: (e) => {
+                      if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                        const timeout = setTimeout(() => {
+                          checkModalSaveButton.current?.click();
+                          clearTimeout(timeout);
+                        }, 100);
+                      }
+                    },
                   }}
+                  inputRef={_checkcountRef}
                 />
               )}
             </div>
@@ -1623,364 +1761,369 @@ export default function PostDateChecks() {
                 variant="contained"
                 autoFocus={state.checkMode !== ""}
                 onClick={() => {
-                  if (state.checkMode === "update") {
-                    flushSync(() => {
-                      setOpenPdcInputModal(false);
-                    });
-                    return Swal.fire({
-                      title: "Are you sure?",
-                      text: `Update Check ${stateModalPdcCheck.Check_No}`,
-                      icon: "warning",
-                      showCancelButton: true,
-                      confirmButtonColor: "#3085d6",
-                      cancelButtonColor: "#d33",
-                      confirmButtonText: "Yes, update it!",
-                    }).then((result) => {
-                      if (!result.isConfirmed) {
-                        table.current?.removeSelection();
-                        setOpenPdcInputModal(false);
-                        dispatch({
-                          type: "UPDATE_FIELD",
-                          field: "checkMode",
-                          value: "",
-                        });
-                        return;
-                      }
-                      modalCheckAddUpdate();
-                    });
-                  }
-                  modalCheckAddUpdate();
+                  handleCheckDetailsSave()
+                  // if (state.checkMode === "update") {
+                  //   flushSync(() => {
+                  //     setOpenPdcInputModal(false);
+                  //   });
+                  //   return Swal.fire({
+                  //     title: "Are you sure?",
+                  //     text: `Update Check ${stateModalPdcCheck.Check_No}`,
+                  //     icon: "warning",
+                  //     showCancelButton: true,
+                  //     confirmButtonColor: "#3085d6",
+                  //     cancelButtonColor: "#d33",
+                  //     confirmButtonText: "Yes, update it!",
+                  //   }).then((result) => {
+                  //     if (!result.isConfirmed) {
+                  //       table.current?.removeSelection();
+                  //       setOpenPdcInputModal(false);
+                  //       dispatch({
+                  //         type: "UPDATE_FIELD",
+                  //         field: "checkMode",
+                  //         value: "",
+                  //       });
+                  //       return;
+                  //     }
+                  //     modalCheckAddUpdate();
+                  //   });
+                  // }
+                  // modalCheckAddUpdate();
 
-                  function modalCheckAddUpdate() {
-                    if (
-                      state.checkMode !== "update" &&
-                      pdcDataRows
-                        .map((item: any) => item.Check_No)
-                        .includes(stateModalPdcCheck.Check_No)
-                    ) {
-                      setOpenPdcInputModal(false);
-                      return Swal.fire({
-                        text: "Check is already exist!",
-                        icon: "warning",
-                        showCancelButton: false,
-                        timer: 1500,
-                      }).then(() => {
-                        flushSync(() => {
-                          setOpenPdcInputModal(true);
-                        });
-                        checkNoRef.current?.focus();
-                      });
-                    }
+                  // function modalCheckAddUpdate() {
+                  //   if (
+                  //     state.checkMode !== "update" &&
+                  //     pdcDataRows
+                  //       .map((item: any) => item.Check_No)
+                  //       .includes(stateModalPdcCheck.Check_No)
+                  //   ) {
+                  //     setOpenPdcInputModal(false);
+                  //     return Swal.fire({
+                  //       text: "Check is already exist!",
+                  //       icon: "warning",
+                  //       showCancelButton: false,
+                  //       timer: 1500,
+                  //     }).then(() => {
+                  //       flushSync(() => {
+                  //         setOpenPdcInputModal(true);
+                  //       });
+                  //       checkNoRef.current?.focus();
+                  //     });
+                  //   }
 
-                    if (stateModalPdcCheck.Check_No === "") {
-                      setOpenPdcInputModal(false);
-                      return Swal.fire({
-                        text: "Please provide check!",
-                        icon: "warning",
-                        showCancelButton: false,
-                        timer: 1500,
-                      }).then(() => {
-                        flushSync(() => {
-                          setOpenPdcInputModal(true);
-                        });
-                        checkNoRef.current?.focus();
-                      });
-                    }
-                    if (
-                      parseInt(stateModalPdcCheck.Check_Amnt) <= 0 ||
-                      isNaN(parseInt(stateModalPdcCheck.Check_Amnt))
-                    ) {
-                      setOpenPdcInputModal(false);
-                      return Swal.fire({
-                        text: "Please provide check amount!",
-                        icon: "warning",
-                        showCancelButton: false,
-                        timer: 1500,
-                      }).then(() => {
-                        flushSync(() => {
-                          setOpenPdcInputModal(true);
-                        });
-                        checkAmountRef.current?.focus();
-                      });
-                    }
-                    if (stateModalPdcCheck.BankName === "") {
-                      setOpenPdcInputModal(false);
-                      return Swal.fire({
-                        text: "Please provide bank!",
-                        icon: "warning",
-                        showCancelButton: false,
-                        timer: 1500,
-                      }).then(() => {
-                        flushSync(() => {
-                          setOpenPdcInputModal(true);
-                        });
-                        checkBankRef.current?.focus();
-                      });
-                    }
-                    if (stateModalPdcCheck.Branch === "") {
-                      setOpenPdcInputModal(false);
-                      return Swal.fire({
-                        text: "Please provide branch!",
-                        icon: "warning",
-                        showCancelButton: false,
-                        timer: 1500,
-                      }).then(() => {
-                        flushSync(() => {
-                          setOpenPdcInputModal(true);
-                        });
-                        checkBranchRef.current?.focus();
-                      });
-                    }
-                    if (stateModalPdcCheck.Check_No.length >= 40) {
-                      return Swal.fire({
-                        text: "Check No is too long!",
-                        icon: "warning",
-                        showCancelButton: false,
-                        timer: 1500,
-                      }).then(() => {
-                        flushSync(() => {
-                          setOpenPdcInputModal(true);
-                        });
-                      });
-                    }
-                    if (stateModalPdcCheck.Check_Amnt.length >= 200) {
-                      return Swal.fire({
-                        text: "Check Amount is too long!",
-                        icon: "warning",
-                        showCancelButton: false,
-                        timer: 1500,
-                      }).then(() => {
-                        flushSync(() => {
-                          setOpenPdcInputModal(true);
-                        });
-                      });
-                    }
-                    if (stateModalPdcCheck.Branch.length >= 45) {
-                      return Swal.fire({
-                        text: "Branch is too long!",
-                        icon: "warning",
-                        showCancelButton: false,
-                        timer: 1500,
-                      }).then(() => {
-                        flushSync(() => {
-                          setOpenPdcInputModal(true);
-                        });
-                      });
-                    }
+                  //   if (stateModalPdcCheck.Check_No === "") {
+                  //     setOpenPdcInputModal(false);
+                  //     return Swal.fire({
+                  //       text: "Please provide check!",
+                  //       icon: "warning",
+                  //       showCancelButton: false,
+                  //       timer: 1500,
+                  //     }).then(() => {
+                  //       flushSync(() => {
+                  //         setOpenPdcInputModal(true);
+                  //       });
+                  //       checkNoRef.current?.focus();
+                  //     });
+                  //   }
+                  //   if (
+                  //     parseInt(stateModalPdcCheck.Check_Amnt) <= 0 ||
+                  //     isNaN(parseInt(stateModalPdcCheck.Check_Amnt))
+                  //   ) {
+                  //     setOpenPdcInputModal(false);
+                  //     return Swal.fire({
+                  //       text: "Please provide check amount!",
+                  //       icon: "warning",
+                  //       showCancelButton: false,
+                  //       timer: 1500,
+                  //     }).then(() => {
+                  //       flushSync(() => {
+                  //         setOpenPdcInputModal(true);
+                  //       });
+                  //       checkAmountRef.current?.focus();
+                  //     });
+                  //   }
+                  //   if (stateModalPdcCheck.BankName === "") {
+                  //     setOpenPdcInputModal(false);
+                  //     return Swal.fire({
+                  //       text: "Please provide bank!",
+                  //       icon: "warning",
+                  //       showCancelButton: false,
+                  //       timer: 1500,
+                  //     }).then(() => {
+                  //       flushSync(() => {
+                  //         setOpenPdcInputModal(true);
+                  //       });
+                  //       checkBankRef.current?.focus();
+                  //     });
+                  //   }
+                  //   if (stateModalPdcCheck.Branch === "") {
+                  //     setOpenPdcInputModal(false);
+                  //     return Swal.fire({
+                  //       text: "Please provide branch!",
+                  //       icon: "warning",
+                  //       showCancelButton: false,
+                  //       timer: 1500,
+                  //     }).then(() => {
+                  //       flushSync(() => {
+                  //         setOpenPdcInputModal(true);
+                  //       });
+                  //       checkBranchRef.current?.focus();
+                  //     });
+                  //   }
+                  //   if (stateModalPdcCheck.Check_No.length >= 40) {
+                  //     return Swal.fire({
+                  //       text: "Check No is too long!",
+                  //       icon: "warning",
+                  //       showCancelButton: false,
+                  //       timer: 1500,
+                  //     }).then(() => {
+                  //       flushSync(() => {
+                  //         setOpenPdcInputModal(true);
+                  //       });
+                  //     });
+                  //   }
+                  //   if (stateModalPdcCheck.Check_Amnt.length >= 200) {
+                  //     return Swal.fire({
+                  //       text: "Check Amount is too long!",
+                  //       icon: "warning",
+                  //       showCancelButton: false,
+                  //       timer: 1500,
+                  //     }).then(() => {
+                  //       flushSync(() => {
+                  //         setOpenPdcInputModal(true);
+                  //       });
+                  //     });
+                  //   }
+                  //   if (stateModalPdcCheck.Branch.length >= 45) {
+                  //     return Swal.fire({
+                  //       text: "Branch is too long!",
+                  //       icon: "warning",
+                  //       showCancelButton: false,
+                  //       timer: 1500,
+                  //     }).then(() => {
+                  //       flushSync(() => {
+                  //         setOpenPdcInputModal(true);
+                  //       });
+                  //     });
+                  //   }
 
-                    if (stateModalPdcCheck.Check_Remarks.length >= 220) {
-                      return Swal.fire({
-                        text: "Remarks is too long!",
-                        icon: "warning",
-                        showCancelButton: false,
-                        timer: 1500,
-                      }).then(() => {
-                        flushSync(() => {
-                          setOpenPdcInputModal(true);
-                        });
-                      });
-                    }
+                  //   if (stateModalPdcCheck.Check_Remarks.length >= 220) {
+                  //     return Swal.fire({
+                  //       text: "Remarks is too long!",
+                  //       icon: "warning",
+                  //       showCancelButton: false,
+                  //       timer: 1500,
+                  //     }).then(() => {
+                  //       flushSync(() => {
+                  //         setOpenPdcInputModal(true);
+                  //       });
+                  //     });
+                  //   }
 
-                    stateModalPdcCheck.Check_Amnt = parseFloat(
-                      stateModalPdcCheck.Check_Amnt.toString().replace(/,/g, "")
-                    ).toLocaleString("en-US", {
-                      style: "decimal",
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    });
+                  //   stateModalPdcCheck.Check_Amnt = parseFloat(
+                  //     stateModalPdcCheck.Check_Amnt.toString().replace(/,/g, "")
+                  //   ).toLocaleString("en-US", {
+                  //     style: "decimal",
+                  //     minimumFractionDigits: 2,
+                  //     maximumFractionDigits: 2,
+                  //   });
 
-                    stateModalPdcCheck.Check_Date = new Date(
-                      stateModalPdcCheck.Check_Date
-                    ).toLocaleDateString("en-US", {
-                      month: "2-digit",
-                      day: "2-digit",
-                      year: "numeric",
-                    });
-                    const checkContainer: any = [];
-                    if (
-                      !isNaN(parseInt(stateModalPdcCheck.Check_Count)) &&
-                      parseInt(stateModalPdcCheck.Check_Count) > 0 &&
-                      state.checkMode !== "update"
-                    ) {
-                      for (
-                        let i = 0;
-                        i < parseInt(stateModalPdcCheck.Check_Count);
-                        i++
-                      ) {
-                        let CheckIdx = (
-                          pdcDataRows.length > 0
-                            ? parseInt(
-                              (pdcDataRows[pdcDataRows.length - 1] as any)
-                                .CheckIdx
-                            ) +
-                            (i + 1)
-                            : i
-                        ).toString();
+                  //   stateModalPdcCheck.Check_Date = new Date(
+                  //     stateModalPdcCheck.Check_Date
+                  //   ).toLocaleDateString("en-US", {
+                  //     month: "2-digit",
+                  //     day: "2-digit",
+                  //     year: "numeric",
+                  //   });
+                  //   const checkContainer: any = [];
+                  //   if (
+                  //     !isNaN(parseInt(stateModalPdcCheck.Check_Count)) &&
+                  //     parseInt(stateModalPdcCheck.Check_Count) > 0 &&
+                  //     state.checkMode !== "update"
+                  //   ) {
+                  //     for (
+                  //       let i = 0;
+                  //       i < parseInt(stateModalPdcCheck.Check_Count);
+                  //       i++
+                  //     ) {
+                  //       let CheckIdx = (
+                  //         pdcDataRows.length > 0
+                  //           ? parseInt(
+                  //             (pdcDataRows[pdcDataRows.length - 1] as any)
+                  //               .CheckIdx
+                  //           ) +
+                  //           (i + 1)
+                  //           : i
+                  //       ).toString();
 
-                        const currentDate = new Date(
-                          stateModalPdcCheck.Check_Date
-                        );
-                        currentDate.setMonth(currentDate.getMonth() + i);
-                        const data: any = {
-                          CheckIdx,
-                          Check_No: incrementStringNumbers(
-                            stateModalPdcCheck.Check_No,
-                            i
-                          ),
-                          Check_Date: currentDate.toLocaleDateString("en-US", {
-                            month: "2-digit",
-                            day: "2-digit",
-                            year: "numeric",
-                          }),
-                          Check_Amnt: stateModalPdcCheck.Check_Amnt,
-                          BankName: stateModalPdcCheck.BankName,
-                          BankCode: stateModalPdcCheck.BankCode,
-                          Branch: stateModalPdcCheck.Branch,
-                          Check_Remarks: stateModalPdcCheck.Check_Remarks,
-                          Deposit_Slip: stateModalPdcCheck.Deposit_Slip,
-                          DateDeposit: stateModalPdcCheck.DateDeposit,
-                          OR_No: stateModalPdcCheck.OR_No,
-                        };
+                  //       const currentDate = new Date(
+                  //         stateModalPdcCheck.Check_Date
+                  //       );
+                  //       currentDate.setMonth(currentDate.getMonth() + i);
+                  //       const data: any = {
+                  //         CheckIdx,
+                  //         Check_No: incrementStringNumbers(
+                  //           stateModalPdcCheck.Check_No,
+                  //           i
+                  //         ),
+                  //         Check_Date: currentDate.toLocaleDateString("en-US", {
+                  //           month: "2-digit",
+                  //           day: "2-digit",
+                  //           year: "numeric",
+                  //         }),
+                  //         Check_Amnt: stateModalPdcCheck.Check_Amnt,
+                  //         BankName: stateModalPdcCheck.BankName,
+                  //         BankCode: stateModalPdcCheck.BankCode,
+                  //         Branch: stateModalPdcCheck.Branch,
+                  //         Check_Remarks: stateModalPdcCheck.Check_Remarks,
+                  //         Deposit_Slip: stateModalPdcCheck.Deposit_Slip,
+                  //         DateDeposit: stateModalPdcCheck.DateDeposit,
+                  //         OR_No: stateModalPdcCheck.OR_No,
+                  //       };
 
-                        if (
-                          state.checkMode !== "update" &&
-                          pdcDataRows
-                            .map((item: any) => item.Check_No)
-                            .includes(data.Check_No)
-                        ) {
-                          setOpenPdcInputModal(false);
-                          return Swal.fire({
-                            text: "Check is already exist!",
-                            icon: "warning",
-                            showCancelButton: false,
-                            timer: 1500,
-                          }).then(() => {
-                            flushSync(() => {
-                              setOpenPdcInputModal(true);
-                            });
-                            checkNoRef.current?.focus();
-                          });
-                        }
+                  //       if (
+                  //         state.checkMode !== "update" &&
+                  //         pdcDataRows
+                  //           .map((item: any) => item.Check_No)
+                  //           .includes(data.Check_No)
+                  //       ) {
+                  //         setOpenPdcInputModal(false);
+                  //         return Swal.fire({
+                  //           text: "Check is already exist!",
+                  //           icon: "warning",
+                  //           showCancelButton: false,
+                  //           timer: 1500,
+                  //         }).then(() => {
+                  //           flushSync(() => {
+                  //             setOpenPdcInputModal(true);
+                  //           });
+                  //           checkNoRef.current?.focus();
+                  //         });
+                  //       }
 
-                        checkContainer.push(data);
-                      }
-                      setPdcDataRows((d: any) => {
-                        d = [...d, ...checkContainer];
-                        return d;
-                      });
-                      flushSync(() => {
-                        setOpenPdcInputModal(false);
-                      });
-                      Swal.fire({
-                        text: "Create New Check Successfully",
-                        icon: "success",
-                        showCancelButton: false,
-                        timer: 1500,
-                      });
+                  //       checkContainer.push(data);
+                  //     }
+                  //     setPdcDataRows((d: any) => {
+                  //       d = [...d, ...checkContainer];
+                  //       return d;
+                  //     });
+                  //     flushSync(() => {
+                  //       setOpenPdcInputModal(false);
+                  //     });
+                  //     Swal.fire({
+                  //       text: "Create New Check Successfully",
+                  //       icon: "success",
+                  //       showCancelButton: false,
+                  //       timer: 1500,
+                  //     });
 
-                      return;
-                    }
+                  //     return;
+                  //   }
 
-                    function incrementStringNumbers(
-                      str: string,
-                      increment: number
-                    ) {
-                      let num = parseInt(str);
-                      num = num + increment;
-                      return num.toString().padStart(str.length, "0");
-                    }
+                  //   function incrementStringNumbers(
+                  //     str: string,
+                  //     increment: number
+                  //   ) {
+                  //     let num = parseInt(str);
+                  //     num = num + increment;
+                  //     return num.toString().padStart(str.length, "0");
+                  //   }
 
-                    setPdcDataRows((dt: any) => {
-                      let CheckIdx = "";
-                      if (dt.length <= 0) {
-                        CheckIdx = "0";
-                      } else if (state.checkMode === "update") {
-                        CheckIdx = stateModalPdcCheck.CheckIdx;
-                      } else {
-                        CheckIdx = (
-                          parseInt(dt[dt.length - 1].CheckIdx) + 1
-                        ).toString();
-                      }
-                      dispatchModalPdcCheck({
-                        type: "UPDATE_FIELD",
-                        field: "CheckIdx",
-                        value: CheckIdx,
-                      });
+                  //   setPdcDataRows((dt: any) => {
+                  //     let CheckIdx = "";
+                  //     if (dt.length <= 0) {
+                  //       CheckIdx = "0";
+                  //     } else if (state.checkMode === "update") {
+                  //       CheckIdx = stateModalPdcCheck.CheckIdx;
+                  //     } else {
+                  //       CheckIdx = (
+                  //         parseInt(dt[dt.length - 1].CheckIdx) + 1
+                  //       ).toString();
+                  //     }
+                  //     dispatchModalPdcCheck({
+                  //       type: "UPDATE_FIELD",
+                  //       field: "CheckIdx",
+                  //       value: CheckIdx,
+                  //     });
 
-                      const data: any = {
-                        Check_No: stateModalPdcCheck.Check_No,
-                        Check_Date: stateModalPdcCheck.Check_Date,
-                        Check_Amnt: stateModalPdcCheck.Check_Amnt,
-                        BankName: stateModalPdcCheck.BankName,
-                        BankCode: stateModalPdcCheck.BankCode,
-                        Branch: stateModalPdcCheck.Branch,
-                        Check_Remarks: stateModalPdcCheck.Check_Remarks,
-                        Deposit_Slip: stateModalPdcCheck.Deposit_Slip,
-                        DateDeposit: stateModalPdcCheck.DateDeposit,
-                        OR_No: stateModalPdcCheck.OR_No,
-                      };
-                      if (state.checkMode === "update") {
-                        dt = dt.map((items: any) => {
-                          if (items.CheckIdx === CheckIdx) {
-                            items = { ...items, ...data };
-                          }
-                          return items;
-                        });
-                      } else {
-                        dt = [...dt, { CheckIdx, ...data }];
-                      }
-                      return dt;
-                    });
+                  //     const data: any = {
+                  //       Check_No: stateModalPdcCheck.Check_No,
+                  //       Check_Date: stateModalPdcCheck.Check_Date,
+                  //       Check_Amnt: stateModalPdcCheck.Check_Amnt,
+                  //       BankName: stateModalPdcCheck.BankName,
+                  //       BankCode: stateModalPdcCheck.BankCode,
+                  //       Branch: stateModalPdcCheck.Branch,
+                  //       Check_Remarks: stateModalPdcCheck.Check_Remarks,
+                  //       Deposit_Slip: stateModalPdcCheck.Deposit_Slip,
+                  //       DateDeposit: stateModalPdcCheck.DateDeposit,
+                  //       OR_No: stateModalPdcCheck.OR_No,
+                  //     };
+                  //     if (state.checkMode === "update") {
+                  //       dt = dt.map((items: any) => {
+                  //         if (items.CheckIdx === CheckIdx) {
+                  //           items = { ...items, ...data };
+                  //         }
+                  //         return items;
+                  //       });
+                  //     } else {
+                  //       dt = [...dt, { CheckIdx, ...data }];
+                  //     }
+                  //     return dt;
+                  //   });
 
-                    setOpenPdcInputModal(false);
+                  //   setOpenPdcInputModal(false);
 
-                    Swal.fire({
-                      text:
-                        state.checkMode === "update"
-                          ? "Check Update Successfully"
-                          : "Create New Check Successfully",
-                      icon: "success",
-                      showCancelButton: false,
-                      timer: 1500,
-                    }).then(() => {
-                      if (state.checkMode !== "update") {
-                        var currentDate = new Date(
-                          stateModalPdcCheck.Check_Date
-                        );
-                        currentDate.setMonth(currentDate.getMonth() + 1);
+                  //   Swal.fire({
+                  //     text:
+                  //       state.checkMode === "update"
+                  //         ? "Check Update Successfully"
+                  //         : "Create New Check Successfully",
+                  //     icon: "success",
+                  //     showCancelButton: false,
+                  //     timer: 1500,
+                  //   }).then(() => {
+                  //     if (state.checkMode !== "update") {
+                  //       var currentDate = new Date(
+                  //         stateModalPdcCheck.Check_Date
+                  //       );
+                  //       currentDate.setMonth(currentDate.getMonth() + 1);
 
-                        dispatchModalPdcCheck({
-                          type: "UPDATE_FIELD",
-                          field: "Check_Date",
-                          value: currentDate,
-                        });
-                      }
-                      dispatchModalPdcCheck({
-                        type: "UPDATE_FIELD",
-                        field: "Check_Amnt",
-                        value: parseFloat(
-                          stateModalPdcCheck.Check_Amnt.replace(/,/g, "")
-                        ),
-                      });
-                      dispatchModalPdcCheck({
-                        type: "UPDATE_FIELD",
-                        field: "Check_No",
-                        value:
-                          state.checkMode === "update"
-                            ? stateModalPdcCheck.Check_No
-                            : incrementCheckNo(stateModalPdcCheck.Check_No),
-                      });
-                      dispatchModalPdcCheck({
-                        type: "UPDATE_FIELD",
-                        field: "checkMode",
-                        value: "",
-                      });
-                      flushSync(() => {
-                        setOpenPdcInputModal(true);
-                      });
-                      checkModalSaveButtonActionRef.current.focusVisible();
-                    });
-                  }
+                  //       dispatchModalPdcCheck({
+                  //         type: "UPDATE_FIELD",
+                  //         field: "Check_Date",
+                  //         value: currentDate,
+                  //       });
+                  //     }
+                  //     dispatchModalPdcCheck({
+                  //       type: "UPDATE_FIELD",
+                  //       field: "Check_Amnt",
+                  //       value: parseFloat(
+                  //         stateModalPdcCheck.Check_Amnt.replace(/,/g, "")
+                  //       ),
+                  //     });
+                  //     dispatchModalPdcCheck({
+                  //       type: "UPDATE_FIELD",
+                  //       field: "Check_No",
+                  //       value:
+                  //         state.checkMode === "update"
+                  //           ? stateModalPdcCheck.Check_No
+                  //           : incrementCheckNo(stateModalPdcCheck.Check_No),
+                  //     });
+                  //     dispatchModalPdcCheck({
+                  //       type: "UPDATE_FIELD",
+                  //       field: "checkMode",
+                  //       value: "",
+                  //     });
+                  //     flushSync(() => {
+                  //       setOpenPdcInputModal(true);
+                  //     });
+                  //     checkModalSaveButtonActionRef.current.focusVisible();
+                  //   });
+                  // }
+                }}
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
                 }}
               >
                 {state.checkMode === "update" ? "Update" : "Save"}
@@ -2002,31 +2145,21 @@ export default function PostDateChecks() {
                       cancelButtonColor: "#d33",
                       confirmButtonText: "Yes, delete it!",
                     }).then((result) => {
-                      if (!result.isConfirmed) {
-                        table.current?.removeSelection();
-                        setOpenPdcInputModal(false);
-                        dispatch({
-                          type: "UPDATE_FIELD",
-                          field: "checkMode",
-                          value: "",
+                      if (result.isConfirmed) {
+                        setPdcDataRows((dt) => {
+                          dt = dt.filter(
+                            (items: any) =>
+                              items.CheckIdx !== stateModalPdcCheck.CheckIdx
+                          );
+                          return dt;
                         });
-                        return;
                       }
-
-                      setPdcDataRows((dt) => {
-                        dt = dt.filter(
-                          (items: any) =>
-                            items.CheckIdx !== stateModalPdcCheck.CheckIdx
-                        );
-                        return dt;
-                      });
-                      dataGridFunctions.current?.removeSelection();
-                      dispatch({
-                        type: "UPDATE_FIELD",
-                        field: "checkMode",
-                        value: "",
-                      });
+                      focusOnTable()
                     });
+                  }}
+                  sx={{
+                    height: "30px",
+                    fontSize: "11px",
                   }}
                 >
                   Delete
@@ -2035,18 +2168,13 @@ export default function PostDateChecks() {
               <Button
                 color="success"
                 variant="contained"
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                }}
                 onClick={() => {
-                  table.current?.removeSelection();
+                  focusOnTable()
                   setOpenPdcInputModal(false);
-                  setNewStateValue(
-                    dispatchModalPdcCheck,
-                    modalPdcCheckInititalState
-                  );
-                  dispatch({
-                    type: "UPDATE_FIELD",
-                    field: "checkMode",
-                    value: "",
-                  });
                 }}
               >
                 Cancel
@@ -2059,13 +2187,8 @@ export default function PostDateChecks() {
                 }}
                 aria-label="search-client"
                 onClick={() => {
-                  table.current?.removeSelection();
                   setOpenPdcInputModal(false);
-                  dispatch({
-                    type: "UPDATE_FIELD",
-                    field: "checkMode",
-                    value: "",
-                  });
+                  focusOnTable()
                 }}
               >
                 <CloseIcon />

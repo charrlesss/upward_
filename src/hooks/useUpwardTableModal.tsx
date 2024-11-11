@@ -6,6 +6,10 @@ import { throttle } from "lodash";
 import { AxiosInstance } from "axios";
 import { User } from "../components/AuthContext";
 import { useMutation } from "react-query";
+import { wait } from "../lib/wait";
+import { IconButton, Modal } from '@mui/material'
+import CloseIcon from "@mui/icons-material/Close";
+
 
 interface UseUpwardTableModalProps {
   myAxios: AxiosInstance;
@@ -78,89 +82,95 @@ export const useUpwardTableModal = ({
 
   useEffect(() => {
     if (show && parentRef.current) {
-      parentRef.current?.focus();
+      wait(1050).then(() => {
+        parentRef.current?.focus();
+      })
     }
   }, [show, parentRef]);
 
-  const Modal = show ? (
-    <div
-      className="modal-parent"
-      ref={parentRef}
-      tabIndex={-1}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") {
-          closeModal();
-
-        }
+  const ModalComponent = (
+    <Modal
+      open={show}
+      onClose={() => {
+        setShowModal(false);
       }}
+      aria-labelledby="modal-modal-title"
+      aria-describedby="modal-modal-description"
     >
-      <div className="modal-content">
-        <TextInput
-          label={{ style: { display: "none" } }}
-          input={{
-            className: "search-input-up-on-key-down",
-            type: "text",
-            style: { width: "100%", marginBottom: "20px" },
-            onChange: (e) => {
-              e.preventDefault();
-              throttledSearch(e.currentTarget.value);
-            },
-            onKeyDown: (e) => {
-              if (e.key === "Enter" || e.key === "NumpadEnter") {
+      <div style={{
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        width: "auto",
+        background: "#fff",
+        paddingTop: "30px",
+        paddingBottom: "20px",
+        paddingLeft: "10px",
+        paddingRight: "10px"
+      }}>
+        <div >
+          <TextInput
+            label={{ style: { display: "none" } }}
+            input={{
+              className: "search-input-up-on-key-down",
+              type: "text",
+              style: { width: "100%", marginBottom: "20px" },
+              onChange: (e) => {
                 e.preventDefault();
-                mutate({ search: (e.target as any).value });
-              }
-              if (e.key === "ArrowDown") {
-                e.preventDefault();
-                const datagridview = document.querySelector(
-                  `.grid-container`
-                ) as HTMLDivElement;
-                console.log(datagridview);
-                datagridview.focus();
-              }
-            },
-          }}
-          inputRef={inputSearchRef}
-        />
-        <UpwardTable
-          ref={tableRef}
-          rows={rows}
-          column={column.filter((itm) => !itm.hide)}
-          width={width}
-          height={height}
-          dataReadOnly={true}
-          onSelectionChange={onSelectionChange}
-        />
-        <button className="close-modal" onClick={closeModal}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16px"
-            height="16px"
-            viewBox="-0.5 0 25 25"
-            fill="none"
+                throttledSearch(e.currentTarget.value);
+              },
+              onKeyDown: (e) => {
+                if (e.key === "Enter" || e.key === "NumpadEnter") {
+                  e.preventDefault();
+                  mutate({ search: (e.target as any).value });
+                }
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  const datagridview = tableRef.current.getParentElement().querySelector(
+                    `.grid-container .row-0.col-0 input`
+                  ) as HTMLDivElement;
+                  setTimeout(() => {
+                    if (datagridview)
+                      datagridview.focus();
+                  }, 100)
+                }
+              },
+            }}
+            inputRef={inputSearchRef}
+          />
+          <UpwardTable
+            ref={tableRef}
+            rows={rows}
+            column={column.filter((itm) => !itm.hide)}
+            width={width}
+            height={height}
+            dataReadOnly={true}
+            onSelectionChange={onSelectionChange}
+          />
+
+          <IconButton
+            style={{
+              position: "absolute",
+              top: "5px",
+              right: "10px",
+            }}
+            aria-label="search-client"
+            onClick={closeModal}
           >
-            <path
-              d="M3 21.32L21 3.32001"
-              stroke="#000000"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M3 3.32001L21 21.32"
-              stroke="#000000"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
+            <CloseIcon style={{ fontSize: "15px" }} />
+          </IconButton>
+
+
+        </div>
       </div>
-    </div>
-  ) : null;
+
+    </Modal>
+
+  );
 
   return {
-    Modal,
+    Modal: ModalComponent,
     openModal,
     closeModal,
     isLoading,

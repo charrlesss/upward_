@@ -575,9 +575,10 @@ export default function Collections() {
       const debit: Array<any> = [];
       const credit: Array<any> = [];
 
-      function isValidDate(dateString: string) {
-        const date: any = new Date(dateString);
-        return !isNaN(date) && dateString.trim() !== "";
+   
+      function isValidDate(dateString: string): boolean {
+        const date = new Date(dateString);
+        return date instanceof Date && !isNaN(date.getTime());
       }
 
       for (let i = 0; i <= dataCollection.length - 1; i++) {
