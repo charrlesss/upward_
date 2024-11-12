@@ -3183,9 +3183,32 @@ export default function NavigatePrint() {
                           <div style={{ height: "5px" }}></div>
                           <div style={{ width: "100%", display: "flex" }}>
                             <div style={{ width: "100px", fontSize: "12px", fontWeight: "bold", }}>In Payment for :</div>
-                            <div style={{ width: "400px", fontSize: "13px", fontWeight: "bold", height: "auto", minHeight: "50px", fontFamily: "monospace" }}><pre>{state.current[0].Particulars}</pre></div>
+                            <div style={{
+                              width: "395px",
+                              fontSize: "13px",
+                              fontWeight: "bold",
+                              height: "auto",
+                              minHeight: "50px",
+                              wordWrap: 'break-word', /* Ensures long words break to fit within the div */
+                              overflowWrap: 'break-word'
+                            }}>
+                              {
+                                state.current[0].Particulars.split('\n').map((itm: any, idx: number) => {
+                                  return <p
+                                    key={idx}
+                                    style={{
+                                      fontSize: "13px",
+                                      fontWeight: "500",
+                                      padding: 0,
+                                      margin: 0,
+                                      color: "black",
+                                    }}
+                                  >{itm}</p>
+                                })
+                              }
+                            </div>
                           </div>
-                          <div style={{ height: "5px" }}></div>
+                          <div style={{ height: "10px" }}></div>
                           <div style={{ width: "100%", display: "flex" }}>
                             <div style={{ width: "100px", fontSize: "12px", fontWeight: "bold", }}>Printed Check :</div>
                             <div style={{ width: "400px", fontSize: "12px", fontWeight: "bold", height: "auto", wordWrap: "break-word" }}>{`${state.current[0].CheckNo} (${format(new Date(state.current[0].CheckDate), 'MM/dd/yyyy')})`}</div>
@@ -3917,7 +3940,7 @@ export default function NavigatePrint() {
                   flex: 1,
                   fontWeight: "bold",
                   position: "relative",
-                  color:"black"
+                  color: "black"
                 }}
               >
 
@@ -3927,8 +3950,8 @@ export default function NavigatePrint() {
                   columnGap: "10px",
                   justifyContent: "flex-end",
                   position: "absolute",
-                  right: "42px",
-                  top:"5px"
+                  right: "43px",
+                  top: "4px"
                 }}>
                   <span style={{ letterSpacing: "10px" }}>{format(new Date(state.current.checkDate), 'MM')}</span>
                   <span style={{ letterSpacing: "10px" }}>{format(new Date(state.current.checkDate), 'dd')}</span>
@@ -3949,33 +3972,37 @@ export default function NavigatePrint() {
                 </div>
                 <div style={{ display: 'flex', justifyContent: "space-between", marginBottom: "10px", position: "relative" }}>
                   <div style={{
-                    fontSize: "14px",
+                    fontSize: "13px",
                     position: "absolute",
-                    width: "320px",
-                    height: "auto",
+                    width: "300px",
+                    minHeight: "18px",
                     wordWrap: "break-word",
-                    left: "87px",
-                    top: "2px"
+                    left: "83px",
+                    top: "18px",
+                    transform: "translateY(-100%)",
                   }}>{`**${state.current.Payto}**`}</div>
                   <div style={{
                     fontSize: "14px",
                     position: "absolute",
-                    width: "100px",
+                    width: "180px",
                     height: "auto",
                     wordWrap: "break-word",
-                    right: "73px",
-                    top: "2px"
+                    right: "50px",
+                    top: "0px",
+                    textAlign: "center",
                   }}>{`**${state.current.credit}**`}</div>
 
+
                   <div style={{
-                    fontSize: "14px",
+                    fontSize: "12px",
                     position: "absolute",
                     width: "564px",
-                    height: "auto",
+                    minHeight: "18px",
                     wordWrap: "break-word",
                     left: "62px",
-                    top: "35px"
-                  }}>{`**${AmountToWords(parseFloat(state.current.credit.replace(/,/g, '')))}**`}</div>
+                    top: "48px",
+                    transform: "translateY(-100%)",
+                  }}>{`**${AmountToWords(parseFloat(state.current.credit.replace(/,/g, '')))}** `}</div>
                 </div>
 
               </div>

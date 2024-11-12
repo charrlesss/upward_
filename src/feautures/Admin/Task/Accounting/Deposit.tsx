@@ -6,6 +6,9 @@ import {
   useEffect,
   useRef,
   useReducer,
+  forwardRef,
+  Fragment,
+  useImperativeHandle,
 } from "react";
 import { GridRowSelectionModel } from "@mui/x-data-grid";
 import { useMutation, useQuery, useQueryClient } from "react-query";
@@ -100,6 +103,7 @@ const DepositContext = createContext<any>({
 });
 
 export default function Deposit() {
+  const cashTable = useRef<any>(null)
   const depositSearch = useRef<HTMLInputElement>(null)
   const inputSearchRef = useRef<HTMLInputElement>(null)
   const refSlipCode = useRef<HTMLInputElement>(null)
@@ -125,6 +129,7 @@ export default function Deposit() {
     <SelectedCollection />,
     <CollectionForDeposit />,
   ]);
+
 
   const [cashCollection, setCashCollection] = useState<any>([])
   const [checkCollection, setCheckCollection] = useState<any>([])
@@ -920,7 +925,8 @@ export default function Deposit() {
           selectedRowsCashIndex,
           setSelectedRowsCashIndex,
           selectedRowsCheckedIndex,
-          setSelectedRowsCheckedIndex
+          setSelectedRowsCheckedIndex,
+          cashTable
         }}
       >
         <div
@@ -953,37 +959,52 @@ function CashCollection() {
     setSelectedRows,
     selectedRowsCashIndex,
     setSelectedRowsCashIndex,
-
+    cashTable
   } = useContext(DepositContext);
 
   const table = useRef<any>(null);
   const cashColumns = [
     {
-      field: "OR_No",
-      headerName: "OR No.",
+      key: "OR_No",
+      label: "OR No.",
       width: 270,
     },
     {
-      field: "OR_Date",
-      headerName: "OR Date",
+      key: "OR_Date",
+      label: "OR Date",
       width: 270,
     },
     {
-      field: "Amount",
-      headerName: "Amount",
+      key: "Amount",
+      label: "Amount",
       width: 200,
       type: "number",
       cellClassName: "super-app-theme--cell",
     },
     {
-      field: "Client_Name",
-      headerName: "Client Name",
+      key: "Client_Name",
+      label: "Client Name",
       flex: 1,
       width: 540,
     },
     {
-      field: "Temp_OR",
-      headerName: "Temp_OR",
+      key: "DRCode",
+      label: "DRCode",
+      hide: true,
+    },
+    {
+      key: "ID_No",
+      label: "ID_No",
+      hide: true,
+    },
+    {
+      key: "Short",
+      label: "Short",
+      hide: true,
+    },
+    {
+      key: "Temp_OR",
+      label: "Temp_OR",
       hide: true,
     },
   ];
@@ -994,11 +1015,7 @@ function CashCollection() {
     );
   }, [selectedRowsCashIndex, table]);
 
-  const width = window.innerWidth - 70;
-  const height = window.innerHeight - 200;
 
-  //[checkSelected, table, loadingSearchByDepositSlip]
-  console.log(selectedRowsCashIndex)
 
   return (
     <div
@@ -1009,8 +1026,38 @@ function CashCollection() {
         position: "relative",
       }}
     >
+      <DepositTable
+        ref={cashTable}
+        columns={cashColumns}
+        rows={cashCollection}
+        getSelectedItem={(rowItm: any, colItm: any, rowIdx: any, colIdx: any) => {
+          const rowSelected = rowItm;
+          console.log(rowSelected)
+          setSelectedRows((d: any) => {
+            const newSelected: any = {
+              Deposit: "Cash",
+              Check_No: "",
+              Check_Date: "",
+              Bank: "",
+              Amount: rowSelected[2],
+              Name: rowSelected[3],
+              RowIndex: d.length + 1,
+              DRCode: rowSelected[4],
+              ORNo: rowSelected[0],
+              DRRemarks: "",
+              IDNo: rowSelected[5],
+              TempOR: rowSelected[7],
+              Short: rowSelected[6],
+            };
 
-      <UpwardTable
+            d = [...d, newSelected];
+            return d;
+          });
+
+
+        }}
+      />
+      {/* <UpwardTable
         isLoading={false}
         ref={table}
         rows={cashCollection}
@@ -1053,59 +1100,8 @@ function CashCollection() {
           }
         }}
         inputsearchselector=".manok"
-      />
-      {/*               
-      <Box
-        style={{
-          height: `${document.getElementById("concatiner")?.getBoundingClientRect()
-            .height
-            }px`,
-          width: "100%",
-          overflowX: "scroll",
-          position: "absolute",
-        }}
-      >
-        <Table
-          ref={table}
-          isLoading={loadingCashCollection}
-          columns={cashColumns}
-          rows={cashCollection}
-          table_id={"Temp_OR"}
-          isSingleSelection={true}
-          isRowFreeze={true}
-          dataSelection={(selection, data, code) => {
-            const rowSelected = data.filter(
-              (item: any) => item.Temp_OR === selection[0]
-            )[0];
-            if (rowSelected === undefined || rowSelected.length <= 0) {
-              return;
-            }
+      /> */}
 
-
-            setSelectedRows((d: any) => {
-
-              const newSelected: any = {
-                Deposit: "Cash",
-                Check_No: "",
-                Check_Date: "",
-                Bank: "",
-                Amount: rowSelected.Amount,
-                Name: rowSelected.Client_Name,
-                RowIndex: d.length + 1,
-                DRCode: rowSelected.DRCode,
-                ORNo: rowSelected.OR_No,
-                DRRemarks: "",
-                IDNo: rowSelected.ID_No,
-                TempOR: rowSelected.Temp_OR,
-                Short: rowSelected.Short,
-              };
-
-              d = [...d, newSelected];
-              return d;
-            });
-          }}
-        />
-      </Box> */}
     </div>
   );
 }
@@ -1124,39 +1120,38 @@ function CheckCollection() {
     {
       field: "OR_No",
       headerName: "OR No.",
-      minWidth: 170,
+      width: 170,
     },
     {
       field: "OR_Date",
       headerName: "OR Date",
-      minWidth: 170,
+      width: 170,
     },
     {
       field: "Check_No",
       headerName: "Check No",
-      minWidth: 170,
+      width: 170,
     },
     {
       field: "Check_Date",
       headerName: "Check Date",
-      minWidth: 170,
+      width: 170,
     },
     {
       field: "Amount",
       headerName: "Amount",
-      minWidth: 160,
+      width: 160,
       align: "right",
     },
     {
       field: "Bank_Branch",
       headerName: "Bank/Branch",
-      minWidth: 300,
+      width: 300,
     },
     {
       field: "Client_Name",
       headerName: "Client Name",
-      minWidth: 300,
-      flex: 1,
+      width: 300,
     },
     {
       field: "Temp_OR",
@@ -1239,116 +1234,7 @@ function CheckCollection() {
         }}
         inputsearchselector=".manok"
       />
-      {/* <UpwardTable
-        isLoading={false}
-        ref={table}
-        rows={checkCollection}
-        column={checkColumns}
-        width={width}
-        height={height}
-        dataReadOnly={true}
-        onSelectionChange={(selectedRow, rowIndex) => {
-          const rowSelected = selectedRow[0];
-          if (selectedRow.length > 0) {
-            setSelectedRowsIndex(rowIndex)
-            setSelectedRows((d: any) => {
-              const newSelected: any = {
-                Deposit: "Check",//0
-                Check_No: rowSelected.Check_No,//1
-                Check_Date: rowSelected.Check_Date,//2
-                Bank: rowSelected.Bank_Branch,//3
-                Amount: rowSelected.Amount,//4
-                Name: rowSelected.Client_Name,//5
-                RowIndex: d.length + 1,//6
-                DRCode: rowSelected.DRCode,//7
-                ORNo: rowSelected.OR_No,//8
-                DRRemarks: rowSelected.DRRemarks,//9
-                IDNo: rowSelected.ID_No,//10
-                TempOR: rowSelected.Temp_OR,//11
-                Short: rowSelected.Short,//12
-              };
-              d = [...d, newSelected];
-              return d;
-            });
 
-
-            setCollectionForDeposit((d: any) => {
-              const newSelectedCheckForDeposit: any = {
-                Bank: rowSelected.Bank_Branch,
-                Check_No: rowSelected.Check_No,
-                Amount: rowSelected.Amount,
-                TempOR: rowSelected.Temp_OR,
-              };
-              d = [...d, newSelectedCheckForDeposit];
-              return d;
-            });
-          } else {
-
-          }
-        }}
-        inputsearchselector=".manok"
-      /> */}
-      {/*       
-      <Box
-        style={{
-          height: `${document.getElementById("concatiner")?.getBoundingClientRect()
-            .height
-            }px`,
-          width: "100%",
-          overflowX: "scroll",
-          position: "absolute",
-        }}
-      >
-        <Table
-          ref={table}
-          isLoading={loadingCheckCollection}
-          columns={checkColumns}
-          rows={checkCollection}
-          table_id={"Temp_OR"}
-          isSingleSelection={true}
-          isRowFreeze={true}
-          dataSelection={(selection, data, code) => {
-            const rowSelected = data.filter(
-              (item: any) => item.Temp_OR === selection[0]
-            )[0];
-            if (rowSelected === undefined || rowSelected.length <= 0) {
-              return;
-            }
-
-            setSelectedRows((d: any) => {
-              const newSelected: any = {
-                Deposit: "Check",//0
-                Check_No: rowSelected.Check_No,//1
-                Check_Date: rowSelected.Check_Date,//2
-                Bank: rowSelected.Bank_Branch,//3
-                Amount: rowSelected.Amount,//4
-                Name: rowSelected.Client_Name,//5
-                RowIndex: d.length + 1,//6
-                DRCode: rowSelected.DRCode,//7
-                ORNo: rowSelected.OR_No,//8
-                DRRemarks: rowSelected.DRRemarks,//9
-                IDNo: rowSelected.ID_No,//10
-                TempOR: rowSelected.Temp_OR,//11
-                Short: rowSelected.Short,//12
-              };
-              d = [...d, newSelected];
-              return d;
-            });
-
-
-            setCollectionForDeposit((d: any) => {
-              const newSelectedCheckForDeposit: any = {
-                Bank: rowSelected.Bank_Branch,
-                Check_No: rowSelected.Check_No,
-                Amount: rowSelected.Amount,
-                TempOR: rowSelected.Temp_OR,
-              };
-              d = [...d, newSelectedCheckForDeposit];
-              return d;
-            });
-          }}
-        />
-      </Box> */}
     </div>
   );
 
@@ -1444,51 +1330,6 @@ function SelectedCollection() {
         }}
         inputsearchselector=".manok"
       />
-
-      {/* <Box
-        style={{
-          height: `${document.getElementById("concatiner")?.getBoundingClientRect()
-            .height
-            }px`,
-          width: "100%",
-          overflowX: "scroll",
-          position: "absolute",
-        }}
-      >
-        <Table
-          ref={table}
-          isLoading={false}
-          columns={selectedCollectionColumns}
-          rows={selectedRows}
-          table_id={"TempOR"}
-          isSingleSelection={true}
-          isRowFreeze={false}
-          dataSelection={(selection, data, code) => {
-            const rowSelected = data.filter(
-              (item: any) => item.TempOR === selection[0]
-            )[0];
-            if (rowSelected === undefined || rowSelected.length <= 0) {
-              return;
-            }
-
-            setSelectedRows((d: any) => {
-              return d.filter((item: any) => item.TempOR !== selection[0]);
-            });
-            setCollectionForDeposit((d: any) => {
-              return d.filter((item: any) => item.TempOR !== selection[0]);
-            });
-          }}
-          getCellClassName={(params) => {
-            if (params.field === "Deposit" && params.value === "Cash") {
-              return "cash";
-            } else if (params.field === "Deposit" && params.value === "Check") {
-              return "check";
-            } else {
-              return "";
-            }
-          }}
-        />
-      </Box> */}
     </div>
   );
 
@@ -1571,53 +1412,6 @@ function CollectionForDeposit() {
           onSelectionChange={() => { }}
           inputsearchselector=".manok"
         />
-
-        {/* <div style={{ marginTop: "10px", width: "100%", position: "relative" }}>
-          <Box
-            style={{
-              height: "530px",
-              width: "100%",
-              overflowX: "scroll",
-              position: "absolute",
-            }}
-          >
-            <Table
-              ref={table}
-              isLoading={false}
-              checkboxSelection={false}
-              columns={[
-                {
-                  field: "Bank",
-                  headerName: "Bank/Branch",
-                  flex: 1,
-                  minWidth: 170,
-                },
-                {
-                  field: "Check_No",
-                  headerName: "Check No",
-                  flex: 1,
-                  minWidth: 170,
-                },
-                {
-                  field: "Amount",
-                  headerName: "Amount",
-                  flex: 1,
-                  minWidth: 170,
-                },
-              ]}
-              rows={collectionForDeposit}
-              table_id={"TempOR"}
-              isSingleSelection={true}
-              isRowFreeze={false}
-              isRowSelectable={() => false}
-              footerChildren={() => {
-                return <FooterCollectionForDepositCheck />;
-              }}
-              footerPaginationPosition={"left-right"}
-              showFooterSelectedCount={false}
-            />
-          </Box>
-        </div> */}
       </fieldset>
       <fieldset
         style={{
@@ -1646,7 +1440,7 @@ function CollectionForDeposit() {
             width: "100%",
           }}
         >
-        
+
           <thead>
             <tr
               style={{
@@ -1827,34 +1621,135 @@ function TrComponent({ value1, value2, value3, idx }: any) {
     </tr>
   );
 }
-function FooterCollectionForDepositCheck() {
-  const { collectionForDeposit } = useContext(DepositContext);
+
+const DepositTable = forwardRef(({
+  columns,
+  rows,
+  height = "300px",
+  getSelectedItem
+}: any, ref) => {
+  const parentElementRef = useRef<any>(null)
+  const [data, setData] = useState([])
+  const [column, setColumn] = useState([])
+  const [selectedRow, setSelectedRow] = useState<Array<any>>([])
+  const totalRowWidth = column.reduce((a: any, b: any) => a + b.width, 0)
+
+
+  useEffect(() => {
+    if (columns.length > 0) {
+      setColumn(columns.filter((itm: any) => !itm.hide))
+    }
+  }, [columns])
+
+  useEffect(() => {
+    if (rows.length > 0) {
+      setData(rows.map((itm: any) => {
+        return columns.map((col: any) => itm[col.key])
+      }))
+    }
+  }, [rows])
+
+  useImperativeHandle(ref, () => ({
+    getData: () => {
+      return data
+    },
+    setData: (newData: any) => {
+      setData(newData)
+    }
+  }))
+
+
   return (
-    <Box
-      sx={{
-        px: 2,
-        py: 1,
-        display: "flex",
-        justifyContent: "flex-end",
-        borderTop: "2px solid #e2e8f0",
-      }}
-    >
-      <strong>
-        Total:{" "}
-        {collectionForDeposit
-          .reduce((sum: number, obj: any) => {
-            return sum + parseFloat(obj.Amount.replace(/,/g, ""));
-          }, 0)
-          .toLocaleString("en-US", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}
-      </strong>
-    </Box>
-  );
+    <Fragment>
+      <div ref={parentElementRef} style={{ width: "calc(100vw - 40px)", height, overflow: "auto", position: "relative" }}>
+        <div style={{ position: "absolute", width: `${totalRowWidth}px`, height: "auto" }}>
+          <table style={{ borderCollapse: "collapse", width: "100%", position: "relative" }}>
+            <thead >
+              <tr>
+                {
+                  column.map((colItm: any, idx: number) => {
+                    return (
+                      <th
+                        key={idx}
+                        style={{
+                          width: colItm.width,
+                          border: "1px solid black",
+                          position: "sticky",
+                          top: 0,
+                          zIndex: 1,
+                          background: "white",
+                          fontSize: "12px",
+                          textAlign: "left",
+                          padding: "0px 5px"
+                        }}
+                      >{colItm.label}</th>
+                    )
+                  })
+                }
+              </tr>
+            </thead>
+            <tbody>
+              {
+                data?.map((rowItm: any, rowIdx: number) => {
+                  return (
+                    <tr key={rowIdx}>
+                      {
+                        column.map((colItm: any, colIdx: number) => {
+                          return (
+                            <td
+                              onDoubleClick={() => {
+                                if (selectedRow.includes(rowIdx)) {
+                                  return
+                                }
+
+
+                                setSelectedRow((d: any) => {
+                                  return [...d, rowIdx]
+                                })
+                                if (getSelectedItem) {
+                                  getSelectedItem(rowItm, colItm, rowIdx, colIdx)
+                                }
+                              }}
+                              key={colIdx}
+                              style={{
+                                border: "1px solid black",
+                                background: selectedRow.includes(rowIdx) ? "#cbd5e1" : "transparent",
+                                fontSize: "12px",
+                                padding: "0px 5px",
+                                cursor: "pointer",
+                              }}
+                            >{
+                                <input
+                                  readOnly={true}
+                                  value={rowItm[colIdx]}
+                                  style={{
+                                    width: colItm.width,
+                                    pointerEvents: "none",
+                                    border: "none",
+                                    background: "transparent",
+                                    userSelect: "none"
+                                  }} />
+                              }</td>
+                          )
+                        })
+                      }
+                    </tr>
+                  )
+                })
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </Fragment>
+  )
+})
+function formatArrayIntoChunks(arr: Array<any>, chunkSize = 100) {
+  let result = [];
+  for (let i = 0; i < arr.length; i += chunkSize) {
+    result.push(arr.slice(i, i + chunkSize));
+  }
+  return result;
 }
-function setNewStateValue(dispatch: any, obj: any) {
-  Object.entries(obj).forEach(([field, value]) => {
-    dispatch({ type: "UPDATE_FIELD", field, value });
-  });
-}
+
+

@@ -16,7 +16,7 @@ import NotInterestedIcon from "@mui/icons-material/NotInterested";
 import { deepOrange, grey } from "@mui/material/colors";
 import { SelectInput, TextAreaInput, TextInput } from "../../../../components/UpwardFields";
 import { format } from "date-fns";
-import "../../../../style/datagridview.css"
+import "../../../../style/datagridviewinput.css"
 import { setNewStateValue } from "./PostDateChecks";
 import { codeCondfirmationAlert, saveCondfirmationAlert } from "../../../../lib/confirmationAlert";
 import { flushSync } from "react-dom";
@@ -1401,6 +1401,7 @@ const DataGridTableReact = forwardRef(({
   height,
   RightClickComponent
 }: any, ref) => {
+  const parentElementRef = useRef<any>(null)
   const dataCellRef = useRef<any>(null)
   const mode = 'add'
   const [pages, setPages] = useState<Array<any>>([])
@@ -1482,7 +1483,8 @@ const DataGridTableReact = forwardRef(({
   const DrawHeaderColumn = () => {
     return (
       <tr>
-        <th className="header" style={{ width: '30px', border: "1px solid black", position: "sticky", top: 0, zIndex: 1, background: "white" }}
+        <th className="header" 
+        style={{ width: '30px', border: "1px solid black", position: "sticky", top: 0, zIndex: 1, background: "white" }}
         >
         </th>
         {
@@ -1549,7 +1551,7 @@ const DataGridTableReact = forwardRef(({
     rowItm,
     parentRef,
   }: any, ref: any) => {
-    const [input, setInput] = useState(rowItm[colIdx])
+    const [input, setInput] = useState(rowItm[colIdx] === '' && colItm.type === 'date' && rowItm[0] === '1.01.10' ? new Date().toISOString().split("T")[0] : rowItm[colIdx])
     const prevValueRef = useRef(rowItm[colIdx]); // Use ref to store the previous value
     const menuRef = useRef<any>(null);
     const [contextMenu, setContextMenu] = useState(false);
@@ -1573,7 +1575,7 @@ const DataGridTableReact = forwardRef(({
     }, []);
 
     let Component = null
-
+    const fontColor = selectedRow === rowIdx ? "#082f49" : "black"
 
     if (selectedRow === rowIdx) {
       if (colItm.type === 'select') {
@@ -1583,6 +1585,7 @@ const DataGridTableReact = forwardRef(({
               title: "",
               style: {
                 width: "0px",
+                display: "none"
               },
             }}
             select={{
@@ -1591,7 +1594,12 @@ const DataGridTableReact = forwardRef(({
               style: {
                 width: "100%",
                 height: "22px",
-                background: selectedRow === rowIdx ? "transparent" : "white"
+                background: selectedRow === rowIdx ? "transparent" : "white",
+                padding: 0,
+                margin: 0,
+                border: "none",
+                cursor: "pointer",
+                color: fontColor
               },
               value: input,
               onChange: (e) => {
@@ -1636,7 +1644,12 @@ const DataGridTableReact = forwardRef(({
             style={{
               width: '100%',
               height: "100%",
-              background: selectedRow === rowIdx ? "transparent" : "white"
+              background: selectedRow === rowIdx ? "transparent" : "white",
+              margin: 0,
+              border: "none",
+              cursor: "pointer",
+              color: fontColor
+
             }}
             onKeyDown={(e) => {
               if (e.code === 'Enter' || e.code === 'NumpadEnter') {
@@ -1693,9 +1706,14 @@ const DataGridTableReact = forwardRef(({
             style={{
               width: '100%',
               height: "100%",
-              background: selectedRow === rowIdx ? "transparent" : "white"
+              background: selectedRow === rowIdx ? "transparent" : "white",
+              margin: 0,
+              border: "none",
+              cursor: "pointer",
+              color: fontColor
+
             }}
-            type="date"
+            type={input === "" ? "text" : "date"}
             value={input}
             onChange={(e) => {
               setInput(e.target.value)
@@ -1731,7 +1749,12 @@ const DataGridTableReact = forwardRef(({
             style={{
               width: '100%',
               height: "100%",
-              background: selectedRow === rowIdx ? "transparent" : "white"
+              background: selectedRow === rowIdx ? "transparent" : "white",
+              margin: 0,
+              border: "none",
+              cursor: "pointer",
+              color: fontColor
+
             }}
             value={input}
             onChange={(e) => {
@@ -1769,6 +1792,9 @@ const DataGridTableReact = forwardRef(({
           style={{
             width: '100%',
             height: "100%",
+            border: "none",
+            cursor: "pointer",
+            color: fontColor
           }}
           value={rowItm[colIdx]}
           onDoubleClick={(e) => {
@@ -1832,7 +1858,14 @@ const DataGridTableReact = forwardRef(({
 
     return (
       <>
-        <td style={{ position: "relative" }}>
+        <td style={{
+          position: "relative", borderBottom: "1px solid black",
+          borderLeft: "1px solid black",
+          borderTop: "none",
+          borderRight: "1px solid black",
+          cursor: "pointer",
+          background: selectedRow === rowIdx ? "#bae6fd" : "",
+        }}>
           <input
             style={{
               cursor: "pointer"
@@ -1852,8 +1885,15 @@ const DataGridTableReact = forwardRef(({
             onContextMenu={(e) => {
               e.preventDefault()
               if (rowIdx === selectedRow) {
-
                 setMenuCheckBox(true)
+                setTimeout(() => {
+                  if (menuCheckBoxRef.current) {
+                    menuCheckBoxRef.current.scrollIntoView({
+                      behavior: "smooth"
+                    });
+                  }
+                }, 100)
+
               }
             }}
           />
@@ -1883,10 +1923,16 @@ const DataGridTableReact = forwardRef(({
                 className={`td row-${rowIdx} col-${colIdx} ${colItm.key}`}
                 style={{
                   width: colItm.width,
-                  padding: "0",
-                  margin: "0",
-                  background: selectedRow === rowIdx ? "#e0f2fe" : "",
+                  padding: '0 important',
+                  margin: 0,
+                  background: selectedRow === rowIdx ? "#bae6fd" : "",
                   position: "relative",
+                  height: "22px",
+                  borderBottom: "1px solid black",
+                  borderLeft: "1px solid black",
+                  borderTop: "none",
+                  borderRight: "1px solid black",
+                  cursor: "pointer",
                 }}
               >
                 <CellInput
@@ -1926,7 +1972,7 @@ const DataGridTableReact = forwardRef(({
 
   return (
     <Fragment>
-      <div style={{ width: "calc(100vw - 40px)", height, overflow: "auto", position: "relative" }}>
+      <div ref={parentElementRef} style={{ width: "calc(100vw - 40px)", height, overflow: "auto", position: "relative" }}>
         <div style={{ position: "absolute", width: `${totalRowWidth}px`, height: "auto" }}>
           <table style={{ borderCollapse: "collapse", width: "100%", position: "relative" }}>
             <thead >

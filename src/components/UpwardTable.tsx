@@ -317,6 +317,9 @@ const UpwardTable = forwardRef(
       getSelectedRowsOnClick: () => {
         return selectedRows[0];
       },
+      setSelectRows: (indx: number) => {
+        return setSelectedItems([indx])
+      },
     }));
 
     const handleRightClick = (event: any, rowIndex: number) => {
