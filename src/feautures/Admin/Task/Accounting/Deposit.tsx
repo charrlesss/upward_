@@ -5,16 +5,13 @@ import {
   CSSProperties,
   useEffect,
   useRef,
-  useReducer,
   forwardRef,
   Fragment,
   useImperativeHandle,
 } from "react";
-import { GridRowSelectionModel } from "@mui/x-data-grid";
-import { useMutation, useQuery, useQueryClient } from "react-query";
+import { useMutation, useQuery } from "react-query";
 import { AuthContext } from "../../../../components/AuthContext";
 import {
-  Box,
   Button,
 } from "@mui/material";
 import useQueryModalTable from "../../../../hooks/useQueryModalTable";
@@ -24,8 +21,6 @@ import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
 import Swal from "sweetalert2";
 import { wait } from "@testing-library/user-event/dist/utils";
-import useMultipleComponent from "../../../../hooks/useMultipleComponent";
-import Table from "../../../../components/Table";
 import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
@@ -35,7 +30,6 @@ import { format } from 'date-fns'
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import '../../../../style/laoding.css'
-import { UpwardTable } from "../../../../components/UpwardTable";
 const defaultCashBreakDown = [
   { value1: "1,000.00", value2: "", value3: "0.00" },
   { value1: "500.00", value2: "", value3: "0.00" },
@@ -104,6 +98,10 @@ const DepositContext = createContext<any>({
 
 export default function Deposit() {
   const cashTable = useRef<any>(null)
+  const checkTable = useRef<any>(null)
+  const selectedTable = useRef<any>(null)
+  const collectionCheckTable = useRef<any>(null)
+
   const depositSearch = useRef<HTMLInputElement>(null)
   const inputSearchRef = useRef<HTMLInputElement>(null)
   const refSlipCode = useRef<HTMLInputElement>(null)
@@ -123,14 +121,7 @@ export default function Deposit() {
   const refShortName = useRef('')
 
   const { myAxios, user } = useContext(AuthContext);
-  const { currentStepIndex, step, goTo } = useMultipleComponent([
-    <CashCollection />,
-    <CheckCollection />,
-    <SelectedCollection />,
-    <CollectionForDeposit />,
-  ]);
-
-
+  const { currentStepIndex, goTo } = useMultipleComponent([0, 1, 2, 3,]);
   const [cashCollection, setCashCollection] = useState<any>([])
   const [checkCollection, setCheckCollection] = useState<any>([])
   const [selectedRows, setSelectedRows] = useState<any>([])
@@ -250,6 +241,7 @@ export default function Deposit() {
       onSuccess: (res) => {
         const resposnse = res as any;
         if (resposnse.data.success) {
+          resetTables()
           setSelectedRows([]);
           setCollectionForDeposit([]);
           RefetchDepositSlipCode();
@@ -300,6 +292,7 @@ export default function Deposit() {
         refetchCheckCollection()
         setSelectedRowsCashIndex([])
         setSelectedRowsCheckedIndex([])
+        resetTables()
         return Swal.fire({
           position: "center",
           icon: "success",
@@ -615,8 +608,13 @@ export default function Deposit() {
     refShortName.current = ''
   }
 
+  function resetTables() {
+    cashTable.current.resetTable()
+    checkTable.current.resetTable()
+    selectedTable.current.resetTable()
+    collectionCheckTable.current.resetTable()
+  }
   const disabledFields = depositMode === "";
-
 
   return (
     <div
@@ -901,11 +899,8 @@ export default function Deposit() {
           })}
         </div>
       </div>
-      <br />
       <DepositContext.Provider
         value={{
-          myAxios,
-          user,
           cashCollection,
           setCashCollection,
           checkCollection,
@@ -926,7 +921,10 @@ export default function Deposit() {
           setSelectedRowsCashIndex,
           selectedRowsCheckedIndex,
           setSelectedRowsCheckedIndex,
-          cashTable
+          cashTable,
+          checkTable,
+          selectedTable,
+          collectionCheckTable
         }}
       >
         <div
@@ -937,12 +935,23 @@ export default function Deposit() {
           }}
           id="concatiner"
         >
-          {step}
+          <div style={{ display: currentStepIndex === 0 ? "block" : "none" }}>
+            <CashCollection />
+          </div>
+          <div style={{ display: currentStepIndex === 1 ? "block" : "none" }}>
+            <CheckCollection />
+          </div>
+          <div style={{ display: currentStepIndex === 2 ? "block" : "none" }}>
+            <SelectedCollection />
+          </div>
+          <div style={{ display: currentStepIndex === 3 ? "block" : "none" }}>
+            <CollectionForDeposit />
+          </div>
         </div>
       </DepositContext.Provider>
       {ModalDepostitBanks}
       {ModalDeposit}
-      {loadingSearchByDepositSlip || updateDepositMutationLoading || addDepositMutationLoading && <div className="loading-component"><div className="loader"></div></div>}
+      {(loadingSearchByDepositSlip || updateDepositMutationLoading || addDepositMutationLoading) && <div className="loading-component"><div className="loader"></div></div>}
     </div>
   );
 }
@@ -957,12 +966,9 @@ function CashCollection() {
   const {
     cashCollection,
     setSelectedRows,
-    selectedRowsCashIndex,
-    setSelectedRowsCashIndex,
     cashTable
   } = useContext(DepositContext);
 
-  const table = useRef<any>(null);
   const cashColumns = [
     {
       key: "OR_No",
@@ -1009,14 +1015,6 @@ function CashCollection() {
     },
   ];
 
-  useEffect(() => {
-    table.current?.setSelectRows(
-      selectedRowsCashIndex
-    );
-  }, [selectedRowsCashIndex, table]);
-
-
-
   return (
     <div
       style={{
@@ -1032,7 +1030,6 @@ function CashCollection() {
         rows={cashCollection}
         getSelectedItem={(rowItm: any, colItm: any, rowIdx: any, colIdx: any) => {
           const rowSelected = rowItm;
-          console.log(rowSelected)
           setSelectedRows((d: any) => {
             const newSelected: any = {
               Deposit: "Cash",
@@ -1057,51 +1054,6 @@ function CashCollection() {
 
         }}
       />
-      {/* <UpwardTable
-        isLoading={false}
-        ref={table}
-        rows={cashCollection}
-        column={cashColumns}
-        width={width}
-        height={height}
-        dataReadOnly={true}
-        freeze={true}
-        isMultipleSelect={true}
-        onSelectionChange={(selectedRow, rowIndex) => {
-          const rowSelected = selectedRow[0];
-          if (selectedRow.length > 0) {
-            if (selectedRowsCashIndex?.includes(rowIndex)) {
-              return
-            }
-            setSelectedRowsCashIndex((d: any) => [...d, rowIndex])
-            setSelectedRows((d: any) => {
-              const newSelected: any = {
-                Deposit: "Cash",
-                Check_No: "",
-                Check_Date: "",
-                Bank: "",
-                Amount: rowSelected.Amount,
-                Name: rowSelected.Client_Name,
-                RowIndex: d.length + 1,
-                DRCode: rowSelected.DRCode,
-                ORNo: rowSelected.OR_No,
-                DRRemarks: "",
-                IDNo: rowSelected.ID_No,
-                TempOR: rowSelected.Temp_OR,
-                Short: rowSelected.Short,
-              };
-
-              d = [...d, newSelected];
-              return d;
-            });
-
-          } else {
-
-          }
-        }}
-        inputsearchselector=".manok"
-      /> */}
-
     </div>
   );
 }
@@ -1109,68 +1061,71 @@ function CheckCollection() {
   const {
     checkCollection,
     setSelectedRows,
-    setCollectionForDeposit,
-    selectedRowsCheckedIndex,
-    setSelectedRowsCheckedIndex
-
+    checkTable,
+    setCollectionForDeposit
   } = useContext(DepositContext)
-
-
   const checkColumns = [
     {
-      field: "OR_No",
-      headerName: "OR No.",
+      key: "OR_No",
+      label: "OR No.",
       width: 170,
     },
     {
-      field: "OR_Date",
-      headerName: "OR Date",
+      key: "OR_Date",
+      label: "OR Date",
       width: 170,
     },
     {
-      field: "Check_No",
-      headerName: "Check No",
+      key: "Check_No",
+      label: "Check No",
       width: 170,
     },
     {
-      field: "Check_Date",
-      headerName: "Check Date",
+      key: "Check_Date",
+      label: "Check Date",
       width: 170,
     },
     {
-      field: "Amount",
-      headerName: "Amount",
+      key: "Amount",
+      label: "Amount",
       width: 160,
       align: "right",
     },
     {
-      field: "Bank_Branch",
-      headerName: "Bank/Branch",
+      key: "Bank_Branch",
+      label: "Bank/Branch",
       width: 300,
     },
     {
-      field: "Client_Name",
-      headerName: "Client Name",
+      key: "Client_Name",
+      label: "Client Name",
       width: 300,
     },
     {
-      field: "Temp_OR",
-      headerName: "Temp_OR",
+      key: "Temp_OR",
+      hide: true,
+    },
+    {
+      key: "DRCode",
+      hide: true,
+    },
+    {
+      key: "DRRemarks",
+      hide: true,
+    },
+    {
+      key: "ID_No",
+      hide: true,
+    },
+    {
+      key: "Short",
+      hide: true,
+    },
+    {
+      key: "SlipCode",
       hide: true,
     },
   ];
-  const table = useRef<any>(null);
-
-  useEffect(() => {
-    table.current?.setSelectRows(
-      selectedRowsCheckedIndex
-    );
-  }, [selectedRowsCheckedIndex, table]);
-
-  const width = window.innerWidth - 70;
-  const height = window.innerHeight - 200;
-  // / [selectedRows, table, loadingSearchByDepositSlip]
-
   return (
     <div
       style={{
@@ -1180,61 +1135,45 @@ function CheckCollection() {
         flex: 1,
       }}
     >
-      <UpwardTable
-        isLoading={false}
-        ref={table}
+
+      <DepositTable
+        ref={checkTable}
+        columns={checkColumns}
         rows={checkCollection}
-        column={checkColumns}
-        width={width}
-        height={height}
-        dataReadOnly={true}
-        freeze={true}
-        isMultipleSelect={true}
-        onSelectionChange={(selectedRow, rowIndex) => {
-          const rowSelected = selectedRow[0];
-          if (selectedRow.length > 0) {
-            if (selectedRowsCheckedIndex.includes(rowIndex)) {
-              return
-            }
-            setSelectedRowsCheckedIndex((d: any) => [...d, rowIndex])
-            setSelectedRows((d: any) => {
-              const newSelected: any = {
-                Deposit: "Check",//0
-                Check_No: rowSelected.Check_No,//1
-                Check_Date: rowSelected.Check_Date,//2
-                Bank: rowSelected.Bank_Branch,//3
-                Amount: rowSelected.Amount,//4
-                Name: rowSelected.Client_Name,//5
-                RowIndex: d.length + 1,//6
-                DRCode: rowSelected.DRCode,//7
-                ORNo: rowSelected.OR_No,//8
-                DRRemarks: rowSelected.DRRemarks,//9
-                IDNo: rowSelected.ID_No,//10
-                TempOR: rowSelected.Temp_OR,//11
-                Short: rowSelected.Short,//12
-              };
-              d = [...d, newSelected];
-              return d;
-            });
+        getSelectedItem={(rowItm: any, colItm: any, rowIdx: any, colIdx: any) => {
+          const rowSelected = rowItm;
+          setSelectedRows((d: any) => {
+            const newSelected: any = {
+              Deposit: "Check",//0
+              Check_No: rowSelected[2],//1
+              Check_Date: rowSelected[3],//2
+              Bank: rowSelected[5],//3
+              Amount: rowSelected[4],//4
+              Name: rowSelected[6],//5
+              DRCode: rowSelected[8],//7
+              ORNo: rowSelected[0],//8
+              DRRemarks: rowSelected[9],//9
+              IDNo: rowSelected[10],//10
+              TempOR: rowSelected[7],//11
+              Short: rowSelected[11],//12
+            };
+            d = [...d, newSelected];
+            return d;
+          });
 
+          setCollectionForDeposit((d: any) => {
+            const newSelectedCheckForDeposit: any = {
+              Bank: rowSelected[5],
+              Check_No: rowSelected[2],
+              Amount: rowSelected[4],
+              TempOR: rowSelected[7],
+            };
+            d = [...d, newSelectedCheckForDeposit];
+            return d;
+          });
 
-            setCollectionForDeposit((d: any) => {
-              const newSelectedCheckForDeposit: any = {
-                Bank: rowSelected.Bank_Branch,
-                Check_No: rowSelected.Check_No,
-                Amount: rowSelected.Amount,
-                TempOR: rowSelected.Temp_OR,
-              };
-              d = [...d, newSelectedCheckForDeposit];
-              return d;
-            });
-          } else {
-
-          }
         }}
-        inputsearchselector=".manok"
       />
-
     </div>
   );
 
@@ -1242,43 +1181,37 @@ function CheckCollection() {
 
 }
 function SelectedCollection() {
-
   const {
-    selectedRows,
     setSelectedRows,
+    selectedRows,
+    selectedTable,
+    cashTable,
+    checkTable,
     setCollectionForDeposit,
-    setSelectedRowsCheckedIndex,
-    setSelectedRowsCashIndex,
-    checkCollection,
-    cashCollection
+    collectionForDeposit,
+    collectionCheckTable
   } = useContext(DepositContext);
 
-  const table = useRef<any>(null);
   const selectedCollectionColumns = [
-    { field: "Deposit", headerName: "Deposit", flex: 1, minWidth: 170 },
-    { field: "Check_No", headerName: "Check No", flex: 1, minWidth: 170 },
+    { key: "Deposit", label: "Deposit", width: 170 },
+    { key: "Check_No", label: "Check No", width: 170 },
     {
-      field: "Check_Date",
-      headerName: "Check Date",
-      flex: 1,
-      minWidth: 170,
+      key: "Check_Date",
+      label: "Check Date",
+      width: 170,
     },
-    { field: "Bank", headerName: "Bank/Branch", flex: 1, minWidth: 200 },
-    { field: "Amount", headerName: "Amount", flex: 1, minWidth: 170 },
-    { field: "Name", headerName: "Client Name", flex: 1, minWidth: 400 },
+    { key: "Bank", label: "Bank/Branch", width: 200 },
+    { key: "Amount", label: "Amount", width: 170 },
+    { key: "Name", label: "Client Name", width: 400 },
     // hide
-    { field: "RowIndex", headerName: "RowIndex", hide: true },
-    { field: "DRCode", headerName: "DRCode", hide: true },
-    { field: "ORNo", headerName: "ORNo", hide: true },
-    { field: "DRRemarks", headerName: "DRRemarks", hide: true },
-    { field: "IDNo", headerName: "IDNo", hide: true },
-    { field: "TempOR", headerName: "TempOR", hide: true },
-    { field: "Short", headerName: "Short", hide: true },
+    { key: "DRCode", label: "DRCode", hide: true },
+    { key: "ORNo", label: "ORNo", hide: true },
+    { key: "DRRemarks", label: "DRRemarks", hide: true },
+    { key: "IDNo", label: "IDNo", hide: true },
+    { key: "TempOR", label: "TempOR", hide: true },
+    { key: "Short", label: "Short", hide: true },
   ];
 
-
-  const width = window.innerWidth - 70;
-  const height = window.innerHeight - 200;
   return (
     <div
       style={{
@@ -1288,47 +1221,70 @@ function SelectedCollection() {
         flex: 1,
       }}
     >
-      <UpwardTable
-        isLoading={false}
-        ref={table}
+      <DepositTableSelected
+        ref={selectedTable}
+        columns={selectedCollectionColumns}
         rows={selectedRows}
-        column={selectedCollectionColumns}
-        width={width}
-        height={height}
-        dataReadOnly={true}
-        freeze={true}
-        isMultipleSelect={true}
-        onSelectionChange={(selectedRow, rowIndex) => {
-          const rowSelected = selectedRow[0];
-          if (selectedRow.length > 0) {
-            if (rowSelected.Deposit === "Check") {
-              const getRowIndex = checkCollection.findIndex((d: any) => d.Temp_OR === rowSelected.TempOR)
+        getSelectedItem={(rowItm: any, colItm: any, rowIdx: any, colIdx: any) => {
+          const rowSelected = rowItm;
+          const selectedData = selectedTable.current.getData()
 
-              setSelectedRowsCheckedIndex((d: any) => {
-                const r = d.filter((d: any) => d !== getRowIndex)
-                return r
-              })
-            } else {
-              const getRowIndex = cashCollection.findIndex((d: any) => d.Temp_OR === rowSelected.TempOR)
-              setSelectedRowsCashIndex((d: any) => {
-                console.log(d, rowIndex)
-                const r = d.filter((d: any) => d !== getRowIndex)
-                return r
-              })
-
+          if (rowSelected[0] === 'Cash') {
+            const cashData = cashTable.current.getData()
+            const getSelectedRow = cashTable.current.getSelectedRow()
+            const rowIdx = cashData.findIndex((itm: any) => itm[7] === rowSelected[10])
+            const index = getSelectedRow.indexOf(rowIdx);
+            if (index !== -1) {
+              getSelectedRow.splice(index, 1);
             }
-            setSelectedRows((d: any) => {
-              return d.filter((item: any) => item.TempOR !== rowSelected.TempOR);
-            });
-            setCollectionForDeposit((d: any) => {
-              return d.filter((item: any) => item.TempOR !== rowSelected.TempOR);
-            });
-
+            cashTable.current.setSelectedRow(getSelectedRow)
           } else {
-
+            const cashData = checkTable.current.getData()
+            const getSelectedRow = checkTable.current.getSelectedRow()
+            const rowIdx = cashData.findIndex((itm: any) => itm[7] === rowSelected[10])
+            const index = getSelectedRow.indexOf(rowIdx);
+            if (index !== -1) {
+              getSelectedRow.splice(index, 1);
+            }
+            checkTable.current.setSelectedRow(getSelectedRow)
           }
+
+          setSelectedRows((d: any) => {
+            if (d.length === 1 && d[0].TempOR === rowSelected[10]) {
+              return []
+            }
+            return d.filter((itm: any) => itm.TempOR !== rowSelected[10])
+          })
+
+
+
+          const newData = (d: any) => {
+            if (d.length === 1 && d[0].TempOR === rowSelected[10]) {
+              return []
+            }
+            return d.filter((item: any) => item.TempOR !== rowSelected[10]);
+          }
+          const dd = newData(collectionForDeposit)
+          setCollectionForDeposit(dd);
+
+          const columns = collectionCheckTable.current?.getColumns()
+          collectionCheckTable.current?.setData(dd.map((itm: any) => {
+            return columns.map((col: any) => itm[col.key])
+          }))
+
+
+          if (selectedData.length === 1 && selectedData[0][10] === rowSelected[10]) {
+            return selectedTable.current.setData([])
+          } else {
+            const newSelectedData = selectedData.filter((itm: any) => {
+              return itm[10] !== rowSelected[10]
+            })
+            selectedTable.current.setData(newSelectedData)
+          }
+
+
+
         }}
-        inputsearchselector=".manok"
       />
     </div>
   );
@@ -1342,8 +1298,9 @@ function CollectionForDeposit() {
     total,
     setTotal,
     TotalCashForDeposit,
+    collectionCheckTable
   } = useContext(DepositContext);
-  const table = useRef<any>(null);
+
   useEffect(() => {
     setTotal(
       tableRows
@@ -1358,8 +1315,8 @@ function CollectionForDeposit() {
         })
     );
   }, [tableRows, setTotal]);
-  const width = 600;
-  const height = window.innerHeight - 200;
+
+
   return (
     <div
       style={{
@@ -1374,55 +1331,45 @@ function CollectionForDeposit() {
           gap: "10px",
           border: "1px solid #cbd5e1",
           borderRadius: "5px",
-          width: "60%",
+          width: "70%",
           position: "relative",
         }}
       >
         <legend>Checks</legend>
-
-        <UpwardTable
-          isLoading={false}
-          ref={table}
-          rows={collectionForDeposit}
-          column={[
+        <DepositTable
+          ref={collectionCheckTable}
+          width="100%"
+          columns={[
             {
-              field: "Bank",
-              headerName: "Bank/Branch",
-              flex: 1,
+              key: "Bank",
+              label: "Bank/Branch",
               width: 170,
             },
             {
-              field: "Check_No",
-              headerName: "Check No",
-              flex: 1,
+              key: "Check_No",
+              label: "Check No",
               width: 170,
             },
             {
-              field: "Amount",
-              headerName: "Amount",
-              flex: 1,
+              key: "Amount",
+              label: "Amount",
               width: 300,
             },
           ]}
-          width={width}
-          height={height}
-          dataReadOnly={true}
-          freeze={true}
-          isMultipleSelect={true}
-          onSelectionChange={() => { }}
-          inputsearchselector=".manok"
+          rows={collectionForDeposit}
+          getSelectedItem={(rowItm: any, colItm: any, rowIdx: any, colIdx: any) => {
+          }}
         />
       </fieldset>
       <fieldset
         style={{
           flexDirection: "column",
           gap: "10px",
-          padding: "15px",
           border: "1px solid #cbd5e1",
           borderRadius: "5px",
           alignSelf: "flex-end",
           display: "flex",
-          width: "40%",
+          width: "30%",
         }}
       >
         <legend
@@ -1436,7 +1383,6 @@ function CollectionForDeposit() {
           style={{
             border: "2px solid black",
             borderCollapse: "collapse",
-            marginTop: "10px",
             width: "100%",
           }}
         >
@@ -1473,7 +1419,8 @@ function CollectionForDeposit() {
           </thead>
           <tbody>
             {tableRows?.map((items: any, idx: number) => {
-              return (
+              return items.value1 !== '2.00' &&
+                items.value1 !== '200.00' ? (
                 <TrComponent
                   key={idx}
                   value1={items.value1}
@@ -1481,7 +1428,7 @@ function CollectionForDeposit() {
                   value3={items.value3}
                   idx={idx}
                 />
-              );
+              ) : null;
             })}
           </tbody>
           <tfoot>
@@ -1497,6 +1444,7 @@ function CollectionForDeposit() {
                     display: "flex",
                     justifyContent: "flex-end",
                     padding: "0 10px  ",
+
                   }}
                 >
                   <div
@@ -1504,9 +1452,10 @@ function CollectionForDeposit() {
                       display: "flex",
                       alignItems: "center",
                       width: "250px",
+                      textAlign: "right"
                     }}
                   >
-                    <span style={{ fontSize: "14px", marginRight: "5px" }}>
+                    <span style={{ fontSize: "12px", marginRight: "5px", fontWeight: "bold" }}>
                       Total Cash Deposit:
                     </span>
                     <input
@@ -1514,7 +1463,7 @@ function CollectionForDeposit() {
                         fontWeight: "bold",
                         border: "1px solid black",
                         textAlign: "right",
-                        fontSize: "15px",
+                        fontSize: "13px",
                         width: "117px",
                       }}
                       value={total}
@@ -1530,6 +1479,8 @@ function CollectionForDeposit() {
           </tfoot>
         </table>
       </fieldset>
+
+
     </div>
   );
 }
@@ -1541,7 +1492,7 @@ function TrComponent({ value1, value2, value3, idx }: any) {
   const [input3, setInput3] = useState(value3);
   const InputStyle: CSSProperties = {
     textAlign: "right",
-    height: "20px",
+    height: "18px",
     borderRight: "none",
     borderLeft: "none",
     borderTop: "none",
@@ -1621,11 +1572,11 @@ function TrComponent({ value1, value2, value3, idx }: any) {
     </tr>
   );
 }
-
 const DepositTable = forwardRef(({
   columns,
   rows,
   height = "300px",
+  width = "calc(100vw - 40px)",
   getSelectedItem
 }: any, ref) => {
   const parentElementRef = useRef<any>(null)
@@ -1647,7 +1598,7 @@ const DepositTable = forwardRef(({
         return columns.map((col: any) => itm[col.key])
       }))
     }
-  }, [rows])
+  }, [rows, columns])
 
   useImperativeHandle(ref, () => ({
     getData: () => {
@@ -1655,17 +1606,32 @@ const DepositTable = forwardRef(({
     },
     setData: (newData: any) => {
       setData(newData)
+    },
+    setSelectedRow: (rowIdx: any) => {
+      setSelectedRow(rowIdx)
+    },
+    getSelectedRow: (rowIdx: any) => {
+      return selectedRow
+    },
+    getColumns: () => {
+      return columns
+    },
+    resetTable: () => {
+      setData([])
+      setSelectedRow([])
     }
   }))
 
 
   return (
     <Fragment>
-      <div ref={parentElementRef} style={{ width: "calc(100vw - 40px)", height, overflow: "auto", position: "relative" }}>
+      <div ref={parentElementRef} style={{ width, height, overflow: "auto", position: "relative" }}>
         <div style={{ position: "absolute", width: `${totalRowWidth}px`, height: "auto" }}>
           <table style={{ borderCollapse: "collapse", width: "100%", position: "relative" }}>
             <thead >
               <tr>
+                <th style={{ width: '30px', border: "1px solid black", position: "sticky", top: 0, zIndex: 1, background: "white" }}
+                ></th>
                 {
                   column.map((colItm: any, idx: number) => {
                     return (
@@ -1693,6 +1659,40 @@ const DepositTable = forwardRef(({
                 data?.map((rowItm: any, rowIdx: number) => {
                   return (
                     <tr key={rowIdx}>
+                      <td style={{
+                        position: "relative", borderBottom: "1px solid black",
+                        borderLeft: "1px solid black",
+                        borderTop: "none",
+                        borderRight: "1px solid black",
+                        cursor: "pointer",
+                        background: selectedRow.includes(rowIdx) ? "#bae6fd" : "",
+                      }}>
+                        <input
+                          style={{
+                            cursor: "pointer",
+                            height: "10px",
+                            background: "transparent"
+                          }}
+                          readOnly={true}
+                          type="checkbox"
+                          checked={selectedRow.includes(rowIdx)}
+                          onClick={() => {
+                            if (selectedRow.includes(rowIdx)) {
+                              return
+                            }
+
+                            setSelectedRow((d: any) => {
+                              return [...d, rowIdx]
+                            })
+
+                            if (getSelectedItem) {
+                              getSelectedItem(rowItm, null, rowIdx, null)
+                            }
+                          }}
+
+                        />
+                      </td>
+
                       {
                         column.map((colItm: any, colIdx: number) => {
                           return (
@@ -1701,7 +1701,6 @@ const DepositTable = forwardRef(({
                                 if (selectedRow.includes(rowIdx)) {
                                   return
                                 }
-
 
                                 setSelectedRow((d: any) => {
                                   return [...d, rowIdx]
@@ -1744,12 +1743,177 @@ const DepositTable = forwardRef(({
     </Fragment>
   )
 })
-function formatArrayIntoChunks(arr: Array<any>, chunkSize = 100) {
-  let result = [];
-  for (let i = 0; i < arr.length; i += chunkSize) {
-    result.push(arr.slice(i, i + chunkSize));
+const DepositTableSelected = forwardRef(({
+  columns,
+  rows,
+  height = "300px",
+  getSelectedItem
+}: any, ref) => {
+  const parentElementRef = useRef<any>(null)
+  const [data, setData] = useState([])
+  const [column, setColumn] = useState([])
+  const [selectedRow, setSelectedRow] = useState<any>(0)
+  const totalRowWidth = column.reduce((a: any, b: any) => a + b.width, 0)
+
+
+  useEffect(() => {
+    if (columns.length > 0) {
+      setColumn(columns.filter((itm: any) => !itm.hide))
+    }
+  }, [columns])
+
+  useEffect(() => {
+    if (rows.length > 0) {
+      setData(rows.map((itm: any) => {
+        return columns.map((col: any) => itm[col.key])
+      }))
+    }
+  }, [rows, columns])
+
+  useImperativeHandle(ref, () => ({
+    getData: () => {
+      return data
+    },
+    setData: (newData: any) => {
+      setData(newData)
+    },
+    getColumns: () => {
+      return columns
+    },
+    resetTable: () => {
+      setData([])
+      setSelectedRow(0)
+    }
+  }))
+
+
+  return (
+    <Fragment>
+      <div ref={parentElementRef} style={{ width: "calc(100vw - 40px)", height, overflow: "auto", position: "relative" }}>
+        <div style={{ position: "absolute", width: `${totalRowWidth}px`, height: "auto" }}>
+          <table style={{ borderCollapse: "collapse", width: "100%", position: "relative" }}>
+            <thead >
+              <tr>
+                <th style={{ width: '30px', border: "1px solid black", position: "sticky", top: 0, zIndex: 1, background: "white" }}
+                ></th>
+                {
+                  column.map((colItm: any, idx: number) => {
+                    return (
+                      <th
+                        key={idx}
+                        style={{
+                          width: colItm.width,
+                          border: "1px solid black",
+                          position: "sticky",
+                          top: 0,
+                          zIndex: 1,
+                          background: "white",
+                          fontSize: "12px",
+                          textAlign: "left",
+                          padding: "0px 5px"
+                        }}
+                      >{colItm.label}</th>
+                    )
+                  })
+                }
+              </tr>
+            </thead>
+            <tbody>
+              {
+                data?.map((rowItm: any, rowIdx: number) => {
+                  return (
+                    <tr key={rowIdx}>
+                      <td style={{
+                        position: "relative", borderBottom: "1px solid black",
+                        borderLeft: "1px solid black",
+                        borderTop: "none",
+                        borderRight: "1px solid black",
+                        cursor: "pointer",
+                        background: selectedRow === rowIdx ? "#bae6fd" : "",
+                      }}>
+                        <input
+                          style={{
+                            cursor: "pointer",
+                            height: "10px"
+                          }}
+                          readOnly={true}
+                          checked={false}
+                          type="checkbox"
+                          onClick={() => {
+                            if (getSelectedItem) {
+                              getSelectedItem(rowItm, null, rowIdx, null)
+                            }
+                            setSelectedRow(null)
+
+                          }}
+
+                        />
+                      </td>
+
+                      {
+                        column.map((colItm: any, colIdx: number) => {
+                          return (
+                            <td
+                              onDoubleClick={() => {
+                                if (getSelectedItem) {
+                                  getSelectedItem(rowItm, null, rowIdx, null)
+                                }
+                                setSelectedRow(null)
+
+                              }}
+                              onClick={() => {
+                                setSelectedRow(rowIdx)
+                              }}
+                              key={colIdx}
+                              style={{
+                                border: "1px solid black",
+                                background: selectedRow === rowIdx ? "#cbd5e1" : "transparent",
+                                fontSize: "12px",
+                                padding: "0px 5px",
+                                cursor: "pointer",
+                              }}
+                            >{
+                                <input
+                                  readOnly={true}
+                                  value={rowItm[colIdx]}
+                                  style={{
+                                    width: colItm.width,
+                                    pointerEvents: "none",
+                                    border: "none",
+                                    background: "transparent",
+                                    userSelect: "none"
+                                  }} />
+                              }</td>
+                          )
+                        })
+                      }
+                    </tr>
+                  )
+                })
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </Fragment>
+  )
+})
+function useMultipleComponent(steps: any) {
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+
+
+  function goTo(index: number) {
+    // Ensure the index is within bounds
+    if (index >= 0 && index < steps.length) {
+      setCurrentStepIndex(index);
+    }
   }
-  return result;
+
+  return {
+    goTo,
+    currentStepIndex,
+  };
 }
+
 
 

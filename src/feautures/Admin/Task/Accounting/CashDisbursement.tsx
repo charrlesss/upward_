@@ -1859,7 +1859,8 @@ const DataGridTableReact = forwardRef(({
     return (
       <>
         <td style={{
-          position: "relative", borderBottom: "1px solid black",
+          position: "relative", 
+          borderBottom: "1px solid black",
           borderLeft: "1px solid black",
           borderTop: "none",
           borderRight: "1px solid black",

@@ -479,9 +479,7 @@ export default function PAPolicyInformation() {
                 </FormControl>
               )}
               <TextField
-                disabled={
-                  state.paActioMode === "" || state.paActioMode === "update"
-                }
+       
                 fullWidth
                 variant="outlined"
                 size="small"

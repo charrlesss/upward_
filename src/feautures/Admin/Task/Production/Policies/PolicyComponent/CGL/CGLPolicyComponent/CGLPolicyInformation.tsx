@@ -477,7 +477,6 @@ export default function CGLPolicyInformation() {
                 </FormControl>
               )}
               <TextField
-                disabled={isAddOrEditMode || state.cglActioMode === "delete"}
                 fullWidth
                 variant="outlined"
                 size="small"

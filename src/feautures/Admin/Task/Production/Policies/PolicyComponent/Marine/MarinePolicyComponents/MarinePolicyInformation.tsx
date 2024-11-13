@@ -467,7 +467,6 @@ export default function MarinePolicyInformation() {
                 </FormControl>
               )}
               <TextField
-                disabled={isAddOrEditMode || state.marineActioMode === "delete"}
                 fullWidth
                 variant="outlined"
                 size="small"

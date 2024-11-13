@@ -631,7 +631,6 @@ export default function PolicyInformation() {
                   <FormControl
                     variant="outlined"
                     size="small"
-                    disabled={isAddOrEditMode || state.mode === "delete"}
                     sx={{
                       flex: 1,
                       ".MuiFormLabel-root": {
@@ -663,9 +662,6 @@ export default function PolicyInformation() {
                       endAdornment={
                         <InputAdornment position="end">
                           <IconButton
-                            disabled={
-                              isAddOrEditMode || state.mode === "delete"
-                            }
                             aria-label="search-client"
                             color="secondary"
                             edge="end"
@@ -684,7 +680,6 @@ export default function PolicyInformation() {
             ) : state.form_action === "REG" ? (
               <TextField
                 onKeyDown={keySave}
-                disabled={isAddOrEditMode || state.mode === "delete"}
                 fullWidth
                 variant="outlined"
                 size="small"
@@ -709,7 +704,6 @@ export default function PolicyInformation() {
                 ) : (
                   <TextField
                     onKeyDown={keySave}
-                    disabled={isAddOrEditMode || state.mode === "delete"}
                     fullWidth
                     variant="outlined"
                     size="small"

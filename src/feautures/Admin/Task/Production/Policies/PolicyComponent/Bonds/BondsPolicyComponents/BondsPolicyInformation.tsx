@@ -481,7 +481,6 @@ export default function BondsPolicyInformation() {
                 }}
               >
                 <TextField
-                  disabled={isAddOrEditMode || state.bondActioMode === "delete"}
                   fullWidth
                   variant="outlined"
                   size="small"

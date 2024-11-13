@@ -501,7 +501,6 @@ export default function FirePolicyInformation() {
               )}
               <TextField
                 onKeyDown={keySave}
-                disabled={isAddOrEditMode || state.fireActioMode === "delete"}
                 fullWidth
                 variant="outlined"
                 size="small"

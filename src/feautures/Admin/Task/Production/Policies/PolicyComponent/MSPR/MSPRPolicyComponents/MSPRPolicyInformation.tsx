@@ -459,7 +459,6 @@ export default function MSPRPolicyInformation() {
               </FormControl>
             )}
             <TextField
-              disabled={isAddOrEditMode || state.msprActioMode === "delete"}
               variant="outlined"
               size="small"
               label="Policy No"
