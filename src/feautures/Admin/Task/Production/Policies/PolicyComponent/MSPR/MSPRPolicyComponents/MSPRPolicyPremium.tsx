@@ -10,7 +10,6 @@ export default function MSPRPolicyPremium() {
     computation,
     isAddOrEditMode,
     dispatch,
-    keySave,
   } = useContext(MSPRContext);
 
   function onKeyDownComputation(e: any) {
@@ -49,7 +48,6 @@ export default function MSPRPolicyPremium() {
             }}
           >
             <TextField
-              onKeyDown={keySave}
               disabled={isAddOrEditMode}
               required
               variant="outlined"
@@ -78,7 +76,6 @@ export default function MSPRPolicyPremium() {
               }}
             />
             <TextField
-              onKeyDown={keySave}
               disabled={isAddOrEditMode}
               required
               variant="outlined"
@@ -107,7 +104,6 @@ export default function MSPRPolicyPremium() {
               }}
             />
             <TextField
-              onKeyDown={keySave}
               disabled={isAddOrEditMode}
               required
               variant="outlined"
@@ -145,7 +141,6 @@ export default function MSPRPolicyPremium() {
             }}
           >
             <TextField
-              onKeyDown={keySave}
               disabled={isAddOrEditMode}
               required
               variant="outlined"
@@ -174,7 +169,6 @@ export default function MSPRPolicyPremium() {
               }}
             />
             <TextField
-              onKeyDown={keySave}
               disabled={isAddOrEditMode}
               required
               variant="outlined"
@@ -203,7 +197,6 @@ export default function MSPRPolicyPremium() {
               }}
             />
             <TextField
-              onKeyDown={keySave}
               disabled={isAddOrEditMode}
               required
               variant="outlined"

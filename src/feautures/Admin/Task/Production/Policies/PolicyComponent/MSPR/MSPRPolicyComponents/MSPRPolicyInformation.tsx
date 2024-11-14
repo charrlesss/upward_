@@ -25,7 +25,6 @@ export default function MSPRPolicyInformation() {
     myAxios,
     user,
     isAddOrEditMode,
-    keySave,
   } = useContext(MSPRContext);
 
   const dateFrom = useRef<HTMLElement>(null);
@@ -214,7 +213,6 @@ export default function MSPRPolicyInformation() {
                 </FormControl>
               )}
               <TextField
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 fullWidth
                 variant="outlined"
@@ -237,7 +235,6 @@ export default function MSPRPolicyInformation() {
             </div>
             <TextField
               rows={5}
-              onKeyDown={keySave}
               disabled={isAddOrEditMode}
               fullWidth
               variant="outlined"
@@ -342,7 +339,6 @@ export default function MSPRPolicyInformation() {
             )}
             <TextField
               fullWidth
-              onKeyDown={keySave}
               disabled={isAddOrEditMode}
               variant="outlined"
               size="small"
@@ -363,7 +359,6 @@ export default function MSPRPolicyInformation() {
               }}
             />
             <TextField
-              onKeyDown={keySave}
               disabled={isAddOrEditMode}
               fullWidth
               variant="outlined"
@@ -609,7 +604,6 @@ export default function MSPRPolicyInformation() {
           }}
         >
           <TextField
-            onKeyDown={keySave}
             disabled={isAddOrEditMode}
             fullWidth
             variant="outlined"
@@ -631,7 +625,6 @@ export default function MSPRPolicyInformation() {
             }}
           />
           <TextField
-            onKeyDown={keySave}
             disabled={isAddOrEditMode}
             fullWidth
             variant="outlined"
@@ -653,7 +646,6 @@ export default function MSPRPolicyInformation() {
             }}
           />
           <TextField
-            onKeyDown={keySave}
             disabled={isAddOrEditMode}
             fullWidth
             variant="outlined"
@@ -675,7 +667,6 @@ export default function MSPRPolicyInformation() {
             }}
           />
           <TextField
-            onKeyDown={keySave}
             disabled={isAddOrEditMode}
             fullWidth
             variant="outlined"
@@ -697,7 +688,6 @@ export default function MSPRPolicyInformation() {
             }}
           />
           <TextField
-            onKeyDown={keySave}
             disabled={isAddOrEditMode}
             fullWidth
             variant="outlined"
@@ -720,7 +710,6 @@ export default function MSPRPolicyInformation() {
           />
           <div style={{ display: "flex", gap: "10px" }}>
             <TextField
-              onKeyDown={keySave}
               disabled={isAddOrEditMode}
               fullWidth
               variant="outlined"
@@ -740,7 +729,6 @@ export default function MSPRPolicyInformation() {
               }}
             />
             <TextField
-              onKeyDown={keySave}
               disabled={isAddOrEditMode}
               fullWidth
               variant="outlined"

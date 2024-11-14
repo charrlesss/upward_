@@ -1,4 +1,4 @@
-import { useReducer, useContext, useState, useRef, useEffect } from "react";
+import { useReducer, useContext, useState, useRef, useEffect, useCallback } from "react";
 import {
   TextField,
   Button,
@@ -136,7 +136,6 @@ export default function GeneralJournal() {
   );
 
   const queryClient = useQueryClient();
-  const explanationInputRef = useRef<HTMLInputElement>(null);
 
   const chartAccountSearchInput = useRef<HTMLInputElement>(null);
   const IdsSearchInput = useRef<HTMLInputElement>(null);
@@ -478,7 +477,7 @@ export default function GeneralJournal() {
     const { name, value } = e.target;
     dispatch({ type: "UPDATE_FIELD", field: name, value });
   };
-  function handleOnSave() {
+  const handleOnSave = useCallback(() => {
     if (refRefNo.current?.value === "") {
       return Swal.fire({
         position: "center",
@@ -495,7 +494,7 @@ export default function GeneralJournal() {
         timer: 1500,
       }).then(() => {
         wait(300).then(() => {
-          explanationInputRef.current?.focus();
+          refExplanation.current?.focus();
         });
       });
     }
@@ -551,7 +550,7 @@ export default function GeneralJournal() {
         },
       });
     }
-  }
+  }, [state, generalJournal, addGeneralJournalMutate, modeUpdate])
   function handleVoid() {
     codeCondfirmationAlert({
       isUpdate: false,
@@ -591,7 +590,7 @@ export default function GeneralJournal() {
       refRemarks.current.value = ""
     }
     if (refVat.current) {
-      refVat.current.value = ""
+      refVat.current.value = "Non-VAT"
     }
     if (refInvoice.current) {
       refInvoice.current.value = ""
@@ -600,6 +599,7 @@ export default function GeneralJournal() {
     refTCDesc.current = ""
     refIDNo.current = ""
     refSubAcct.current = ""
+    setSelectedIndex(null)
   }
   function handleRowSave() {
     if (refCode.current && refCode.current.value === "") {
@@ -704,7 +704,6 @@ export default function GeneralJournal() {
     }
     const isUpdate = selectedIndex !== null && selectedIndex >= 0
     function addEntryVat(Entry1: any, Entry2: any, debitNum: number, creditNum: number) {
-
 
       let storage = []
 
@@ -841,6 +840,11 @@ export default function GeneralJournal() {
           }
           resetRow()
           table.current.resetTableSelected()
+          setTimeout(() => {
+            if (refCode.current) {
+              refCode.current.focus()
+            }
+          }, 350)
         }
 
       }
@@ -889,31 +893,74 @@ export default function GeneralJournal() {
     setGeneralJournal([]);
 
   }
+
+
+  useEffect(() => {
+    const handleKeyDown = (event: any) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+        event.preventDefault();
+        handleOnSave();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleOnSave]);
+
   const width = window.innerWidth - 50;
   const height = window.innerHeight - 200;
 
+  function formatNumber(Amount: number) {
+    return Amount.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+  }
+
+
   useEffect(() => {
-    const debit = generalJournal.reduce((a: number, item: any) => {
-      return a + parseFloat(item.debit.replace(/,/g, ""));
-    }, 0);
-    const credit = generalJournal.reduce((a: number, item: any) => {
-      return a + parseFloat(item.credit.replace(/,/g, ""));
-    }, 0);
-    dispatch({
-      type: "UPDATE_FIELD",
-      field: "totalDebit",
-      value: debit.toFixed(2),
-    });
-    dispatch({
-      type: "UPDATE_FIELD",
-      field: "totalCredit",
-      value: credit.toFixed(2),
-    });
-    dispatch({
-      type: "UPDATE_FIELD",
-      field: "totalBalance",
-      value: (debit - credit).toFixed(2),
-    });
+    if (generalJournal.length > 0) {
+      const debit = generalJournal.reduce((a: number, item: any) => {
+        return a + parseFloat(item.debit.replace(/,/g, ""));
+      }, 0);
+      const credit = generalJournal.reduce((a: number, item: any) => {
+        return a + parseFloat(item.credit.replace(/,/g, ""));
+      }, 0);
+      dispatch({
+        type: "UPDATE_FIELD",
+        field: "totalDebit",
+        value: formatNumber(debit),
+      });
+      dispatch({
+        type: "UPDATE_FIELD",
+        field: "totalCredit",
+        value: formatNumber(credit),
+      });
+      dispatch({
+        type: "UPDATE_FIELD",
+        field: "totalBalance",
+        value: formatNumber(debit - credit),
+      });
+    } else {
+      dispatch({
+        type: "UPDATE_FIELD",
+        field: "totalDebit",
+        value: '0.00',
+      });
+      dispatch({
+        type: "UPDATE_FIELD",
+        field: "totalCredit",
+        value: '0.00',
+      });
+      dispatch({
+        type: "UPDATE_FIELD",
+        field: "totalBalance",
+        value: '0.00',
+      });
+    }
+
   }, [generalJournal]);
 
 
@@ -1152,8 +1199,8 @@ export default function GeneralJournal() {
               type: "text",
               style: { width: "190px" },
               readOnly: true,
-              onKeyDown:(e)=>{
-                if(e.code === "NumpadEnter" || e.code === 'Enter'){
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === 'Enter') {
                   refDate.current?.focus()
                 }
               }
@@ -1174,8 +1221,8 @@ export default function GeneralJournal() {
             disabled: modeDefault,
             type: "date",
             style: { width: "190px" },
-            onKeyDown:(e)=>{
-              if(e.code === "NumpadEnter" || e.code === 'Enter'){
+            onKeyDown: (e) => {
+              if (e.code === "NumpadEnter" || e.code === 'Enter') {
                 refExplanation.current?.focus()
               }
             }
@@ -1195,8 +1242,8 @@ export default function GeneralJournal() {
             disabled: modeDefault,
             type: "text",
             style: { width: "600px" },
-            onKeyDown:(e)=>{
-              if(e.code === "NumpadEnter" || e.code === 'Enter'){
+            onKeyDown: (e) => {
+              if (e.code === "NumpadEnter" || e.code === 'Enter') {
                 refCode.current?.focus()
               }
             }
@@ -1273,8 +1320,8 @@ export default function GeneralJournal() {
               type: "text",
               style: { width: "190px" },
               readOnly: true,
-              onKeyDown:(e)=>{
-                if(e.code === "NumpadEnter" || e.code === 'Enter'){
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === 'Enter') {
                   refSubAccount.current?.focus()
                 }
               }
@@ -1296,8 +1343,8 @@ export default function GeneralJournal() {
               type: "text",
               style: { width: "190px" },
               readOnly: true,
-              onKeyDown:(e)=>{
-                if(e.code === "NumpadEnter" || e.code === 'Enter'){
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === 'Enter') {
                   refName.current?.focus()
                 }
               }
@@ -1362,8 +1409,8 @@ export default function GeneralJournal() {
               disabled: modeDefault,
               type: "text",
               style: { width: "190px" },
-              onKeyDown:(e)=>{
-                if(e.code === "NumpadEnter" || e.code === 'Enter'){
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === 'Enter') {
                   refCredit.current?.focus()
                 }
               }
@@ -1383,8 +1430,8 @@ export default function GeneralJournal() {
               disabled: modeDefault,
               type: "text",
               style: { width: "190px" },
-              onKeyDown:(e)=>{
-                if(e.code === "NumpadEnter" || e.code === 'Enter'){
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === 'Enter') {
                   refTC.current?.focus()
                 }
               }
@@ -1440,8 +1487,8 @@ export default function GeneralJournal() {
               disabled: modeDefault,
               type: "text",
               style: { width: "300px" },
-              onKeyDown:(e)=>{
-                if(e.code === "NumpadEnter" || e.code === 'Enter'){
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === 'Enter') {
                   refVat.current?.focus()
                 }
               }
@@ -1468,8 +1515,9 @@ export default function GeneralJournal() {
             select={{
               disabled: modeDefault,
               style: { width: "190px", height: "22px" },
-              onKeyDown:(e)=>{
-                if(e.code === "NumpadEnter" || e.code === 'Enter'){
+              defaultValue: "Non-VAT",
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === 'Enter') {
                   e.preventDefault()
                   refInvoice.current?.focus()
                 }
@@ -1495,8 +1543,8 @@ export default function GeneralJournal() {
               disabled: modeDefault,
               type: "text",
               style: { width: "300px" },
-              onKeyDown:(e)=>{
-                if(e.code === "NumpadEnter" || e.code === 'Enter'){
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === 'Enter') {
                   e.preventDefault()
                   handleRowSave()
                 }
@@ -1578,7 +1626,6 @@ export default function GeneralJournal() {
               if (refVat.current) {
                 refVat.current.value = rowSelected.vatType
               }
-
               setSelectedIndex(rowIndex)
             } else {
               setSelectedIndex(null)
@@ -1609,8 +1656,6 @@ export default function GeneralJournal() {
           }}
           inputsearchselector=".manok"
         />
-
-
       </div>
       <Modal open={openJobs} onClose={() => setOpenJobs(false)}>
         <Box

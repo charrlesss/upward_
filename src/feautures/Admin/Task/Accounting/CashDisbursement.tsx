@@ -1,4 +1,4 @@
-import { useReducer, useContext, useState, useRef, useEffect, forwardRef, useImperativeHandle, Fragment } from "react";
+import { useReducer, useContext, useState, useRef, useEffect, forwardRef, useImperativeHandle, Fragment, useCallback } from "react";
 import {
   TextField,
   Button,
@@ -595,7 +595,7 @@ export default function CashDisbursement() {
 
     },
   });
-  function handleOnSave() {
+  const handleOnSave = useCallback(() => {
     if (state.refNo === "") {
       return Swal.fire({
         position: "center",
@@ -690,7 +690,8 @@ export default function CashDisbursement() {
         },
       });
     }
-  }
+  }, [state, addCashDisbursementMutate, cashDMode, getTotalCredit, getTotalDebit])
+
   function handleVoid() {
     codeCondfirmationAlert({
       isUpdate: false,
@@ -964,6 +965,23 @@ export default function CashDisbursement() {
       }
     });
   }
+
+
+
+  useEffect(() => {
+    const handleKeyDown = (event: any) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+        event.preventDefault();
+        handleOnSave();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleOnSave]);
+
 
   if (loadingGetSearchSelectedCashDisbursement || loadingGeneralJournalGenerator || isLoadingPolicyIdClientIdRefId || isLoadingChartAccountSearch || isLoadingPolicyIdPayTo || isLoadingTransactionAccount) {
     return <div>Loading...</div>
@@ -1483,8 +1501,8 @@ const DataGridTableReact = forwardRef(({
   const DrawHeaderColumn = () => {
     return (
       <tr>
-        <th className="header" 
-        style={{ width: '30px', border: "1px solid black", position: "sticky", top: 0, zIndex: 1, background: "white" }}
+        <th className="header"
+          style={{ width: '30px', border: "1px solid black", position: "sticky", top: 0, zIndex: 1, background: "white" }}
         >
         </th>
         {
@@ -1859,7 +1877,7 @@ const DataGridTableReact = forwardRef(({
     return (
       <>
         <td style={{
-          position: "relative", 
+          position: "relative",
           borderBottom: "1px solid black",
           borderLeft: "1px solid black",
           borderTop: "none",

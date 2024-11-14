@@ -30,7 +30,6 @@ export default function CGLPolicyInformation() {
     isAddOrEditMode,
     computation,
     dispatch,
-    keySave,
   } = useContext(CGLContext);
   const dateFrom = useRef<HTMLElement>(null);
   const dateToDateRef = useRef<HTMLElement>(null);
@@ -243,7 +242,6 @@ export default function CGLPolicyInformation() {
                   name="client_name"
                   value={state.client_name}
                   onChange={handleInputChange}
-                  onKeyDown={keySave}
                   InputProps={{
                     style: { height: "27px", fontSize: "14px" },
                     readOnly: true,
@@ -266,7 +264,6 @@ export default function CGLPolicyInformation() {
                 name="client_address"
                 value={state.client_address}
                 onChange={handleInputChange}
-                onKeyDown={keySave}
                 InputProps={{
                   style: { height: "100px", fontSize: "14px" },
                   readOnly: true,
@@ -366,7 +363,6 @@ export default function CGLPolicyInformation() {
                 name="agent_name"
                 value={state.agent_name}
                 onChange={handleInputChange}
-                onKeyDown={keySave}
                 InputProps={{
                   style: { height: "27px", fontSize: "14px" },
                   readOnly: true,
@@ -380,7 +376,6 @@ export default function CGLPolicyInformation() {
                 }}
               />
               <TextField
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 fullWidth
                 variant="outlined"
@@ -484,7 +479,6 @@ export default function CGLPolicyInformation() {
                 name="PolicyNo"
                 value={state.PolicyNo}
                 onChange={handleInputChange}
-                onKeyDown={keySave}
                 InputProps={{
                   style: { height: "27px", fontSize: "14px" },
                 }}
@@ -648,7 +642,6 @@ export default function CGLPolicyInformation() {
                 label="Sum Insured"
                 name="sumInsured"
                 value={state.sumInsured}
-                onKeyDown={keySave}
                 onChange={handleInputChange}
                 placeholder="0.00"
                 onBlur={() => {
@@ -670,7 +663,6 @@ export default function CGLPolicyInformation() {
                 }}
               />
               <TextField
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 variant="outlined"
                 size="small"
@@ -689,7 +681,6 @@ export default function CGLPolicyInformation() {
                 }}
               />
               <TextField
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 variant="outlined"
                 size="small"
@@ -708,7 +699,6 @@ export default function CGLPolicyInformation() {
                 }}
               />
               <TextField
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 variant="outlined"
                 size="small"
@@ -727,7 +717,6 @@ export default function CGLPolicyInformation() {
                 }}
               />
               <TextField
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 variant="outlined"
                 size="small"

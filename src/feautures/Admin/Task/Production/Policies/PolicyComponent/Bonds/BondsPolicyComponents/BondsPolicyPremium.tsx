@@ -12,7 +12,6 @@ export default function BondsPolicyPremium() {
     computation,
     isAddOrEditMode,
     dispatch,
-    keySave,  
   } = useContext(BondContext);
 
   const officerDateIssuedRef = useRef<HTMLElement>(null);
@@ -46,7 +45,7 @@ export default function BondsPolicyPremium() {
         >
           <legend>Information for notary (Officer)</legend>
           <TextField
-            onKeyDown={keySave}
+          
             disabled={isAddOrEditMode}
             required
             variant="outlined"
@@ -66,7 +65,7 @@ export default function BondsPolicyPremium() {
             }}
           />
           <TextField
-            onKeyDown={keySave}
+          
             disabled={isAddOrEditMode}
             required
             variant="outlined"

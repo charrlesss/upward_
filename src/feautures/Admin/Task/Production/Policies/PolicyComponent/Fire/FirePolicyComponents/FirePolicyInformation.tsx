@@ -45,7 +45,6 @@ export default function FirePolicyInformation() {
     myAxios,
     user,
     isAddOrEditMode,
-    keySave,
   } = useContext(FireContext);
   const searchClientInputRef = useRef<HTMLInputElement>(null);
   const searchAgentInputRef = useRef<HTMLInputElement>(null);
@@ -256,7 +255,6 @@ export default function FirePolicyInformation() {
                   </FormControl>
                 )}
                 <TextField
-                  onKeyDown={keySave}
                   disabled={isAddOrEditMode}
                   fullWidth
                   variant="outlined"
@@ -279,7 +277,6 @@ export default function FirePolicyInformation() {
               </div>
               <TextField
                 rows={5}
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 fullWidth
                 variant="outlined"
@@ -381,7 +378,6 @@ export default function FirePolicyInformation() {
               )}
               <TextField
                 fullWidth
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 variant="outlined"
                 size="small"
@@ -402,7 +398,6 @@ export default function FirePolicyInformation() {
                 }}
               />
               <TextField
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 fullWidth
                 variant="outlined"
@@ -500,7 +495,6 @@ export default function FirePolicyInformation() {
                 </FormControl>
               )}
               <TextField
-                onKeyDown={keySave}
                 fullWidth
                 variant="outlined"
                 size="small"
@@ -519,7 +513,6 @@ export default function FirePolicyInformation() {
                 }}
               />
               <TextField
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 fullWidth
                 variant="outlined"
@@ -679,7 +672,6 @@ export default function FirePolicyInformation() {
             >
               <div style={{ display: "flex", columnGap: "10px" }}>
                 <TextField
-                  onKeyDown={keySave}
                   disabled={isAddOrEditMode}
                   variant="outlined"
                   size="small"
@@ -745,7 +737,6 @@ export default function FirePolicyInformation() {
               </div>
               <div style={{ display: "flex", columnGap: "10px" }}>
                 <TextField
-                  onKeyDown={keySave}
                   style={{
                     gridArea: "propertyInsured",
                   }}
@@ -768,7 +759,6 @@ export default function FirePolicyInformation() {
                   }}
                 />
                 <TextField
-                  onKeyDown={keySave}
                   style={{
                     gridArea: "construction",
                   }}
@@ -792,7 +782,6 @@ export default function FirePolicyInformation() {
                 />
               </div>
               <TextField
-                onKeyDown={keySave}
                 style={{
                   gridArea: "boundaries",
                 }}

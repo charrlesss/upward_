@@ -25,7 +25,6 @@ export default function MarinePolicyInformation() {
     isAddOrEditMode,
     myAxios,
     user,
-    keySave,
   } = useContext(MarineContext);
 
   const searchClientInputRef = useRef<HTMLInputElement>(null);
@@ -235,7 +234,6 @@ export default function MarinePolicyInformation() {
                   ".MuiFormLabel-root": { fontSize: "14px" },
                   ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
                 }}
-                onKeyDown={keySave}
               />
             </div>
             <TextField
@@ -249,7 +247,6 @@ export default function MarinePolicyInformation() {
               name="client_address"
               value={state.client_address}
               onChange={handleInputChange}
-              onKeyDown={keySave}
               InputProps={{
                 style: { height: "100px", fontSize: "14px" },
                 readOnly: true,
@@ -344,7 +341,6 @@ export default function MarinePolicyInformation() {
             )}
             <TextField
               fullWidth
-              onKeyDown={keySave}
               disabled={isAddOrEditMode}
               variant="outlined"
               size="small"
@@ -365,7 +361,6 @@ export default function MarinePolicyInformation() {
               }}
             />
             <TextField
-              onKeyDown={keySave}
               disabled={isAddOrEditMode}
               fullWidth
               variant="outlined"
@@ -474,7 +469,6 @@ export default function MarinePolicyInformation() {
                 name="PolicyNo"
                 value={state.PolicyNo}
                 onChange={handleInputChange}
-                onKeyDown={keySave}
                 InputProps={{
                   style: { height: "27px", fontSize: "14px" },
                 }}
@@ -494,7 +488,6 @@ export default function MarinePolicyInformation() {
               name="location"
               value={state.location}
               onChange={handleInputChange}
-              onKeyDown={keySave}
               multiline
               rows={2}
               InputProps={{
@@ -659,7 +652,6 @@ export default function MarinePolicyInformation() {
                 name="consignee"
                 value={state.consignee}
                 onChange={handleInputChange}
-                onKeyDown={keySave}
                 InputProps={{
                   style: { height: "27px", fontSize: "14px" },
                 }}
@@ -679,7 +671,6 @@ export default function MarinePolicyInformation() {
                 name="smi"
                 value={state.smi}
                 onChange={handleInputChange}
-                onKeyDown={keySave}
                 InputProps={{
                   style: { height: "27px", fontSize: "14px" },
                 }}
@@ -699,7 +690,6 @@ export default function MarinePolicyInformation() {
                 name="vessel"
                 value={state.vessel}
                 onChange={handleInputChange}
-                onKeyDown={keySave}
                 InputProps={{
                   style: { height: "27px", fontSize: "14px" },
                 }}
@@ -719,7 +709,6 @@ export default function MarinePolicyInformation() {
                 name="add_info"
                 value={state.add_info}
                 onChange={handleInputChange}
-                onKeyDown={keySave}
                 InputProps={{
                   style: { height: "27px", fontSize: "14px" },
                 }}
@@ -739,7 +728,6 @@ export default function MarinePolicyInformation() {
                 name="point_orig"
                 value={state.point_orig}
                 onChange={handleInputChange}
-                onKeyDown={keySave}
                 InputProps={{
                   style: { height: "27px", fontSize: "14px" },
                 }}
@@ -759,7 +747,6 @@ export default function MarinePolicyInformation() {
                 name="point_dis"
                 value={state.point_dis}
                 onChange={handleInputChange}
-                onKeyDown={keySave}
                 InputProps={{
                   style: { height: "27px", fontSize: "14px" },
                 }}

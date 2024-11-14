@@ -20,7 +20,6 @@ export default function FirePolicyPremium() {
     dispatch,
     myAxios,
     user,
-    keySave,
   } = useContext(FireContext);
 
   const { data: dataMortgagee, isLoading: isLoadingMortgagee } = useQuery({
@@ -118,7 +117,6 @@ export default function FirePolicyPremium() {
         >
           <legend>Warranties</legend>
           <TextField
-            key={keySave}
             disabled={isAddOrEditMode}
             required
             variant="outlined"

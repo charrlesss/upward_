@@ -1,4 +1,4 @@
-import React, { useContext, useState, useRef, useReducer, useEffect } from "react";
+import React, { useContext, useState, useRef, useReducer, useEffect, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -22,8 +22,6 @@ import { AuthContext } from "../../../../components/AuthContext";
 import CustomDatePicker from "../../../../components/DatePicker";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import CloseIcon from "@mui/icons-material/Close";
-import PolicyIcon from "@mui/icons-material/Policy";
-import { NumericFormatCustom } from "../../../../components/NumberFormat";
 import { flushSync } from "react-dom";
 import { LoadingButton } from "@mui/lab";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
@@ -42,7 +40,6 @@ import { TextAreaInput, TextInput } from "../../../../components/UpwardFields";
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import { NumericFormat } from "react-number-format";
 import { format } from "date-fns";
-import { wait } from "@testing-library/user-event/dist/utils";
 
 const initialState = {
   Sub_Ref_No: "",
@@ -138,7 +135,6 @@ export default function PostDateChecks() {
   );
 
   const { myAxios, user } = useContext(AuthContext);
-  const dataGridFunctions = useRef<any>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   // pdc form save button
@@ -518,7 +514,11 @@ export default function PostDateChecks() {
     const { name, value } = e.target;
     dispatch({ type: "UPDATE_FIELD", field: name, value });
   };
-  async function handleOnSave(e: any) {
+  // async function handleOnSave(e: any) {
+
+  // }
+
+  const handleOnSave = useCallback(async (e: any) => {
     if (state.PNo === "") {
       return Swal.fire({
         position: "center",
@@ -610,7 +610,7 @@ export default function PostDateChecks() {
         },
       });
     }
-  }
+  }, [state ,mutate,pdcDataRows,selectedFiles])
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
@@ -725,7 +725,6 @@ export default function PostDateChecks() {
   const onSelectionChange = (selectedRow: any) => {
     if (selectedRow.length > 0) {
       const rowSelected = selectedRow[0];
-      console.log(rowSelected)
       setTimeout(() => {
         if (
           _checknoRef.current &&
@@ -804,7 +803,7 @@ export default function PostDateChecks() {
       const filteredChecks = pdcDataRows.filter((itm: any) => {
         return _checknoRef.current && _checknoRef.current.value === itm.Check_No
       })
-      if(filteredChecks.length > 0 ){
+      if (filteredChecks.length > 0) {
         alert('check no. is already exist!')
         _checknoRef.current.focus()
         return
@@ -909,7 +908,6 @@ export default function PostDateChecks() {
     }
 
   }
-
   function focusOnTable() {
     setTimeout(() => {
       tableRef.current?.resetTableSelected();
@@ -922,6 +920,21 @@ export default function PostDateChecks() {
       }, 100)
     }, 100)
   }
+
+  useEffect(() => {
+    const handleKeyDown = (event: any) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+        event.preventDefault();
+        handleOnSave(event);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleOnSave]);
+
 
   const isDisableField = state.pdcMode === "";
   const width = window.innerWidth - 50;

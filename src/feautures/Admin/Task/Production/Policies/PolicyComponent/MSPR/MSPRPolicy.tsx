@@ -541,6 +541,21 @@ export default function MSPRPolicy() {
     }
   }
 
+  useEffect(() => {
+    const handleKeyDown = (event: any) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+        event.preventDefault();
+        handleOnSave();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleOnSave]);
+
+
   return (
     <MSPRContext.Provider
       value={{

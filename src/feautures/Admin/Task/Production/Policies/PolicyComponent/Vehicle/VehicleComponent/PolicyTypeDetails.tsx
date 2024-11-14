@@ -63,7 +63,6 @@ export default function PolicyTypeDetails() {
     tplCompuation,
     comComputation,
     parseStringToNumber,
-    keySave,
     domination,
     isLoadingrates,
     user,
@@ -287,7 +286,6 @@ export default function PolicyTypeDetails() {
                 }}
               />
               <TextField
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 variant="outlined"
                 size="small"
@@ -316,7 +314,6 @@ export default function PolicyTypeDetails() {
                 }}
               />
               <TextField
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 variant="outlined"
                 size="small"
@@ -345,7 +342,6 @@ export default function PolicyTypeDetails() {
                 }}
               />
               <TextField
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 variant="outlined"
                 size="small"
@@ -382,7 +378,6 @@ export default function PolicyTypeDetails() {
                 }}
               >
                 <TextField
-                  onKeyDown={keySave}
                   disabled={isAddOrEditMode}
                   variant="outlined"
                   size="small"
@@ -413,7 +408,6 @@ export default function PolicyTypeDetails() {
                   }}
                 ></div>
                 <TextField
-                  onKeyDown={keySave}
                   disabled={isAddOrEditMode}
                   variant="outlined"
                   size="small"
@@ -530,7 +524,6 @@ export default function PolicyTypeDetails() {
                       </Select>
                     </FormControl>
                     <TextField
-                      onKeyDown={keySave}
                       disabled={isAddOrEditMode}
                       variant="outlined"
                       size="small"
@@ -564,7 +557,6 @@ export default function PolicyTypeDetails() {
                   </div>
 
                   <TextField
-                    onKeyDown={keySave}
                     disabled={isAddOrEditMode}
                     variant="outlined"
                     size="small"
@@ -600,7 +592,6 @@ export default function PolicyTypeDetails() {
                     }}
                   />
                   <TextField
-                    onKeyDown={keySave}
                     disabled={isAddOrEditMode}
                     variant="outlined"
                     size="small"

@@ -28,7 +28,6 @@ export default function PAPolicyInformation() {
     myAxios,
     user,
     isAddOrEditMode,
-    keySave,
     computation,
     dispatch,
   } = useContext(PAContext);
@@ -241,7 +240,6 @@ export default function PAPolicyInformation() {
                   size="small"
                   label="Client Name"
                   name="client_name"
-                  onKeyDown={keySave}
                   value={state.client_name}
                   onChange={handleInputChange}
                   InputProps={{
@@ -267,7 +265,6 @@ export default function PAPolicyInformation() {
                 name="client_address"
                 value={state.client_address}
                 onChange={handleInputChange}
-                onKeyDown={keySave}
                 InputProps={{
                   style: { height: "100px", fontSize: "14px" },
                   readOnly: true,
@@ -362,7 +359,6 @@ export default function PAPolicyInformation() {
               )}
               <TextField
                 fullWidth
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 variant="outlined"
                 size="small"
@@ -383,7 +379,6 @@ export default function PAPolicyInformation() {
                 }}
               />
               <TextField
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 fullWidth
                 variant="outlined"
@@ -490,7 +485,6 @@ export default function PAPolicyInformation() {
                 InputProps={{
                   style: { height: "27px", fontSize: "14px" },
                 }}
-                onKeyDown={keySave}
                 sx={{
                   width: "100%",
                   height: "27px",
@@ -651,7 +645,6 @@ export default function PAPolicyInformation() {
                 name="sumInsured"
                 value={state.sumInsured}
                 onChange={handleInputChange}
-                onKeyDown={keySave}
                 placeholder="0.00"
                 InputProps={{
                   inputComponent: NumericFormatCustom as any,
@@ -680,7 +673,6 @@ export default function PAPolicyInformation() {
                 name="propertyInsured"
                 value={state.propertyInsured}
                 onChange={handleInputChange}
-                onKeyDown={keySave}
                 InputProps={{
                   style: { height: "27px", fontSize: "14px" },
                 }}

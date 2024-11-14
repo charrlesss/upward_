@@ -419,7 +419,7 @@ export default function PAPolicy() {
 
     customInputchange(Location, "propertyInsured");
     customInputchange(sumInsured, "sumInsured");
-  
+
     customInputchange(sumInsured, "sumInsured");
     customInputchange(formatNumber(parseFloat(TotalPremium)), "netPremium");
     customInputchange(formatNumber(parseFloat(Vat)), "vat");
@@ -441,6 +441,21 @@ export default function PAPolicy() {
       handleOnSave();
     }
   }
+
+  useEffect(() => {
+    const handleKeyDown = (event: any) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+        event.preventDefault();
+        handleOnSave();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleOnSave]);
+
   return (
     <PAContext.Provider
       value={{

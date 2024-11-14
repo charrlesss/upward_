@@ -25,7 +25,6 @@ export default function BondsPolicyInformation() {
     myAxios,
     user,
     isAddOrEditMode,
-    keySave,
   } = useContext(BondContext);
   const [account, setAccount] = useState([]);
   const biddingDateRef = useRef<HTMLElement>(null);
@@ -234,7 +233,6 @@ export default function BondsPolicyInformation() {
                 name="client_name"
                 value={state.client_name}
                 onChange={handleInputChange}
-                onKeyDown={keySave}
                 InputProps={{
                   style: { height: "27px", fontSize: "14px" },
                   readOnly: true,
@@ -258,7 +256,6 @@ export default function BondsPolicyInformation() {
               name="client_address"
               value={state.client_address}
               onChange={handleInputChange}
-              onKeyDown={keySave}
               InputProps={{
                 style: { height: "100px", fontSize: "14px" },
                 readOnly: true,
@@ -360,7 +357,6 @@ export default function BondsPolicyInformation() {
               name="agent_name"
               value={state.agent_name}
               onChange={handleInputChange}
-              onKeyDown={keySave}
               InputProps={{
                 style: { height: "27px", fontSize: "14px" },
                 readOnly: true,
@@ -374,7 +370,6 @@ export default function BondsPolicyInformation() {
               }}
             />
             <TextField
-              onKeyDown={keySave}
               disabled={isAddOrEditMode}
               fullWidth
               variant="outlined"
@@ -488,7 +483,6 @@ export default function BondsPolicyInformation() {
                   name="PolicyNo"
                   value={state.PolicyNo}
                   onChange={handleInputChange}
-                  onKeyDown={keySave}
                   InputProps={{
                     style: { height: "27px", fontSize: "14px" },
                   }}
@@ -582,7 +576,6 @@ export default function BondsPolicyInformation() {
               name="officer"
               value={state.officer}
               onChange={handleInputChange}
-              onKeyDown={keySave}
               InputProps={{
                 style: { height: "27px", fontSize: "14px" },
               }}
@@ -601,7 +594,6 @@ export default function BondsPolicyInformation() {
               name="position"
               value={state.position}
               onChange={handleInputChange}
-              onKeyDown={keySave}
               InputProps={{
                 style: { height: "27px", fontSize: "14px" },
               }}
@@ -760,7 +752,6 @@ export default function BondsPolicyInformation() {
           onChange={handleInputChange}
           multiline
           rows={3}
-          onKeyDown={keySave}
         />
         <TextField
           disabled={isAddOrEditMode}
@@ -773,7 +764,6 @@ export default function BondsPolicyInformation() {
           onChange={handleInputChange}
           multiline
           rows={3}
-          onKeyDown={keySave}
         />
       </fieldset>
       {ModalClientIDs}

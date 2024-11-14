@@ -74,7 +74,6 @@ export default function PolicyInformation() {
     user,
     isAddOrEditMode,
     isLoadingTempId,
-    keySave,
     mutateRates,
   } = useContext(VehicleContext);
   const [clientDetailsState, dispatch] = useReducer(
@@ -386,7 +385,6 @@ export default function PolicyInformation() {
               </div>
 
               <TextField
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 fullWidth
                 variant="outlined"
@@ -409,7 +407,6 @@ export default function PolicyInformation() {
             </div>
             <TextField
               rows={5}
-              onKeyDown={keySave}
               disabled={isAddOrEditMode}
               fullWidth
               variant="outlined"
@@ -501,7 +498,6 @@ export default function PolicyInformation() {
             )}
             <TextField
               fullWidth
-              onKeyDown={keySave}
               disabled={isAddOrEditMode}
               variant="outlined"
               size="small"
@@ -522,7 +518,6 @@ export default function PolicyInformation() {
               }}
             />
             <TextField
-              onKeyDown={keySave}
               disabled={isAddOrEditMode}
               fullWidth
               variant="outlined"
@@ -679,7 +674,6 @@ export default function PolicyInformation() {
               </React.Fragment>
             ) : state.form_action === "REG" ? (
               <TextField
-                onKeyDown={keySave}
                 fullWidth
                 variant="outlined"
                 size="small"
@@ -703,7 +697,6 @@ export default function PolicyInformation() {
                   <LoadingButton loading={isLoadingTempId} />
                 ) : (
                   <TextField
-                    onKeyDown={keySave}
                     fullWidth
                     variant="outlined"
                     size="small"
@@ -726,7 +719,6 @@ export default function PolicyInformation() {
               </React.Fragment>
             )}
             <TextField
-              onKeyDown={keySave}
               disabled={isAddOrEditMode}
               fullWidth
               variant="outlined"
@@ -746,7 +738,6 @@ export default function PolicyInformation() {
               }}
             />
             <TextField
-              onKeyDown={keySave}
               disabled={isAddOrEditMode}
               fullWidth
               variant="outlined"
@@ -904,7 +895,6 @@ export default function PolicyInformation() {
               }
             >
               <TextField
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 fullWidth
                 variant="outlined"
@@ -924,7 +914,6 @@ export default function PolicyInformation() {
                 }}
               />
               <TextField
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 fullWidth
                 variant="outlined"
@@ -944,7 +933,6 @@ export default function PolicyInformation() {
                 }}
               />
               <TextField
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 fullWidth
                 variant="outlined"
@@ -964,7 +952,6 @@ export default function PolicyInformation() {
                 }}
               />
               <TextField
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 fullWidth
                 variant="outlined"
@@ -984,7 +971,6 @@ export default function PolicyInformation() {
                 }}
               />
               <TextField
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 fullWidth
                 variant="outlined"
@@ -1015,7 +1001,6 @@ export default function PolicyInformation() {
               }
             >
               <TextField
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 fullWidth
                 variant="outlined"
@@ -1035,7 +1020,6 @@ export default function PolicyInformation() {
                 }}
               />
               <TextField
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 fullWidth
                 variant="outlined"
@@ -1055,7 +1039,6 @@ export default function PolicyInformation() {
                 }}
               />
               <TextField
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 fullWidth
                 variant="outlined"
@@ -1075,7 +1058,6 @@ export default function PolicyInformation() {
                 }}
               />
               <TextField
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 fullWidth
                 variant="outlined"
@@ -1095,7 +1077,6 @@ export default function PolicyInformation() {
                 }}
               />
               <TextField
-                onKeyDown={keySave}
                 disabled={isAddOrEditMode}
                 fullWidth
                 variant="outlined"

@@ -304,7 +304,7 @@ export default function VehiclePolicy() {
 
       return formattedNumber;
     }
-  
+
     function setFixValue(value: string) {
       const intVal = parseFloat(value);
       return intVal.toFixed(2);
@@ -610,7 +610,7 @@ export default function VehiclePolicy() {
       }).then((result) => {
         if (result.isConfirmed) {
           return window.open(
-            "/dashboard/reference/id-entry?drawer=false",
+            "/dashboard/reference/id-entry",
             "_blank"
           );
         }
@@ -865,6 +865,20 @@ export default function VehiclePolicy() {
       target: { value: "COM", name: "form_type" },
     });
   }, [user?.department, dataTemp?.data.tempId]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: any) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+        event.preventDefault();
+        handleOnSave();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleOnSave]);
 
   return (
     <VehicleContext.Provider
@@ -1319,7 +1333,7 @@ export default function VehiclePolicy() {
         onClickCloseIcon={() => {
           setSearchShow(false);
         }}
-        searchOnChange={() => {}}
+        searchOnChange={() => { }}
         onSearchKeyEnter={(value) => {
           myAxios
             .get(

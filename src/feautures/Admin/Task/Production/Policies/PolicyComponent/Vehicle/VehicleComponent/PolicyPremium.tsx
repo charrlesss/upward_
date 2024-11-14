@@ -28,7 +28,6 @@ export default function PolicyPremium() {
     dispatch,
     myAxios,
     user,
-    keySave,
   } = useContext(VehicleContext);
   const [text, setText] = useState(
     JSON.parse(state.MortgageeForm)
@@ -153,7 +152,7 @@ export default function PolicyPremium() {
             <Typography variant="caption">{text}</Typography>
           </div>
           <TextField
-            onKeyDown={keySave}
+            
             disabled={isAddOrEditMode}
             label="Remarks"
             name="remarks"

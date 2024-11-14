@@ -10,7 +10,6 @@ export default function MarinePolicyPremium() {
     computation,
     isAddOrEditMode,
     dispatch,
-    keySave,
   } = useContext(MarineContext);
 
   function onKeyDownComputation(e: any) {
@@ -52,7 +51,6 @@ export default function MarinePolicyPremium() {
             multiline
             rows={5}
             onChange={handleInputChange}
-            onKeyDown={keySave}
           />
           <TextField
             disabled={isAddOrEditMode}
@@ -64,7 +62,6 @@ export default function MarinePolicyPremium() {
             multiline
             rows={5}
             onChange={handleInputChange}
-            onKeyDown={keySave}
           />
         </fieldset>
       </div>
