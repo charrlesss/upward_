@@ -609,7 +609,9 @@ export default function GeneralJournal() {
         title: "Code is required!",
         timer: 1500,
       }).then(() => {
-        return openChartAccountSearch(state.code);
+        wait(300).then(() => {
+          return openChartAccountSearch(state.code);
+        })
       });
     }
 
@@ -620,7 +622,9 @@ export default function GeneralJournal() {
         title: "ID is required!",
         timer: 1500,
       }).then(() => {
-        return openPolicyIdClientIdRefId(refName.current?.value);
+        wait(300).then(() => {
+          return openPolicyIdClientIdRefId(refName.current?.value)
+        })
       });
     }
 
@@ -630,7 +634,11 @@ export default function GeneralJournal() {
         icon: "warning",
         title: "Debit is required!",
         timer: 1500,
-      });
+      }).then(() => {
+        wait(300).then(() => {
+          refDebit.current?.focus()
+        })
+      })
     }
     if (refCredit.current && isNaN(parseFloat(refCredit.current?.value.replace(/,/g, "")))) {
       return Swal.fire({
@@ -638,7 +646,11 @@ export default function GeneralJournal() {
         icon: "warning",
         title: "Credit is required!",
         timer: 1500,
-      });
+      }).then(() => {
+        wait(300).then(() => {
+          refCredit.current?.focus()
+        })
+      })
     }
     if (
       refDebit.current &&
@@ -651,7 +663,11 @@ export default function GeneralJournal() {
         icon: "warning",
         title: "Credit and Debit must be different!",
         timer: 1500,
-      });
+      }).then(() => {
+        wait(300).then(() => {
+          refCredit.current?.focus()
+        })
+      })
     }
     if (refTC.current && refTC.current?.value === "") {
       return Swal.fire({
@@ -660,7 +676,9 @@ export default function GeneralJournal() {
         title: "TC is required!",
         timer: 1500,
       }).then(() => {
-        return openTransactionAccount(state.TC_Code);
+        wait(300).then(() => {
+          openTransactionAccount(state.TC_Code);
+        })
       });
     }
     if (refCode.current && refCode.current?.value.length >= 200) {
@@ -669,7 +687,11 @@ export default function GeneralJournal() {
         icon: "warning",
         title: "Code is too long!",
         timer: 1500,
-      });
+      }).then(() => {
+        wait(300).then(() => {
+          refCode.current?.focus()
+        })
+      })
     }
     if (refName.current && refName.current?.value.length >= 200) {
       return Swal.fire({
@@ -677,7 +699,11 @@ export default function GeneralJournal() {
         icon: "warning",
         title: "Client name is too long!",
         timer: 1500,
-      });
+      }).then(() => {
+        wait(300).then(() => {
+          refName.current?.focus()
+        })
+      })
     }
     if (refTC.current && refTC.current.value.length >= 200) {
       return Swal.fire({
@@ -685,7 +711,11 @@ export default function GeneralJournal() {
         icon: "warning",
         title: "TC is too long!",
         timer: 1500,
-      });
+      }).then(() => {
+        wait(300).then(() => {
+          refTC.current?.focus()
+        })
+      })
     }
     if (refInvoice.current && refInvoice.current.value.length >= 200) {
       return Swal.fire({
@@ -693,8 +723,13 @@ export default function GeneralJournal() {
         icon: "warning",
         title: "Invoice is too long!",
         timer: 1500,
-      });
+      }).then(() => {
+        wait(300).then(() => {
+          refInvoice.current?.focus()
+        })
+      })
     }
+
     function generateID(array: Array<any>) {
       const lastItem = array.length ? array[array.length - 1].TempID : "000";
       const numericPart = (parseInt(lastItem.toString().match(/\d+/)[0]) + 1)
@@ -702,6 +737,7 @@ export default function GeneralJournal() {
         .padStart(3, "0");
       return numericPart;
     }
+
     const isUpdate = selectedIndex !== null && selectedIndex >= 0
     function addEntryVat(Entry1: any, Entry2: any, debitNum: number, creditNum: number) {
 
@@ -886,14 +922,12 @@ export default function GeneralJournal() {
     });
     window.open("/dashboard/print", "_blank");
   }
-
   function onCancel() {
     setMode("")
     refetchGeneralJournalGenerator();
     setGeneralJournal([]);
 
   }
-
 
   useEffect(() => {
     const handleKeyDown = (event: any) => {
@@ -1198,7 +1232,6 @@ export default function GeneralJournal() {
               disabled: modeDefault || modeUpdate,
               type: "text",
               style: { width: "190px" },
-              readOnly: true,
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === 'Enter') {
                   refDate.current?.focus()

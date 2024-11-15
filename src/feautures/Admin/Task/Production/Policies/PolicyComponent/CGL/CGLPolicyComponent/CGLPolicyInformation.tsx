@@ -115,7 +115,7 @@ export default function CGLPolicyInformation() {
   const { data: policyAccount, isLoading: isLoadingPolicyAccount } = useQuery({
     queryKey: "bond-policy-account-ss",
     queryFn: async () =>
-      await myAxios.get(`/task/production/policy-accounts-by-line?Line=PA`, {
+      await myAxios.get(`/task/production/policy-accounts-by-line?Line=CGL`, {
         headers: {
           Authorization: `Bearer ${user?.accessToken}`,
         },
@@ -428,7 +428,7 @@ export default function CGLPolicyInformation() {
                 marginBottom: "10px",
               }}
             >
-              <legend style={{ color: "#065f46" }}>PA Policy</legend>
+              <legend style={{ color: "#065f46" }}>CGL Policy</legend>
               {isLoadingPolicyAccount ? (
                 <LoadingButton loading={isLoadingPolicyAccount} />
               ) : (
