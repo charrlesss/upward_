@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import '../style/header.css'
 import { AuthContext } from "./AuthContext";
 import { Logout } from "./Sidebars/Logout";
@@ -10,9 +10,6 @@ import Swal from "sweetalert2";
 import axios from "axios";
 
 export default function Header() {
- 
-
-
   const { user, setUser, myAxios } = useContext(AuthContext);
   const [openMenu, setOpenMenu] = useState(null);
   const [openUserMenu, setOpenUserMenu] = useState(false);
@@ -68,7 +65,7 @@ export default function Header() {
       ],
     },
   ])
-
+  const location = useLocation();
   const navigate = useNavigate();
 
   const { refetch, isLoading } = useQuery({
@@ -142,6 +139,7 @@ export default function Header() {
   const handleSubLinkClick = () => {
     // Close submenu after clicking any sublink
     setOpenMenu(null);
+
   };
 
   useEffect(() => {
@@ -194,7 +192,7 @@ export default function Header() {
           { name: "Statement of Account", path: "/dashboard/task/production/statement-of-account" },
         ],
       },
-  
+
     ];
     if (user?.userAccess === 'PRODUCTION_ACCOUNTING') {
       setMenuData([{
@@ -345,9 +343,23 @@ export default function Header() {
     };
   }, []);
 
+  const openReport = () => {
+    axios.get('http://localhost:7624/open-report', {
+      withCredentials: true
+    }).then((res) => {
+      if (!res.data.success) {
+        alert(res.data.message)
+      }
+    })
+      .catch(console.log)
+
+  }
+
+
+
   return (
     <header >
-      <nav ref={menuRef} className="menu header-ch">
+      <nav ref={menuRef} className="menu header-ch" >
         <ul className="main-menu">
           {menuData.map((menuItem: any, index: any) => (
             <li
@@ -365,7 +377,9 @@ export default function Header() {
               {menuItem.subLinks && openMenu === menuItem.name && (
                 <ul className="submenu">
                   {menuItem.subLinks.map((subLink: any, subIndex: any) => (
-                    <li key={subIndex}>
+                    <li key={subIndex} style={{
+                      background: subLink.path === location.pathname ? "#555" : ""
+                    }}>
                       <Link to={subLink.path} onClick={handleSubLinkClick}>{subLink.name}</Link>
                     </li>
                   ))}
@@ -373,12 +387,16 @@ export default function Header() {
               )}
             </li>
           ))}
+          <li>
+            <span style={{ cursor: "pointer", fontSize: "14px", fontWeight: "bold" }} onClick={openReport}>Open Report</span>
+          </li>
         </ul>
       </nav>
-      <div className="header-ch">
-        <span>{user?.department}</span>
-      </div>
-      <div className="header-ch">
+
+      <div className="header-ch" style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", columnGap: "10px" }}>
+        <div className="profile-sub-menu">
+          <span>{user?.department}</span>
+        </div>
         <div ref={menuUserRef} style={{ position: "relative", display: "flex", alignItems: "center" }}>
           <AccountCircle
             color="info"

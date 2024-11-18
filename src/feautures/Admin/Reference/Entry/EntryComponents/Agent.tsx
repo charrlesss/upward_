@@ -35,6 +35,7 @@ import {
   saveCondfirmationAlert,
 } from "../../../../../lib/confirmationAlert";
 import { UpwardTable } from "../../../../../components/UpwardTable";
+import PageHelmet from "../../../../../components/Helmet";
 
 const initialState = {
   firstname: "",
@@ -287,508 +288,510 @@ export default function Agent() {
   const width = window.innerWidth - 40;
   const height = window.innerHeight - 180;
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        width: "100%",
-        height: "100%",
-        flex: 1,
-      }}
-    >
-      <Box
-        sx={(theme) => ({
+    <>
+      <PageHelmet title="ID Entry - Agent" />
+      <div
+        style={{
           display: "flex",
-          alignItems: "center",
-          columnGap: "20px",
-          [theme.breakpoints.down("sm")]: {
-            flexDirection: "column",
-            alignItems: "flex-start",
-            flex: 1,
-            marginBottom: "15px",
-          },
-        })}
+          flexDirection: "column",
+          width: "100%",
+          height: "100%",
+          flex: 1,
+        }}
       >
-        <div
-          style={{
-            marginTop: "10px",
-            marginBottom: "12px",
-            width: "100%",
-          }}
+        <Box
+          sx={(theme) => ({
+            display: "flex",
+            alignItems: "center",
+            columnGap: "20px",
+            [theme.breakpoints.down("sm")]: {
+              flexDirection: "column",
+              alignItems: "flex-start",
+              flex: 1,
+              marginBottom: "15px",
+            },
+          })}
         >
+          <div
+            style={{
+              marginTop: "10px",
+              marginBottom: "12px",
+              width: "100%",
+            }}
+          >
+            <TextField
+              label="Search"
+              fullWidth
+              size="small"
+              type="text"
+              value={state.search}
+              name="search"
+              onChange={handleInputChange}
+              onKeyDown={(e) => {
+                if (e.code === "Enter" || e.code === "NumpadEnter") {
+                  e.preventDefault();
+                  return refetchAgentSearch();
+                }
+
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  const datagridview = document.querySelector(
+                    `.grid-container`
+                  ) as HTMLDivElement;
+                  datagridview.focus();
+                }
+
+              }}
+              InputProps={{
+                style: { height: "27px", fontSize: "14px" },
+                className: "manok"
+              }}
+              sx={{
+                width: "500px",
+                height: "27px",
+                ".MuiFormLabel-root": { fontSize: "14px" },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              }}
+            />
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              columnGap: "20px",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                columnGap: "5px",
+              }}
+            >
+              {state.mode === "" && (
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  id="entry-header-save-button"
+                  sx={{
+                    height: "30px",
+                    fontSize: "11px",
+                  }}
+                  onClick={() => {
+                    refetchAgentId();
+                    handleInputChange({ target: { value: "add", name: "mode" } });
+                  }}
+                >
+                  New
+                </Button>
+              )}
+              <LoadingButton
+                id="save-entry-header"
+                color="primary"
+                variant="contained"
+                type="submit"
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                }}
+                onClick={handleOnSave}
+                startIcon={<SaveIcon />}
+                disabled={state.mode === ""}
+                loading={loadingAdd || loadingEdit}
+              >
+                Save
+              </LoadingButton>
+              {state.mode !== "" && (
+                <Button
+                  sx={{
+                    height: "30px",
+                    fontSize: "11px",
+                  }}
+                  variant="contained"
+                  startIcon={<CloseIcon />}
+                  color="error"
+                  onClick={() => {
+                    Swal.fire({
+                      title: "Are you sure?",
+                      text: "You won't be able to revert this!",
+                      icon: "warning",
+                      showCancelButton: true,
+                      confirmButtonColor: "#3085d6",
+                      cancelButtonColor: "#d33",
+                      confirmButtonText: "Yes, cancel it!",
+                    }).then((result) => {
+                      if (result.isConfirmed) {
+                        resetModule();
+                      }
+                    });
+                  }}
+                >
+                  Cancel
+                </Button>
+              )}
+
+              <LoadingButton
+                id="save-entry-header"
+                variant="contained"
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                  backgroundColor: pink[500],
+                  "&:hover": {
+                    backgroundColor: pink[600],
+                  },
+                }}
+                loading={loadingDelete}
+                startIcon={<DeleteIcon />}
+                disabled={state.mode !== "edit"}
+                onClick={() => {
+                  codeCondfirmationAlert({
+                    isUpdate: false,
+                    cb: (userCodeConfirmation) => {
+                      mutateDelete({
+                        id: state.entry_agent_id,
+                        userCodeConfirmation,
+                      });
+                    },
+                  });
+                }}
+              >
+                Delete
+              </LoadingButton>
+            </div>
+          </div>
+        </Box>
+
+        <form
+          onKeyDown={(e) => {
+            const enterList = [
+              "firstname",
+              "lastname",
+              "middlename",
+              "address",
+              "email",
+              "mobile",
+              "telephone",
+              "entry_agent_id",
+            ];
+            if (
+              (e.code === "Enter" || e.code === "NumpadEnter") &&
+              enterList.includes((e.target as any).name)
+            ) {
+              e.preventDefault();
+              handleOnSave(e);
+            }
+          }}
+          onSubmit={handleOnSave}
+          style={{ width: "100%" }}
+          id="Form-Agent"
+        >
+          <Box
+            sx={(theme) => ({
+              display: "flex",
+              gap: "10px",
+              flexDirection: "column",
+              [theme.breakpoints.down("md")]: {
+                flexDirection: "column",
+                rowGap: "10px",
+              },
+              marginBottom: "10px",
+            })}
+          >
+            <Box sx={{ display: "flex", gap: "10px" }}>
+              {loadingAgentId ? (
+                <LoadingButton loading={loadingAgentId} />
+              ) : (
+                <FormControl
+                  fullWidth
+                  variant="outlined"
+                  size="small"
+                  disabled={state.mode === ""}
+                  sx={{
+                    flex: 1,
+                    ".MuiFormLabel-root": {
+                      fontSize: "14px",
+                      background: "white",
+                      zIndex: 99,
+                      padding: "0 3px",
+                    },
+                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                  }}
+                >
+                  <InputLabel htmlFor="agent-auto-generate-id-field">
+                    Agent ID
+                  </InputLabel>
+                  <OutlinedInput
+                    sx={{
+                      height: "27px",
+                      fontSize: "14px",
+                    }}
+                    disabled={state.mode === ""}
+                    fullWidth
+                    label="Agent ID"
+                    name="entry_agent_id"
+                    value={state.entry_agent_id}
+                    onChange={handleInputChange}
+                    readOnly={true}
+                    id="agent-auto-generate-id-field"
+                    endAdornment={
+                      <InputAdornment position="end">
+                        <IconButton
+                          disabled={state.mode === ""}
+                          aria-label="search-agent"
+                          color="secondary"
+                          edge="end"
+                          onClick={() => {
+                            refetchAgentId();
+                          }}
+                        >
+                          <RestartAltIcon />
+                        </IconButton>
+                      </InputAdornment>
+                    }
+                  />
+                </FormControl>
+              )}
+              <TextField
+                type="text"
+                name="firstname"
+                label="First Name"
+                size="small"
+                fullWidth
+                value={state.firstname}
+                onChange={handleInputChange}
+                disabled={state.mode === ""}
+                InputProps={{
+                  style: { height: "27px", fontSize: "14px" },
+                }}
+                sx={{
+                  flex: 1,
+                  height: "27px",
+                  ".MuiFormLabel-root": { fontSize: "14px" },
+                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                }}
+              />
+              <TextField
+                type="text"
+                name="middlename"
+                label="Middle Name"
+                size="small"
+                fullWidth
+                value={state.middlename}
+                onChange={handleInputChange}
+                disabled={state.mode === ""}
+                InputProps={{
+                  style: { height: "27px", fontSize: "14px" },
+                }}
+                sx={{
+                  flex: 1,
+                  height: "27px",
+                  ".MuiFormLabel-root": { fontSize: "14px" },
+                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                }}
+              />
+              <TextField
+                type="text"
+                name="lastname"
+                label="Last Name"
+                size="small"
+                fullWidth
+                required
+                value={state.lastname}
+                onChange={handleInputChange}
+                disabled={state.mode === ""}
+                InputProps={{
+                  style: { height: "27px", fontSize: "14px" },
+                }}
+                sx={{
+                  flex: 1,
+                  height: "27px",
+                  ".MuiFormLabel-root": { fontSize: "14px" },
+                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                }}
+              />
+            </Box>
+            <Box sx={{ display: "flex", gap: "10px" }}>
+              <TextField
+                type="email"
+                name="email"
+                label="Email"
+                size="small"
+                fullWidth
+                required
+                value={state.email}
+                onChange={handleInputChange}
+                disabled={state.mode === ""}
+                InputProps={{
+                  style: { height: "27px", fontSize: "14px" },
+                }}
+                sx={{
+                  flex: 1,
+                  height: "27px",
+                  ".MuiFormLabel-root": { fontSize: "14px" },
+                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                }}
+              />
+              <TextField
+                name="mobile"
+                label="Mobile Number"
+                size="small"
+                fullWidth
+                required
+                value={state.mobile}
+                onChange={handleInputChange}
+                disabled={state.mode === ""}
+                InputProps={{
+                  style: { height: "27px", fontSize: "14px" },
+                  inputComponent: PhoneNumberFormat as any,
+                }}
+                sx={{
+                  flex: 1,
+                  height: "27px",
+                  ".MuiFormLabel-root": { fontSize: "14px" },
+                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                }}
+                placeholder="(+63) 000-000-0000"
+              />
+              <TextField
+                name="telephone"
+                label="Telephone Number"
+                size="small"
+                fullWidth
+                required
+                value={state.telephone}
+                onChange={handleInputChange}
+                disabled={state.mode === ""}
+                InputProps={{
+                  style: { height: "27px", fontSize: "14px" },
+                  inputComponent: TelephoneFormat as any,
+                }}
+                sx={{
+                  flex: 1,
+                  height: "27px",
+                  ".MuiFormLabel-root": { fontSize: "14px" },
+                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                }}
+                placeholder="0000-0000"
+              />
+
+              {subAccountLoading ? (
+                <LoadingButton loading={subAccountLoading} />
+              ) : (
+                <FormControl
+                  fullWidth
+                  required
+                  size="small"
+                  sx={{
+                    flex: 1,
+                    ".MuiFormLabel-root": {
+                      fontSize: "14px",
+                      background: "white",
+                      zIndex: 99,
+                      padding: "0 3px",
+                    },
+                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                  }}
+                >
+                  <InputLabel id="Sub Account">Sub Account</InputLabel>
+                  <Select
+                    sx={{
+                      height: "27px",
+                      fontSize: "14px",
+                    }}
+                    disabled={state.mode === ""}
+                    value={state.sub_account}
+                    onChange={(e) => {
+                      dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "sub_account",
+                        value: e.target.value,
+                      });
+                    }}
+                    labelId="Sub Account"
+                    label="Sub Account"
+                    name="sub_account"
+                  >
+                    {subAccountData?.data.subAccount.map(
+                      (item: {
+                        Sub_Acct: string;
+                        NewShortName: string;
+                        Acronym: string;
+                      }) => {
+                        return (
+                          <MenuItem key={item.Sub_Acct} value={item.Sub_Acct}>
+                            {item.NewShortName}
+                          </MenuItem>
+                        );
+                      }
+                    )}
+                  </Select>
+                </FormControl>
+              )}
+            </Box>
+          </Box>
           <TextField
-            label="Search"
+            label="Address"
+            name="address"
+            minRows={10}
             fullWidth
             size="small"
-            type="text"
-            value={state.search}
-            name="search"
+            required
+            value={state.address}
             onChange={handleInputChange}
-            onKeyDown={(e) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                e.preventDefault();
-                return refetchAgentSearch();
-              }
-
-              if (e.key === "ArrowDown") {
-                e.preventDefault();
-                const datagridview = document.querySelector(
-                  `.grid-container`
-                ) as HTMLDivElement;
-                datagridview.focus();
-              }
-
-            }}
+            disabled={state.mode === ""}
             InputProps={{
               style: { height: "27px", fontSize: "14px" },
-              className: "manok"
             }}
             sx={{
-              width: "500px",
+              flex: 1,
               height: "27px",
               ".MuiFormLabel-root": { fontSize: "14px" },
               ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
             }}
           />
-        </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            columnGap: "20px",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              columnGap: "5px",
-            }}
-          >
-            {state.mode === "" && (
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                id="entry-header-save-button"
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                }}
-                onClick={() => {
-                  refetchAgentId();
-                  handleInputChange({ target: { value: "add", name: "mode" } });
-                }}
-              >
-                New
-              </Button>
-            )}
-            <LoadingButton
-              id="save-entry-header"
-              color="primary"
-              variant="contained"
-              type="submit"
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-              }}
-              onClick={handleOnSave}
-              startIcon={<SaveIcon />}
-              disabled={state.mode === ""}
-              loading={loadingAdd || loadingEdit}
-            >
-              Save
-            </LoadingButton>
-            {state.mode !== "" && (
-              <Button
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                }}
-                variant="contained"
-                startIcon={<CloseIcon />}
-                color="error"
-                onClick={() => {
-                  Swal.fire({
-                    title: "Are you sure?",
-                    text: "You won't be able to revert this!",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#3085d6",
-                    cancelButtonColor: "#d33",
-                    confirmButtonText: "Yes, cancel it!",
-                  }).then((result) => {
-                    if (result.isConfirmed) {
-                      resetModule();
-                    }
-                  });
-                }}
-              >
-                Cancel
-              </Button>
-            )}
+        </form>
+        <br />
+        <UpwardTable
+          ref={table}
+          isLoading={isLoading || loadingDelete || loadingEdit || loadingAdd}
+          rows={rows}
+          column={agentColumn}
+          width={width}
+          height={height}
+          dataReadOnly={true}
+          onSelectionChange={(rowSelected) => {
+            if (rowSelected.length > 0) {
+              handleInputChange({ target: { value: "edit", name: "mode" } });
 
-            <LoadingButton
-              id="save-entry-header"
-              variant="contained"
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-                backgroundColor: pink[500],
-                "&:hover": {
-                  backgroundColor: pink[600],
-                },
-              }}
-              loading={loadingDelete}
-              startIcon={<DeleteIcon />}
-              disabled={state.mode !== "edit"}
-              onClick={() => {
+              setNewStateValue(dispatch, rowSelected[0]);
+
+            } else {
+              setNewStateValue(dispatch, initialState);
+              handleInputChange({ target: { value: "", name: "mode" } });
+            }
+          }}
+          onKeyDown={(row, key) => {
+            if (key === "Delete" || key === "Backspace") {
+              const rowSelected = row[0];
+              wait(100).then(() => {
                 codeCondfirmationAlert({
                   isUpdate: false,
                   cb: (userCodeConfirmation) => {
                     mutateDelete({
-                      id: state.entry_agent_id,
+                      id: rowSelected.entry_agent_id,
                       userCodeConfirmation,
                     });
                   },
                 });
-              }}
-            >
-              Delete
-            </LoadingButton>
-          </div>
-        </div>
-      </Box>
-
-      <form
-        onKeyDown={(e) => {
-          const enterList = [
-            "firstname",
-            "lastname",
-            "middlename",
-            "address",
-            "email",
-            "mobile",
-            "telephone",
-            "entry_agent_id",
-          ];
-          if (
-            (e.code === "Enter" || e.code === "NumpadEnter") &&
-            enterList.includes((e.target as any).name)
-          ) {
-            e.preventDefault();
-            handleOnSave(e);
-          }
-        }}
-        onSubmit={handleOnSave}
-        style={{ width: "100%" }}
-        id="Form-Agent"
-      >
-        <Box
-          sx={(theme) => ({
-            display: "flex",
-            gap: "10px",
-            flexDirection: "column",
-            [theme.breakpoints.down("md")]: {
-              flexDirection: "column",
-              rowGap: "10px",
-            },
-            marginBottom: "10px",
-          })}
-        >
-          <Box sx={{ display: "flex", gap: "10px" }}>
-            {loadingAgentId ? (
-              <LoadingButton loading={loadingAgentId} />
-            ) : (
-              <FormControl
-                fullWidth
-                variant="outlined"
-                size="small"
-                disabled={state.mode === ""}
-                sx={{
-                  flex: 1,
-                  ".MuiFormLabel-root": {
-                    fontSize: "14px",
-                    background: "white",
-                    zIndex: 99,
-                    padding: "0 3px",
-                  },
-                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                }}
-              >
-                <InputLabel htmlFor="agent-auto-generate-id-field">
-                  Agent ID
-                </InputLabel>
-                <OutlinedInput
-                  sx={{
-                    height: "27px",
-                    fontSize: "14px",
-                  }}
-                  disabled={state.mode === ""}
-                  fullWidth
-                  label="Agent ID"
-                  name="entry_agent_id"
-                  value={state.entry_agent_id}
-                  onChange={handleInputChange}
-                  readOnly={true}
-                  id="agent-auto-generate-id-field"
-                  endAdornment={
-                    <InputAdornment position="end">
-                      <IconButton
-                        disabled={state.mode === ""}
-                        aria-label="search-agent"
-                        color="secondary"
-                        edge="end"
-                        onClick={() => {
-                          refetchAgentId();
-                        }}
-                      >
-                        <RestartAltIcon />
-                      </IconButton>
-                    </InputAdornment>
-                  }
-                />
-              </FormControl>
-            )}
-            <TextField
-              type="text"
-              name="firstname"
-              label="First Name"
-              size="small"
-              fullWidth
-              value={state.firstname}
-              onChange={handleInputChange}
-              disabled={state.mode === ""}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-              }}
-              sx={{
-                flex: 1,
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            />
-            <TextField
-              type="text"
-              name="middlename"
-              label="Middle Name"
-              size="small"
-              fullWidth
-              value={state.middlename}
-              onChange={handleInputChange}
-              disabled={state.mode === ""}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-              }}
-              sx={{
-                flex: 1,
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            />
-            <TextField
-              type="text"
-              name="lastname"
-              label="Last Name"
-              size="small"
-              fullWidth
-              required
-              value={state.lastname}
-              onChange={handleInputChange}
-              disabled={state.mode === ""}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-              }}
-              sx={{
-                flex: 1,
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            />
-          </Box>
-          <Box sx={{ display: "flex", gap: "10px" }}>
-            <TextField
-              type="email"
-              name="email"
-              label="Email"
-              size="small"
-              fullWidth
-              required
-              value={state.email}
-              onChange={handleInputChange}
-              disabled={state.mode === ""}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-              }}
-              sx={{
-                flex: 1,
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            />
-            <TextField
-              name="mobile"
-              label="Mobile Number"
-              size="small"
-              fullWidth
-              required
-              value={state.mobile}
-              onChange={handleInputChange}
-              disabled={state.mode === ""}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-                inputComponent: PhoneNumberFormat as any,
-              }}
-              sx={{
-                flex: 1,
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-              placeholder="(+63) 000-000-0000"
-            />
-            <TextField
-              name="telephone"
-              label="Telephone Number"
-              size="small"
-              fullWidth
-              required
-              value={state.telephone}
-              onChange={handleInputChange}
-              disabled={state.mode === ""}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-                inputComponent: TelephoneFormat as any,
-              }}
-              sx={{
-                flex: 1,
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-              placeholder="0000-0000"
-            />
-
-            {subAccountLoading ? (
-              <LoadingButton loading={subAccountLoading} />
-            ) : (
-              <FormControl
-                fullWidth
-                required
-                size="small"
-                sx={{
-                  flex: 1,
-                  ".MuiFormLabel-root": {
-                    fontSize: "14px",
-                    background: "white",
-                    zIndex: 99,
-                    padding: "0 3px",
-                  },
-                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                }}
-              >
-                <InputLabel id="Sub Account">Sub Account</InputLabel>
-                <Select
-                  sx={{
-                    height: "27px",
-                    fontSize: "14px",
-                  }}
-                  disabled={state.mode === ""}
-                  value={state.sub_account}
-                  onChange={(e) => {
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "sub_account",
-                      value: e.target.value,
-                    });
-                  }}
-                  labelId="Sub Account"
-                  label="Sub Account"
-                  name="sub_account"
-                >
-                  {subAccountData?.data.subAccount.map(
-                    (item: {
-                      Sub_Acct: string;
-                      NewShortName: string;
-                      Acronym: string;
-                    }) => {
-                      return (
-                        <MenuItem key={item.Sub_Acct} value={item.Sub_Acct}>
-                          {item.NewShortName}
-                        </MenuItem>
-                      );
-                    }
-                  )}
-                </Select>
-              </FormControl>
-            )}
-          </Box>
-        </Box>
-        <TextField
-          label="Address"
-          name="address"
-          minRows={10}
-          fullWidth
-          size="small"
-          required
-          value={state.address}
-          onChange={handleInputChange}
-          disabled={state.mode === ""}
-          InputProps={{
-            style: { height: "27px", fontSize: "14px" },
-          }}
-          sx={{
-            flex: 1,
-            height: "27px",
-            ".MuiFormLabel-root": { fontSize: "14px" },
-            ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-          }}
-        />
-      </form>
-      <br />
-      <UpwardTable
-        ref={table}
-        isLoading={isLoading || loadingDelete || loadingEdit || loadingAdd}
-        rows={rows}
-        column={agentColumn}
-        width={width}
-        height={height}
-        dataReadOnly={true}
-        onSelectionChange={(rowSelected) => {
-          if (rowSelected.length > 0) {
-            handleInputChange({ target: { value: "edit", name: "mode" } });
-
-            setNewStateValue(dispatch, rowSelected[0]);
-
-          } else {
-            setNewStateValue(dispatch, initialState);
-            handleInputChange({ target: { value: "", name: "mode" } });
-          }
-        }}
-        onKeyDown={(row, key) => {
-          if (key === "Delete" || key === "Backspace") {
-            const rowSelected = row[0];
-            wait(100).then(() => {
-              codeCondfirmationAlert({
-                isUpdate: false,
-                cb: (userCodeConfirmation) => {
-                  mutateDelete({
-                    id: rowSelected.entry_agent_id,
-                    userCodeConfirmation,
-                  });
-                },
               });
-            });
-            return;
-          }
-        }}
-        inputsearchselector=".manok"
-      />
+              return;
+            }
+          }}
+          inputsearchselector=".manok"
+        />
 
-      {/* <div
+        {/* <div
         ref={refParent}
         style={{
           marginTop: "10px",
@@ -844,6 +847,8 @@ export default function Agent() {
           />
         </Box>
       </div> */}
-    </div>
+      </div>
+    </>
+
   );
 }

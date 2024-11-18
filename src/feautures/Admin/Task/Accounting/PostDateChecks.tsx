@@ -40,6 +40,7 @@ import { TextAreaInput, TextInput } from "../../../../components/UpwardFields";
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import { NumericFormat } from "react-number-format";
 import { format } from "date-fns";
+import PageHelmet from "../../../../components/Helmet";
 
 const initialState = {
   Sub_Ref_No: "",
@@ -610,7 +611,7 @@ export default function PostDateChecks() {
         },
       });
     }
-  }, [state ,mutate,pdcDataRows,selectedFiles])
+  }, [state, mutate, pdcDataRows, selectedFiles])
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
@@ -942,651 +943,631 @@ export default function PostDateChecks() {
 
 
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        flex: 1,
-        background: "red",
-        padding: "10px",
-        backgroundColor: "#F8F8FF",
-      }}
-    >
-      {ModalSearchBanks}
-      {UpwardPDCModal}
-      {ModalSearchPdcIDs}
-      <Box
-        sx={(theme) => ({
-          display: "flex",
-          alignItems: "center",
-          columnGap: "20px",
-          [theme.breakpoints.down("sm")]: {
-            flexDirection: "column",
-            alignItems: "flex-start",
-            flex: 1,
-            marginBottom: "15px",
-          },
-        })}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            columnGap: "5px",
-            marginBottom: "15px",
-          }}
-        >
-          {isLoadingModalSearchPDC ? (
-            <LoadingButton loading={isLoadingModalSearchPDC} />
-          ) : (
-            <TextField
-              label="Search"
-              size="small"
-              name="search"
-              value={state.search}
-              onChange={handleInputChange}
-              onKeyDown={(e) => {
-                if (e.code === "Enter" || e.code === "NumpadEnter") {
-                  e.preventDefault();
-                  openUpwardPDCModal((e.target as HTMLInputElement).value);
-                }
-                if (e.key === "ArrowDown") {
-                  e.preventDefault();
-                  const datagridview = document.querySelector(
-                    `.grid-container`
-                  ) as HTMLDivElement;
-                  datagridview.focus();
-                }
-              }}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-                inputRef: searchRef,
-                className: "manok",
-              }}
-              sx={{
-                width: "400px",
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            />
-          )}
-          {state.pdcMode === "" && (
-            <Button
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-              }}
-              variant="contained"
-              startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
-              id="entry-header-save-button"
-              color="primary"
-              onClick={() => {
-                dispatch({
-                  type: "UPDATE_FIELD",
-                  field: "pdcMode",
-                  value: "add",
-                });
-              }}
-            >
-              New
-            </Button>
-          )}
-          <LoadingButton
-            sx={{
-              height: "30px",
-              fontSize: "11px",
-            }}
-            ref={savePDCButtonRef}
-            id="save-entry-header"
-            color="success"
-            variant="contained"
-            type="submit"
-            onClick={handleOnSave}
-            disabled={state.pdcMode === ""}
-            loading={loadingAddNew}
-            startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
-          >
-            Save
-          </LoadingButton>
-          {(state.pdcMode === "add" || state.pdcMode === "update") && (
-            <Button
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-              }}
-              variant="contained"
-              startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
-              onClick={() => {
-                Swal.fire({
-                  title: "Are you sure?",
-                  text: "You won't be able to revert this!",
-                  icon: "warning",
-                  showCancelButton: true,
-                  confirmButtonColor: "#3085d6",
-                  cancelButtonColor: "#d33",
-                  confirmButtonText: "Yes, cancel it!",
-                }).then((result) => {
-                  if (result.isConfirmed) {
-                    initialState.Sub_Ref_No = state.Sub_Ref_No;
-                    initialState.Ref_No = state.Sub_Ref_No;
-                    setNewStateValue(dispatch, initialState);
-                    setPdcDataRows([]);
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "pdcMode",
-                      value: "",
-                    });
-                  }
-                });
-              }}
-              color="error"
-            >
-              Cancel
-            </Button>
-          )}
-          <Button
-            sx={{
-              height: "30px",
-              fontSize: "11px",
-            }}
-            disabled={state.pdcMode === ""}
-            variant="contained"
-            startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
-            onClick={() => {
-              const getLastCheck_No: any = pdcDataRows[pdcDataRows.length - 1];
-              modalPdcCheckInititalState.Check_No = incrementCheckNo(
-                getLastCheck_No?.Check_No
-              );
-              setNewStateValue(
-                dispatchModalPdcCheck,
-                modalPdcCheckInititalState
-              );
-              dispatch({
-                type: "UPDATE_FIELD",
-                field: "checkMode",
-                value: "",
-              });
-              flushSync(() => {
-                setOpenPdcInputModal(true);
-              });
-
-              _checknoRef.current?.focus();
-            }}
-            ref={addRefButton}
-          >
-            Add Check
-          </Button>
-          <div>
-            <Button
-              disabled={state.pdcMode !== "update"}
-              id="basic-button"
-              aria-controls={open ? "basic-menu" : undefined}
-              aria-haspopup="true"
-              aria-expanded={open ? "true" : undefined}
-              onClick={handleClick}
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-                color: "white",
-                backgroundColor: grey[600],
-                "&:hover": {
-                  backgroundColor: grey[700],
-                },
-              }}
-            >
-              Print
-            </Button>
-            <Menu
-              id="basic-menu"
-              anchorEl={anchorEl}
-              open={open}
-              onClose={handleClose}
-              MenuListProps={{
-                "aria-labelledby": "basic-button",
-              }}
-            >
-              <MenuItem onClick={clickPDCReceipt}>PDC Receipt</MenuItem>
-              <MenuItem onClick={clickPDCLabeling}>PDC Labeling</MenuItem>
-            </Menu>
-          </div>
-        </div>
-      </Box>
-      <form
-        onKeyDown={(e) => {
-          if (e.code === "Enter" || e.code === "NumpadEnter") {
-            e.preventDefault();
-            return;
-          }
-        }}
+    <>
+      <PageHelmet title="PDC" />
+      <div
         style={{
-          marginBottom: "20px",
+          width: "100%",
+          height: "100%",
+          flex: 1,
+          background: "red",
+          padding: "10px",
+          backgroundColor: "#F8F8FF",
         }}
       >
+
+        {ModalSearchBanks}
+        {UpwardPDCModal}
+        {ModalSearchPdcIDs}
         <Box
           sx={(theme) => ({
             display: "flex",
-            columnGap: "15px",
-            flexDirection: "row",
-            [theme.breakpoints.down("md")]: {
+            alignItems: "center",
+            columnGap: "20px",
+            [theme.breakpoints.down("sm")]: {
               flexDirection: "column",
-              rowGap: "10px",
+              alignItems: "flex-start",
+              flex: 1,
+              marginBottom: "15px",
             },
           })}
         >
-          <Box
-            sx={{
+          <div
+            style={{
               display: "flex",
-              gap: "10px",
-              width: "100%",
+              alignItems: "center",
+              columnGap: "5px",
+              marginBottom: "15px",
             }}
           >
-            <fieldset
-              style={
-                {
-                  flex: 1,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "10px",
-                  padding: "15px",
-                  border: "1px solid #cbd5e1",
-                  borderRadius: "5px",
-                } as any
-              }
-            >
-              <div
-                style={{
-                  display: "flex",
-                  gap: "10px",
-                }}
-              >
-                {newRefNumberLoading ? (
-                  <LoadingButton loading={newRefNumberLoading} />
-                ) : (
-                  <FormControl
-                    fullWidth
-                    variant="outlined"
-                    size="small"
-                    disabled={isDisableField}
-                    sx={{
-                      ".MuiFormLabel-root": {
-                        fontSize: "14px",
-                        background: "white",
-                        zIndex: 99,
-                        padding: "0 3px",
-                      },
-                      ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                    }}
-                  >
-                    <InputLabel htmlFor="pdc-id-field">
-                      Reference No.
-                    </InputLabel>
-                    <OutlinedInput
-                      readOnly={user?.department !== "UCSMI"}
-                      sx={{
-                        height: "27px",
-                        fontSize: "14px",
-                        fieldset: { borderColor: "black" },
-                      }}
-                      disabled={isDisableField}
-                      label="Reference No."
-                      name="Ref_No"
-                      value={state.Ref_No}
-                      onChange={handleInputChange}
-                      onKeyDown={(e) => {
-                        if (e.code === "Enter" || e.code === "NumpadEnter") {
-                          dateRef.current?.focus()
-                        }
-                      }}
-                      id="pdc-id-field"
-                      endAdornment={
-                        <InputAdornment position="end">
-                          <IconButton
-                            disabled={isDisableField}
-                            aria-label="search-client"
-                            color="secondary"
-                            edge="end"
-                          >
-                            <RestartAltIcon />
-                          </IconButton>
-                        </InputAdornment>
-                      }
-                    />
-                  </FormControl>
-                )}
-                <CustomDatePicker
-                  fullWidth={true}
-                  disabled={isDisableField}
-                  label="Date Received"
-                  onChange={(value: any) => {
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "Date",
-                      value: value,
-                    });
-                  }}
-                  inputRef={dateRef}
-                  value={new Date(state.Date)}
-                  onKeyDown={(e: any) => {
-                    if (e.code === "Enter" || e.code === "NumpadEnter") {
-                      // savePDCButtonRef.current?.click();
-                      remakrsRef.current?.focus()
-                    }
-                  }}
-                  textField={{
-                    InputLabelProps: {
-                      style: {
-                        fontSize: "14px",
-                      },
-                    },
-                    InputProps: {
-                      style: { height: "27px", fontSize: "14px" },
-                    },
-                  }}
-                />
-              </div>
+            {isLoadingModalSearchPDC ? (
+              <LoadingButton loading={isLoadingModalSearchPDC} />
+            ) : (
               <TextField
-                InputLabelProps={{
-                  sx: {
-                    color: "black",
-                  },
-                }}
-                variant="outlined"
+                label="Search"
                 size="small"
-                label="Remarks"
-                name="Remarks"
-                value={state.Remarks}
+                name="search"
+                value={state.search}
                 onChange={handleInputChange}
-                disabled={isDisableField}
                 onKeyDown={(e) => {
                   if (e.code === "Enter" || e.code === "NumpadEnter") {
-                    pnRef.current?.focus()
+                    e.preventDefault();
+                    openUpwardPDCModal((e.target as HTMLInputElement).value);
+                  }
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    const datagridview = document.querySelector(
+                      `.grid-container`
+                    ) as HTMLDivElement;
+                    datagridview.focus();
                   }
                 }}
                 InputProps={{
                   style: { height: "27px", fontSize: "14px" },
-                  inputRef: remakrsRef
+                  inputRef: searchRef,
+                  className: "manok",
                 }}
                 sx={{
-                  fieldset: { borderColor: "black" },
+                  width: "400px",
+                  height: "27px",
                   ".MuiFormLabel-root": { fontSize: "14px" },
                   ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
                 }}
               />
-            </fieldset>
-            <fieldset
-              style={
-                {
-                  flex: 1,
-                  display: "flex",
-                  gap: "10px",
-                  padding: "15px",
-                  border: "1px solid #cbd5e1",
-                  borderRadius: "5px",
-                  flexDirection: "column",
-                } as any
-              }
-            >
-              <div
-                style={{ width: "100%", flex: 1, display: "flex", gap: "10px" }}
-              >
-                {isLoadingModalSearchPdcIDs ? (
-                  <LoadingButton loading={isLoadingModalSearchPdcIDs} />
-                ) : (
-                  <FormControl
-                    fullWidth
-                    variant="outlined"
-                    size="small"
-                    disabled={isDisableField}
-                    sx={{
-                      flex: 1,
-                      ".MuiFormLabel-root": {
-                        fontSize: "14px",
-                        background: "white",
-                        zIndex: 99,
-                        padding: "0 3px",
-                      },
-                      ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                    }}
-                  >
-                    <InputLabel htmlFor="label-input-id">
-                      PN/Client ID
-                    </InputLabel>
-                    <OutlinedInput
-                      inputRef={pnRef}
-                      sx={{
-                        fieldset: { borderColor: "black" },
-
-                        height: "27px",
-                        fontSize: "14px",
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.code === "Enter" || e.code === "NumpadEnter") {
-                          openIdsButtonRef.current?.click();
-                        }
-                      }}
-                      name="PNo"
-                      value={state.PNo}
-                      onChange={handleInputChange}
-                      id="label-input-id"
-                      endAdornment={
-                        <InputAdornment position="end">
-                          <IconButton
-                            ref={openIdsButtonRef}
-                            disabled={isDisableField}
-                            aria-label="search-client"
-                            color="secondary"
-                            edge="end"
-                            onClick={() => openModalSearchPdcIDs(state.PNo)}
-                          >
-                            <PersonSearchIcon />
-                          </IconButton>
-                        </InputAdornment>
-                      }
-                      label="PN/Client ID"
-                    />
-                  </FormControl>
-                )}
-                <TextField
-                  InputLabelProps={{
-                    sx: {
-                      color: "black",
-                    },
-                  }}
-                  variant="outlined"
-                  size="small"
-                  label="Branch"
-                  name="Acronym"
-                  value={state.Acronym}
-                  onChange={handleInputChange}
-                  disabled={isDisableField}
-                  onKeyDown={(e) => {
-                    if (e.code === "Enter" || e.code === "NumpadEnter") {
-                      clientnameRef.current?.focus();
-                    }
-                  }}
-                  InputProps={{
-                    style: { height: "27px", fontSize: "14px" },
-                    readOnly: true,
-                    inputRef: branchRef
-                  }}
-                  sx={{
-                    fieldset: { borderColor: "black" },
-                    flex: 1,
-                    height: "27px",
-                    ".MuiFormLabel-root": { fontSize: "14px" },
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                  }}
-                />
-              </div>
-              <div
-                style={{ width: "100%", display: "flex", columnGap: "10px" }}
-              >
-                <TextField
-                  InputLabelProps={{
-                    sx: {
-                      color: "black",
-                    },
-                  }}
-                  variant="outlined"
-                  size="small"
-                  label="Clients Name"
-                  name="Name"
-                  value={state.Name}
-                  onChange={handleInputChange}
-                  disabled={isDisableField}
-                  onKeyDown={(e) => {
-                    if (e.code === "Enter" || e.code === "NumpadEnter") {
-                      savePDCButtonRef.current?.click();
-                    }
-                  }}
-                  InputProps={{
-                    style: { height: "27px", fontSize: "14px" },
-                    readOnly: true,
-                    inputRef: clientnameRef
-                  }}
-                  sx={{
-                    fieldset: { borderColor: "black" },
-                    flex: 1,
-                    height: "27px",
-                    ".MuiFormLabel-root": { fontSize: "14px" },
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                  }}
-                />
-                <Button
-                  sx={{
-                    height: "27px",
-                    fontSize: "11px",
-                  }}
-                  disabled={state.pdcMode === ""}
-                  variant="contained"
-                  startIcon={<DownloadIcon sx={{ width: 15, height: 15 }} />}
-                  onClick={() => {
-                    setShowModal(true);
-                  }}
-                >
-                  Upload Check
-                </Button>
-              </div>
-            </fieldset>
-          </Box>
-        </Box>
-      </form>
-      <UpwardTable
-        isLoading={isLoadingSelectedSearch}
-        ref={tableRef}
-        rows={pdcDataRows}
-        column={pdcColumn}
-        width={width}
-        height={height}
-        dataReadOnly={true}
-        onSelectionChange={onSelectionChange}
-        onKeyDown={(row, key) => {
-          if (key === "Delete" || key === "Backspace") {
-            const rowSelected = row[0];
-            if (
-              (rowSelected.Deposit_Slip && rowSelected.Deposit_Slip !== "") ||
-              (rowSelected.DateDeposit && rowSelected.DateDeposit !== "") ||
-              (rowSelected.OR_No && rowSelected.OR_No !== "")
-            ) {
-              return Swal.fire({
-                position: "center",
-                icon: "warning",
-                title: `Unable to delete. Check No ${rowSelected.Check_No} is already ${rowSelected.OR_No} issued of OR!`,
-                showConfirmButton: false,
-                timer: 1500,
-              });
-            }
-            Swal.fire({
-              title: "Are you sure?",
-              text: `You won't to delete this Check No. ${rowSelected.Check_No}`,
-              icon: "warning",
-              showCancelButton: true,
-              confirmButtonColor: "#3085d6",
-              cancelButtonColor: "#d33",
-              confirmButtonText: "Yes, delete it!",
-            }).then((result) => {
-              if (result.isConfirmed) {
-                setTimeout(() => {
-                  const selectedIndex = tableRef.current.getSelectedRowsOnClick()
-                  setPdcDataRows((dt) => {
-                    return dt.filter(
-                      (item: any, idx: number) => idx !== selectedIndex
-                    );
+            )}
+            {state.pdcMode === "" && (
+              <Button
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                }}
+                variant="contained"
+                startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+                id="entry-header-save-button"
+                color="primary"
+                onClick={() => {
+                  dispatch({
+                    type: "UPDATE_FIELD",
+                    field: "pdcMode",
+                    value: "add",
                   });
-                  tableRef.current?.resetTableSelected();
-                }, 100)
-              }
-            });
-          }
-        }}
-        inputsearchselector=".manok"
-      />
+                }}
+              >
+                New
+              </Button>
+            )}
+            <LoadingButton
+              sx={{
+                height: "30px",
+                fontSize: "11px",
+              }}
+              ref={savePDCButtonRef}
+              id="save-entry-header"
+              color="success"
+              variant="contained"
+              type="submit"
+              onClick={handleOnSave}
+              disabled={state.pdcMode === ""}
+              loading={loadingAddNew}
+              startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
+            >
+              Save
+            </LoadingButton>
+            {(state.pdcMode === "add" || state.pdcMode === "update") && (
+              <Button
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                }}
+                variant="contained"
+                startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
+                onClick={() => {
+                  Swal.fire({
+                    title: "Are you sure?",
+                    text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Yes, cancel it!",
+                  }).then((result) => {
+                    if (result.isConfirmed) {
+                      initialState.Sub_Ref_No = state.Sub_Ref_No;
+                      initialState.Ref_No = state.Sub_Ref_No;
+                      setNewStateValue(dispatch, initialState);
+                      setPdcDataRows([]);
+                      dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "pdcMode",
+                        value: "",
+                      });
+                    }
+                  });
+                }}
+                color="error"
+              >
+                Cancel
+              </Button>
+            )}
+            <Button
+              sx={{
+                height: "30px",
+                fontSize: "11px",
+              }}
+              disabled={state.pdcMode === ""}
+              variant="contained"
+              startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+              onClick={() => {
+                const getLastCheck_No: any = pdcDataRows[pdcDataRows.length - 1];
+                modalPdcCheckInititalState.Check_No = incrementCheckNo(
+                  getLastCheck_No?.Check_No
+                );
+                setNewStateValue(
+                  dispatchModalPdcCheck,
+                  modalPdcCheckInititalState
+                );
+                dispatch({
+                  type: "UPDATE_FIELD",
+                  field: "checkMode",
+                  value: "",
+                });
+                flushSync(() => {
+                  setOpenPdcInputModal(true);
+                });
 
-      <Modal
-        open={openPdcInputModal}
-        onClose={() => {
-          tableRef.current?.resetTableSelected();
-          setOpenPdcInputModal(false);
-          focusOnTable()
-        }}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
-        <Box
-          sx={{
-            position: "absolute" as "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: "auto",
-            bgcolor: "background.paper",
-            p: 4,
+                _checknoRef.current?.focus();
+              }}
+              ref={addRefButton}
+            >
+              Add Check
+            </Button>
+            <div>
+              <Button
+                disabled={state.pdcMode !== "update"}
+                id="basic-button"
+                aria-controls={open ? "basic-menu" : undefined}
+                aria-haspopup="true"
+                aria-expanded={open ? "true" : undefined}
+                onClick={handleClick}
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                  color: "white",
+                  backgroundColor: grey[600],
+                  "&:hover": {
+                    backgroundColor: grey[700],
+                  },
+                }}
+              >
+                Print
+              </Button>
+              <Menu
+                id="basic-menu"
+                anchorEl={anchorEl}
+                open={open}
+                onClose={handleClose}
+                MenuListProps={{
+                  "aria-labelledby": "basic-button",
+                }}
+              >
+                <MenuItem onClick={clickPDCReceipt}>PDC Receipt</MenuItem>
+                <MenuItem onClick={clickPDCLabeling}>PDC Labeling</MenuItem>
+              </Menu>
+            </div>
+          </div>
+        </Box>
+        <form
+          onKeyDown={(e) => {
+            if (e.code === "Enter" || e.code === "NumpadEnter") {
+              e.preventDefault();
+              return;
+            }
+          }}
+          style={{
+            marginBottom: "20px",
           }}
         >
-          <Typography id="modal-modal-title" variant="h6" component="h2">
-            Check Detail
-          </Typography>
-          <br />
-          <div
-            style={{
+          <Box
+            sx={(theme) => ({
               display: "flex",
-              columnGap: "10px",
+              columnGap: "15px",
+              flexDirection: "row",
+              [theme.breakpoints.down("md")]: {
+                flexDirection: "column",
+                rowGap: "10px",
+              },
+            })}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                gap: "10px",
+                width: "100%",
+              }}
+            >
+              <fieldset
+                style={
+                  {
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "10px",
+                    padding: "15px",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: "5px",
+                  } as any
+                }
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "10px",
+                  }}
+                >
+                  {newRefNumberLoading ? (
+                    <LoadingButton loading={newRefNumberLoading} />
+                  ) : (
+                    <FormControl
+                      fullWidth
+                      variant="outlined"
+                      size="small"
+                      disabled={isDisableField}
+                      sx={{
+                        ".MuiFormLabel-root": {
+                          fontSize: "14px",
+                          background: "white",
+                          zIndex: 99,
+                          padding: "0 3px",
+                        },
+                        ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                      }}
+                    >
+                      <InputLabel htmlFor="pdc-id-field">
+                        Reference No.
+                      </InputLabel>
+                      <OutlinedInput
+                        readOnly={user?.department !== "UCSMI"}
+                        sx={{
+                          height: "27px",
+                          fontSize: "14px",
+                          fieldset: { borderColor: "black" },
+                        }}
+                        disabled={isDisableField}
+                        label="Reference No."
+                        name="Ref_No"
+                        value={state.Ref_No}
+                        onChange={handleInputChange}
+                        onKeyDown={(e) => {
+                          if (e.code === "Enter" || e.code === "NumpadEnter") {
+                            dateRef.current?.focus()
+                          }
+                        }}
+                        id="pdc-id-field"
+                        endAdornment={
+                          <InputAdornment position="end">
+                            <IconButton
+                              disabled={isDisableField}
+                              aria-label="search-client"
+                              color="secondary"
+                              edge="end"
+                            >
+                              <RestartAltIcon />
+                            </IconButton>
+                          </InputAdornment>
+                        }
+                      />
+                    </FormControl>
+                  )}
+                  <CustomDatePicker
+                    fullWidth={true}
+                    disabled={isDisableField}
+                    label="Date Received"
+                    onChange={(value: any) => {
+                      dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "Date",
+                        value: value,
+                      });
+                    }}
+                    inputRef={dateRef}
+                    value={new Date(state.Date)}
+                    onKeyDown={(e: any) => {
+                      if (e.code === "Enter" || e.code === "NumpadEnter") {
+                        // savePDCButtonRef.current?.click();
+                        remakrsRef.current?.focus()
+                      }
+                    }}
+                    textField={{
+                      InputLabelProps: {
+                        style: {
+                          fontSize: "14px",
+                        },
+                      },
+                      InputProps: {
+                        style: { height: "27px", fontSize: "14px" },
+                      },
+                    }}
+                  />
+                </div>
+                <TextField
+                  InputLabelProps={{
+                    sx: {
+                      color: "black",
+                    },
+                  }}
+                  variant="outlined"
+                  size="small"
+                  label="Remarks"
+                  name="Remarks"
+                  value={state.Remarks}
+                  onChange={handleInputChange}
+                  disabled={isDisableField}
+                  onKeyDown={(e) => {
+                    if (e.code === "Enter" || e.code === "NumpadEnter") {
+                      pnRef.current?.focus()
+                    }
+                  }}
+                  InputProps={{
+                    style: { height: "27px", fontSize: "14px" },
+                    inputRef: remakrsRef
+                  }}
+                  sx={{
+                    fieldset: { borderColor: "black" },
+                    ".MuiFormLabel-root": { fontSize: "14px" },
+                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                  }}
+                />
+              </fieldset>
+              <fieldset
+                style={
+                  {
+                    flex: 1,
+                    display: "flex",
+                    gap: "10px",
+                    padding: "15px",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: "5px",
+                    flexDirection: "column",
+                  } as any
+                }
+              >
+                <div
+                  style={{ width: "100%", flex: 1, display: "flex", gap: "10px" }}
+                >
+                  {isLoadingModalSearchPdcIDs ? (
+                    <LoadingButton loading={isLoadingModalSearchPdcIDs} />
+                  ) : (
+                    <FormControl
+                      fullWidth
+                      variant="outlined"
+                      size="small"
+                      disabled={isDisableField}
+                      sx={{
+                        flex: 1,
+                        ".MuiFormLabel-root": {
+                          fontSize: "14px",
+                          background: "white",
+                          zIndex: 99,
+                          padding: "0 3px",
+                        },
+                        ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                      }}
+                    >
+                      <InputLabel htmlFor="label-input-id">
+                        PN/Client ID
+                      </InputLabel>
+                      <OutlinedInput
+                        inputRef={pnRef}
+                        sx={{
+                          fieldset: { borderColor: "black" },
+
+                          height: "27px",
+                          fontSize: "14px",
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.code === "Enter" || e.code === "NumpadEnter") {
+                            openIdsButtonRef.current?.click();
+                          }
+                        }}
+                        name="PNo"
+                        value={state.PNo}
+                        onChange={handleInputChange}
+                        id="label-input-id"
+                        endAdornment={
+                          <InputAdornment position="end">
+                            <IconButton
+                              ref={openIdsButtonRef}
+                              disabled={isDisableField}
+                              aria-label="search-client"
+                              color="secondary"
+                              edge="end"
+                              onClick={() => openModalSearchPdcIDs(state.PNo)}
+                            >
+                              <PersonSearchIcon />
+                            </IconButton>
+                          </InputAdornment>
+                        }
+                        label="PN/Client ID"
+                      />
+                    </FormControl>
+                  )}
+                  <TextField
+                    InputLabelProps={{
+                      sx: {
+                        color: "black",
+                      },
+                    }}
+                    variant="outlined"
+                    size="small"
+                    label="Branch"
+                    name="Acronym"
+                    value={state.Acronym}
+                    onChange={handleInputChange}
+                    disabled={isDisableField}
+                    onKeyDown={(e) => {
+                      if (e.code === "Enter" || e.code === "NumpadEnter") {
+                        clientnameRef.current?.focus();
+                      }
+                    }}
+                    InputProps={{
+                      style: { height: "27px", fontSize: "14px" },
+                      readOnly: true,
+                      inputRef: branchRef
+                    }}
+                    sx={{
+                      fieldset: { borderColor: "black" },
+                      flex: 1,
+                      height: "27px",
+                      ".MuiFormLabel-root": { fontSize: "14px" },
+                      ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                    }}
+                  />
+                </div>
+                <div
+                  style={{ width: "100%", display: "flex", columnGap: "10px" }}
+                >
+                  <TextField
+                    InputLabelProps={{
+                      sx: {
+                        color: "black",
+                      },
+                    }}
+                    variant="outlined"
+                    size="small"
+                    label="Clients Name"
+                    name="Name"
+                    value={state.Name}
+                    onChange={handleInputChange}
+                    disabled={isDisableField}
+                    onKeyDown={(e) => {
+                      if (e.code === "Enter" || e.code === "NumpadEnter") {
+                        savePDCButtonRef.current?.click();
+                      }
+                    }}
+                    InputProps={{
+                      style: { height: "27px", fontSize: "14px" },
+                      readOnly: true,
+                      inputRef: clientnameRef
+                    }}
+                    sx={{
+                      fieldset: { borderColor: "black" },
+                      flex: 1,
+                      height: "27px",
+                      ".MuiFormLabel-root": { fontSize: "14px" },
+                      ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                    }}
+                  />
+                  <Button
+                    sx={{
+                      height: "27px",
+                      fontSize: "11px",
+                    }}
+                    disabled={state.pdcMode === ""}
+                    variant="contained"
+                    startIcon={<DownloadIcon sx={{ width: 15, height: 15 }} />}
+                    onClick={() => {
+                      setShowModal(true);
+                    }}
+                  >
+                    Upload Check
+                  </Button>
+                </div>
+              </fieldset>
+            </Box>
+          </Box>
+        </form>
+        <UpwardTable
+          isLoading={isLoadingSelectedSearch}
+          ref={tableRef}
+          rows={pdcDataRows}
+          column={pdcColumn}
+          width={width}
+          height={height}
+          dataReadOnly={true}
+          onSelectionChange={onSelectionChange}
+          onKeyDown={(row, key) => {
+            if (key === "Delete" || key === "Backspace") {
+              const rowSelected = row[0];
+              if (
+                (rowSelected.Deposit_Slip && rowSelected.Deposit_Slip !== "") ||
+                (rowSelected.DateDeposit && rowSelected.DateDeposit !== "") ||
+                (rowSelected.OR_No && rowSelected.OR_No !== "")
+              ) {
+                return Swal.fire({
+                  position: "center",
+                  icon: "warning",
+                  title: `Unable to delete. Check No ${rowSelected.Check_No} is already ${rowSelected.OR_No} issued of OR!`,
+                  showConfirmButton: false,
+                  timer: 1500,
+                });
+              }
+              Swal.fire({
+                title: "Are you sure?",
+                text: `You won't to delete this Check No. ${rowSelected.Check_No}`,
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, delete it!",
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  setTimeout(() => {
+                    const selectedIndex = tableRef.current.getSelectedRowsOnClick()
+                    setPdcDataRows((dt) => {
+                      return dt.filter(
+                        (item: any, idx: number) => idx !== selectedIndex
+                      );
+                    });
+                    tableRef.current?.resetTableSelected();
+                  }, 100)
+                }
+              });
+            }
+          }}
+          inputsearchselector=".manok"
+        />
+
+        <Modal
+          open={openPdcInputModal}
+          onClose={() => {
+            tableRef.current?.resetTableSelected();
+            setOpenPdcInputModal(false);
+            focusOnTable()
+          }}
+          aria-labelledby="modal-modal-title"
+          aria-describedby="modal-modal-description"
+        >
+          <Box
+            sx={{
+              position: "absolute" as "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: "auto",
+              bgcolor: "background.paper",
+              p: 4,
             }}
           >
+            <Typography id="modal-modal-title" variant="h6" component="h2">
+              Check Detail
+            </Typography>
+            <br />
             <div
               style={{
                 display: "flex",
-                flexDirection: "column",
-                gap: "10px",
+                columnGap: "10px",
               }}
             >
-              <TextInput
-                label={{
-                  title: "Check No : ",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "70px",
-                  },
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "10px",
                 }}
-                input={{
-                  type: "text",
-                  style: { width: "190px" },
-                  onKeyDown: (e) => {
-                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                      _bankRef.current?.focus()
-                    }
-                  },
-                }}
-                inputRef={_checknoRef}
-              />
-              {isLoadingModalSearchbanks ? (
-                <LoadingButton loading={isLoadingModalSearchbanks} />
-              ) : (
+              >
                 <TextInput
                   label={{
-                    title: "Bank : ",
+                    title: "Check No : ",
                     style: {
                       fontSize: "12px",
                       fontWeight: "bold",
@@ -1596,143 +1577,108 @@ export default function PostDateChecks() {
                   input={{
                     type: "text",
                     style: { width: "190px" },
-                    value: state.refNo,
-                    name: "refNo",
                     onKeyDown: (e) => {
                       if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                        return openModalSearchBanks(
-                          e.currentTarget.value
-                        );
+                        _bankRef.current?.focus()
                       }
-                    }
+                    },
                   }}
-                  icon={<AccountBalanceIcon sx={{ fontSize: "18px" }} />}
-                  onIconClick={(e) => {
-                    e.preventDefault()
-                    if (_bankRef.current) {
-                      openModalSearchBanks(
-                        _bankRef.current?.value
-                      );
-                    }
-                  }}
-                  inputRef={_bankRef}
+                  inputRef={_checknoRef}
                 />
-              )}
-
-              <TextInput
-                label={{
-                  title: "Branch : ",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "70px",
-                  },
-                }}
-                input={{
-                  type: "text",
-                  style: { width: "190px" },
-                  onKeyDown: (e) => {
-                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                      _remarksRef.current?.focus()
-                    }
-                  },
-                }}
-                inputRef={_branchRef}
-              />
-              <TextAreaInput
-                label={{
-                  title: "Remarks : ",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "70px",
-                  },
-                }}
-                textarea={{
-                  rows: 4,
-                  disabled: isDisableField,
-                  style: { flex: 1 },
-                  onKeyDown: (e) => {
-                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                      _chekdateRef.current?.focus()
-                    }
-                  },
-                }}
-                _inputRef={_remarksRef}
-              />
-            </div>
-            <div
-              style={{
-                display: "flex",
-                gap: "10px",
-                flexDirection: "column",
-              }}
-            >
-
-              <TextInput
-                label={{
-                  title: "Check Dated : ",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "90px",
-                  },
-                }}
-                input={{
-                  disabled: isDisableField,
-                  type: "date",
-                  style: { width: "190px" },
-                  defaultValue: new Date().toISOString().split("T")[0],
-                  onKeyDown: (e) => {
-                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                      _amountRef.current?.focus()
-                    }
-                  },
-                }}
-                inputRef={_chekdateRef}
-              />
-
-              <div style={{
-                display: "flex"
-              }}>
-                <label style={{
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "90px",
-                }}>Amount :</label>
-                <NumericFormat
-                  style={{
-                    flex: 1
-                  }}
-                  value={_amountRef.current?.value ?? ""}
-                  getInputRef={_amountRef}
-                  allowNegative={false}
-                  thousandSeparator
-                  valueIsNumericString
-                  onKeyDown={(e) => {
-                    if (e.code === "Enter" || e.code === "NumpadEnter") {
-                      let currentValue = _amountRef.current?.value as string;
-                      let numericValue = parseFloat(currentValue.replace(/,/g, ''));
-                      if (_amountRef.current) {
-                        if (isNaN(numericValue)) {
-                          _amountRef.current.value = "0.00";
-                        } else {
-                          if (!currentValue.includes(".")) {
-                            _amountRef.current.value = `${formatNumber(numericValue)}`;
-                          } else {
-                            _amountRef.current.value = formatNumber(numericValue);
-                          }
+                {isLoadingModalSearchbanks ? (
+                  <LoadingButton loading={isLoadingModalSearchbanks} />
+                ) : (
+                  <TextInput
+                    label={{
+                      title: "Bank : ",
+                      style: {
+                        fontSize: "12px",
+                        fontWeight: "bold",
+                        width: "70px",
+                      },
+                    }}
+                    input={{
+                      type: "text",
+                      style: { width: "190px" },
+                      value: state.refNo,
+                      name: "refNo",
+                      onKeyDown: (e) => {
+                        if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                          return openModalSearchBanks(
+                            e.currentTarget.value
+                          );
                         }
                       }
-                      _checkcountRef.current?.focus()
-                    }
-                  }}
-                />
-              </div>
-              {state.checkMode !== "update" && (
+                    }}
+                    icon={<AccountBalanceIcon sx={{ fontSize: "18px" }} />}
+                    onIconClick={(e) => {
+                      e.preventDefault()
+                      if (_bankRef.current) {
+                        openModalSearchBanks(
+                          _bankRef.current?.value
+                        );
+                      }
+                    }}
+                    inputRef={_bankRef}
+                  />
+                )}
+
                 <TextInput
                   label={{
-                    title: "Check Count : ",
+                    title: "Branch : ",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "70px",
+                    },
+                  }}
+                  input={{
+                    type: "text",
+                    style: { width: "190px" },
+                    onKeyDown: (e) => {
+                      if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                        _remarksRef.current?.focus()
+                      }
+                    },
+                  }}
+                  inputRef={_branchRef}
+                />
+                <TextAreaInput
+                  label={{
+                    title: "Remarks : ",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "70px",
+                    },
+                  }}
+                  textarea={{
+                    rows: 4,
+                    disabled: isDisableField,
+                    style: { flex: 1 },
+                    onKeyDown: (e) => {
+                      if (e.key === "Enter" && e.shiftKey) {
+                        return
+                      }
+                      if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                        _chekdateRef.current?.focus()
+                      }
+                    },
+                  }}
+                  _inputRef={_remarksRef}
+                />
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "10px",
+                  flexDirection: "column",
+                }}
+              >
+
+                <TextInput
+                  label={{
+                    title: "Check Dated : ",
                     style: {
                       fontSize: "12px",
                       fontWeight: "bold",
@@ -1741,266 +1687,328 @@ export default function PostDateChecks() {
                   }}
                   input={{
                     disabled: isDisableField,
-                    type: "number",
+                    type: "date",
                     style: { width: "190px" },
+                    defaultValue: new Date().toISOString().split("T")[0],
                     onKeyDown: (e) => {
                       if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                        const timeout = setTimeout(() => {
-                          checkModalSaveButton.current?.click();
-                          clearTimeout(timeout);
-                        }, 100);
+                        _amountRef.current?.focus()
                       }
                     },
                   }}
-                  inputRef={_checkcountRef}
+                  inputRef={_chekdateRef}
                 />
-              )}
-            </div>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              width: "100%",
-              marginTop: "10px",
-            }}
-          >
-            <div style={{ display: "flex", gap: "10px" }}>
-              <Button
-                ref={checkModalSaveButton}
-                action={checkModalSaveButtonActionRef}
-                color="primary"
-                variant="contained"
-                autoFocus={state.checkMode !== ""}
-                onClick={() => {
-                  handleCheckDetailsSave()
-                }}
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                }}
-              >
-                {state.checkMode === "update" ? "Update" : "Save"}
-              </Button>
-              {state.checkMode === "update" && (
-                <Button
-                  color="error"
-                  variant="contained"
-                  onClick={() => {
-                    flushSync(() => {
-                      setOpenPdcInputModal(false);
-                    });
-                    Swal.fire({
-                      title: "Are you sure?",
-                      text: `Delete Check ${stateModalPdcCheck.Check_No} `,
-                      icon: "warning",
-                      showCancelButton: true,
-                      confirmButtonColor: "#3085d6",
-                      cancelButtonColor: "#d33",
-                      confirmButtonText: "Yes, delete it!",
-                    }).then((result) => {
-                      if (result.isConfirmed) {
-                        setPdcDataRows((dt) => {
-                          dt = dt.filter(
-                            (items: any) =>
-                              items.CheckIdx !== stateModalPdcCheck.CheckIdx
-                          );
-                          return dt;
-                        });
+
+                <div style={{
+                  display: "flex"
+                }}>
+                  <label style={{
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "90px",
+                  }}>Amount :</label>
+                  <NumericFormat
+                    style={{
+                      flex: 1
+                    }}
+                    value={_amountRef.current?.value ?? ""}
+                    getInputRef={_amountRef}
+                    allowNegative={false}
+                    thousandSeparator
+                    valueIsNumericString
+                    onKeyDown={(e) => {
+                      if (e.code === "Enter" || e.code === "NumpadEnter") {
+                        let currentValue = _amountRef.current?.value as string;
+                        let numericValue = parseFloat(currentValue.replace(/,/g, ''));
+                        if (_amountRef.current) {
+                          if (isNaN(numericValue)) {
+                            _amountRef.current.value = "0.00";
+                          } else {
+                            if (!currentValue.includes(".")) {
+                              _amountRef.current.value = `${formatNumber(numericValue)}`;
+                            } else {
+                              _amountRef.current.value = formatNumber(numericValue);
+                            }
+                          }
+                        }
+                        _checkcountRef.current?.focus()
                       }
-                      focusOnTable()
-                    });
+                    }}
+                  />
+                </div>
+                {state.checkMode !== "update" && (
+                  <TextInput
+                    label={{
+                      title: "Check Count : ",
+                      style: {
+                        fontSize: "12px",
+                        fontWeight: "bold",
+                        width: "90px",
+                      },
+                    }}
+                    input={{
+                      disabled: isDisableField,
+                      type: "number",
+                      style: { width: "190px" },
+                      onKeyDown: (e) => {
+                        if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                          const timeout = setTimeout(() => {
+                            checkModalSaveButton.current?.click();
+                            clearTimeout(timeout);
+                          }, 100);
+                        }
+                      },
+                    }}
+                    inputRef={_checkcountRef}
+                  />
+                )}
+              </div>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                width: "100%",
+                marginTop: "10px",
+              }}
+            >
+              <div style={{ display: "flex", gap: "10px" }}>
+                <Button
+                  ref={checkModalSaveButton}
+                  action={checkModalSaveButtonActionRef}
+                  color="primary"
+                  variant="contained"
+                  autoFocus={state.checkMode !== ""}
+                  onClick={() => {
+                    handleCheckDetailsSave()
                   }}
                   sx={{
                     height: "30px",
                     fontSize: "11px",
                   }}
                 >
-                  Delete
+                  {state.checkMode === "update" ? "Update" : "Save"}
                 </Button>
-              )}
-              <Button
-                color="success"
-                variant="contained"
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                }}
-                onClick={() => {
-                  focusOnTable()
-                  setOpenPdcInputModal(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <IconButton
-                style={{
-                  position: "absolute",
-                  top: "10px",
-                  right: "10px",
-                }}
-                aria-label="search-client"
-                onClick={() => {
-                  setOpenPdcInputModal(false);
-                  focusOnTable()
-                }}
-              >
-                <CloseIcon />
-              </IconButton>
+                {state.checkMode === "update" && (
+                  <Button
+                    color="error"
+                    variant="contained"
+                    onClick={() => {
+                      flushSync(() => {
+                        setOpenPdcInputModal(false);
+                      });
+                      Swal.fire({
+                        title: "Are you sure?",
+                        text: `Delete Check ${stateModalPdcCheck.Check_No} `,
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#3085d6",
+                        cancelButtonColor: "#d33",
+                        confirmButtonText: "Yes, delete it!",
+                      }).then((result) => {
+                        if (result.isConfirmed) {
+                          setPdcDataRows((dt) => {
+                            dt = dt.filter(
+                              (items: any) =>
+                                items.CheckIdx !== stateModalPdcCheck.CheckIdx
+                            );
+                            return dt;
+                          });
+                        }
+                        focusOnTable()
+                      });
+                    }}
+                    sx={{
+                      height: "30px",
+                      fontSize: "11px",
+                    }}
+                  >
+                    Delete
+                  </Button>
+                )}
+                <Button
+                  color="success"
+                  variant="contained"
+                  sx={{
+                    height: "30px",
+                    fontSize: "11px",
+                  }}
+                  onClick={() => {
+                    focusOnTable()
+                    setOpenPdcInputModal(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <IconButton
+                  style={{
+                    position: "absolute",
+                    top: "10px",
+                    right: "10px",
+                  }}
+                  aria-label="search-client"
+                  onClick={() => {
+                    setOpenPdcInputModal(false);
+                    focusOnTable()
+                  }}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </div>
             </div>
-          </div>
-        </Box>
-      </Modal>
-      <div
-        style={{
-          display: showModal ? "flex" : "none",
-          position: "absolute",
-          top: 0,
-          bottom: 0,
-          left: 0,
-          right: 0,
-          background: "rgba(158, 155, 157, 0.31)",
-          zIndex: "999",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
+          </Box>
+        </Modal>
         <div
           style={{
-            width: "90%",
-            height: "90%",
+            display: showModal ? "flex" : "none",
+            position: "absolute",
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            background: "rgba(158, 155, 157, 0.31)",
+            zIndex: "999",
+            justifyContent: "center",
+            alignItems: "center",
           }}
         >
           <div
             style={{
               width: "90%",
               height: "90%",
-              overflow: "auto",
-              background: "white",
-              padding: "20px",
-              margin: "auto",
-              zIndex: "9929",
-              boxShadow: " -1px 1px 13px 6px rgba(0,0,0,0.54)",
-              position: "relative",
             }}
           >
             <div
               style={{
-                height: "100%",
-                width: "100%",
+                width: "90%",
+                height: "90%",
+                overflow: "auto",
+                background: "white",
+                padding: "20px",
+                margin: "auto",
+                zIndex: "9929",
+                boxShadow: " -1px 1px 13px 6px rgba(0,0,0,0.54)",
                 position: "relative",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                flexDirection: "column",
               }}
             >
-              <IconButton
-                sx={{
-                  position: "absolute",
-                  right: "5px",
-                  top: "5px",
-                }}
-                onClick={() => {
-                  setShowModal(false);
-                }}
-              >
-                <CloseIcon />
-              </IconButton>
               <div
                 style={{
+                  height: "100%",
                   width: "100%",
-                  height: "500px",
-                  border: isDragging ? "5px dashed green" : "5px dashed grey",
-                  overflow: "auto",
-                  padding: "10px",
+                  position: "relative",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  flexDirection: "column",
                 }}
-                onDragEnter={handleDragEnter}
-                onDragOver={(e) => e.preventDefault()}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
               >
+                <IconButton
+                  sx={{
+                    position: "absolute",
+                    right: "5px",
+                    top: "5px",
+                  }}
+                  onClick={() => {
+                    setShowModal(false);
+                  }}
+                >
+                  <CloseIcon />
+                </IconButton>
                 <div
-                  id="upload-container"
                   style={{
                     width: "100%",
-                    height: "100%",
-                    display: "flex",
-                    gap: "10px",
-                    flexWrap: "wrap",
+                    height: "500px",
+                    border: isDragging ? "5px dashed green" : "5px dashed grey",
+                    overflow: "auto",
+                    padding: "10px",
                   }}
                   onDragEnter={handleDragEnter}
                   onDragOver={(e) => e.preventDefault()}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
                 >
-                  {selectedFiles.map((itm, idx) => {
-                    return (
-                      <DisplayFile
-                        key={idx}
-                        itm={itm}
-                        selectedFiles={selectedFiles}
-                        setSelectedFiles={setSelectedFiles}
-                        fileInput={fileInputRef}
-                      />
-                    );
-                  })}
-                </div>
-                {selectedFiles.length <= 0 && (
                   <div
+                    id="upload-container"
                     style={{
-                      position: "absolute",
-                      top: "50%",
-                      left: "50%",
-                      transform: "translate(-50%,-50%)",
-                      textAlign: "center",
+                      width: "100%",
+                      height: "100%",
+                      display: "flex",
+                      gap: "10px",
+                      flexWrap: "wrap",
                     }}
+                    onDragEnter={handleDragEnter}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
                   >
-                    <DriveFolderUploadIcon
-                      sx={{ fontSize: "20em", color: "#64748b" }}
-                    />
+                    {selectedFiles.map((itm, idx) => {
+                      return (
+                        <DisplayFile
+                          key={idx}
+                          itm={itm}
+                          selectedFiles={selectedFiles}
+                          setSelectedFiles={setSelectedFiles}
+                          fileInput={fileInputRef}
+                        />
+                      );
+                    })}
                   </div>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  style={{ display: "none", background: "white" }}
-                  id="input-file"
-                  onChange={(e) => {
-                    const fileList = e.target.files as FileList;
-                    const files = Array.from(fileList);
-                    const newFiles = [...selectedFiles, ...files];
-                    if (checkFile(newFiles)) {
-                      return alert("file is not valid Extention!");
-                    }
-                    setSelectedFiles(newFiles);
-                  }}
-                />
-              </div>
-              <div
-                style={{
-                  width: "100%",
-                }}
-              >
-                <Button
-                  fullWidth
-                  onClick={() => {
-                    const inputFile = document.getElementById("input-file");
-                    inputFile?.click();
+                  {selectedFiles.length <= 0 && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%,-50%)",
+                        textAlign: "center",
+                      }}
+                    >
+                      <DriveFolderUploadIcon
+                        sx={{ fontSize: "20em", color: "#64748b" }}
+                      />
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    style={{ display: "none", background: "white" }}
+                    id="input-file"
+                    onChange={(e) => {
+                      const fileList = e.target.files as FileList;
+                      const files = Array.from(fileList);
+                      const newFiles = [...selectedFiles, ...files];
+                      if (checkFile(newFiles)) {
+                        return alert("file is not valid Extention!");
+                      }
+                      setSelectedFiles(newFiles);
+                    }}
+                  />
+                </div>
+                <div
+                  style={{
+                    width: "100%",
                   }}
                 >
-                  CLick it to upload
-                </Button>
+                  <Button
+                    fullWidth
+                    onClick={() => {
+                      const inputFile = document.getElementById("input-file");
+                      inputFile?.click();
+                    }}
+                  >
+                    CLick it to upload
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-      {(loadingAddNew ||
-        isLoadingSelectedSearch) && <div className="loading-component"><div className="loader"></div></div>}
+        {(loadingAddNew ||
+          isLoadingSelectedSearch) && <div className="loading-component"><div className="loader"></div></div>}
 
-    </div>
+      </div>
+    </>
   );
 }
 export function setNewStateValue(dispatch: any, obj: any) {

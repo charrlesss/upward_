@@ -24,6 +24,7 @@ import { differenceInDays } from "date-fns";
 import { setNewStateValue } from "./PostDateChecks";
 import { NumericFormatCustom } from "../../../../components/NumberFormat";
 import { addDays } from "date-fns";
+import PageHelmet from "../../../../components/Helmet";
 
 const requestInitialState = {
   RPCD: "",
@@ -118,33 +119,19 @@ export default function ChekPostponement() {
   });
 
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "auto",
-        maxHeight: "100%",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <div style={{ display: "flex" }}>
-        <button style={{ ...style(0) }} onClick={() => goTo(0)}>
-          <span
-            style={{
-              position: "absolute",
-              top: 0,
-              bottom: 0,
-              left: 0,
-              right: 0,
-              background: "rgba(206, 214, 211, 0.18)",
-              transition: "all 200ms",
-              transform: slideAnimation(currentStepIndex, 0),
-            }}
-          ></span>
-          Chek Postponement Request
-        </button>
-        {user?.userAccess === "ADMIN" && (
-          <button style={{ ...style(1) }} onClick={() => goTo(1)}>
+    <>
+      <PageHelmet title="Check Posponement" />
+      <div
+        style={{
+          width: "100%",
+          height: "auto",
+          maxHeight: "100%",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <div style={{ display: "flex" }}>
+          <button style={{ ...style(0) }} onClick={() => goTo(0)}>
             <span
               style={{
                 position: "absolute",
@@ -154,16 +141,34 @@ export default function ChekPostponement() {
                 right: 0,
                 background: "rgba(206, 214, 211, 0.18)",
                 transition: "all 200ms",
-                transform: slideAnimation(currentStepIndex, 1),
+                transform: slideAnimation(currentStepIndex, 0),
               }}
             ></span>
-            Chek Postponement Approved
+            Chek Postponement Request
           </button>
-        )}
+          {user?.userAccess === "ADMIN" && (
+            <button style={{ ...style(1) }} onClick={() => goTo(1)}>
+              <span
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  background: "rgba(206, 214, 211, 0.18)",
+                  transition: "all 200ms",
+                  transform: slideAnimation(currentStepIndex, 1),
+                }}
+              ></span>
+              Chek Postponement Approved
+            </button>
+          )}
+        </div>
+        <br />
+        {step}
       </div>
-      <br />
-      {step}
-    </div>
+    </>
+
   );
 }
 const checkSelectedColumns = [
@@ -630,8 +635,9 @@ function ChekPostponementRequest() {
   }
 
   return (
+
     <Box sx={{ width: "100%", height: "100%" }}>
-      <div style={{ display: "flex", justifyContent: "flex-start", gap: "5px" ,marginBottom:"10px" }}>
+      <div style={{ display: "flex", justifyContent: "flex-start", gap: "5px", marginBottom: "10px" }}>
         {stateRequest.requestMode === "" && (
           <Button
             sx={{
@@ -1801,7 +1807,9 @@ function ChekPostponementRequest() {
         </Box>
       </fieldset>
     </Box>
+
   );
+
 }
 function ChekPostponementApproved() {
   const { myAxios, user } = useContext(AuthContext);

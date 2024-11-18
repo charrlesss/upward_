@@ -21,7 +21,7 @@ import { setNewStateValue } from "./PostDateChecks";
 import { codeCondfirmationAlert, saveCondfirmationAlert } from "../../../../lib/confirmationAlert";
 import { flushSync } from "react-dom";
 import { NumericFormat } from "react-number-format";
-
+import PageHelmet from "../../../../components/Helmet";
 
 const initialState = {
   sub_refNo: "",
@@ -40,7 +40,6 @@ const initialState = {
   search: "",
   cashMode: "",
 };
-
 export const reducer = (state: any, action: any) => {
   switch (action.type) {
     case "UPDATE_FIELD":
@@ -52,7 +51,6 @@ export const reducer = (state: any, action: any) => {
       return state;
   }
 };
-
 const columns = [
   {
     key: "code", label: "Code", width: 150, type: 'text'
@@ -143,8 +141,6 @@ const columns = [
     hide: true,
   }
 ];
-
-
 export default function CashDisbursement() {
   const tableRef = useRef<any>(null)
   const { myAxios, user } = useContext(AuthContext);
@@ -880,8 +876,6 @@ export default function CashDisbursement() {
 
     setTotals(tableData)
 
-
-
     return true
   }
   function resetAll() {
@@ -966,8 +960,6 @@ export default function CashDisbursement() {
     });
   }
 
-
-
   useEffect(() => {
     const handleKeyDown = (event: any) => {
       if ((event.ctrlKey || event.metaKey) && event.key === 's') {
@@ -982,20 +974,14 @@ export default function CashDisbursement() {
     };
   }, [handleOnSave]);
 
-
   if (loadingGetSearchSelectedCashDisbursement || loadingGeneralJournalGenerator || isLoadingPolicyIdClientIdRefId || isLoadingChartAccountSearch || isLoadingPolicyIdPayTo || isLoadingTransactionAccount) {
     return <div>Loading...</div>
   }
 
   return (
-    <div>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          columnGap: "5px",
-        }}
-      >
+    <>
+      <PageHelmet title="Cash Disbursement" />
+      <div>
         <div
           style={{
             display: "flex",
@@ -1003,152 +989,212 @@ export default function CashDisbursement() {
             columnGap: "5px",
           }}
         >
-          {isLoadingSearchCashDisbursement ? (
-            <LoadingButton loading={isLoadingSearchCashDisbursement} />
-          ) : (
-            <TextField
-              label="Search"
-              size="small"
-              name="search"
-              onKeyDown={(e) => {
-                if (e.code === "Enter" || e.code === "NumpadEnter") {
-                  e.preventDefault();
-                  return openSearchCashDisbursement(
-                    (e.target as HTMLInputElement).value
-                  );
-                }
-              }}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-
-              }}
-              sx={{
-                width: "300px",
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            />
-          )}
-
-          {cashDMode === "" && (
-            <Button
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-              }}
-              variant="contained"
-              startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
-              id="entry-header-save-button"
-              onClick={() => {
-                setCashDMode("add")
-              }}
-              color="primary"
-            >
-              New
-            </Button>
-          )}
-          <LoadingButton
-            sx={{
-              height: "30px",
-              fontSize: "11px",
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              columnGap: "5px",
             }}
-            loading={loadingCashDisbursementMutate}
-            disabled={cashDMode === ""}
-            onClick={handleOnSave}
-            color="success"
-            variant="contained"
           >
-            Save
-          </LoadingButton>
-          {cashDMode !== "" && (
+            {isLoadingSearchCashDisbursement ? (
+              <LoadingButton loading={isLoadingSearchCashDisbursement} />
+            ) : (
+              <TextField
+                label="Search"
+                size="small"
+                name="search"
+                onKeyDown={(e) => {
+                  if (e.code === "Enter" || e.code === "NumpadEnter") {
+                    e.preventDefault();
+                    return openSearchCashDisbursement(
+                      (e.target as HTMLInputElement).value
+                    );
+                  }
+                }}
+                InputProps={{
+                  style: { height: "27px", fontSize: "14px" },
+
+                }}
+                sx={{
+                  width: "300px",
+                  height: "27px",
+                  ".MuiFormLabel-root": { fontSize: "14px" },
+                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                }}
+              />
+            )}
+
+            {cashDMode === "" && (
+              <Button
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                }}
+                variant="contained"
+                startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+                id="entry-header-save-button"
+                onClick={() => {
+                  setCashDMode("add")
+                }}
+                color="primary"
+              >
+                New
+              </Button>
+            )}
             <LoadingButton
               sx={{
                 height: "30px",
                 fontSize: "11px",
               }}
-              variant="contained"
-              startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
-              color="error"
-              onClick={() => {
-                Swal.fire({
-                  title: "Are you sure?",
-                  text: "You won't be able to revert this!",
-                  icon: "warning",
-                  showCancelButton: true,
-                  confirmButtonColor: "#3085d6",
-                  cancelButtonColor: "#d33",
-                  confirmButtonText: "Yes, cancel it!",
-                }).then((result) => {
-                  if (result.isConfirmed) {
-
-                    resetAll()
-                  }
-                });
-              }}
+              loading={loadingCashDisbursementMutate}
               disabled={cashDMode === ""}
+              onClick={handleOnSave}
+              color="success"
+              variant="contained"
             >
-              Cancel
+              Save
             </LoadingButton>
-          )}
-          <LoadingButton
-            sx={{
-              height: "30px",
-              fontSize: "11px",
-              background: deepOrange[500],
-              ":hover": {
-                background: deepOrange[600],
-              },
-            }}
-            onClick={handleVoid}
-            loading={loadingVoidCashDisbursement}
-            disabled={cashDMode !== "update"}
-            variant="contained"
-            startIcon={<NotInterestedIcon sx={{ width: 20, height: 20 }} />}
-          >
-            Void
-          </LoadingButton>
-          <LoadingButton
-            loading={isLoadingOnPrint}
-            disabled={cashDMode !== "update"}
-            id="basic-button"
-            aria-haspopup="true"
-            onClick={handleClickPrint}
-            sx={{
-              height: "30px",
-              fontSize: "11px",
-              color: "white",
-              backgroundColor: grey[600],
-              "&:hover": {
-                backgroundColor: grey[700],
-              },
-            }}
-          >
-            Print
-          </LoadingButton>
+            {cashDMode !== "" && (
+              <LoadingButton
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                }}
+                variant="contained"
+                startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
+                color="error"
+                onClick={() => {
+                  Swal.fire({
+                    title: "Are you sure?",
+                    text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Yes, cancel it!",
+                  }).then((result) => {
+                    if (result.isConfirmed) {
+
+                      resetAll()
+                    }
+                  });
+                }}
+                disabled={cashDMode === ""}
+              >
+                Cancel
+              </LoadingButton>
+            )}
+            <LoadingButton
+              sx={{
+                height: "30px",
+                fontSize: "11px",
+                background: deepOrange[500],
+                ":hover": {
+                  background: deepOrange[600],
+                },
+              }}
+              onClick={handleVoid}
+              loading={loadingVoidCashDisbursement}
+              disabled={cashDMode !== "update"}
+              variant="contained"
+              startIcon={<NotInterestedIcon sx={{ width: 20, height: 20 }} />}
+            >
+              Void
+            </LoadingButton>
+            <LoadingButton
+              loading={isLoadingOnPrint}
+              disabled={cashDMode !== "update"}
+              id="basic-button"
+              aria-haspopup="true"
+              onClick={handleClickPrint}
+              sx={{
+                height: "30px",
+                fontSize: "11px",
+                color: "white",
+                backgroundColor: grey[600],
+                "&:hover": {
+                  backgroundColor: grey[700],
+                },
+              }}
+            >
+              Print
+            </LoadingButton>
+          </div>
         </div>
-      </div>
-      <div style={{ display: "flex", marginBottom: "10px" }}>
-        <fieldset
-          style={{
-            border: "1px solid #cbd5e1",
-            borderRadius: "5px",
-            position: "relative",
-            flex: 1,
-            height: "auto",
-            display: "flex",
-            marginTop: "10px",
-            gap: "10px",
-            padding: "15px",
-            flexDirection: "column"
-          }}
-        >
-          {loadingGeneralJournalGenerator ? (
-            <LoadingButton loading={loadingGeneralJournalGenerator} />
-          ) : (
+        <div style={{ display: "flex", marginBottom: "10px" }}>
+          <fieldset
+            style={{
+              border: "1px solid #cbd5e1",
+              borderRadius: "5px",
+              position: "relative",
+              flex: 1,
+              height: "auto",
+              display: "flex",
+              marginTop: "10px",
+              gap: "10px",
+              padding: "15px",
+              flexDirection: "column"
+            }}
+          >
+            {loadingGeneralJournalGenerator ? (
+              <LoadingButton loading={loadingGeneralJournalGenerator} />
+            ) : (
+              <TextInput
+                label={{
+                  title: "Reference CV- : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "100px",
+                  },
+                }}
+                input={{
+                  disabled: isDisableField,
+                  type: "text",
+                  style: { width: "190px" },
+                  readOnly: true,
+                  value: state.refNo,
+                  name: "refNo",
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                      dateRef.current?.focus()
+                    }
+                  }
+                }}
+                inputRef={refNoRef}
+              />
+            )}
             <TextInput
               label={{
-                title: "Reference CV- : ",
+                title: "Date : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
+              }}
+              input={{
+                disabled: isDisableField,
+                type: "date",
+                name: "dateEntry",
+                value: state.dateEntry,
+                style: { width: "190px" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                    expRef.current?.focus()
+                  }
+                },
+                onChange: (e) => {
+                  dispatch({
+                    type: "UPDATE_FIELD", field: "dateEntry", value: e.target.value
+                  })
+                },
+              }}
+              inputRef={dateRef}
+            />
+            <TextInput
+              label={{
+                title: "Explanation : ",
                 style: {
                   fontSize: "12px",
                   fontWeight: "bold",
@@ -1158,260 +1204,206 @@ export default function CashDisbursement() {
               input={{
                 disabled: isDisableField,
                 type: "text",
-                style: { width: "190px" },
-                readOnly: true,
-                value: state.refNo,
-                name: "refNo",
+                style: { flex: 1 },
+                name: "explanation",
+                value: state.explanation,
+                onChange: (e) => {
+                  dispatch({
+                    type: "UPDATE_FIELD", field: "explanation", value: e.target.value
+                  })
+                },
                 onKeyDown: (e) => {
                   if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                    dateRef.current?.focus()
+                    particularRef.current?.focus()
                   }
                 }
               }}
-              inputRef={refNoRef}
+              inputRef={expRef}
             />
-          )}
-          <TextInput
-            label={{
-              title: "Date : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-              },
+            <TextAreaInput
+              label={{
+                title: "Particulars : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
+              }}
+              textarea={{
+                rows: 4,
+                disabled: isDisableField,
+                style: { flex: 1 },
+                name: "particulars",
+                value: state.particulars,
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                    //  refDate.current?.focus()
+                  }
+                },
+                onChange: (e) => {
+                  dispatch({
+                    type: "UPDATE_FIELD", field: "particulars", value: e.target.value
+                  })
+                },
+              }}
+              _inputRef={particularRef}
+            />
+          </fieldset>
+          <fieldset
+            style={{
+              border: "1px solid #cbd5e1",
+              borderRadius: "5px",
+              position: "relative",
+              width: "400px",
+              height: "auto",
+              display: "flex",
+              marginTop: "10px",
+              gap: "10px",
+              padding: "15px",
             }}
-            input={{
-              disabled: isDisableField,
-              type: "date",
-              name: "dateEntry",
-              value: state.dateEntry,
-              style: { width: "190px" },
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                  expRef.current?.focus()
-                }
-              },
-              onChange: (e) => {
-                dispatch({
-                  type: "UPDATE_FIELD", field: "dateEntry", value: e.target.value
-                })
-              },
-            }}
-            inputRef={dateRef}
-          />
-          <TextInput
-            label={{
-              title: "Explanation : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-              },
-            }}
-            input={{
-              disabled: isDisableField,
-              type: "text",
-              style: { flex: 1 },
-              name: "explanation",
-              value: state.explanation,
-              onChange: (e) => {
-                dispatch({
-                  type: "UPDATE_FIELD", field: "explanation", value: e.target.value
-                })
-              },
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                  particularRef.current?.focus()
-                }
+          >
+            <div style={{ alignItems: "center", display: "flex", textAlign: "center", width: "100px" }}>
+              <p style={{ margin: 0, padding: 0, color: "black", display: "flex", flexDirection: "column" }}>
+                <span style={{ fontSize: "12px" }}>Total Rows:</span> <strong>{totalRow}</strong>
+              </p>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-around", flexDirection: "column", flex: 1 }}>
+              <p style={{ margin: 0, padding: 0, color: "black" }}>
+                <span style={{ fontSize: "12px" }}>Total Debit:</span> <strong>{
+                  getTotalDebit.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })
+                }</strong>
+              </p>
+              <p style={{ margin: 0, padding: 0, color: "black" }}>
+                <span style={{ fontSize: "12px" }}>Total Credit:</span> <strong>{
+                  getTotalCredit.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })
+                }</strong>
+              </p>
+              <p style={{ margin: 0, padding: 0, color: "black" }}>
+                <span style={{ fontSize: "12px" }}>Balance:</span>{" "}
+                <strong
+                  style={{
+                    color:
+                      (getTotalDebit - getTotalCredit) > 0
+                        ? "red"
+                        : "black",
+                  }}
+                >
+                  {(getTotalDebit - getTotalCredit).toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </strong>
+              </p>
+            </div>
+          </fieldset>
+        </div>
+        <DataGridTableReact
+          height={"300px"}
+          ref={tableRef}
+          rows={[]}
+          columns={columns.filter((itm) => !itm.hide)}
+          onInputKeyDown={(rowIdx: number, colIdx: number, value: any) => {
+            const tableData = tableRef.current.getData()
+            if (colIdx === 0) {
+              openChartAccountSearch(value)
+            } else if (colIdx === 3) {
+              openPolicyIdClientIdRefId(value)
+            } else if (colIdx === 8) {
+              openTransactionAccount(value)
+            } else if (colIdx === 10 && tableData[rowIdx][0] === '1.01.10') {
+              openPolicyIdPayTo(value)
+            } else if (colIdx === 5 && tableData[rowIdx][0] !== '1.01.10') {
+              const nextInput = document.querySelector(`.input.row-${rowIdx}.col-${colIdx + 3}`) as HTMLInputElement
+              if (nextInput) {
+                nextInput.focus()
               }
-            }}
-            inputRef={expRef}
-          />
-          <TextAreaInput
-            label={{
-              title: "Particulars : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-              },
-            }}
-            textarea={{
-              rows: 4,
-              disabled: isDisableField,
-              style: { flex: 1 },
-              name: "particulars",
-              value: state.particulars,
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                  //  refDate.current?.focus()
-                }
-              },
-              onChange: (e) => {
-                dispatch({
-                  type: "UPDATE_FIELD", field: "particulars", value: e.target.value
-                })
-              },
-            }}
-            _inputRef={particularRef}
-          />
-        </fieldset>
-        <fieldset
-          style={{
-            border: "1px solid #cbd5e1",
-            borderRadius: "5px",
-            position: "relative",
-            width: "400px",
-            height: "auto",
-            display: "flex",
-            marginTop: "10px",
-            gap: "10px",
-            padding: "15px",
-          }}
-        >
-          <div style={{ alignItems: "center", display: "flex", textAlign: "center", width: "100px" }}>
-            <p style={{ margin: 0, padding: 0, color: "black", display: "flex", flexDirection: "column" }}>
-              <span style={{ fontSize: "12px" }}>Total Rows:</span> <strong>{totalRow}</strong>
-            </p>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-around", flexDirection: "column", flex: 1 }}>
-            <p style={{ margin: 0, padding: 0, color: "black" }}>
-              <span style={{ fontSize: "12px" }}>Total Debit:</span> <strong>{
-                getTotalDebit.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })
-              }</strong>
-            </p>
-            <p style={{ margin: 0, padding: 0, color: "black" }}>
-              <span style={{ fontSize: "12px" }}>Total Credit:</span> <strong>{
-                getTotalCredit.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })
-              }</strong>
-            </p>
-            <p style={{ margin: 0, padding: 0, color: "black" }}>
-              <span style={{ fontSize: "12px" }}>Balance:</span>{" "}
-              <strong
-                style={{
-                  color:
-                    (getTotalDebit - getTotalCredit) > 0
-                      ? "red"
-                      : "black",
-                }}
-              >
-                {(getTotalDebit - getTotalCredit).toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </strong>
-            </p>
-          </div>
-        </fieldset>
-      </div>
-      <DataGridTableReact
-        height={"300px"}
-        ref={tableRef}
-        rows={[]}
-        columns={columns.filter((itm) => !itm.hide)}
-        onInputKeyDown={(rowIdx: number, colIdx: number, value: any) => {
-          const tableData = tableRef.current.getData()
-          if (colIdx === 0) {
-            openChartAccountSearch(value)
-          } else if (colIdx === 3) {
-            openPolicyIdClientIdRefId(value)
-          } else if (colIdx === 8) {
-            openTransactionAccount(value)
-          } else if (colIdx === 10 && tableData[rowIdx][0] === '1.01.10') {
-            openPolicyIdPayTo(value)
-          } else if (colIdx === 5 && tableData[rowIdx][0] !== '1.01.10') {
-            const nextInput = document.querySelector(`.input.row-${rowIdx}.col-${colIdx + 3}`) as HTMLInputElement
-            if (nextInput) {
-              nextInput.focus()
-            }
-          } else if (colIdx === 9 && tableData[rowIdx][0] !== '1.01.10') {
-            const nextInput = document.querySelector(`.input.row-${rowIdx}.col-${colIdx + 2}`) as HTMLInputElement
-            if (nextInput) {
-              nextInput.focus()
-            }
-          } else {
-            const nextInput = document.querySelector(`.input.row-${rowIdx}.col-${colIdx + 1}`) as HTMLInputElement
-            if (nextInput) {
-              nextInput.focus()
+            } else if (colIdx === 9 && tableData[rowIdx][0] !== '1.01.10') {
+              const nextInput = document.querySelector(`.input.row-${rowIdx}.col-${colIdx + 2}`) as HTMLInputElement
+              if (nextInput) {
+                nextInput.focus()
+              }
             } else {
-              if (SumbitRow()) {
-                const confirm = window.confirm('Add New Row?')
-                if (confirm) {
-                  tableRef.current.AddRow()
-                  let RowIndex = tableRef.current.getSelectedIndex()
-                  if (tableData[RowIndex][11].toLowerCase() === 'vat') {
-                    tableRef.current.setNewRowIndex(RowIndex + 2)
-                    wait(250).then(() => {
-                      const nextInput = document.querySelector(`.input.row-${RowIndex + 2}.col-0`) as HTMLInputElement
-                      if (nextInput) {
-                        nextInput.focus()
-                      }
-                    })
-                  } else {
-                    tableRef.current.setNewRowIndex(RowIndex + 1)
-                    wait(250).then(() => {
-                      const nextInput = document.querySelector(`.input.row-${RowIndex + 1}.col-0`) as HTMLInputElement
-                      if (nextInput) {
-                        nextInput.focus()
-                      }
-                    })
+              const nextInput = document.querySelector(`.input.row-${rowIdx}.col-${colIdx + 1}`) as HTMLInputElement
+              if (nextInput) {
+                nextInput.focus()
+              } else {
+                if (SumbitRow()) {
+                  const confirm = window.confirm('Add New Row?')
+                  if (confirm) {
+                    tableRef.current.AddRow()
+                    let RowIndex = tableRef.current.getSelectedIndex()
+                    if (tableData[RowIndex][11].toLowerCase() === 'vat') {
+                      tableRef.current.setNewRowIndex(RowIndex + 2)
+                      wait(250).then(() => {
+                        const nextInput = document.querySelector(`.input.row-${RowIndex + 2}.col-0`) as HTMLInputElement
+                        if (nextInput) {
+                          nextInput.focus()
+                        }
+                      })
+                    } else {
+                      tableRef.current.setNewRowIndex(RowIndex + 1)
+                      wait(250).then(() => {
+                        const nextInput = document.querySelector(`.input.row-${RowIndex + 1}.col-0`) as HTMLInputElement
+                        if (nextInput) {
+                          nextInput.focus()
+                        }
+                      })
+                    }
                   }
                 }
               }
-
             }
-          }
-        }}
-        RightClickComponent={({ rowItm }: any) => {
-          const buttonStyle: any = {
-            padding: "5px 10px",
-            margin: "0px",
-            background: "transparent",
-            color: "black",
-            fontSize: "14px",
-            width: "100%",
-            borderRadius: "0px",
-            textAlign: "left"
-          }
-          return (
-            <div>
-              <button
-                className="button-r"
-                style={buttonStyle}
-                onClick={() => {
-                  deleteRow()
-                }}
-              >
-                Delete
-              </button>
-              {rowItm[0] === '1.01.10' && <button
-                className="button-r"
-                style={buttonStyle}
-                onClick={() => {
-                  printRow(rowItm)
-                }}>
-                Print
-              </button>}
-            </div>
-          )
-        }}
-      />
-      {ModalPolicyIdClientIdRefId}
-      {ModalChartAccountSearch}
-      {ModalPolicyIdPayTo}
-      {ModalTransactionAccount}
-      {ModalSearchCashDisbursement}
-    </div>
+          }}
+          RightClickComponent={({ rowItm }: any) => {
+            const buttonStyle: any = {
+              padding: "5px 10px",
+              margin: "0px",
+              background: "transparent",
+              color: "black",
+              fontSize: "14px",
+              width: "100%",
+              borderRadius: "0px",
+              textAlign: "left"
+            }
+            return (
+              <div>
+                <button
+                  className="button-r"
+                  style={buttonStyle}
+                  onClick={() => {
+                    deleteRow()
+                  }}
+                >
+                  Delete
+                </button>
+                {rowItm[0] === '1.01.10' && <button
+                  className="button-r"
+                  style={buttonStyle}
+                  onClick={() => {
+                    printRow(rowItm)
+                  }}>
+                  Print
+                </button>}
+              </div>
+            )
+          }}
+        />
+        {ModalPolicyIdClientIdRefId}
+        {ModalChartAccountSearch}
+        {ModalPolicyIdPayTo}
+        {ModalTransactionAccount}
+        {ModalSearchCashDisbursement}
+      </div>
+    </>
+
   );
 };
-
-
 const DataGridTableReact = forwardRef(({
   rows,
   columns,
@@ -2016,8 +2008,6 @@ const DataGridTableReact = forwardRef(({
     </Fragment>
   )
 })
-
-
 function formatArrayIntoChunks(arr: Array<any>, chunkSize = 100) {
   let result = [];
   for (let i = 0; i < arr.length; i += chunkSize) {

@@ -12,7 +12,6 @@ header{
 }
 header .header-ch{
     flex-grow: 1;
-    flex-basis: 25%
 }
 .header-ch:nth-child(2){
     text-align: center;
@@ -29,7 +28,7 @@ header .header-ch{
     column-gap: 15px;
 }
 
-.header-ch:nth-child(3) .user-menu{
+.header-ch:nth-child(2) .user-menu{
     position: absolute;
     top: 100%;
     left: -130px;
@@ -45,7 +44,7 @@ header .header-ch{
    padding: 10px 0;
 }
 
-.header-ch:nth-child(3) .user-menu li{
+.header-ch:nth-child(2) .user-menu li{
     text-decoration: none !important;
     width: 100%;
     padding: 0;
@@ -54,7 +53,7 @@ header .header-ch{
      list-style-type: none;
 
 }
-.header-ch:nth-child(3) .user-menu li span {
+.header-ch:nth-child(2) .user-menu li span {
     color: white;
     text-decoration: none;
     padding: 5px 10px;
@@ -65,7 +64,7 @@ header .header-ch{
     cursor: pointer;
   }
   
-  .header-ch:nth-child(3) .user-menu li span:hover {
+  .header-ch:nth-child(2) .user-menu li span:hover {
     background-color: #555;
   }
   
@@ -107,7 +106,7 @@ header .header-ch{
     top: 100%;
     left: 0;
     background-color: #444;
-    padding: 10px;
+    padding: 10px 0px;
     display: none;
     list-style: none;
     margin: 0;

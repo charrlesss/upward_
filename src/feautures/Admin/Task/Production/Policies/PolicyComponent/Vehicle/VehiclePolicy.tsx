@@ -39,6 +39,7 @@ import {
 } from "../../../../../../../lib/confirmationAlert";
 import { addYears, format } from "date-fns";
 import ArticleIcon from "@mui/icons-material/Article";
+import PageHelmet from "../../../../../../../components/Helmet";
 
 interface CustomButtonProps {
   currentStepIndex: number;
@@ -881,269 +882,316 @@ export default function VehiclePolicy() {
   }, [handleOnSave]);
 
   return (
-    <VehicleContext.Provider
-      value={{
-        parseStringToNumber,
-        state,
-        handleInputChange,
-        handleDateChange,
-        Mortgagee,
-        setMortgagee,
-        showField,
-        setShowField,
-        myAxios,
-        user,
-        tplCompuation,
-        comComputation,
-        tplId,
-        setTplId,
-        isAddOrEditMode,
-        dispatch,
-        isLoadingTempId,
-        keySave,
-        domination,
-        mutateRates,
-        isLoadingrates,
-        reducer,
-      }}
-    >
-      <div style={{ display: "flex", columnGap: "5px" }}>
-        <div
-          style={{ display: "flex", columnGap: "8px", alignItems: "center" }}
-        >
-          <CustomButton
-            onClick={() => {
-              goTo(0);
-            }}
-            currentStepIndex={currentStepIndex}
-            index={0}
+    <>
+      <PageHelmet title="Vehicle Policy" />
+
+      <VehicleContext.Provider
+        value={{
+          parseStringToNumber,
+          state,
+          handleInputChange,
+          handleDateChange,
+          Mortgagee,
+          setMortgagee,
+          showField,
+          setShowField,
+          myAxios,
+          user,
+          tplCompuation,
+          comComputation,
+          tplId,
+          setTplId,
+          isAddOrEditMode,
+          dispatch,
+          isLoadingTempId,
+          keySave,
+          domination,
+          mutateRates,
+          isLoadingrates,
+          reducer,
+        }}
+      >
+        <div style={{ display: "flex", columnGap: "5px" }}>
+          <div
+            style={{ display: "flex", columnGap: "8px", alignItems: "center" }}
           >
-            Policy Information
-          </CustomButton>
-          <NavigateNextIcon fontSize="small" />
-        </div>
-        <div
-          style={{ display: "flex", columnGap: "8px", alignItems: "center" }}
-        >
-          <CustomButton
-            onClick={() => {
-              goTo(1);
-            }}
-            currentStepIndex={currentStepIndex}
-            index={1}
+            <CustomButton
+              onClick={() => {
+                goTo(0);
+              }}
+              currentStepIndex={currentStepIndex}
+              index={0}
+            >
+              Policy Information
+            </CustomButton>
+            <NavigateNextIcon fontSize="small" />
+          </div>
+          <div
+            style={{ display: "flex", columnGap: "8px", alignItems: "center" }}
           >
-            Policy Type and Details
-          </CustomButton>
-          <NavigateNextIcon fontSize="small" />
-        </div>
-        <div
-          style={{ display: "flex", columnGap: "8px", alignItems: "center" }}
-        >
-          <CustomButton
-            onClick={() => {
-              goTo(2);
-            }}
-            currentStepIndex={currentStepIndex}
-            index={2}
+            <CustomButton
+              onClick={() => {
+                goTo(1);
+              }}
+              currentStepIndex={currentStepIndex}
+              index={1}
+            >
+              Policy Type and Details
+            </CustomButton>
+            <NavigateNextIcon fontSize="small" />
+          </div>
+          <div
+            style={{ display: "flex", columnGap: "8px", alignItems: "center" }}
           >
-            Policy Premium
-          </CustomButton>
-        </div>
-        <div
-          style={{
-            marginLeft: "30px",
-            display: "flex",
-            alignItems: "center",
-            columnGap: "20px",
-          }}
-        >
+            <CustomButton
+              onClick={() => {
+                goTo(2);
+              }}
+              currentStepIndex={currentStepIndex}
+              index={2}
+            >
+              Policy Premium
+            </CustomButton>
+          </div>
           <div
             style={{
+              marginLeft: "30px",
               display: "flex",
               alignItems: "center",
-              columnGap: "5px",
+              columnGap: "20px",
             }}
           >
-            {state.mode === "" && (
-              <Button
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                }}
-                ref={newButtonRef}
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => {
-                  handleDateChange("add", "mode");
-                }}
-              >
-                New
-              </Button>
-            )}
-            <LoadingButton
-              loading={loadingAddNew}
-              sx={{
-                height: "30px",
-                fontSize: "11px",
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                columnGap: "5px",
               }}
-              color="primary"
-              variant="contained"
-              type="submit"
-              onClick={handleOnSave}
-              disabled={state.mode === ""}
-              startIcon={<SaveIcon />}
             >
-              Save
-            </LoadingButton>
-            {state.mode !== "" && (
-              <Button
+              {state.mode === "" && (
+                <Button
+                  sx={{
+                    height: "30px",
+                    fontSize: "11px",
+                  }}
+                  ref={newButtonRef}
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => {
+                    handleDateChange("add", "mode");
+                  }}
+                >
+                  New
+                </Button>
+              )}
+              <LoadingButton
+                loading={loadingAddNew}
                 sx={{
                   height: "30px",
                   fontSize: "11px",
                 }}
-                ref={cancelButtonRef}
+                color="primary"
                 variant="contained"
-                startIcon={<CloseIcon />}
-                color="error"
+                type="submit"
+                onClick={handleOnSave}
+                disabled={state.mode === ""}
+                startIcon={<SaveIcon />}
+              >
+                Save
+              </LoadingButton>
+              {state.mode !== "" && (
+                <Button
+                  sx={{
+                    height: "30px",
+                    fontSize: "11px",
+                  }}
+                  ref={cancelButtonRef}
+                  variant="contained"
+                  startIcon={<CloseIcon />}
+                  color="error"
+                  onClick={() => {
+                    Swal.fire({
+                      title: "Are you sure?",
+                      text: "You won't be able to revert this!",
+                      icon: "warning",
+                      showCancelButton: true,
+                      confirmButtonColor: "#3085d6",
+                      cancelButtonColor: "#d33",
+                      confirmButtonText: "Yes, cancel it!",
+                    }).then((result) => {
+                      if (result.isConfirmed) {
+                        initialState.form_action = state.form_action;
+                        initialState.form_type = state.form_type;
+                        backToDefaultState(initialState, true);
+                      }
+                    });
+                  }}
+                >
+                  Cancel
+                </Button>
+              )}
+              <LoadingButton
+                loading={loadingDelete}
+                id="save-entry-header"
+                variant="contained"
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                  backgroundColor: pink[500],
+                  "&:hover": {
+                    backgroundColor: pink[600],
+                  },
+                }}
+                ref={deleteButtonRef}
+                disabled={state.mode !== "delete"}
+                startIcon={<DeleteIcon />}
                 onClick={() => {
-                  Swal.fire({
-                    title: "Are you sure?",
-                    text: "You won't be able to revert this!",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#3085d6",
-                    cancelButtonColor: "#d33",
-                    confirmButtonText: "Yes, cancel it!",
-                  }).then((result) => {
-                    if (result.isConfirmed) {
-                      initialState.form_action = state.form_action;
-                      initialState.form_type = state.form_type;
-                      backToDefaultState(initialState, true);
-                    }
+                  codeCondfirmationAlert({
+                    isUpdate: false,
+                    cb: (userCodeConfirmation) => {
+                      mutateDelete({
+                        PolicyAccount: state.PolicyAccount,
+                        form_type: state.form_type,
+                        PolicyNo: state.PolicyNo,
+                        userCodeConfirmation,
+                      });
+                    },
                   });
                 }}
               >
-                Cancel
-              </Button>
-            )}
-            <LoadingButton
-              loading={loadingDelete}
-              id="save-entry-header"
-              variant="contained"
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-                backgroundColor: pink[500],
-                "&:hover": {
-                  backgroundColor: pink[600],
-                },
-              }}
-              ref={deleteButtonRef}
-              disabled={state.mode !== "delete"}
-              startIcon={<DeleteIcon />}
-              onClick={() => {
-                codeCondfirmationAlert({
-                  isUpdate: false,
-                  cb: (userCodeConfirmation) => {
-                    mutateDelete({
-                      PolicyAccount: state.PolicyAccount,
-                      form_type: state.form_type,
-                      PolicyNo: state.PolicyNo,
-                      userCodeConfirmation,
-                    });
-                  },
-                });
-              }}
-            >
-              Delete
-            </LoadingButton>
+                Delete
+              </LoadingButton>
+            </div>
           </div>
         </div>
-      </div>
-      <Box
-        sx={(theme) => ({
-          display: "flex",
-          alignItems: "center",
-          columnGap: "20px",
-          marginBottom: "10px",
-          [theme.breakpoints.down("sm")]: {
-            flexDirection: "column",
-            alignItems: "flex-start",
-            flex: 1,
-          },
-        })}
-      >
-        <div
-          style={{
-            marginTop: "10px",
-            marginBottom: "12px",
-            width: "100%",
-          }}
-        ></div>
-      </Box>
-      <div style={{ marginBottom: "5px", display: "flex", gap: "10px" }}>
-        {searchLoading ? (
-          <LoadingButton loading={searchLoading} />
-        ) : (
-          <TextField
-            label="Search"
-            size="small"
-            name="search"
-            value={search}
-            onChange={(e: any) => {
-              setSearch(e.target.value);
+        <Box
+          sx={(theme) => ({
+            display: "flex",
+            alignItems: "center",
+            columnGap: "20px",
+            marginBottom: "10px",
+            [theme.breakpoints.down("sm")]: {
+              flexDirection: "column",
+              alignItems: "flex-start",
+              flex: 1,
+            },
+          })}
+        >
+          <div
+            style={{
+              marginTop: "10px",
+              marginBottom: "12px",
+              width: "100%",
             }}
-            onKeyDown={(e) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                e.preventDefault();
+          ></div>
+        </Box>
+        <div style={{ marginBottom: "5px", display: "flex", gap: "10px" }}>
+          {searchLoading ? (
+            <LoadingButton loading={searchLoading} />
+          ) : (
+            <TextField
+              label="Search"
+              size="small"
+              name="search"
+              value={search}
+              onChange={(e: any) => {
+                setSearch(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                if (e.code === "Enter" || e.code === "NumpadEnter") {
+                  e.preventDefault();
 
-                flushSync(() => {
-                  setSearchShow(true);
-                });
-                if (vPolicySearchInput?.current) {
-                  vPolicySearchInput.current.value = search;
+                  flushSync(() => {
+                    setSearchShow(true);
+                  });
+                  if (vPolicySearchInput?.current) {
+                    vPolicySearchInput.current.value = search;
 
-                  myAxios
-                    .get(
-                      `/task/production/tpl-search-vehicle-policy?form_type=${state.form_type}&form_action=${state.form_action}&search=${search}`,
-                      {
-                        headers: {
-                          Authorization: `Bearer ${user?.accessToken}`,
-                        },
-                      }
-                    )
-                    .then((res: any) => {
-                      if (!res?.data.success) {
-                        return alert(`Error : ${res?.data.message}`);
-                      }
+                    myAxios
+                      .get(
+                        `/task/production/tpl-search-vehicle-policy?form_type=${state.form_type}&form_action=${state.form_action}&search=${search}`,
+                        {
+                          headers: {
+                            Authorization: `Bearer ${user?.accessToken}`,
+                          },
+                        }
+                      )
+                      .then((res: any) => {
+                        if (!res?.data.success) {
+                          return alert(`Error : ${res?.data.message}`);
+                        }
 
-                      const response = res as any;
-                      setRows(response.data["searchVPolicy"]);
-                      if (vPolicySearchInput?.current)
-                        vPolicySearchInput.current.focus();
-                    });
+                        const response = res as any;
+                        setRows(response.data["searchVPolicy"]);
+                        if (vPolicySearchInput?.current)
+                          vPolicySearchInput.current.focus();
+                      });
+                  }
                 }
-              }
-            }}
-            InputProps={{
-              style: { height: "27px", fontSize: "14px" },
-            }}
-            sx={{
-              width: "300px",
-              height: "27px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-          />
-        )}
+              }}
+              InputProps={{
+                style: { height: "27px", fontSize: "14px" },
+              }}
+              sx={{
+                width: "300px",
+                height: "27px",
+                ".MuiFormLabel-root": { fontSize: "14px" },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              }}
+            />
+          )}
 
-        {isLoadingSubAccount ? (
-          <LoadingButton loading={isLoadingSubAccount} />
-        ) : (
+          {isLoadingSubAccount ? (
+            <LoadingButton loading={isLoadingSubAccount} />
+          ) : (
+            <FormControl
+              size="small"
+              sx={(theme) => ({
+                width: "150px",
+                ".MuiFormLabel-root": {
+                  fontSize: "14px",
+                  background: "white",
+                  zIndex: 99,
+                  padding: "0 3px",
+                },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              })}
+            >
+              <InputLabel id="subAccount">Sub Account</InputLabel>
+              <Select
+                sx={{
+                  height: "27px",
+                  fontSize: "14px",
+                }}
+                size="small"
+                labelId="subAccount"
+                label="subAccount"
+                name="sub_account"
+                value={state.sub_account}
+                onChange={(e) => {
+                  handleDateChange("", "Denomination");
+                  handleDateChange("", "PolicyAccount");
+                  handleDateChange("", "Mortgagee");
+                  handleInputChange(e);
+                }}
+              >
+                {(dataSubAccount?.data.sub_account).map(
+                  (items: any, idx: number) => {
+                    return (
+                      <MenuItem key={idx} value={items.Acronym.trim()}>
+                        {items.Acronym}
+                      </MenuItem>
+                    );
+                  }
+                )}
+              </Select>
+            </FormControl>
+          )}
+
           <FormControl
             size="small"
             sx={(theme) => ({
-              width: "150px",
+              width: "100px",
               ".MuiFormLabel-root": {
                 fontSize: "14px",
                 background: "white",
@@ -1153,369 +1201,326 @@ export default function VehiclePolicy() {
               ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
             })}
           >
-            <InputLabel id="subAccount">Sub Account</InputLabel>
             <Select
               sx={{
                 height: "27px",
                 fontSize: "14px",
               }}
-              size="small"
-              labelId="subAccount"
-              label="subAccount"
-              name="sub_account"
-              value={state.sub_account}
+              labelId="formType"
+              name="form_type"
+              value={state.form_type}
               onChange={(e) => {
-                handleDateChange("", "Denomination");
-                handleDateChange("", "PolicyAccount");
-                handleDateChange("", "Mortgagee");
-                handleInputChange(e);
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, change it!",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    initialState.form_action = state.form_action;
+                    backToDefaultState(initialState);
+                    setShowField({
+                      thirdparty: e.target.value.toLowerCase() === "tpl",
+                      compre: e.target.value.toLowerCase() === "com",
+                    });
+
+                    refetch();
+                    handleInputChange(e);
+                  }
+                });
               }}
             >
-              {(dataSubAccount?.data.sub_account).map(
-                (items: any, idx: number) => {
-                  return (
-                    <MenuItem key={idx} value={items.Acronym.trim()}>
-                      {items.Acronym}
-                    </MenuItem>
-                  );
-                }
+              {[
+                { Account: "TPL", show: state.form_action === "REG" },
+                { Account: "COM", show: true },
+              ].map((items: any, idx: number) => {
+                return items.show ? (
+                  <MenuItem key={idx} value={items.Account}>
+                    {items.Account}
+                  </MenuItem>
+                ) : null;
+              })}
+            </Select>
+          </FormControl>
+          <FormControl
+            size="small"
+            sx={(theme) => ({
+              width: "100px",
+              ".MuiFormLabel-root": {
+                fontSize: "14px",
+                background: "white",
+                zIndex: 99,
+                padding: "0 3px",
+              },
+              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+            })}
+          >
+            <Select
+              sx={{
+                height: "27px",
+                fontSize: "14px",
+              }}
+              name="form_action"
+              value={state.form_action}
+              onChange={(e) => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, change it!",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    initialState.form_type = "COM";
+                    backToDefaultState(initialState);
+                    refetch();
+                    handleInputChange(e);
+
+                    if (e.target.value === "TEMP") {
+                      handleDateChange(
+                        dataTemp?.data.tempId[0].tempPolicy_No,
+                        "PolicyNo"
+                      );
+                      handleInputChange({
+                        target: { value: "COM", name: "form_type" },
+                      });
+                    }
+
+                    if (e.target.value === "REG") {
+                      handleDateChange("", "PolicyNo");
+                    }
+                  }
+                });
+              }}
+            >
+              <MenuItem value={"REG"}>REG</MenuItem>
+              {state.form_type !== "TPL" && (
+                <MenuItem value={"TEMP"}>TEMP</MenuItem>
               )}
             </Select>
           </FormControl>
-        )}
-
-        <FormControl
-          size="small"
-          sx={(theme) => ({
-            width: "100px",
-            ".MuiFormLabel-root": {
-              fontSize: "14px",
-              background: "white",
-              zIndex: 99,
-              padding: "0 3px",
-            },
-            ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-          })}
-        >
-          <Select
-            sx={{
-              height: "27px",
-              fontSize: "14px",
-            }}
-            labelId="formType"
-            name="form_type"
-            value={state.form_type}
-            onChange={(e) => {
-              Swal.fire({
-                title: "Are you sure?",
-                text: "You won't be able to revert this!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, change it!",
-              }).then((result) => {
-                if (result.isConfirmed) {
-                  initialState.form_action = state.form_action;
-                  backToDefaultState(initialState);
-                  setShowField({
-                    thirdparty: e.target.value.toLowerCase() === "tpl",
-                    compre: e.target.value.toLowerCase() === "com",
-                  });
-
-                  refetch();
-                  handleInputChange(e);
+          {isLoadingPolicyDetails ? (
+            <div>
+              <CircularProgress size="20px" />
+            </div>
+          ) : (
+            <Button
+              disabled={state.mode !== "delete"}
+              variant="outlined"
+              startIcon={<ArticleIcon />}
+              sx={{
+                height: "27px",
+                fontSize: "11px",
+              }}
+              onClick={() => {
+                mutatePolicyDetails({
+                  PolicyNo: state.PolicyNo,
+                });
+              }}
+            >
+              Summary
+            </Button>
+          )}
+        </div>
+        {step}
+        <ModalWithTable
+          searchRef={vPolicySearchInput}
+          showModal={searchShow}
+          onCloseModal={() => {
+            setSearchShow(false);
+          }}
+          onClickCloseIcon={() => {
+            setSearchShow(false);
+          }}
+          searchOnChange={() => { }}
+          onSearchKeyEnter={(value) => {
+            myAxios
+              .get(
+                `/task/production/tpl-search-vehicle-policy?form_type=${state.form_type}&form_action=${state.form_action}&search=${value}`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${user?.accessToken}`,
+                  },
                 }
-              });
-            }}
-          >
-            {[
-              { Account: "TPL", show: state.form_action === "REG" },
-              { Account: "COM", show: true },
-            ].map((items: any, idx: number) => {
-              return items.show ? (
-                <MenuItem key={idx} value={items.Account}>
-                  {items.Account}
-                </MenuItem>
-              ) : null;
-            })}
-          </Select>
-        </FormControl>
-        <FormControl
-          size="small"
-          sx={(theme) => ({
-            width: "100px",
-            ".MuiFormLabel-root": {
-              fontSize: "14px",
-              background: "white",
-              zIndex: 99,
-              padding: "0 3px",
-            },
-            ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-          })}
-        >
-          <Select
-            sx={{
-              height: "27px",
-              fontSize: "14px",
-            }}
-            name="form_action"
-            value={state.form_action}
-            onChange={(e) => {
-              Swal.fire({
-                title: "Are you sure?",
-                text: "You won't be able to revert this!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, change it!",
-              }).then((result) => {
-                if (result.isConfirmed) {
-                  initialState.form_type = "COM";
-                  backToDefaultState(initialState);
-                  refetch();
-                  handleInputChange(e);
-
-                  if (e.target.value === "TEMP") {
-                    handleDateChange(
-                      dataTemp?.data.tempId[0].tempPolicy_No,
-                      "PolicyNo"
-                    );
-                    handleInputChange({
-                      target: { value: "COM", name: "form_type" },
-                    });
-                  }
-
-                  if (e.target.value === "REG") {
-                    handleDateChange("", "PolicyNo");
-                  }
+              )
+              .then((res: any) => {
+                if (!res?.data.success) {
+                  return alert(`Error : ${res?.data.message}`);
                 }
+                const response = res as any;
+                setRows(response.data["searchVPolicy"]);
               });
-            }}
-          >
-            <MenuItem value={"REG"}>REG</MenuItem>
-            {state.form_type !== "TPL" && (
-              <MenuItem value={"TEMP"}>TEMP</MenuItem>
-            )}
-          </Select>
-        </FormControl>
-        {isLoadingPolicyDetails ? (
-          <div>
-            <CircularProgress size="20px" />
-          </div>
-        ) : (
-          <Button
-            disabled={state.mode !== "delete"}
-            variant="outlined"
-            startIcon={<ArticleIcon />}
-            sx={{
-              height: "27px",
-              fontSize: "11px",
-            }}
-            onClick={() => {
-              mutatePolicyDetails({
-                PolicyNo: state.PolicyNo,
-              });
-            }}
-          >
-            Summary
-          </Button>
-        )}
-      </div>
-      {step}
-      <ModalWithTable
-        searchRef={vPolicySearchInput}
-        showModal={searchShow}
-        onCloseModal={() => {
-          setSearchShow(false);
-        }}
-        onClickCloseIcon={() => {
-          setSearchShow(false);
-        }}
-        searchOnChange={() => { }}
-        onSearchKeyEnter={(value) => {
-          myAxios
-            .get(
-              `/task/production/tpl-search-vehicle-policy?form_type=${state.form_type}&form_action=${state.form_action}&search=${value}`,
-              {
-                headers: {
-                  Authorization: `Bearer ${user?.accessToken}`,
-                },
-              }
-            )
-            .then((res: any) => {
-              if (!res?.data.success) {
-                return alert(`Error : ${res?.data.message}`);
-              }
-              const response = res as any;
-              setRows(response.data["searchVPolicy"]);
+          }}
+          height={300}
+          isLoading={searchLoading}
+          queryKey={vpolicyKey}
+          columns={vpolicyColumn}
+          onCellKeyDown={(__: any, key: any) => {
+            if (key.code === "Enter" || key.code === "NumpadEnter") {
+              key.preventDefault();
+              onSearchSelected([__.row]);
+            }
+          }}
+          onSelectionChange={(rowSelectionModel, data) => {
+            if (rowSelectionModel.length <= 0) {
+              return;
+            }
+
+            const selectedIDs = new Set(rowSelectionModel);
+            const selectedRowData = data.filter((row: any) => {
+              return selectedIDs.has(row["PolicyNo"].toString());
             });
-        }}
-        height={300}
-        isLoading={searchLoading}
-        queryKey={vpolicyKey}
-        columns={vpolicyColumn}
-        onCellKeyDown={(__: any, key: any) => {
-          if (key.code === "Enter" || key.code === "NumpadEnter") {
-            key.preventDefault();
-            onSearchSelected([__.row]);
-          }
-        }}
-        onSelectionChange={(rowSelectionModel, data) => {
-          if (rowSelectionModel.length <= 0) {
-            return;
-          }
+            if (selectedRowData.length <= 0) return;
+            mutateRates({
+              Account: selectedRowData[0].Account.trim(),
+              Type: state.form_type.toUpperCase(),
+            } as any);
 
-          const selectedIDs = new Set(rowSelectionModel);
-          const selectedRowData = data.filter((row: any) => {
-            return selectedIDs.has(row["PolicyNo"].toString());
-          });
-          if (selectedRowData.length <= 0) return;
-          mutateRates({
-            Account: selectedRowData[0].Account.trim(),
-            Type: state.form_type.toUpperCase(),
-          } as any);
-
-          onSearchSelected(selectedRowData);
-        }}
-        id={"PolicyNo"}
-        rows={rows}
-        setRows={setRows}
-      />
-      <div
-        style={{
-          position: "fixed",
-          top: 0,
-          bottom: 0,
-          left: 0,
-          right: 0,
-          background: "rgba(158, 155, 157, 0.31)",
-          zIndex: "999",
-          display: showClientDetails ? "flex" : "none",
-          justifyContent: "center",
-          alignItems: "center",
-          boxShadow: "-1px 15px 74px 38px rgba(0,0,0,0.37)",
-        }}
-      >
+            onSearchSelected(selectedRowData);
+          }}
+          id={"PolicyNo"}
+          rows={rows}
+          setRows={setRows}
+        />
         <div
           style={{
-            background: "white",
-            width: "70%",
-            height: "700px",
-            position: "relative",
-            padding: "50px 20px",
+            position: "fixed",
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            background: "rgba(158, 155, 157, 0.31)",
+            zIndex: "999",
+            display: showClientDetails ? "flex" : "none",
+            justifyContent: "center",
+            alignItems: "center",
+            boxShadow: "-1px 15px 74px 38px rgba(0,0,0,0.37)",
           }}
         >
-          <IconButton
-            sx={{
-              position: "absolute",
-              top: "10px",
-              right: "10px",
+          <div
+            style={{
+              background: "white",
+              width: "70%",
+              height: "700px",
+              position: "relative",
+              padding: "50px 20px",
             }}
-            onClick={() => setShowCLientDetails(false)}
           >
-            <CloseIcon />
-          </IconButton>
-          <div style={{ width: "100%", height: "100%" }}>
-            <hr style={{ margin: "5px 0" }} />
-            <p style={{ margin: "0", padding: "0", fontWeight: "bold" }}>
-              Policy Details
-            </p>
-            <hr style={{ margin: "5px 0" }} />
-            <DisplayDetails
-              datakey={"DateIssued"}
-              label={"Date Issued"}
-              value={format(new Date(), "yyyy/MM/dd")}
-            />
-            <DisplayDetails
-              datakey={"PolicyNo"}
-              label={"Policy No."}
-              value={summaryState.PolicyNo}
-            />
-            <DisplayDetails
-              datakey={"PolicyType"}
-              label={"Policy Type"}
-              value={summaryState.PolicyType}
-            />
-            <DisplayDetails
-              datakey={"Account"}
-              label={"Account"}
-              value={summaryState.Account}
-            />
-            <DisplayDetails
-              datakey={"Mortgagee"}
-              label={"Mortgagee"}
-              value={summaryState.Mortgagee}
-            />
-            <DisplayDetails
-              datakey={"TotalDue"}
-              label={"Total Due"}
-              value={parseFloat(
-                summaryState.TotalDue.toString().replace(/,/g, "")
-              ).toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            />
-            <DisplayDetails
-              datakey={"sale_officer"}
-              label={"Sale Officer"}
-              value={summaryState.sale_officer}
-            />
-            <hr style={{ margin: "5px 0" }} />
-            <p style={{ margin: "0", padding: "0", fontWeight: "bold" }}>
-              Client Details
-            </p>
-            <hr style={{ margin: "5px 0" }} />
-            <DisplayDetails
-              datakey={"IDNo_dr"}
-              label={"ID NO."}
-              value={summaryState.IDNo}
-            />
-            <DisplayDetails
-              datakey={"ShortName_dr"}
-              label={"Short Name"}
-              value={summaryState.ShortName}
-            />
-            <DisplayDetails
-              datakey={"subShortName_dr"}
-              label={"Sub Account"}
-              value={summaryState.subShortName}
-            />
-            <DisplayDetails
-              datakey={"mobile_dr"}
-              label={"Mobile"}
-              value={summaryState.mobile}
-            />
-            <DisplayDetails
-              datakey={"email_dr"}
-              label={"Email"}
-              value={summaryState.email}
-            />
-            <DisplayDetails
-              datakey={"address_dr"}
-              label={"Address"}
-              value={summaryState.address}
-            />
-            <DisplayDetails
-              datakey={"options_dr"}
-              label={"Option"}
-              value={summaryState.options}
-            />
-            <hr style={{ margin: "5px 0" }} />
-            <p style={{ margin: "0", padding: "0", fontWeight: "bold" }}>
-              Agent Details
-            </p>
-            <hr style={{ margin: "5px 0" }} />
-            <DisplayDetails
-              datakey={"agent_fullname"}
-              label={"Agent Name"}
-              value={summaryState.agent_fullname}
-            />
+            <IconButton
+              sx={{
+                position: "absolute",
+                top: "10px",
+                right: "10px",
+              }}
+              onClick={() => setShowCLientDetails(false)}
+            >
+              <CloseIcon />
+            </IconButton>
+            <div style={{ width: "100%", height: "100%" }}>
+              <hr style={{ margin: "5px 0" }} />
+              <p style={{ margin: "0", padding: "0", fontWeight: "bold" }}>
+                Policy Details
+              </p>
+              <hr style={{ margin: "5px 0" }} />
+              <DisplayDetails
+                datakey={"DateIssued"}
+                label={"Date Issued"}
+                value={format(new Date(), "yyyy/MM/dd")}
+              />
+              <DisplayDetails
+                datakey={"PolicyNo"}
+                label={"Policy No."}
+                value={summaryState.PolicyNo}
+              />
+              <DisplayDetails
+                datakey={"PolicyType"}
+                label={"Policy Type"}
+                value={summaryState.PolicyType}
+              />
+              <DisplayDetails
+                datakey={"Account"}
+                label={"Account"}
+                value={summaryState.Account}
+              />
+              <DisplayDetails
+                datakey={"Mortgagee"}
+                label={"Mortgagee"}
+                value={summaryState.Mortgagee}
+              />
+              <DisplayDetails
+                datakey={"TotalDue"}
+                label={"Total Due"}
+                value={parseFloat(
+                  summaryState.TotalDue.toString().replace(/,/g, "")
+                ).toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              />
+              <DisplayDetails
+                datakey={"sale_officer"}
+                label={"Sale Officer"}
+                value={summaryState.sale_officer}
+              />
+              <hr style={{ margin: "5px 0" }} />
+              <p style={{ margin: "0", padding: "0", fontWeight: "bold" }}>
+                Client Details
+              </p>
+              <hr style={{ margin: "5px 0" }} />
+              <DisplayDetails
+                datakey={"IDNo_dr"}
+                label={"ID NO."}
+                value={summaryState.IDNo}
+              />
+              <DisplayDetails
+                datakey={"ShortName_dr"}
+                label={"Short Name"}
+                value={summaryState.ShortName}
+              />
+              <DisplayDetails
+                datakey={"subShortName_dr"}
+                label={"Sub Account"}
+                value={summaryState.subShortName}
+              />
+              <DisplayDetails
+                datakey={"mobile_dr"}
+                label={"Mobile"}
+                value={summaryState.mobile}
+              />
+              <DisplayDetails
+                datakey={"email_dr"}
+                label={"Email"}
+                value={summaryState.email}
+              />
+              <DisplayDetails
+                datakey={"address_dr"}
+                label={"Address"}
+                value={summaryState.address}
+              />
+              <DisplayDetails
+                datakey={"options_dr"}
+                label={"Option"}
+                value={summaryState.options}
+              />
+              <hr style={{ margin: "5px 0" }} />
+              <p style={{ margin: "0", padding: "0", fontWeight: "bold" }}>
+                Agent Details
+              </p>
+              <hr style={{ margin: "5px 0" }} />
+              <DisplayDetails
+                datakey={"agent_fullname"}
+                label={"Agent Name"}
+                value={summaryState.agent_fullname}
+              />
+            </div>
           </div>
         </div>
-      </div>
-    </VehicleContext.Provider>
+      </VehicleContext.Provider>
+    </>
   );
 }

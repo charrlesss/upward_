@@ -28,6 +28,7 @@ import {
   saveCondfirmationAlert,
 } from "../../../../../lib/confirmationAlert";
 import { UpwardTable } from "../../../../../components/UpwardTable";
+import PageHelmet from "../../../../../components/Helmet";
 
 const initialState = {
   description: "",
@@ -222,416 +223,418 @@ export default function FixedAssets() {
   const width = window.innerWidth - 40;
   const height = window.innerHeight - 100;
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        width: "100%",
-        height: "100%",
-        flex: 1,
-      }}
-    >
-      <Box
-        sx={(theme) => ({
+    <>
+      <PageHelmet title="ID Entry - Fixed Assets" />
+      <div
+        style={{
           display: "flex",
-          alignItems: "center",
-          columnGap: "20px",
-          [theme.breakpoints.down("sm")]: {
-            flexDirection: "column",
-            alignItems: "flex-start",
-            flex: 1,
-            marginBottom: "15px",
-          },
-        })}
-      >
-        <div
-          style={{
-            marginTop: "10px",
-            marginBottom: "12px",
-            width: "100%",
-          }}
-        >
-          <TextField
-            label="Search"
-            fullWidth
-            size="small"
-            type="text"
-            value={state.search}
-            name="search"
-            onChange={handleInputChange}
-            onKeyDown={(e) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                e.preventDefault();
-                return refetchFixedAssetSearch();
-              }
-              if (e.key === "ArrowDown") {
-                e.preventDefault();
-                const datagridview = document.querySelector(
-                  `.grid-container`
-                ) as HTMLDivElement;
-                datagridview.focus();
-              }
-
-            }}
-            InputProps={{
-              style: { height: "27px", fontSize: "14px" },
-              className: "manok"
-            }}
-            sx={{
-              width: "500px",
-              height: "27px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-          />
-        </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            columnGap: "20px",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              columnGap: "5px",
-            }}
-          >
-            {state.mode === "" && (
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                id="entry-header-save-button"
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                }}
-                onClick={() => {
-                  refetchFixedAssetId();
-                  handleInputChange({ target: { value: "add", name: "mode" } });
-                }}
-              >
-                New
-              </Button>
-            )}
-            <LoadingButton
-              id="save-entry-header"
-              color="primary"
-              variant="contained"
-              type="submit"
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-              }}
-              onClick={handleOnSave}
-              startIcon={<SaveIcon />}
-              disabled={state.mode === ""}
-              loading={loadingAdd || loadingEdit}
-            >
-              Save
-            </LoadingButton>
-            {state.mode !== "" && (
-              <Button
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                }}
-                variant="contained"
-                startIcon={<CloseIcon />}
-                color="error"
-                onClick={() => {
-                  Swal.fire({
-                    title: "Are you sure?",
-                    text: "You won't be able to revert this!",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#3085d6",
-                    cancelButtonColor: "#d33",
-                    confirmButtonText: "Yes, cancel it!",
-                  }).then((result) => {
-                    if (result.isConfirmed) {
-                      resetModule();
-                    }
-                  });
-                }}
-              >
-                Cancel
-              </Button>
-            )}
-
-            <LoadingButton
-              id="save-entry-header"
-              variant="contained"
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-                backgroundColor: pink[500],
-                "&:hover": {
-                  backgroundColor: pink[600],
-                },
-              }}
-              loading={loadingDelete}
-              startIcon={<DeleteIcon />}
-              disabled={state.mode !== "edit"}
-              onClick={() => {
-                codeCondfirmationAlert({
-                  isUpdate: false,
-                  cb: (userCodeConfirmation) => {
-                    mutateDelete({
-                      id: state.entry_fixed_assets_id,
-                      userCodeConfirmation,
-                    });
-                  },
-                });
-              }}
-            >
-              Delete
-            </LoadingButton>
-          </div>
-        </div>
-      </Box>
-      <form
-        onKeyDown={(e) => {
-          const enterList = [
-            "description",
-            "remarks",
-            "fullname",
-            "entry_fixed_assets_id",
-          ];
-          if (
-            (e.code === "Enter" || e.code === "NumpadEnter") &&
-            enterList.includes((e.target as any).name)
-          ) {
-            e.preventDefault();
-            handleOnSave(e);
-          }
+          flexDirection: "column",
+          width: "100%",
+          height: "100%",
+          flex: 1,
         }}
-        onSubmit={handleOnSave}
-        id="Form-Fixed Assets"
       >
         <Box
           sx={(theme) => ({
             display: "flex",
-            columnGap: "15px",
-            flexDirection: "row",
-            [theme.breakpoints.down("md")]: {
+            alignItems: "center",
+            columnGap: "20px",
+            [theme.breakpoints.down("sm")]: {
               flexDirection: "column",
-              rowGap: "10px",
+              alignItems: "flex-start",
+              flex: 1,
+              marginBottom: "15px",
             },
-            marginBottom: "10px",
           })}
         >
-          {loadingFixedAssetId ? (
-            <LoadingButton loading={loadingFixedAssetId} />
-          ) : (
-            <FormControl
-              variant="outlined"
+          <div
+            style={{
+              marginTop: "10px",
+              marginBottom: "12px",
+              width: "100%",
+            }}
+          >
+            <TextField
+              label="Search"
+              fullWidth
               size="small"
-              disabled={state.mode === ""}
+              type="text"
+              value={state.search}
+              name="search"
+              onChange={handleInputChange}
+              onKeyDown={(e) => {
+                if (e.code === "Enter" || e.code === "NumpadEnter") {
+                  e.preventDefault();
+                  return refetchFixedAssetSearch();
+                }
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  const datagridview = document.querySelector(
+                    `.grid-container`
+                  ) as HTMLDivElement;
+                  datagridview.focus();
+                }
+
+              }}
+              InputProps={{
+                style: { height: "27px", fontSize: "14px" },
+                className: "manok"
+              }}
               sx={{
-                width: "150px",
-                ".MuiFormLabel-root": {
-                  fontSize: "14px",
-                  background: "white",
-                  zIndex: 99,
-                  padding: "0 3px",
-                },
+                width: "500px",
+                height: "27px",
+                ".MuiFormLabel-root": { fontSize: "14px" },
                 ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
               }}
+            />
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              columnGap: "20px",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                columnGap: "5px",
+              }}
             >
-              <InputLabel htmlFor="fixed_assets-auto-generate-id-field">
-                Fixed Assets ID
-              </InputLabel>
-              <OutlinedInput
+              {state.mode === "" && (
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  id="entry-header-save-button"
+                  sx={{
+                    height: "30px",
+                    fontSize: "11px",
+                  }}
+                  onClick={() => {
+                    refetchFixedAssetId();
+                    handleInputChange({ target: { value: "add", name: "mode" } });
+                  }}
+                >
+                  New
+                </Button>
+              )}
+              <LoadingButton
+                id="save-entry-header"
+                color="primary"
+                variant="contained"
+                type="submit"
                 sx={{
-                  height: "27px",
-                  fontSize: "14px",
+                  height: "30px",
+                  fontSize: "11px",
                 }}
+                onClick={handleOnSave}
+                startIcon={<SaveIcon />}
                 disabled={state.mode === ""}
-                fullWidth
-                label="Fixed Assets ID"
-                name="entry_fixed_assets_id"
-                value={state.entry_fixed_assets_id}
-                onChange={handleInputChange}
-                readOnly={true}
-                id="fixed_assets-auto-generate-id-field"
-                endAdornment={
-                  <InputAdornment position="end">
-                    <IconButton
-                      disabled={state.mode === ""}
-                      aria-label="search-client"
-                      color="secondary"
-                      edge="end"
-                      onClick={() => {
-                        refetchFixedAssetId();
-                      }}
-                    >
-                      <RestartAltIcon />
-                    </IconButton>
-                  </InputAdornment>
-                }
-              />
-            </FormControl>
-          )}
-          <TextField
-            label="Full Name"
-            name="fullname"
-            minRows={10}
-            fullWidth
-            style={{ marginBottom: "10px" }}
-            size="small"
-            required
-            value={state.fullname}
-            onChange={handleInputChange}
-            disabled={state.mode === ""}
-            InputProps={{
-              style: { height: "27px", fontSize: "14px" },
-            }}
-            sx={{
-              flex: 1,
-              height: "27px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-          />
-          <TextField
-            label="Description"
-            name="description"
-            minRows={10}
-            fullWidth
-            style={{ marginBottom: "10px" }}
-            size="small"
-            required
-            value={state.description}
-            onChange={handleInputChange}
-            disabled={state.mode === ""}
-            InputProps={{
-              style: { height: "27px", fontSize: "14px" },
-            }}
-            sx={{
-              flex: 1,
-              height: "27px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-          />
-          <TextField
-            label="Remarks"
-            name="remarks"
-            minRows={10}
-            fullWidth
-            style={{ marginBottom: "10px" }}
-            size="small"
-            value={state.remarks}
-            onChange={handleInputChange}
-            disabled={state.mode === ""}
-            InputProps={{
-              style: { height: "27px", fontSize: "14px" },
-            }}
-            sx={{
-              flex: 1,
-              height: "27px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-          />
-          {subAccountLoading ? (
-            <LoadingButton loading={subAccountLoading} />
-          ) : (
-            <FormControl
+                loading={loadingAdd || loadingEdit}
+              >
+                Save
+              </LoadingButton>
+              {state.mode !== "" && (
+                <Button
+                  sx={{
+                    height: "30px",
+                    fontSize: "11px",
+                  }}
+                  variant="contained"
+                  startIcon={<CloseIcon />}
+                  color="error"
+                  onClick={() => {
+                    Swal.fire({
+                      title: "Are you sure?",
+                      text: "You won't be able to revert this!",
+                      icon: "warning",
+                      showCancelButton: true,
+                      confirmButtonColor: "#3085d6",
+                      cancelButtonColor: "#d33",
+                      confirmButtonText: "Yes, cancel it!",
+                    }).then((result) => {
+                      if (result.isConfirmed) {
+                        resetModule();
+                      }
+                    });
+                  }}
+                >
+                  Cancel
+                </Button>
+              )}
+
+              <LoadingButton
+                id="save-entry-header"
+                variant="contained"
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                  backgroundColor: pink[500],
+                  "&:hover": {
+                    backgroundColor: pink[600],
+                  },
+                }}
+                loading={loadingDelete}
+                startIcon={<DeleteIcon />}
+                disabled={state.mode !== "edit"}
+                onClick={() => {
+                  codeCondfirmationAlert({
+                    isUpdate: false,
+                    cb: (userCodeConfirmation) => {
+                      mutateDelete({
+                        id: state.entry_fixed_assets_id,
+                        userCodeConfirmation,
+                      });
+                    },
+                  });
+                }}
+              >
+                Delete
+              </LoadingButton>
+            </div>
+          </div>
+        </Box>
+        <form
+          onKeyDown={(e) => {
+            const enterList = [
+              "description",
+              "remarks",
+              "fullname",
+              "entry_fixed_assets_id",
+            ];
+            if (
+              (e.code === "Enter" || e.code === "NumpadEnter") &&
+              enterList.includes((e.target as any).name)
+            ) {
+              e.preventDefault();
+              handleOnSave(e);
+            }
+          }}
+          onSubmit={handleOnSave}
+          id="Form-Fixed Assets"
+        >
+          <Box
+            sx={(theme) => ({
+              display: "flex",
+              columnGap: "15px",
+              flexDirection: "row",
+              [theme.breakpoints.down("md")]: {
+                flexDirection: "column",
+                rowGap: "10px",
+              },
+              marginBottom: "10px",
+            })}
+          >
+            {loadingFixedAssetId ? (
+              <LoadingButton loading={loadingFixedAssetId} />
+            ) : (
+              <FormControl
+                variant="outlined"
+                size="small"
+                disabled={state.mode === ""}
+                sx={{
+                  width: "150px",
+                  ".MuiFormLabel-root": {
+                    fontSize: "14px",
+                    background: "white",
+                    zIndex: 99,
+                    padding: "0 3px",
+                  },
+                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                }}
+              >
+                <InputLabel htmlFor="fixed_assets-auto-generate-id-field">
+                  Fixed Assets ID
+                </InputLabel>
+                <OutlinedInput
+                  sx={{
+                    height: "27px",
+                    fontSize: "14px",
+                  }}
+                  disabled={state.mode === ""}
+                  fullWidth
+                  label="Fixed Assets ID"
+                  name="entry_fixed_assets_id"
+                  value={state.entry_fixed_assets_id}
+                  onChange={handleInputChange}
+                  readOnly={true}
+                  id="fixed_assets-auto-generate-id-field"
+                  endAdornment={
+                    <InputAdornment position="end">
+                      <IconButton
+                        disabled={state.mode === ""}
+                        aria-label="search-client"
+                        color="secondary"
+                        edge="end"
+                        onClick={() => {
+                          refetchFixedAssetId();
+                        }}
+                      >
+                        <RestartAltIcon />
+                      </IconButton>
+                    </InputAdornment>
+                  }
+                />
+              </FormControl>
+            )}
+            <TextField
+              label="Full Name"
+              name="fullname"
+              minRows={10}
               fullWidth
-              required
+              style={{ marginBottom: "10px" }}
               size="small"
+              required
+              value={state.fullname}
+              onChange={handleInputChange}
+              disabled={state.mode === ""}
+              InputProps={{
+                style: { height: "27px", fontSize: "14px" },
+              }}
               sx={{
                 flex: 1,
-                ".MuiFormLabel-root": {
-                  fontSize: "14px",
-                  background: "white",
-                  zIndex: 99,
-                  padding: "0 3px",
-                },
+                height: "27px",
+                ".MuiFormLabel-root": { fontSize: "14px" },
                 ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
               }}
-            >
-              <InputLabel id="Sub Account">Sub Account</InputLabel>
-              <Select
+            />
+            <TextField
+              label="Description"
+              name="description"
+              minRows={10}
+              fullWidth
+              style={{ marginBottom: "10px" }}
+              size="small"
+              required
+              value={state.description}
+              onChange={handleInputChange}
+              disabled={state.mode === ""}
+              InputProps={{
+                style: { height: "27px", fontSize: "14px" },
+              }}
+              sx={{
+                flex: 1,
+                height: "27px",
+                ".MuiFormLabel-root": { fontSize: "14px" },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              }}
+            />
+            <TextField
+              label="Remarks"
+              name="remarks"
+              minRows={10}
+              fullWidth
+              style={{ marginBottom: "10px" }}
+              size="small"
+              value={state.remarks}
+              onChange={handleInputChange}
+              disabled={state.mode === ""}
+              InputProps={{
+                style: { height: "27px", fontSize: "14px" },
+              }}
+              sx={{
+                flex: 1,
+                height: "27px",
+                ".MuiFormLabel-root": { fontSize: "14px" },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              }}
+            />
+            {subAccountLoading ? (
+              <LoadingButton loading={subAccountLoading} />
+            ) : (
+              <FormControl
+                fullWidth
+                required
+                size="small"
                 sx={{
-                  height: "27px",
-                  fontSize: "14px",
+                  flex: 1,
+                  ".MuiFormLabel-root": {
+                    fontSize: "14px",
+                    background: "white",
+                    zIndex: 99,
+                    padding: "0 3px",
+                  },
+                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
                 }}
-                disabled={state.mode === ""}
-                value={state.sub_account}
-                onChange={(e) => {
-                  dispatch({
-                    type: "UPDATE_FIELD",
-                    field: "sub_account",
-                    value: e.target.value,
-                  });
-                }}
-                labelId="Sub Account"
-                label="Sub Account"
-                name="sub_account"
               >
-                {subAccountData?.data.subAccount.map(
-                  (item: {
-                    Sub_Acct: string;
-                    NewShortName: string;
-                    Acronym: string;
-                  }) => {
-                    return (
-                      <MenuItem key={item.Sub_Acct} value={item.Sub_Acct}>
-                        {item.NewShortName}
-                      </MenuItem>
-                    );
-                  }
-                )}
-              </Select>
-            </FormControl>
-          )}
-        </Box>
-      </form>
-      <UpwardTable
-        ref={table}
-        isLoading={isLoading || loadingDelete || loadingEdit || loadingAdd}
-        rows={rows}
-        column={fixedAssetstColumn}
-        width={width}
-        height={height}
-        dataReadOnly={true}
-        onSelectionChange={(rowSelected) => {
-          if (rowSelected.length > 0) {
-            handleInputChange({ target: { value: "edit", name: "mode" } });
+                <InputLabel id="Sub Account">Sub Account</InputLabel>
+                <Select
+                  sx={{
+                    height: "27px",
+                    fontSize: "14px",
+                  }}
+                  disabled={state.mode === ""}
+                  value={state.sub_account}
+                  onChange={(e) => {
+                    dispatch({
+                      type: "UPDATE_FIELD",
+                      field: "sub_account",
+                      value: e.target.value,
+                    });
+                  }}
+                  labelId="Sub Account"
+                  label="Sub Account"
+                  name="sub_account"
+                >
+                  {subAccountData?.data.subAccount.map(
+                    (item: {
+                      Sub_Acct: string;
+                      NewShortName: string;
+                      Acronym: string;
+                    }) => {
+                      return (
+                        <MenuItem key={item.Sub_Acct} value={item.Sub_Acct}>
+                          {item.NewShortName}
+                        </MenuItem>
+                      );
+                    }
+                  )}
+                </Select>
+              </FormControl>
+            )}
+          </Box>
+        </form>
+        <UpwardTable
+          ref={table}
+          isLoading={isLoading || loadingDelete || loadingEdit || loadingAdd}
+          rows={rows}
+          column={fixedAssetstColumn}
+          width={width}
+          height={height}
+          dataReadOnly={true}
+          onSelectionChange={(rowSelected) => {
+            if (rowSelected.length > 0) {
+              handleInputChange({ target: { value: "edit", name: "mode" } });
 
-            setNewStateValue(dispatch, rowSelected[0]);
+              setNewStateValue(dispatch, rowSelected[0]);
 
-          } else {
-            setNewStateValue(dispatch, initialState);
-            handleInputChange({ target: { value: "", name: "mode" } });
-            return;
-          }
-        }}
-        onKeyDown={(row, key) => {
-          if (key === "Delete" || key === "Backspace") {
-            const rowSelected = row[0];
-            wait(100).then(() => {
-              codeCondfirmationAlert({
-                isUpdate: false,
-                cb: (userCodeConfirmation) => {
-                  mutateDelete({
-                    id: rowSelected.entry_fixed_assets_id,
-                    userCodeConfirmation,
-                  });
-                },
+            } else {
+              setNewStateValue(dispatch, initialState);
+              handleInputChange({ target: { value: "", name: "mode" } });
+              return;
+            }
+          }}
+          onKeyDown={(row, key) => {
+            if (key === "Delete" || key === "Backspace") {
+              const rowSelected = row[0];
+              wait(100).then(() => {
+                codeCondfirmationAlert({
+                  isUpdate: false,
+                  cb: (userCodeConfirmation) => {
+                    mutateDelete({
+                      id: rowSelected.entry_fixed_assets_id,
+                      userCodeConfirmation,
+                    });
+                  },
+                });
               });
-            });
-            return;
-          }
-        }}
-        inputsearchselector=".manok"
-      />
-      {/* <div
+              return;
+            }
+          }}
+          inputsearchselector=".manok"
+        />
+        {/* <div
         ref={refParent}
         style={{
           marginTop: "10px",
@@ -685,6 +688,7 @@ export default function FixedAssets() {
           />
         </Box>
       </div> */}
-    </div>
+      </div>
+    </>
   );
 }

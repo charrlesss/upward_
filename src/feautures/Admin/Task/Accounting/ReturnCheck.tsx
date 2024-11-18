@@ -46,6 +46,7 @@ import {
   generateRandomClass,
   keyBoardSelectionTable,
 } from "../../../../components/ModalWithTable";
+import PageHelmet from "../../../../components/Helmet";
 
 interface ReturnCheckContextType {
   checkCollection: Array<any>;
@@ -123,24 +124,24 @@ const ReturnCheckContext = createContext<ReturnCheckContextType>({
   tableSelectedCheck: { current: {} },
   tableAccountingEntryCheck: { current: {} },
   tableSelectedCheckReturn: { current: {} },
-  dispatchModal: () => {},
-  modalSelectedMutate: () => {},
+  dispatchModal: () => { },
+  modalSelectedMutate: () => { },
   getSearchReturnCheckInfoLoading: false,
   modalSelectedCheckLoading: false,
   debitModalCollection: [],
   myAxios: {},
   user: {},
-  setCheckCollection: () => {},
+  setCheckCollection: () => { },
   openSelectedCheckModal: false,
-  setOpenSelectedCheckModal: () => {},
+  setOpenSelectedCheckModal: () => { },
   currentStepIndex: 0,
-  fireModal: () => {},
+  fireModal: () => { },
   stateModal: {},
   datePickerModalRef: { current: null },
-  setAccountingEntry: () => {},
-  handleModalInputChange: () => {},
-  LoadSelectedCheckInSelectedTable: () => {},
-  setCheckSelectedCollection: () => {},
+  setAccountingEntry: () => { },
+  handleModalInputChange: () => { },
+  LoadSelectedCheckInSelectedTable: () => { },
+  setCheckSelectedCollection: () => { },
 });
 const buttons = [
   {
@@ -258,7 +259,7 @@ export default function ReturnCheck() {
       refetchOnWindowFocus: false,
       onSuccess: (data) => {
         const response = data as any;
-    
+
         dispatch({
           type: "UPDATE_FIELD",
           field: "RefNo",
@@ -336,7 +337,7 @@ export default function ReturnCheck() {
         dispatchModal({
           type: "UPDATE_FIELD",
           field: "depoBankIdentity",
-          value:credit.Identity  ,
+          value: credit.Identity,
         });
 
         dispatchModal({
@@ -562,7 +563,7 @@ export default function ReturnCheck() {
         });
       });
     }
-   
+
     if (state.returnMode === "edit") {
       codeCondfirmationAlert({
         isUpdate: true,
@@ -768,744 +769,748 @@ export default function ReturnCheck() {
   const isFieldDisable = state.returnMode === "";
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        width: "100%",
-        height: "100%",
-        flex: 1,
-      }}
-    >
+    <>
+      <PageHelmet title="Returned Check" />
       <div
         style={{
           display: "flex",
-          alignItems: "center",
-          columnGap: "5px",
-        }}
-      >
-        {isLoadingReturnChecksModal ? (
-          <LoadingButton loading={isLoadingReturnChecksModal} />
-        ) : (
-          <TextField
-            label="Search"
-            size="small"
-            name="search"
-            value={state.search}
-            onChange={handleInputChange}
-            onKeyDown={(e) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                e.preventDefault();
-                return openReturnChecksModal(
-                  (e.target as HTMLInputElement).value
-                );
-              }
-            }}
-            InputProps={{
-              style: { height: "27px", fontSize: "14px" },
-            }}
-            sx={{
-              width: "300px",
-              height: "27px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-          />
-        )}
-
-        {state.returnMode === "" && (
-          <Button
-            sx={{
-              height: "30px",
-              fontSize: "11px",
-            }}
-            variant="contained"
-            startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
-            id="entry-header-save-button"
-            onClick={() => {
-              dispatch({
-                type: "UPDATE_FIELD",
-                field: "returnMode",
-                value: "add",
-              });
-            }}
-          >
-            New
-          </Button>
-        )}
-        <LoadingButton
-          sx={{
-            height: "30px",
-            fontSize: "11px",
-          }}
-          id="save-entry-header"
-          color="primary"
-          variant="contained"
-          type="submit"
-          onClick={handleOnSave}
-          disabled={state.returnMode === ""}
-          startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
-          loading={addReturnCheckLoading}
-        >
-          {state.returnMode === "edit" ? "Update" : "Save"}
-        </LoadingButton>
-        {state.returnMode !== "" && (
-          <Button
-            sx={{
-              height: "30px",
-              fontSize: "11px",
-            }}
-            variant="contained"
-            startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
-            color="error"
-            onClick={() => {
-              Swal.fire({
-                title: "Are you sure?",
-                text: "You won't be able to revert this!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, cancel it!",
-              }).then((result) => {
-                if (result.isConfirmed) {
-                  refetchCheckList();
-                  setCheckSelectedCollection([]);
-                  setAccountingEntry([]);
-                  dispatch({
-                    type: "UPDATE_FIELD",
-                    field: "returnMode",
-                    value: "",
-                  });
-                  setNewStateValue(dispatch, initialState);
-                  RefetchReturnCheck();
-                }
-              });
-            }}
-          >
-            Cancel
-          </Button>
-        )}
-      </div>
-      <br />
-      <form
-        onKeyDown={(e) => {
-          if (e.code === "Enter" || e.code === "NumpadEnter") {
-            e.preventDefault();
-            return;
-          }
-        }}
-        style={{
-          display: "flex",
-          gap: "10px",
-        }}
-      >
-        {LoadingReturnCheckLoading ? (
-          <LoadingButton loading={LoadingReturnCheckLoading} />
-        ) : (
-          <FormControl
-            sx={{
-              width: "200px",
-              ".MuiFormLabel-root": {
-                fontSize: "14px",
-                background: "white",
-                zIndex: 99,
-                padding: "0 3px",
-              },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-            variant="outlined"
-            size="small"
-            disabled={isFieldDisable}
-          >
-            <InputLabel htmlFor="return-check-id-field">Ref. No.</InputLabel>
-            <OutlinedInput
-              sx={{
-                height: "27px",
-                fontSize: "14px",
-              }}
-              // inputRef={checkBankRef}
-              disabled={isFieldDisable}
-              fullWidth
-              label="Ref. No."
-              name="RefNo"
-              value={state.RefNo}
-              onChange={handleInputChange}
-              onKeyDown={(e) => {
-                if (e.code === "Enter" || e.code === "NumpadEnter") {
-                  return handleOnSave(e);
-                }
-              }}
-              readOnly={user?.department !== "UCSMI"}
-              id="return-check-id-field"
-              endAdornment={
-                <InputAdornment position="end">
-                  <IconButton
-                    ref={reloadIDButtonRef}
-                    disabled={isFieldDisable}
-                    aria-label="search-client"
-                    color="secondary"
-                    edge="end"
-                    onClick={() => {
-                      RefetchReturnCheck();
-                    }}
-                  >
-                    <RestartAltIcon />
-                  </IconButton>
-                </InputAdornment>
-              }
-            />
-          </FormControl>
-        )}
-        <CustomDatePicker
-          disabled={isFieldDisable}
-          label="Date Returned"
-          onChange={(value: any) => {
-            dispatch({
-              type: "UPDATE_FIELD",
-              field: "DateReturn",
-              value: value,
-            });
-          }}
-          value={new Date(state.DateReturn)}
-          onKeyDown={(e: any) => {
-            if (e.code === "Enter" || e.code === "NumpadEnter") {
-              const timeout = setTimeout(() => {
-                datePickerRef.current?.querySelector("button")?.click();
-                clearTimeout(timeout);
-              }, 150);
-            }
-          }}
-          textField={{
-            InputLabelProps: {
-              style: {
-                fontSize: "14px",
-              },
-            },
-            InputProps: {
-              style: { height: "27px", fontSize: "14px" },
-            },
-          }}
-          datePickerRef={datePickerRef}
-        />
-        <TextField
-          disabled={isFieldDisable}
-          fullWidth
-          label="Explanation"
-          size="small"
-          name="Explanation"
-          value={state.Explanation}
-          onChange={handleInputChange}
-          onKeyDown={(e: any) => {
-            if (e.code === "Enter" || e.code === "NumpadEnter") {
-              return;
-            }
-          }}
-          InputProps={{
-            style: { height: "27px", fontSize: "14px" },
-            readOnly: true,
-          }}
-          sx={{
-            flex: 1,
-            ".MuiFormLabel-root": { fontSize: "14px" },
-            ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-          }}
-          inputRef={explanationInputRef}
-        />
-        <button
-          ref={submitButton}
-          style={{ display: "none" }}
-          type="submit"
-        ></button>
-      </form>
-      <br />
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <div>
-          {buttons.map((item, idx) => {
-            return (
-              <button
-                key={idx}
-                style={{
-                  border: "none",
-                  outline: "none",
-                  backgroundColor: "rgba(51, 51, 51, 0.05)",
-                  borderWidth: "0",
-                  color: currentStepIndex === idx ? "#7e22ce" : "#333333",
-                  cursor: "pointer",
-                  display: "inline-block",
-                  fontFamily: `"Haas Grot Text R Web", "Helvetica Neue", Helvetica, Arial, sans-serif`,
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  lineHeight: "20px",
-                  listStyle: "none",
-                  margin: "0",
-                  padding: "10px 12px",
-                  textAlign: "center",
-                  transition: "all 200ms",
-                  verticalAlign: "baseline",
-                  whiteSpace: "nowrap",
-                  userSelect: "none",
-                  touchAction: "manipulation",
-                  position: "relative",
-                  overflow: "hidden",
-                }}
-                onClick={() => goTo(idx)}
-              >
-                <span
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    background: "rgba(206, 214, 211, 0.18)",
-                    transition: "all 200ms",
-                    transform: slideAnimation(currentStepIndex, idx),
-                  }}
-                ></span>
-                {item.title}
-              </button>
-            );
-          })}
-        </div>
-        <div>
-          Total Amount:{" "}
-          <strong>
-            {accountingEntry
-              .reduce(
-                (sum: any, obj: any) =>
-                  sum + parseFloat(obj.Credit.replace(/,/g, "")),
-                0
-              )
-              .toLocaleString("en-US", {
-                style: "decimal",
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-          </strong>
-        </div>
-      </div>
-      <br />
-      <ReturnCheckContext.Provider
-        value={{
-          checkCollection,
-          checkSelectedCollection,
-          accountingEntry,
-          LoadingCheckList,
-          addReturnCheckLoading,
-          tableSelectedCheck,
-          dispatchModal,
-          modalSelectedMutate,
-          getSearchReturnCheckInfoLoading,
-          debitModalCollection,
-          tableAccountingEntryCheck,
-          tableSelectedCheckReturn,
-          modalSelectedCheckLoading,
-          myAxios,
-          user,
-          setCheckCollection,
-          openSelectedCheckModal,
-          setOpenSelectedCheckModal,
-          currentStepIndex,
-          fireModal,
-          stateModal,
-          datePickerModalRef,
-          setAccountingEntry,
-          handleModalInputChange,
-          LoadSelectedCheckInSelectedTable,
-          setCheckSelectedCollection,
+          flexDirection: "column",
+          width: "100%",
+          height: "100%",
+          flex: 1,
         }}
       >
         <div
           style={{
             display: "flex",
-            flexDirection: "column",
-            flex: 1,
+            alignItems: "center",
+            columnGap: "5px",
           }}
-          id="container"
         >
-          {step}
-          {ReturnChecksModal}
-          <Modal
-            open={openSelectedCheckModal}
-            onClose={() => {
-              setOpenSelectedCheckModal(false);
-              tableSelectedCheck.current?.removeSelection();
-              tableSelectedCheckReturn.current?.removeSelection();
+          {isLoadingReturnChecksModal ? (
+            <LoadingButton loading={isLoadingReturnChecksModal} />
+          ) : (
+            <TextField
+              label="Search"
+              size="small"
+              name="search"
+              value={state.search}
+              onChange={handleInputChange}
+              onKeyDown={(e) => {
+                if (e.code === "Enter" || e.code === "NumpadEnter") {
+                  e.preventDefault();
+                  return openReturnChecksModal(
+                    (e.target as HTMLInputElement).value
+                  );
+                }
+              }}
+              InputProps={{
+                style: { height: "27px", fontSize: "14px" },
+              }}
+              sx={{
+                width: "300px",
+                height: "27px",
+                ".MuiFormLabel-root": { fontSize: "14px" },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              }}
+            />
+          )}
+
+          {state.returnMode === "" && (
+            <Button
+              sx={{
+                height: "30px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+              id="entry-header-save-button"
+              onClick={() => {
+                dispatch({
+                  type: "UPDATE_FIELD",
+                  field: "returnMode",
+                  value: "add",
+                });
+              }}
+            >
+              New
+            </Button>
+          )}
+          <LoadingButton
+            sx={{
+              height: "30px",
+              fontSize: "11px",
             }}
-            aria-labelledby="modal-modal-title"
-            aria-describedby="modal-modal-description"
-            onKeyDown={(e) => {
-              if (
-                currentStepIndex === 1 &&
-                (e.code === "Backspace" || e.code === "Delete")
-              ) {
-                setOpenSelectedCheckModal(false);
-
-                fireModal({
-                  onConfirmCallback: () => {
-                    setCheckSelectedCollection((d) =>
-                      d.filter((itm: any) => {
-                        return (
-                          itm.TempID.toString() !== stateModal.TempID.toString()
-                        );
-                      })
-                    );
-                    setAccountingEntry((d) => {
-                      return d.filter((itm: any) => {
-                        return (
-                          itm.Check_No.split("-")[0] !==
-                          stateModal.Check_No.toString()
-                        );
-                      });
+            id="save-entry-header"
+            color="primary"
+            variant="contained"
+            type="submit"
+            onClick={handleOnSave}
+            disabled={state.returnMode === ""}
+            startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
+            loading={addReturnCheckLoading}
+          >
+            {state.returnMode === "edit" ? "Update" : "Save"}
+          </LoadingButton>
+          {state.returnMode !== "" && (
+            <Button
+              sx={{
+                height: "30px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
+              color="error"
+              onClick={() => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, cancel it!",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    refetchCheckList();
+                    setCheckSelectedCollection([]);
+                    setAccountingEntry([]);
+                    dispatch({
+                      type: "UPDATE_FIELD",
+                      field: "returnMode",
+                      value: "",
                     });
-                  },
+                    setNewStateValue(dispatch, initialState);
+                    RefetchReturnCheck();
+                  }
+                });
+              }}
+            >
+              Cancel
+            </Button>
+          )}
+        </div>
+        <br />
+        <form
+          onKeyDown={(e) => {
+            if (e.code === "Enter" || e.code === "NumpadEnter") {
+              e.preventDefault();
+              return;
+            }
+          }}
+          style={{
+            display: "flex",
+            gap: "10px",
+          }}
+        >
+          {LoadingReturnCheckLoading ? (
+            <LoadingButton loading={LoadingReturnCheckLoading} />
+          ) : (
+            <FormControl
+              sx={{
+                width: "200px",
+                ".MuiFormLabel-root": {
+                  fontSize: "14px",
+                  background: "white",
+                  zIndex: 99,
+                  padding: "0 3px",
+                },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              }}
+              variant="outlined"
+              size="small"
+              disabled={isFieldDisable}
+            >
+              <InputLabel htmlFor="return-check-id-field">Ref. No.</InputLabel>
+              <OutlinedInput
+                sx={{
+                  height: "27px",
+                  fontSize: "14px",
+                }}
+                // inputRef={checkBankRef}
+                disabled={isFieldDisable}
+                fullWidth
+                label="Ref. No."
+                name="RefNo"
+                value={state.RefNo}
+                onChange={handleInputChange}
+                onKeyDown={(e) => {
+                  if (e.code === "Enter" || e.code === "NumpadEnter") {
+                    return handleOnSave(e);
+                  }
+                }}
+                readOnly={user?.department !== "UCSMI"}
+                id="return-check-id-field"
+                endAdornment={
+                  <InputAdornment position="end">
+                    <IconButton
+                      ref={reloadIDButtonRef}
+                      disabled={isFieldDisable}
+                      aria-label="search-client"
+                      color="secondary"
+                      edge="end"
+                      onClick={() => {
+                        RefetchReturnCheck();
+                      }}
+                    >
+                      <RestartAltIcon />
+                    </IconButton>
+                  </InputAdornment>
+                }
+              />
+            </FormControl>
+          )}
+          <CustomDatePicker
+            disabled={isFieldDisable}
+            label="Date Returned"
+            onChange={(value: any) => {
+              dispatch({
+                type: "UPDATE_FIELD",
+                field: "DateReturn",
+                value: value,
+              });
+            }}
+            value={new Date(state.DateReturn)}
+            onKeyDown={(e: any) => {
+              if (e.code === "Enter" || e.code === "NumpadEnter") {
+                const timeout = setTimeout(() => {
+                  datePickerRef.current?.querySelector("button")?.click();
+                  clearTimeout(timeout);
+                }, 150);
+              }
+            }}
+            textField={{
+              InputLabelProps: {
+                style: {
+                  fontSize: "14px",
+                },
+              },
+              InputProps: {
+                style: { height: "27px", fontSize: "14px" },
+              },
+            }}
+            datePickerRef={datePickerRef}
+          />
+          <TextField
+            disabled={isFieldDisable}
+            fullWidth
+            label="Explanation"
+            size="small"
+            name="Explanation"
+            value={state.Explanation}
+            onChange={handleInputChange}
+            onKeyDown={(e: any) => {
+              if (e.code === "Enter" || e.code === "NumpadEnter") {
+                return;
+              }
+            }}
+            InputProps={{
+              style: { height: "27px", fontSize: "14px" },
+              readOnly: true,
+            }}
+            sx={{
+              flex: 1,
+              ".MuiFormLabel-root": { fontSize: "14px" },
+              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+            }}
+            inputRef={explanationInputRef}
+          />
+          <button
+            ref={submitButton}
+            style={{ display: "none" }}
+            type="submit"
+          ></button>
+        </form>
+        <br />
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div>
+            {buttons.map((item, idx) => {
+              return (
+                <button
+                  key={idx}
+                  style={{
+                    border: "none",
+                    outline: "none",
+                    backgroundColor: "rgba(51, 51, 51, 0.05)",
+                    borderWidth: "0",
+                    color: currentStepIndex === idx ? "#7e22ce" : "#333333",
+                    cursor: "pointer",
+                    display: "inline-block",
+                    fontFamily: `"Haas Grot Text R Web", "Helvetica Neue", Helvetica, Arial, sans-serif`,
+                    fontSize: "14px",
+                    fontWeight: "500",
+                    lineHeight: "20px",
+                    listStyle: "none",
+                    margin: "0",
+                    padding: "10px 12px",
+                    textAlign: "center",
+                    transition: "all 200ms",
+                    verticalAlign: "baseline",
+                    whiteSpace: "nowrap",
+                    userSelect: "none",
+                    touchAction: "manipulation",
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                  onClick={() => goTo(idx)}
+                >
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      background: "rgba(206, 214, 211, 0.18)",
+                      transition: "all 200ms",
+                      transform: slideAnimation(currentStepIndex, idx),
+                    }}
+                  ></span>
+                  {item.title}
+                </button>
+              );
+            })}
+          </div>
+          <div>
+            Total Amount:{" "}
+            <strong>
+              {accountingEntry
+                .reduce(
+                  (sum: any, obj: any) =>
+                    sum + parseFloat(obj.Credit.replace(/,/g, "")),
+                  0
+                )
+                .toLocaleString("en-US", {
+                  style: "decimal",
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+            </strong>
+          </div>
+        </div>
+        <br />
+        <ReturnCheckContext.Provider
+          value={{
+            checkCollection,
+            checkSelectedCollection,
+            accountingEntry,
+            LoadingCheckList,
+            addReturnCheckLoading,
+            tableSelectedCheck,
+            dispatchModal,
+            modalSelectedMutate,
+            getSearchReturnCheckInfoLoading,
+            debitModalCollection,
+            tableAccountingEntryCheck,
+            tableSelectedCheckReturn,
+            modalSelectedCheckLoading,
+            myAxios,
+            user,
+            setCheckCollection,
+            openSelectedCheckModal,
+            setOpenSelectedCheckModal,
+            currentStepIndex,
+            fireModal,
+            stateModal,
+            datePickerModalRef,
+            setAccountingEntry,
+            handleModalInputChange,
+            LoadSelectedCheckInSelectedTable,
+            setCheckSelectedCollection,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              flex: 1,
+            }}
+            id="container"
+          >
+            {step}
+            {ReturnChecksModal}
+            <Modal
+              open={openSelectedCheckModal}
+              onClose={() => {
+                setOpenSelectedCheckModal(false);
+                tableSelectedCheck.current?.removeSelection();
+                tableSelectedCheckReturn.current?.removeSelection();
+              }}
+              aria-labelledby="modal-modal-title"
+              aria-describedby="modal-modal-description"
+              onKeyDown={(e) => {
+                if (
+                  currentStepIndex === 1 &&
+                  (e.code === "Backspace" || e.code === "Delete")
+                ) {
+                  setOpenSelectedCheckModal(false);
 
-                  onCancelCallback: () => {
+                  fireModal({
+                    onConfirmCallback: () => {
+                      setCheckSelectedCollection((d) =>
+                        d.filter((itm: any) => {
+                          return (
+                            itm.TempID.toString() !== stateModal.TempID.toString()
+                          );
+                        })
+                      );
+                      setAccountingEntry((d) => {
+                        return d.filter((itm: any) => {
+                          return (
+                            itm.Check_No.split("-")[0] !==
+                            stateModal.Check_No.toString()
+                          );
+                        });
+                      });
+                    },
+
+                    onCancelCallback: () => {
+                      setOpenSelectedCheckModal(false);
+                      tableSelectedCheck.current?.removeSelection();
+                      tableSelectedCheckReturn.current?.removeSelection();
+                    },
+                  });
+                }
+                if (
+                  currentStepIndex === 0 &&
+                  (e.code === "Enter" || e.code === "NumpadEnter")
+                ) {
+                  handleAccept();
+                }
+              }}
+            >
+              <Box
+                sx={{
+                  position: "absolute" as "absolute",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  width: "80%",
+                  bgcolor: "background.paper",
+                  p: 3,
+                  boxSizing: "border-box",
+                }}
+              >
+                <IconButton
+                  style={{
+                    position: "absolute",
+                    top: "10px",
+                    right: "10px",
+                  }}
+                  // disabled={!addNew}
+                  aria-label="search-client"
+                  onClick={() => {
                     setOpenSelectedCheckModal(false);
                     tableSelectedCheck.current?.removeSelection();
                     tableSelectedCheckReturn.current?.removeSelection();
-                  },
-                });
-              }
-              if (
-                currentStepIndex === 0 &&
-                (e.code === "Enter" || e.code === "NumpadEnter")
-              ) {
-                handleAccept();
-              }
-            }}
-          >
-            <Box
-              sx={{
-                position: "absolute" as "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                width: "80%",
-                bgcolor: "background.paper",
-                p: 3,
-                boxSizing: "border-box",
-              }}
-            >
-              <IconButton
-                style={{
-                  position: "absolute",
-                  top: "10px",
-                  right: "10px",
-                }}
-                // disabled={!addNew}
-                aria-label="search-client"
-                onClick={() => {
-                  setOpenSelectedCheckModal(false);
-                  tableSelectedCheck.current?.removeSelection();
-                  tableSelectedCheckReturn.current?.removeSelection();
-                  dispatchModal({
-                    type: "UPDATE_FIELD",
-                    field: "TempID",
-                    value: "",
-                  });
-                  dispatchModal({
-                    type: "UPDATE_FIELD",
-                    field: "subSelectedChecks",
-                    value: {},
-                  });
-                }}
-              >
-                <CloseIcon />
-              </IconButton>
-              <Typography id="modal-modal-title" variant="body1" component="h2">
-                Return Detail and Accounting Entry (Check No.:
-                <strong>{stateModal.Check_No}</strong>)
-              </Typography>
-              <fieldset
-                style={{
-                  display: "flex",
-                  columnGap: "10px",
-                  padding: "10px",
-                  border: "1px solid #cbd5e1",
-                  borderRadius: "5px",
-                  marginTop: "20px",
-                }}
-              >
-                <legend style={{ fontSize: "14px" }}>Return Detail</legend>
-                <FormControl
-                  size="small"
-                  variant="outlined"
-                  fullWidth
-                  sx={{
-                    ".MuiFormLabel-root": {
-                      fontSize: "14px",
-                      background: "white",
-                      zIndex: 99,
-                      padding: "0 3px",
-                    },
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-1px" },
-                  }}
-                >
-                  <InputLabel id="label-selection-reason">
-                    Return Reason
-                  </InputLabel>
-                  <Select
-                    labelId="label-selection-reason"
-                    value={stateModal.ReturnReason}
-                    name="ReturnReason"
-                    onChange={handleModalInputChange}
-                    autoWidth
-                    sx={{
-                      height: "27px",
-                      fontSize: "14px",
-                    }}
-                  >
-                    <MenuItem value="DAIF">DAIF</MenuItem>
-                    <MenuItem value={"DAUD"}>DAUD</MenuItem>
-                    <MenuItem value={"AC"}>ACCOUNT CLOSED</MenuItem>
-                    <MenuItem value={"SPO"}>SPO</MenuItem>
-                    <MenuItem value={"SD"}>SIGNATURE DIFFERS</MenuItem>
-                  </Select>
-                </FormControl>
-                <CustomDatePicker
-                  fullWidth={true}
-                  label="Date Returned"
-                  onChange={(value: any) => {
                     dispatchModal({
                       type: "UPDATE_FIELD",
-                      field: "ModalDateReturn",
-                      value: value.toLocaleDateString(),
+                      field: "TempID",
+                      value: "",
+                    });
+                    dispatchModal({
+                      type: "UPDATE_FIELD",
+                      field: "subSelectedChecks",
+                      value: {},
                     });
                   }}
-                  value={new Date(stateModal.ModalDateReturn)}
-                  onKeyDown={(e: any) => {
-                    if (e.code === "Enter" || e.code === "NumpadEnter") {
-                      const timeout = setTimeout(() => {
-                        datePickerModalRef.current
-                          ?.querySelector("button")
-                          ?.click();
-                        clearTimeout(timeout);
-                      }, 150);
-                    }
-                  }}
-                  datePickerRef={datePickerModalRef}
-                  textField={{
-                    InputLabelProps: {
-                      style: {
-                        fontSize: "14px",
-                      },
-                    },
-                    InputProps: {
-                      style: { height: "27px", fontSize: "14px" },
-                    },
-                  }}
-                />
-              </fieldset>
-              <fieldset
-                style={{
-                  display: "flex",
-                  columnGap: "10px",
-                  padding: "10px",
-                  border: "1px solid #cbd5e1",
-                  borderRadius: "5px",
-                  marginTop: "5px",
-                }}
-              >
-                <legend style={{ fontSize: "14px" }}>Credit Entry</legend>
-                <div
+                >
+                  <CloseIcon />
+                </IconButton>
+                <Typography id="modal-modal-title" variant="body1" component="h2">
+                  Return Detail and Accounting Entry (Check No.:
+                  <strong>{stateModal.Check_No}</strong>)
+                </Typography>
+                <fieldset
                   style={{
                     display: "flex",
-                    gap: "10px",
-                    width: "100%",
+                    columnGap: "10px",
+                    padding: "10px",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: "5px",
+                    marginTop: "20px",
                   }}
                 >
-                  <TextField
+                  <legend style={{ fontSize: "14px" }}>Return Detail</legend>
+                  <FormControl
                     size="small"
-                    label="Account Name"
-                    name="AccountName"
-                    value={stateModal.Short}
-                    onChange={handleModalInputChange}
-                    InputProps={{
-                      readOnly: true,
-                      style: { height: "27px", fontSize: "14px" },
-                    }}
+                    variant="outlined"
+                    fullWidth
                     sx={{
-                      flex: 1,
-                      ".MuiFormLabel-root": { fontSize: "14px" },
+                      ".MuiFormLabel-root": {
+                        fontSize: "14px",
+                        background: "white",
+                        zIndex: 99,
+                        padding: "0 3px",
+                      },
                       ".MuiFormLabel-root[data-shrink=false]": { top: "-1px" },
                     }}
-                  />
-                  <TextField
-                    size="small"
-                    label="Account ID"
-                    name="AccountID"
-                    value={stateModal.AccountID}
-                    onChange={handleModalInputChange}
-                    InputProps={{
-                      readOnly: true,
-                      style: {
+                  >
+                    <InputLabel id="label-selection-reason">
+                      Return Reason
+                    </InputLabel>
+                    <Select
+                      labelId="label-selection-reason"
+                      value={stateModal.ReturnReason}
+                      name="ReturnReason"
+                      onChange={handleModalInputChange}
+                      autoWidth
+                      sx={{
                         height: "27px",
                         fontSize: "14px",
-                        width: "200px",
+                      }}
+                    >
+                      <MenuItem value="DAIF">DAIF</MenuItem>
+                      <MenuItem value={"DAUD"}>DAUD</MenuItem>
+                      <MenuItem value={"AC"}>ACCOUNT CLOSED</MenuItem>
+                      <MenuItem value={"SPO"}>SPO</MenuItem>
+                      <MenuItem value={"SD"}>SIGNATURE DIFFERS</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <CustomDatePicker
+                    fullWidth={true}
+                    label="Date Returned"
+                    onChange={(value: any) => {
+                      dispatchModal({
+                        type: "UPDATE_FIELD",
+                        field: "ModalDateReturn",
+                        value: value.toLocaleDateString(),
+                      });
+                    }}
+                    value={new Date(stateModal.ModalDateReturn)}
+                    onKeyDown={(e: any) => {
+                      if (e.code === "Enter" || e.code === "NumpadEnter") {
+                        const timeout = setTimeout(() => {
+                          datePickerModalRef.current
+                            ?.querySelector("button")
+                            ?.click();
+                          clearTimeout(timeout);
+                        }, 150);
+                      }
+                    }}
+                    datePickerRef={datePickerModalRef}
+                    textField={{
+                      InputLabelProps: {
+                        style: {
+                          fontSize: "14px",
+                        },
+                      },
+                      InputProps: {
+                        style: { height: "27px", fontSize: "14px" },
                       },
                     }}
-                    sx={{
-                      ".MuiFormLabel-root": { fontSize: "14px" },
-                      ".MuiFormLabel-root[data-shrink=false]": { top: "-1px" },
-                    }}
                   />
-                  <TextField
-                    size="small"
-                    label="Amount"
-                    name="Amount"
-                    value={stateModal.Amount}
-                    onChange={handleModalInputChange}
-                    InputProps={{
-                      readOnly: true,
-                      style: {
-                        height: "27px",
-                        fontSize: "14px",
-                        width: "200px",
-                      },
-                    }}
-                    sx={{
-                      ".MuiFormLabel-root": { fontSize: "14px" },
-                      ".MuiFormLabel-root[data-shrink=false]": { top: "-1px" },
-                    }}
-                  />
-                  <TextField
-                    size="small"
-                    label="Sub Account"
-                    name="SubAccount"
-                    value={stateModal.SubAccount}
-                    onChange={handleModalInputChange}
-                    InputProps={{
-                      readOnly: true,
-                      style: {
-                        height: "27px",
-                        fontSize: "14px",
-                        width: "200px",
-                      },
-                    }}
-                    sx={{
-                      ".MuiFormLabel-root": { fontSize: "14px" },
-                      ".MuiFormLabel-root[data-shrink=false]": { top: "-1px" },
-                    }}
-                  />
-                </div>
-              </fieldset>
-              <fieldset
-                style={{
-                  display: "flex",
-                  columnGap: "10px",
-                  border: "1px solid #cbd5e1",
-                  borderRadius: "5px",
-                  marginTop: "5px",
-                }}
-              >
-                <legend style={{ fontSize: "14px" }}>Debit Entry</legend>
-                <div
+                </fieldset>
+                <fieldset
                   style={{
-                    marginTop: "10px",
-                    width: "100%",
-                    position: "relative",
-                    height: "300px",
+                    display: "flex",
+                    columnGap: "10px",
+                    padding: "10px",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: "5px",
+                    marginTop: "5px",
                   }}
                 >
+                  <legend style={{ fontSize: "14px" }}>Credit Entry</legend>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "10px",
+                      width: "100%",
+                    }}
+                  >
+                    <TextField
+                      size="small"
+                      label="Account Name"
+                      name="AccountName"
+                      value={stateModal.Short}
+                      onChange={handleModalInputChange}
+                      InputProps={{
+                        readOnly: true,
+                        style: { height: "27px", fontSize: "14px" },
+                      }}
+                      sx={{
+                        flex: 1,
+                        ".MuiFormLabel-root": { fontSize: "14px" },
+                        ".MuiFormLabel-root[data-shrink=false]": { top: "-1px" },
+                      }}
+                    />
+                    <TextField
+                      size="small"
+                      label="Account ID"
+                      name="AccountID"
+                      value={stateModal.AccountID}
+                      onChange={handleModalInputChange}
+                      InputProps={{
+                        readOnly: true,
+                        style: {
+                          height: "27px",
+                          fontSize: "14px",
+                          width: "200px",
+                        },
+                      }}
+                      sx={{
+                        ".MuiFormLabel-root": { fontSize: "14px" },
+                        ".MuiFormLabel-root[data-shrink=false]": { top: "-1px" },
+                      }}
+                    />
+                    <TextField
+                      size="small"
+                      label="Amount"
+                      name="Amount"
+                      value={stateModal.Amount}
+                      onChange={handleModalInputChange}
+                      InputProps={{
+                        readOnly: true,
+                        style: {
+                          height: "27px",
+                          fontSize: "14px",
+                          width: "200px",
+                        },
+                      }}
+                      sx={{
+                        ".MuiFormLabel-root": { fontSize: "14px" },
+                        ".MuiFormLabel-root[data-shrink=false]": { top: "-1px" },
+                      }}
+                    />
+                    <TextField
+                      size="small"
+                      label="Sub Account"
+                      name="SubAccount"
+                      value={stateModal.SubAccount}
+                      onChange={handleModalInputChange}
+                      InputProps={{
+                        readOnly: true,
+                        style: {
+                          height: "27px",
+                          fontSize: "14px",
+                          width: "200px",
+                        },
+                      }}
+                      sx={{
+                        ".MuiFormLabel-root": { fontSize: "14px" },
+                        ".MuiFormLabel-root[data-shrink=false]": { top: "-1px" },
+                      }}
+                    />
+                  </div>
+                </fieldset>
+                <fieldset
+                  style={{
+                    display: "flex",
+                    columnGap: "10px",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: "5px",
+                    marginTop: "5px",
+                  }}
+                >
+                  <legend style={{ fontSize: "14px" }}>Debit Entry</legend>
                   <div
                     style={{
                       marginTop: "10px",
                       width: "100%",
                       position: "relative",
+                      height: "300px",
                     }}
                   >
-                    <Box
+                    <div
                       style={{
-                        height: "300px",
+                        marginTop: "10px",
                         width: "100%",
-                        overflowX: "scroll",
-                        position: "absolute",
+                        position: "relative",
                       }}
                     >
-                      <Table
-                        isLoading={modalSelectedCheckLoading}
-                        columns={modalDebitEntryColumn}
-                        rows={debitModalCollection}
-                        table_id={"TempID"}
-                        isSingleSelection={true}
-                        isRowFreeze={true}
-                        checkboxSelection={false}
-                        footerChildren={() => <DebitFooterComponent />}
-                        footerPaginationPosition="left-right"
-                        showFooterSelectedCount={false}
-                      />
-                    </Box>
+                      <Box
+                        style={{
+                          height: "300px",
+                          width: "100%",
+                          overflowX: "scroll",
+                          position: "absolute",
+                        }}
+                      >
+                        <Table
+                          isLoading={modalSelectedCheckLoading}
+                          columns={modalDebitEntryColumn}
+                          rows={debitModalCollection}
+                          table_id={"TempID"}
+                          isSingleSelection={true}
+                          isRowFreeze={true}
+                          checkboxSelection={false}
+                          footerChildren={() => <DebitFooterComponent />}
+                          footerPaginationPosition="left-right"
+                          showFooterSelectedCount={false}
+                        />
+                      </Box>
+                    </div>
+                  </div>
+                </fieldset>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    gap: "20px",
+                    marginTop: "15px",
+                  }}
+                >
+                  <div>
+                    <Button
+                      color="success"
+                      variant="contained"
+                      onClick={handleAccept}
+                      style={{ marginRight: "10px" }}
+                      startIcon={<CheckCircleOutlineIcon />}
+                      sx={{
+                        height: "30px",
+                        fontSize: "14px",
+                        textTransform: "none",
+                      }}
+                    >
+                      Accept
+                    </Button>
+                    <Button
+                      color="error"
+                      variant="contained"
+                      onClick={() => {
+                        setOpenSelectedCheckModal(false);
+                        tableSelectedCheck.current?.removeSelection();
+                        tableSelectedCheckReturn.current?.removeSelection();
+
+                        dispatchModal({
+                          type: "UPDATE_FIELD",
+                          field: "TempID",
+                          value: "",
+                        });
+                        dispatchModal({
+                          type: "UPDATE_FIELD",
+                          field: "subSelectedChecks",
+                          value: {},
+                        });
+                        // setIsSelectedFromTobeReturnTable(false);
+                      }}
+                      startIcon={<NotInterestedIcon />}
+                      sx={{
+                        height: "30px",
+                        fontSize: "14px",
+                        textTransform: "none",
+                      }}
+                    >
+                      Cancel
+                    </Button>
                   </div>
                 </div>
-              </fieldset>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  gap: "20px",
-                  marginTop: "15px",
-                }}
-              >
-                <div>
-                  <Button
-                    color="success"
-                    variant="contained"
-                    onClick={handleAccept}
-                    style={{ marginRight: "10px" }}
-                    startIcon={<CheckCircleOutlineIcon />}
-                    sx={{
-                      height: "30px",
-                      fontSize: "14px",
-                      textTransform: "none",
-                    }}
-                  >
-                    Accept
-                  </Button>
-                  <Button
-                    color="error"
-                    variant="contained"
-                    onClick={() => {
-                      setOpenSelectedCheckModal(false);
-                      tableSelectedCheck.current?.removeSelection();
-                      tableSelectedCheckReturn.current?.removeSelection();
+              </Box>
+            </Modal>
+            <ConfirmationModal />
+          </div>
+        </ReturnCheckContext.Provider>
+      </div>
+    </>
 
-                      dispatchModal({
-                        type: "UPDATE_FIELD",
-                        field: "TempID",
-                        value: "",
-                      });
-                      dispatchModal({
-                        type: "UPDATE_FIELD",
-                        field: "subSelectedChecks",
-                        value: {},
-                      });
-                      // setIsSelectedFromTobeReturnTable(false);
-                    }}
-                    startIcon={<NotInterestedIcon />}
-                    sx={{
-                      height: "30px",
-                      fontSize: "14px",
-                      textTransform: "none",
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            </Box>
-          </Modal>
-          <ConfirmationModal />
-        </div>
-      </ReturnCheckContext.Provider>
-    </div>
   );
 }
 
@@ -1539,8 +1544,8 @@ const styles: any = {
 
 const useConfirmation = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [onConfirm, setOnConfirm] = useState(() => () => {});
-  const [onCancel, setOnCancel] = useState(() => () => {});
+  const [onConfirm, setOnConfirm] = useState(() => () => { });
+  const [onCancel, setOnCancel] = useState(() => () => { });
 
   const fireModal = (p: any) => {
     setIsOpen(true);
@@ -1689,10 +1694,9 @@ function SelectedCheck() {
         <div
           className={mainId}
           style={{
-            height: `${
-              (document.getElementById("container")?.getBoundingClientRect()
+            height: `${(document.getElementById("container")?.getBoundingClientRect()
                 .height as number) - 30
-            }px`,
+              }px`,
             width: "100%",
             overflowX: "scroll",
             position: "absolute",
@@ -1833,10 +1837,9 @@ function SelectedCheckToBeReturn() {
     <div style={{ marginTop: "10px", width: "100%", position: "relative" }}>
       <Box
         style={{
-          height: `${
-            (document.getElementById("container")?.getBoundingClientRect()
+          height: `${(document.getElementById("container")?.getBoundingClientRect()
               .height as number) - 30
-          }px`,
+            }px`,
           width: "100%",
           overflowX: "scroll",
           position: "absolute",
@@ -1992,10 +1995,9 @@ function AccountingEntry() {
     <div style={{ marginTop: "10px", width: "100%", position: "relative" }}>
       <Box
         style={{
-          height: `${
-            (document.getElementById("container")?.getBoundingClientRect()
+          height: `${(document.getElementById("container")?.getBoundingClientRect()
               .height as number) - 30
-          }px`,
+            }px`,
           width: "100%",
           overflowX: "scroll",
           position: "absolute",

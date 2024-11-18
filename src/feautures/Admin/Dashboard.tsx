@@ -7,6 +7,7 @@ import "../../style/dashboard.css";
 import useMultipleComponent from "../../hooks/useMultipleComponent";
 import { flushSync } from "react-dom";
 import { UpwardTable } from "../../components/UpwardTable";
+import PageHelmet from "../../components/Helmet";
 
 
 
@@ -81,6 +82,7 @@ export default function Dashboard() {
   // style={{border:"1px solid red" ,height:"500px" ,background:"#D3D3D3"}}
   return (
     <div id="main" >
+      <PageHelmet title="Dashboard" />
       {
         (user?.userAccess === "PRODUCTION" ||
           user?.userAccess === "ACCOUNTING" ||

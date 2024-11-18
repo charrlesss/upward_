@@ -26,6 +26,7 @@ import {
   saveCondfirmationAlert,
 } from "../../../../../../../lib/confirmationAlert";
 import { addYears } from "date-fns";
+import PageHelmet from "../../../../../../../components/Helmet";
 
 const initialState = {
   sub_account: "HO",
@@ -457,224 +458,228 @@ export default function PAPolicy() {
   }, [handleOnSave]);
 
   return (
-    <PAContext.Provider
-      value={{
-        state,
-        handleInputChange,
-        customInputchange,
-        Mortgagee,
-        setMortgagee,
-        clientRows,
-        setClientRows,
-        myAxios,
-        user,
-        agentRows,
-        setAgentRows,
-        computation,
-        isAddOrEditMode,
-        dispatch,
-        keySave,
-      }}
-    >
-      <Box
-        sx={(theme) => ({
-          display: "flex",
-          alignItems: "center",
-          columnGap: "20px",
-          marginBottom: "10px",
-          [theme.breakpoints.down("sm")]: {
-            flexDirection: "column",
-            alignItems: "flex-start",
-            flex: 1,
-          },
-        })}
-      >
+    <>
+      <PageHelmet title="PA Policy" />
 
-        <div
-          style={{
+      <PAContext.Provider
+        value={{
+          state,
+          handleInputChange,
+          customInputchange,
+          Mortgagee,
+          setMortgagee,
+          clientRows,
+          setClientRows,
+          myAxios,
+          user,
+          agentRows,
+          setAgentRows,
+          computation,
+          isAddOrEditMode,
+          dispatch,
+          keySave,
+        }}
+      >
+        <Box
+          sx={(theme) => ({
             display: "flex",
             alignItems: "center",
             columnGap: "20px",
-          }}
+            marginBottom: "10px",
+            [theme.breakpoints.down("sm")]: {
+              flexDirection: "column",
+              alignItems: "flex-start",
+              flex: 1,
+            },
+          })}
         >
+
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              columnGap: "5px",
+              columnGap: "20px",
             }}
           >
-            {state.paActioMode === "" && (
-              <Button
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                }}
-                ref={newButtonRef}
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => {
-                  customInputchange("add", "paActioMode");
-                }}
-              >
-                New
-              </Button>
-            )}
-            <LoadingButton
-              sx={{
-                height: "30px",
-                fontSize: "11px",
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                columnGap: "5px",
               }}
-              color="primary"
-              variant="contained"
-              type="submit"
-              onClick={handleOnSave}
-              disabled={state.paActioMode === ""}
-              startIcon={<SaveIcon />}
-              loading={loadingAddNew}
             >
-              Save
-            </LoadingButton>
-            {state.paActioMode !== "" && (
-              <Button
+              {state.paActioMode === "" && (
+                <Button
+                  sx={{
+                    height: "30px",
+                    fontSize: "11px",
+                  }}
+                  ref={newButtonRef}
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => {
+                    customInputchange("add", "paActioMode");
+                  }}
+                >
+                  New
+                </Button>
+              )}
+              <LoadingButton
                 sx={{
                   height: "30px",
                   fontSize: "11px",
                 }}
-                ref={cancelButtonRef}
+                color="primary"
                 variant="contained"
-                startIcon={<CloseIcon />}
-                color="error"
+                type="submit"
+                onClick={handleOnSave}
+                disabled={state.paActioMode === ""}
+                startIcon={<SaveIcon />}
+                loading={loadingAddNew}
+              >
+                Save
+              </LoadingButton>
+              {state.paActioMode !== "" && (
+                <Button
+                  sx={{
+                    height: "30px",
+                    fontSize: "11px",
+                  }}
+                  ref={cancelButtonRef}
+                  variant="contained"
+                  startIcon={<CloseIcon />}
+                  color="error"
+                  onClick={() => {
+                    Swal.fire({
+                      title: "Are you sure?",
+                      text: "You won't be able to revert this!",
+                      icon: "warning",
+                      showCancelButton: true,
+                      confirmButtonColor: "#3085d6",
+                      cancelButtonColor: "#d33",
+                      confirmButtonText: "Yes, cancel it!",
+                    }).then((result) => {
+                      if (result.isConfirmed) {
+                        customInputchange("", "paActioMode");
+                        backToDefaultState(initialState, true);
+                      }
+                    });
+                  }}
+                >
+                  Cancel
+                </Button>
+              )}
+              <LoadingButton
+                loading={loadingDelete}
+                id="save-entry-header"
+                variant="contained"
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                  backgroundColor: pink[500],
+                  "&:hover": {
+                    backgroundColor: pink[600],
+                  },
+                }}
+                ref={deleteButtonRef}
+                disabled={state.paActioMode !== "update"}
+                startIcon={<DeleteIcon />}
                 onClick={() => {
-                  Swal.fire({
-                    title: "Are you sure?",
-                    text: "You won't be able to revert this!",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#3085d6",
-                    cancelButtonColor: "#d33",
-                    confirmButtonText: "Yes, cancel it!",
-                  }).then((result) => {
-                    if (result.isConfirmed) {
-                      customInputchange("", "paActioMode");
-                      backToDefaultState(initialState, true);
-                    }
+                  codeCondfirmationAlert({
+                    isUpdate: false,
+                    cb: (userCodeConfirmation) => {
+                      mutateDelete({
+                        PolicyAccount: state.PolicyAccount,
+                        PolicyNo: state.PolicyNo,
+                        policyType: state.policyType,
+                        userCodeConfirmation,
+                      });
+                    },
                   });
                 }}
               >
-                Cancel
-              </Button>
-            )}
-            <LoadingButton
-              loading={loadingDelete}
-              id="save-entry-header"
-              variant="contained"
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-                backgroundColor: pink[500],
-                "&:hover": {
-                  backgroundColor: pink[600],
-                },
-              }}
-              ref={deleteButtonRef}
-              disabled={state.paActioMode !== "update"}
-              startIcon={<DeleteIcon />}
-              onClick={() => {
-                codeCondfirmationAlert({
-                  isUpdate: false,
-                  cb: (userCodeConfirmation) => {
-                    mutateDelete({
-                      PolicyAccount: state.PolicyAccount,
-                      PolicyNo: state.PolicyNo,
-                      policyType: state.policyType,
-                      userCodeConfirmation,
-                    });
-                  },
-                });
-              }}
-            >
-              Delete
-            </LoadingButton>
+                Delete
+              </LoadingButton>
+            </div>
           </div>
-        </div>
-      </Box>
-      <div style={{ marginBottom: "5px", display: "flex", gap: "10px" }}>
-        {isLoadingModalPaPolicy ? (
-          <LoadingButton loading={isLoadingModalPaPolicy} />
-        ) : (
-          <TextField
-            label="Search"
-            size="small"
-            name="search"
-            value={search}
-            onChange={(e: any) => {
-              setSearch(e.target.value);
-            }}
-            onKeyDown={(e) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                e.preventDefault();
-                openModalPaPolicy(search);
-              }
-            }}
-            InputProps={{
-              style: { height: "27px", fontSize: "14px" },
-            }}
-            sx={{
-              width: "300px",
-              height: "27px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-          />
-        )}
-
-        {isLoadingSubAccount ? (
-          <LoadingButton loading={isLoadingSubAccount} />
-        ) : (
-          <FormControl
-            size="small"
-            sx={(theme) => ({
-              width: "150px",
-              ".MuiFormLabel-root": {
-                fontSize: "14px",
-                background: "white",
-                zIndex: 99,
-                padding: "0 3px",
-              },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            })}
-          >
-            <InputLabel id="subAccount">Sub Account</InputLabel>
-            <Select
-              sx={{
-                height: "27px",
-                fontSize: "14px",
-              }}
+        </Box>
+        <div style={{ marginBottom: "5px", display: "flex", gap: "10px" }}>
+          {isLoadingModalPaPolicy ? (
+            <LoadingButton loading={isLoadingModalPaPolicy} />
+          ) : (
+            <TextField
+              label="Search"
               size="small"
-              labelId="subAccount"
-              label="subAccount"
-              name="sub_account"
-              value={state.sub_account}
-              onChange={(e) => {
-                handleInputChange(e);
+              name="search"
+              value={search}
+              onChange={(e: any) => {
+                setSearch(e.target.value);
               }}
-            >
-              {(dataSubAccount?.data.sub_account).map(
-                (items: any, idx: number) => {
-                  return (
-                    <MenuItem key={idx} value={items.Acronym.trim()}>
-                      {items.Acronym}
-                    </MenuItem>
-                  );
+              onKeyDown={(e) => {
+                if (e.code === "Enter" || e.code === "NumpadEnter") {
+                  e.preventDefault();
+                  openModalPaPolicy(search);
                 }
-              )}
-            </Select>
-          </FormControl>
-        )}
-      </div>
-      <PAPolicyInformation />
-      {ModalPaPolicy}
-    </PAContext.Provider>
+              }}
+              InputProps={{
+                style: { height: "27px", fontSize: "14px" },
+              }}
+              sx={{
+                width: "300px",
+                height: "27px",
+                ".MuiFormLabel-root": { fontSize: "14px" },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              }}
+            />
+          )}
+
+          {isLoadingSubAccount ? (
+            <LoadingButton loading={isLoadingSubAccount} />
+          ) : (
+            <FormControl
+              size="small"
+              sx={(theme) => ({
+                width: "150px",
+                ".MuiFormLabel-root": {
+                  fontSize: "14px",
+                  background: "white",
+                  zIndex: 99,
+                  padding: "0 3px",
+                },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              })}
+            >
+              <InputLabel id="subAccount">Sub Account</InputLabel>
+              <Select
+                sx={{
+                  height: "27px",
+                  fontSize: "14px",
+                }}
+                size="small"
+                labelId="subAccount"
+                label="subAccount"
+                name="sub_account"
+                value={state.sub_account}
+                onChange={(e) => {
+                  handleInputChange(e);
+                }}
+              >
+                {(dataSubAccount?.data.sub_account).map(
+                  (items: any, idx: number) => {
+                    return (
+                      <MenuItem key={idx} value={items.Acronym.trim()}>
+                        {items.Acronym}
+                      </MenuItem>
+                    );
+                  }
+                )}
+              </Select>
+            </FormControl>
+          )}
+        </div>
+        <PAPolicyInformation />
+        {ModalPaPolicy}
+      </PAContext.Provider>
+    </>
   );
 }

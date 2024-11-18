@@ -17,6 +17,7 @@ import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../lib/confirmationAlert";
+import PageHelmet from "../../../components/Helmet";
 
 const initialState = {
   Mortgagee: "",
@@ -204,335 +205,338 @@ export default function Mortgagee() {
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        width: "100%",
-        height: "100%",
-        flex: 1,
-      }}
-    >
-      {/* <Box>
+    <>
+      <PageHelmet title="Mortgagee" />
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          width: "100%",
+          height: "100%",
+          flex: 1,
+        }}
+      >
+        {/* <Box>
         <Typography variant="h5" sx={{ marginBottom: "10px" }}>
           Mortgagee Details
         </Typography>
       </Box> */}
-      <Box
-        sx={(theme) => ({
-          display: "flex",
-          alignItems: "center",
-          columnGap: "20px",
-          [theme.breakpoints.down("sm")]: {
-            flexDirection: "column",
-            alignItems: "flex-start",
-            flex: 1,
-            marginBottom: "15px",
-          },
-        })}
-      >
-        <div
-          style={{
-            marginTop: "10px",
-            marginBottom: "12px",
-            width: "100%",
-          }}
-        >
-          <TextField
-            label="Search"
-            fullWidth
-            size="small"
-            type="text"
-            name="search"
-            value={state.search}
-            onChange={handleInputChange}
-            InputProps={{
-              style: { height: "27px", fontSize: "14px" },
-            }}
-            sx={{
-              width: "500px",
-              height: "27px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-            onKeyDown={(e) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                e.preventDefault();
-                return refetchMortgageSearch();
-              }
-            }}
-          />
-        </div>
-        <div
-          style={{
+        <Box
+          sx={(theme) => ({
             display: "flex",
             alignItems: "center",
             columnGap: "20px",
-          }}
+            [theme.breakpoints.down("sm")]: {
+              flexDirection: "column",
+              alignItems: "flex-start",
+              flex: 1,
+              marginBottom: "15px",
+            },
+          })}
         >
+          <div
+            style={{
+              marginTop: "10px",
+              marginBottom: "12px",
+              width: "100%",
+            }}
+          >
+            <TextField
+              label="Search"
+              fullWidth
+              size="small"
+              type="text"
+              name="search"
+              value={state.search}
+              onChange={handleInputChange}
+              InputProps={{
+                style: { height: "27px", fontSize: "14px" },
+              }}
+              sx={{
+                width: "500px",
+                height: "27px",
+                ".MuiFormLabel-root": { fontSize: "14px" },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              }}
+              onKeyDown={(e) => {
+                if (e.code === "Enter" || e.code === "NumpadEnter") {
+                  e.preventDefault();
+                  return refetchMortgageSearch();
+                }
+              }}
+            />
+          </div>
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              columnGap: "5px",
+              columnGap: "20px",
             }}
           >
-            {state.mode === "" && (
-              <Button
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                }}
-                variant="contained"
-                startIcon={<AddIcon />}
-                id="entry-header-save-button"
-                onClick={() => {
-                  handleInputChange({
-                    target: { value: "add", name: "mode" },
-                  });
-                }}
-              >
-                New
-              </Button>
-            )}
-
-            <LoadingButton
-              sx={{
-                height: "30px",
-                fontSize: "11px",
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                columnGap: "5px",
               }}
-              id="save-entry-header"
-              color="primary"
-              variant="contained"
-              type="submit"
-              onClick={handleOnSave}
-              disabled={state.mode === ""}
-              startIcon={<SaveIcon />}
-              loading={loadingAdd || loadingEdit}
             >
-              Save
-            </LoadingButton>
-            {state.mode !== "" && (
-              <Button
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                }}
-                variant="contained"
-                startIcon={<CloseIcon />}
-                color="error"
-                onClick={() => {
-                  Swal.fire({
-                    title: "Are you sure?",
-                    text: "You won't be able to revert this!",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#3085d6",
-                    cancelButtonColor: "#d33",
-                    confirmButtonText: "Yes, cancel it!",
-                  }).then((result) => {
-                    if (result.isConfirmed) {
-                      resetModule();
-                    }
-                  });
-                }}
-              >
-                Cancel
-              </Button>
-            )}
-
-            <LoadingButton
-              id="save-entry-header"
-              variant="contained"
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-                backgroundColor: pink[500],
-                "&:hover": {
-                  backgroundColor: pink[600],
-                },
-              }}
-              disabled={state.mode !== "edit"}
-              startIcon={<DeleteIcon />}
-              loading={loadingDelete}
-              onClick={() => {
-                codeCondfirmationAlert({
-                  isUpdate: false,
-                  cb: (userCodeConfirmation) => {
-                    mutateDelete({
-                      Mortgagee: state.Mortgagee,
-                      userCodeConfirmation,
+              {state.mode === "" && (
+                <Button
+                  sx={{
+                    height: "30px",
+                    fontSize: "11px",
+                  }}
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  id="entry-header-save-button"
+                  onClick={() => {
+                    handleInputChange({
+                      target: { value: "add", name: "mode" },
                     });
-                  },
-                });
-              }}
-            >
-              Delete
-            </LoadingButton>
-          </div>
-        </div>
-      </Box>
-      <form
-        onSubmit={handleOnSave}
-        onKeyDown={(e) => {
-          if (e.code === "Enter" || e.code === "NumpadEnter") {
-            e.preventDefault();
-            handleOnSave(e);
-            return;
-          }
-        }}
-      >
-        <Box
-          sx={(theme) => ({
-            display: "flex",
-            columnGap: "15px",
-            flexDirection: "row",
-            [theme.breakpoints.down("md")]: {
-              flexDirection: "column",
-              rowGap: "10px",
-            },
-          })}
-        >
-          {!isLoading && (
-            <React.Fragment>
-              <Autocomplete
+                  }}
+                >
+                  New
+                </Button>
+              )}
+
+              <LoadingButton
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                }}
+                id="save-entry-header"
+                color="primary"
+                variant="contained"
+                type="submit"
+                onClick={handleOnSave}
                 disabled={state.mode === ""}
-                value={state.Policy}
-                onChange={(event: any, value: string | null) => {
-                  handleInputSelectionChange({ name: "Policy", value });
+                startIcon={<SaveIcon />}
+                loading={loadingAdd || loadingEdit}
+              >
+                Save
+              </LoadingButton>
+              {state.mode !== "" && (
+                <Button
+                  sx={{
+                    height: "30px",
+                    fontSize: "11px",
+                  }}
+                  variant="contained"
+                  startIcon={<CloseIcon />}
+                  color="error"
+                  onClick={() => {
+                    Swal.fire({
+                      title: "Are you sure?",
+                      text: "You won't be able to revert this!",
+                      icon: "warning",
+                      showCancelButton: true,
+                      confirmButtonColor: "#3085d6",
+                      cancelButtonColor: "#d33",
+                      confirmButtonText: "Yes, cancel it!",
+                    }).then((result) => {
+                      if (result.isConfirmed) {
+                        resetModule();
+                      }
+                    });
+                  }}
+                >
+                  Cancel
+                </Button>
+              )}
+
+              <LoadingButton
+                id="save-entry-header"
+                variant="contained"
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                  backgroundColor: pink[500],
+                  "&:hover": {
+                    backgroundColor: pink[600],
+                  },
                 }}
-                size="small"
-                freeSolo
-                disableClearable
-                options={(data as any).data.mortgagee.policy.map(
-                  (option: any) => option.Policy
-                )}
-                getOptionLabel={(option: any) => option}
-                sx={(theme) => ({
-                  width: 300,
-                  ".MuiFormLabel-root": {
-                    fontSize: "14px",
-                  },
-                  ".MuiInputBase-input": {
-                    width: "100% !important",
-                  },
-                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                  ".MuiAutocomplete-input ": {
-                    position: "absolute",
-                  },
-                  [theme.breakpoints.down("md")]: { width: "100%" },
-                })}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Policy"
-                    name="Policy"
-                    InputProps={{
-                      ...params.InputProps,
-                      style: { height: "27px", fontSize: "14px" },
-                    }}
-                    onChange={handleInputChange}
-                  />
-                )}
-              />
-              <Autocomplete
-                disabled={state.mode === "" || state.mode === "edit"}
-                value={state.Mortgagee}
-                onChange={(event: any, value: string | null) => {
-                  handleInputSelectionChange({ name: "Mortgagee", value });
+                disabled={state.mode !== "edit"}
+                startIcon={<DeleteIcon />}
+                loading={loadingDelete}
+                onClick={() => {
+                  codeCondfirmationAlert({
+                    isUpdate: false,
+                    cb: (userCodeConfirmation) => {
+                      mutateDelete({
+                        Mortgagee: state.Mortgagee,
+                        userCodeConfirmation,
+                      });
+                    },
+                  });
                 }}
-                size="small"
-                freeSolo
-                disableClearable
-                options={(data as any).data.mortgagee.mortgagee.map(
-                  (option: any) => option.Mortgagee
-                )}
-                getOptionLabel={(option: any) => option}
-                sx={(theme) => ({
-                  width: 700,
-                  ".MuiFormLabel-root": {
-                    fontSize: "14px",
-                  },
-                  ".MuiInputBase-input": {
-                    width: "100% !important",
-                  },
-                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                  ".MuiAutocomplete-input ": {
-                    position: "absolute",
-                  },
-                  [theme.breakpoints.down("md")]: { width: "100%" },
-                })}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Mortgagee"
-                    name="Mortgagee"
-                    InputProps={{
-                      ...params.InputProps,
-                      style: { height: "27px", fontSize: "14px" },
-                    }}
-                    onChange={handleInputChange}
-                  />
-                )}
-              />
-            </React.Fragment>
-          )}
+              >
+                Delete
+              </LoadingButton>
+            </div>
+          </div>
         </Box>
-      </form>
-      <div
-        style={{
-          marginTop: "10px",
-          width: "100%",
-          position: "relative",
-          flex: 1,
-        }}
-      >
-        <Box
-          style={{
-            height:"500px",
-            width: "100%",
-            overflowX: "scroll",
-            position: "absolute",
+        <form
+          onSubmit={handleOnSave}
+          onKeyDown={(e) => {
+            if (e.code === "Enter" || e.code === "NumpadEnter") {
+              e.preventDefault();
+              handleOnSave(e);
+              return;
+            }
           }}
         >
-          <Table
-            ref={table}
-            isLoading={isLoading || loadingAdd || loadingEdit || loadingDelete}
-            columns={poliyAccountColumn}
-            rows={rows}
-            table_id={"Mortgagee"}
-            isSingleSelection={true}
-            isRowFreeze={false}
-            dataSelection={(selection, data, code) => {
-              const rowSelected = data.filter(
-                (item: any) => item.Mortgagee === selection[0]
-              )[0];
-              if (rowSelected === undefined || rowSelected.length <= 0) {
-                setNewStateValue(dispatch, initialState);
-                handleInputChange({ target: { value: "", name: "mode" } });
-                return;
-              }
-              handleInputChange({ target: { value: "edit", name: "mode" } });
-
-              if (code === "Delete" || code === "Backspace") {
-                codeCondfirmationAlert({
-                  isUpdate: false,
-                  cb: (userCodeConfirmation) => {
-                    mutateDelete({
-                      Mortgagee: rowSelected.Mortgagee,
-                      userCodeConfirmation,
-                    });
-                  },
-                });
-                return;
-              }
-
-              setNewStateValue(dispatch, rowSelected);
+          <Box
+            sx={(theme) => ({
+              display: "flex",
+              columnGap: "15px",
+              flexDirection: "row",
+              [theme.breakpoints.down("md")]: {
+                flexDirection: "column",
+                rowGap: "10px",
+              },
+            })}
+          >
+            {!isLoading && (
+              <React.Fragment>
+                <Autocomplete
+                  disabled={state.mode === ""}
+                  value={state.Policy}
+                  onChange={(event: any, value: string | null) => {
+                    handleInputSelectionChange({ name: "Policy", value });
+                  }}
+                  size="small"
+                  freeSolo
+                  disableClearable
+                  options={(data as any).data.mortgagee.policy.map(
+                    (option: any) => option.Policy
+                  )}
+                  getOptionLabel={(option: any) => option}
+                  sx={(theme) => ({
+                    width: 300,
+                    ".MuiFormLabel-root": {
+                      fontSize: "14px",
+                    },
+                    ".MuiInputBase-input": {
+                      width: "100% !important",
+                    },
+                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                    ".MuiAutocomplete-input ": {
+                      position: "absolute",
+                    },
+                    [theme.breakpoints.down("md")]: { width: "100%" },
+                  })}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Policy"
+                      name="Policy"
+                      InputProps={{
+                        ...params.InputProps,
+                        style: { height: "27px", fontSize: "14px" },
+                      }}
+                      onChange={handleInputChange}
+                    />
+                  )}
+                />
+                <Autocomplete
+                  disabled={state.mode === "" || state.mode === "edit"}
+                  value={state.Mortgagee}
+                  onChange={(event: any, value: string | null) => {
+                    handleInputSelectionChange({ name: "Mortgagee", value });
+                  }}
+                  size="small"
+                  freeSolo
+                  disableClearable
+                  options={(data as any).data.mortgagee.mortgagee.map(
+                    (option: any) => option.Mortgagee
+                  )}
+                  getOptionLabel={(option: any) => option}
+                  sx={(theme) => ({
+                    width: 700,
+                    ".MuiFormLabel-root": {
+                      fontSize: "14px",
+                    },
+                    ".MuiInputBase-input": {
+                      width: "100% !important",
+                    },
+                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                    ".MuiAutocomplete-input ": {
+                      position: "absolute",
+                    },
+                    [theme.breakpoints.down("md")]: { width: "100%" },
+                  })}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Mortgagee"
+                      name="Mortgagee"
+                      InputProps={{
+                        ...params.InputProps,
+                        style: { height: "27px", fontSize: "14px" },
+                      }}
+                      onChange={handleInputChange}
+                    />
+                  )}
+                />
+              </React.Fragment>
+            )}
+          </Box>
+        </form>
+        <div
+          style={{
+            marginTop: "10px",
+            width: "100%",
+            position: "relative",
+            flex: 1,
+          }}
+        >
+          <Box
+            style={{
+              height: "500px",
+              width: "100%",
+              overflowX: "scroll",
+              position: "absolute",
             }}
-          />
-        </Box>
+          >
+            <Table
+              ref={table}
+              isLoading={isLoading || loadingAdd || loadingEdit || loadingDelete}
+              columns={poliyAccountColumn}
+              rows={rows}
+              table_id={"Mortgagee"}
+              isSingleSelection={true}
+              isRowFreeze={false}
+              dataSelection={(selection, data, code) => {
+                const rowSelected = data.filter(
+                  (item: any) => item.Mortgagee === selection[0]
+                )[0];
+                if (rowSelected === undefined || rowSelected.length <= 0) {
+                  setNewStateValue(dispatch, initialState);
+                  handleInputChange({ target: { value: "", name: "mode" } });
+                  return;
+                }
+                handleInputChange({ target: { value: "edit", name: "mode" } });
+
+                if (code === "Delete" || code === "Backspace") {
+                  codeCondfirmationAlert({
+                    isUpdate: false,
+                    cb: (userCodeConfirmation) => {
+                      mutateDelete({
+                        Mortgagee: rowSelected.Mortgagee,
+                        userCodeConfirmation,
+                      });
+                    },
+                  });
+                  return;
+                }
+
+                setNewStateValue(dispatch, rowSelected);
+              }}
+            />
+          </Box>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 export function setNewStateValue(dispatch: any, obj: any) {

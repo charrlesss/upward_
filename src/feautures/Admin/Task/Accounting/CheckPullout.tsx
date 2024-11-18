@@ -21,6 +21,7 @@ import { useMutation, useQuery } from "react-query";
 import useMultipleComponent from "../../../../hooks/useMultipleComponent";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { UpwardTable } from "../../../../components/UpwardTable";
+import PageHelmet from "../../../../components/Helmet";
 const reasonList = [
   "",
   "Fully Paid",
@@ -335,515 +336,517 @@ function CheckPulloutRequest() {
   const width = window.innerWidth - 100;
   const height = window.innerHeight - 145;
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        width: "100%",
-        height: "100%",
-        flex: 1,
-      }}
-    >
+    <>
+      <PageHelmet title="Check Pullout" />
       <div
         style={{
-          height: "70px",
           display: "flex",
-          alignItems: "center",
-        }}
-      >
-        <div
-          style={
-            {
-              display: "flex",
-              flexDirection: state.requestMode === "edit" ? "column" : "row",
-              columnGap: "5px",
-              padding: "0px 40px",
-            } as any
-          }
-        >
-          <div style={{ display: "flex", flexGrow: 1, columnGap: "10px" }}>
-            {state.requestMode !== "edit" && (
-              <React.Fragment>
-                {loadingPulloutRequestId ? (
-                  <LoadingButton loading={loadingPulloutRequestId} />
-                ) : (
-                  <FormControl
-                    variant="outlined"
-                    size="small"
-                    disabled={state.requestMode !== "add"}
-                    sx={{
-                      width: "200px",
-                      ".MuiFormLabel-root": {
-                        fontSize: "14px",
-                        background: "white",
-                        zIndex: 99,
-                        padding: "0 3px",
-                      },
-                      ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                    }}
-                  >
-                    <InputLabel htmlFor="pullout-req-id">RCP NO.</InputLabel>
-                    <OutlinedInput
-                      sx={{
-                        height: "27px",
-                        fontSize: "14px",
-                      }}
-                      disabled={state.requestMode !== "add"}
-                      fullWidth
-                      label="RCP NO."
-                      name="RCPNo"
-                      value={state.RCPNo}
-                      onChange={handleInputChange}
-                      onKeyDown={(e) => {
-                        if (e.code === "Enter" || e.code === "NumpadEnter") {
-                          e.preventDefault();
-                          return handleOnSave();
-                        }
-                      }}
-                      readOnly={user?.department !== "UCSMI"}
-                      id="pullout-req-id"
-                      endAdornment={
-                        <InputAdornment position="end">
-                          <IconButton
-                            disabled={state.requestMode !== "add"}
-                            color="secondary"
-                            edge="end"
-                            onClick={() => {
-                              refetchPulloutRequestId();
-                            }}
-                          >
-                            <RestartAltIcon />
-                          </IconButton>
-                        </InputAdornment>
-                      }
-                    />
-                  </FormControl>
-                )}
-              </React.Fragment>
-            )}
-            {state.requestMode === "edit" && (
-              <Autocomplete
-                loading={loadingLoadRCPN}
-                freeSolo
-                options={rcpn}
-                value={state.RCPNo}
-                onChange={(e, v: any) => {
-                  if (v) {
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "RCPNo",
-                      value: v.RCPNo,
-                    });
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "PNNo",
-                      value: v.PNo,
-                    });
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "client",
-                      value: v.Name,
-                    });
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "reason",
-                      value: v.Reason,
-                    });
-                    mutateLoadChecks({
-                      PNNo: v.PNo,
-                    });
-                  }
-                }}
-                onInput={(e: any) => {
-                  dispatch({
-                    type: "UPDATE_FIELD",
-                    field: "RCPNo",
-                    value: e.target.value,
-                  });
-                }}
-                onBlur={(e) => {
-                  const options = rcpn;
-                  const find = options.find((itm) => itm.RCPNo === state.RCPNo);
-                  if (find !== undefined) {
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "RCPNo",
-                      value: find.RCPNo,
-                    });
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "PNNo",
-                      value: find.PNo,
-                    });
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "client",
-                      value: find.Name,
-                    });
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "reason",
-                      value: find.Reason,
-                    });
-                    mutateLoadChecks({
-                      PNNo: find.PNo,
-                    });
-                  }
-                }}
-                renderOption={(props, option) => {
-                  return (
-                    <li {...props} key={option.RCPNo}>
-                      {option.RCPNo}
-                    </li>
-                  );
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    InputProps={{
-                      ...params.InputProps,
-                      style: { height: "27px", fontSize: "14px" },
-                    }}
-                    label="PN No."
-                  />
-                )}
-                sx={{
-                  width: "200px",
-                  ".MuiFormLabel-root": {
-                    fontSize: "14px",
-                  },
-                  ".MuiInputBase-input": {
-                    width: "100% !important",
-                  },
-                  ".MuiFormLabel-root[data-shrink=false]": {
-                    top: "-5px",
-                  },
-                  ".MuiAutocomplete-input ": {
-                    position: "absolute",
-                  },
-                }}
-                size="small"
-              />
-            )}
-            <div style={{ display: "flex", gap: "10px" } as any}>
-              <Autocomplete
-                loading={loadingLoadPNNo}
-                disabled={state.requestMode !== "add"}
-                freeSolo
-                options={pnno.map((itm: any) => itm.PNo)}
-                value={state.PNNo}
-                onChange={(e, v: any) => {
-                  if (v) {
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "PNNo",
-                      value: v,
-                    });
-                  }
-                }}
-                onInput={(e: any) => {
-                  dispatch({
-                    type: "UPDATE_FIELD",
-                    field: "PNNo",
-                    value: e.target.value,
-                  });
-                }}
-                onBlur={(e) => {
-                  const options = pnno;
-                  const find = options.find((itm) => itm.PNo === state.PNNo);
-                  if (find !== undefined) {
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "PNNo",
-                      value: find.PNo,
-                    });
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "client",
-                      value: find.Name,
-                    });
-                    mutateLoadChecks({
-                      PNNo: find.PNo,
-                    });
-                  }
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    InputProps={{
-                      ...params.InputProps,
-                      style: { height: "27px", fontSize: "14px" },
-                    }}
-                    label="PN No."
-                    disabled={state.requestMode !== "add"}
-                  />
-                )}
-                sx={{
-                  width: "300px",
-                  ".MuiFormLabel-root": {
-                    fontSize: "14px",
-                  },
-                  ".MuiInputBase-input": {
-                    width: "100% !important",
-                  },
-                  ".MuiFormLabel-root[data-shrink=false]": {
-                    top: "-5px",
-                  },
-                  ".MuiAutocomplete-input ": {
-                    position: "absolute",
-                  },
-                }}
-                size="small"
-              />
-              <Autocomplete
-                loading={loadingLoadPNNo}
-                disabled={state.requestMode !== "add"}
-                freeSolo
-                options={pnno}
-                value={state.client}
-                onChange={(e, v: any) => {
-                  if (v) {
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "client",
-                      value: v.Name,
-                    });
-                  }
-                }}
-                onInput={(e: any) => {
-                  dispatch({
-                    type: "UPDATE_FIELD",
-                    field: "client",
-                    value: e.target.value,
-                  });
-                }}
-                onBlur={(e) => {
-                  const options = pnno;
-                  const find = options.find((itm) => itm.Name === state.client);
-                  if (find !== undefined) {
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "PNNo",
-                      value: find.PNo,
-                    });
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "client",
-                      value: find.Name,
-                    });
-                    mutateLoadChecks({
-                      PNNo: find.PNo,
-                    });
-                  }
-                }}
-                renderOption={(props, option) => {
-                  return (
-                    <li {...props} key={option.PNo}>
-                      {option.Name}
-                    </li>
-                  );
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    InputProps={{
-                      ...params.InputProps,
-                      style: { height: "27px", fontSize: "14px" },
-                    }}
-                    fullWidth
-                    label="Name"
-                    disabled={state.requestMode !== "add"}
-                  />
-                )}
-                sx={{
-                  width: "300px",
-                  ".MuiFormLabel-root": {
-                    fontSize: "14px",
-                  },
-                  ".MuiInputBase-input": {
-                    width: "100% !important",
-                  },
-                  ".MuiFormLabel-root[data-shrink=false]": {
-                    top: "-5px",
-                  },
-                  ".MuiAutocomplete-input ": {
-                    position: "absolute",
-                  },
-                }}
-                size="small"
-              />
-            </div>
-            <FormControl
-              size="small"
-              variant="outlined"
-              disabled={
-                state.requestMode !== "add" && state.requestMode !== "edit"
-              }
-              sx={{
-                width: "250px",
-                ".MuiFormLabel-root": {
-                  fontSize: "14px",
-                  background: "white",
-                  zIndex: 99,
-                  padding: "0 3px",
-                },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            >
-              <InputLabel id="reason">Reason</InputLabel>
-              <Select
-                labelId="reason"
-                value={state.reason}
-                name="reason"
-                onChange={(e) => {
-                  handleInputChange(e);
-                  mutateLoadChecks({
-                    PNNo: state.PNNo,
-                  });
-                }}
-                autoWidth
-                sx={{
-                  height: "27px",
-                  fontSize: "14px",
-                }}
-              >
-                {reasonList.map((item, idx) => {
-                  return (
-                    <MenuItem key={idx} value={item}>
-                      {item}
-                    </MenuItem>
-                  );
-                })}
-              </Select>
-            </FormControl>
-          </div>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            columnGap: "10px",
-            paddingBottom: "5px",
-          }}
-        >
-          {state.requestMode === "" && (
-            <Button
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-              }}
-              variant="contained"
-              startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
-              id="entry-header-save-button"
-              onClick={() => {
-                handleInputChange({
-                  target: { value: "add", name: "requestMode" },
-                });
-              }}
-              color="primary"
-            >
-              New
-            </Button>
-          )}
-          {state.requestMode === "" && (
-            <LoadingButton
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-              }}
-              onClick={() => {
-                handleInputChange({
-                  target: { value: "edit", name: "requestMode" },
-                });
-                handleInputChange({
-                  target: { value: "", name: "RCPNo" },
-                });
-
-                mutateLoadRCPN({});
-              }}
-              color="secondary"
-              variant="contained"
-            >
-              Edit
-            </LoadingButton>
-          )}
-          {state.requestMode !== "" && (
-            <LoadingButton
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-              }}
-              disabled={state.requestMode === ""}
-              onClick={handleOnSave}
-              color="success"
-              variant="contained"
-              loading={isLoadingSave}
-            >
-              Save
-            </LoadingButton>
-          )}
-
-          {state.requestMode !== "" && (
-            <LoadingButton
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-              }}
-              variant="contained"
-              startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
-              color="error"
-              onClick={() => {
-                Swal.fire({
-                  title: "Are you sure?",
-                  text: "You won't be able to revert this!",
-                  icon: "warning",
-                  showCancelButton: true,
-                  confirmButtonColor: "#3085d6",
-                  cancelButtonColor: "#d33",
-                  confirmButtonText: "Yes, cancel it!",
-                }).then((result) => {
-                  if (result.isConfirmed) {
-                    defaultState();
-                  }
-                });
-              }}
-            >
-              Cancel
-            </LoadingButton>
-          )}
-        </div>
-      </div>
-
-      <div
-        ref={refParent}
-        style={{
-          marginTop: "10px",
+          flexDirection: "column",
           width: "100%",
-          position: "relative",
+          height: "100%",
           flex: 1,
         }}
       >
-        <UpwardTable
-          isLoading={loadingLoadChecks}
-          ref={table}
-          rows={pulloutRequest}
-          column={pulloutRequestColumns}
-          width={width}
-          height={height}
-          dataReadOnly={true}
-          unSelectable={(row) => {
-            if (state.requestMode === "edit") {
-              return ["APPROVED", "DISAPPROVED"].includes(row.Status);
-            }
-            if (state.requestMode === "add") {
-              return ["PENDING", "APPROVED", "DISAPPROVED"].includes(
-                row.Status
-              );
-            }
-            return false;
+        <div
+          style={{
+            height: "70px",
+            display: "flex",
+            alignItems: "center",
           }}
-          isMultipleSelect={true}
-        />
-        {/* <Box
+        >
+          <div
+            style={
+              {
+                display: "flex",
+                flexDirection: state.requestMode === "edit" ? "column" : "row",
+                columnGap: "5px",
+                padding: "0px 40px",
+              } as any
+            }
+          >
+            <div style={{ display: "flex", flexGrow: 1, columnGap: "10px" }}>
+              {state.requestMode !== "edit" && (
+                <React.Fragment>
+                  {loadingPulloutRequestId ? (
+                    <LoadingButton loading={loadingPulloutRequestId} />
+                  ) : (
+                    <FormControl
+                      variant="outlined"
+                      size="small"
+                      disabled={state.requestMode !== "add"}
+                      sx={{
+                        width: "200px",
+                        ".MuiFormLabel-root": {
+                          fontSize: "14px",
+                          background: "white",
+                          zIndex: 99,
+                          padding: "0 3px",
+                        },
+                        ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                      }}
+                    >
+                      <InputLabel htmlFor="pullout-req-id">RCP NO.</InputLabel>
+                      <OutlinedInput
+                        sx={{
+                          height: "27px",
+                          fontSize: "14px",
+                        }}
+                        disabled={state.requestMode !== "add"}
+                        fullWidth
+                        label="RCP NO."
+                        name="RCPNo"
+                        value={state.RCPNo}
+                        onChange={handleInputChange}
+                        onKeyDown={(e) => {
+                          if (e.code === "Enter" || e.code === "NumpadEnter") {
+                            e.preventDefault();
+                            return handleOnSave();
+                          }
+                        }}
+                        readOnly={user?.department !== "UCSMI"}
+                        id="pullout-req-id"
+                        endAdornment={
+                          <InputAdornment position="end">
+                            <IconButton
+                              disabled={state.requestMode !== "add"}
+                              color="secondary"
+                              edge="end"
+                              onClick={() => {
+                                refetchPulloutRequestId();
+                              }}
+                            >
+                              <RestartAltIcon />
+                            </IconButton>
+                          </InputAdornment>
+                        }
+                      />
+                    </FormControl>
+                  )}
+                </React.Fragment>
+              )}
+              {state.requestMode === "edit" && (
+                <Autocomplete
+                  loading={loadingLoadRCPN}
+                  freeSolo
+                  options={rcpn}
+                  value={state.RCPNo}
+                  onChange={(e, v: any) => {
+                    if (v) {
+                      dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "RCPNo",
+                        value: v.RCPNo,
+                      });
+                      dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "PNNo",
+                        value: v.PNo,
+                      });
+                      dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "client",
+                        value: v.Name,
+                      });
+                      dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "reason",
+                        value: v.Reason,
+                      });
+                      mutateLoadChecks({
+                        PNNo: v.PNo,
+                      });
+                    }
+                  }}
+                  onInput={(e: any) => {
+                    dispatch({
+                      type: "UPDATE_FIELD",
+                      field: "RCPNo",
+                      value: e.target.value,
+                    });
+                  }}
+                  onBlur={(e) => {
+                    const options = rcpn;
+                    const find = options.find((itm) => itm.RCPNo === state.RCPNo);
+                    if (find !== undefined) {
+                      dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "RCPNo",
+                        value: find.RCPNo,
+                      });
+                      dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "PNNo",
+                        value: find.PNo,
+                      });
+                      dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "client",
+                        value: find.Name,
+                      });
+                      dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "reason",
+                        value: find.Reason,
+                      });
+                      mutateLoadChecks({
+                        PNNo: find.PNo,
+                      });
+                    }
+                  }}
+                  renderOption={(props, option) => {
+                    return (
+                      <li {...props} key={option.RCPNo}>
+                        {option.RCPNo}
+                      </li>
+                    );
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      InputProps={{
+                        ...params.InputProps,
+                        style: { height: "27px", fontSize: "14px" },
+                      }}
+                      label="PN No."
+                    />
+                  )}
+                  sx={{
+                    width: "200px",
+                    ".MuiFormLabel-root": {
+                      fontSize: "14px",
+                    },
+                    ".MuiInputBase-input": {
+                      width: "100% !important",
+                    },
+                    ".MuiFormLabel-root[data-shrink=false]": {
+                      top: "-5px",
+                    },
+                    ".MuiAutocomplete-input ": {
+                      position: "absolute",
+                    },
+                  }}
+                  size="small"
+                />
+              )}
+              <div style={{ display: "flex", gap: "10px" } as any}>
+                <Autocomplete
+                  loading={loadingLoadPNNo}
+                  disabled={state.requestMode !== "add"}
+                  freeSolo
+                  options={pnno.map((itm: any) => itm.PNo)}
+                  value={state.PNNo}
+                  onChange={(e, v: any) => {
+                    if (v) {
+                      dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "PNNo",
+                        value: v,
+                      });
+                    }
+                  }}
+                  onInput={(e: any) => {
+                    dispatch({
+                      type: "UPDATE_FIELD",
+                      field: "PNNo",
+                      value: e.target.value,
+                    });
+                  }}
+                  onBlur={(e) => {
+                    const options = pnno;
+                    const find = options.find((itm) => itm.PNo === state.PNNo);
+                    if (find !== undefined) {
+                      dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "PNNo",
+                        value: find.PNo,
+                      });
+                      dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "client",
+                        value: find.Name,
+                      });
+                      mutateLoadChecks({
+                        PNNo: find.PNo,
+                      });
+                    }
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      InputProps={{
+                        ...params.InputProps,
+                        style: { height: "27px", fontSize: "14px" },
+                      }}
+                      label="PN No."
+                      disabled={state.requestMode !== "add"}
+                    />
+                  )}
+                  sx={{
+                    width: "300px",
+                    ".MuiFormLabel-root": {
+                      fontSize: "14px",
+                    },
+                    ".MuiInputBase-input": {
+                      width: "100% !important",
+                    },
+                    ".MuiFormLabel-root[data-shrink=false]": {
+                      top: "-5px",
+                    },
+                    ".MuiAutocomplete-input ": {
+                      position: "absolute",
+                    },
+                  }}
+                  size="small"
+                />
+                <Autocomplete
+                  loading={loadingLoadPNNo}
+                  disabled={state.requestMode !== "add"}
+                  freeSolo
+                  options={pnno}
+                  value={state.client}
+                  onChange={(e, v: any) => {
+                    if (v) {
+                      dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "client",
+                        value: v.Name,
+                      });
+                    }
+                  }}
+                  onInput={(e: any) => {
+                    dispatch({
+                      type: "UPDATE_FIELD",
+                      field: "client",
+                      value: e.target.value,
+                    });
+                  }}
+                  onBlur={(e) => {
+                    const options = pnno;
+                    const find = options.find((itm) => itm.Name === state.client);
+                    if (find !== undefined) {
+                      dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "PNNo",
+                        value: find.PNo,
+                      });
+                      dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "client",
+                        value: find.Name,
+                      });
+                      mutateLoadChecks({
+                        PNNo: find.PNo,
+                      });
+                    }
+                  }}
+                  renderOption={(props, option) => {
+                    return (
+                      <li {...props} key={option.PNo}>
+                        {option.Name}
+                      </li>
+                    );
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      InputProps={{
+                        ...params.InputProps,
+                        style: { height: "27px", fontSize: "14px" },
+                      }}
+                      fullWidth
+                      label="Name"
+                      disabled={state.requestMode !== "add"}
+                    />
+                  )}
+                  sx={{
+                    width: "300px",
+                    ".MuiFormLabel-root": {
+                      fontSize: "14px",
+                    },
+                    ".MuiInputBase-input": {
+                      width: "100% !important",
+                    },
+                    ".MuiFormLabel-root[data-shrink=false]": {
+                      top: "-5px",
+                    },
+                    ".MuiAutocomplete-input ": {
+                      position: "absolute",
+                    },
+                  }}
+                  size="small"
+                />
+              </div>
+              <FormControl
+                size="small"
+                variant="outlined"
+                disabled={
+                  state.requestMode !== "add" && state.requestMode !== "edit"
+                }
+                sx={{
+                  width: "250px",
+                  ".MuiFormLabel-root": {
+                    fontSize: "14px",
+                    background: "white",
+                    zIndex: 99,
+                    padding: "0 3px",
+                  },
+                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                }}
+              >
+                <InputLabel id="reason">Reason</InputLabel>
+                <Select
+                  labelId="reason"
+                  value={state.reason}
+                  name="reason"
+                  onChange={(e) => {
+                    handleInputChange(e);
+                    mutateLoadChecks({
+                      PNNo: state.PNNo,
+                    });
+                  }}
+                  autoWidth
+                  sx={{
+                    height: "27px",
+                    fontSize: "14px",
+                  }}
+                >
+                  {reasonList.map((item, idx) => {
+                    return (
+                      <MenuItem key={idx} value={item}>
+                        {item}
+                      </MenuItem>
+                    );
+                  })}
+                </Select>
+              </FormControl>
+            </div>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              columnGap: "10px",
+              paddingBottom: "5px",
+            }}
+          >
+            {state.requestMode === "" && (
+              <Button
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                }}
+                variant="contained"
+                startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+                id="entry-header-save-button"
+                onClick={() => {
+                  handleInputChange({
+                    target: { value: "add", name: "requestMode" },
+                  });
+                }}
+                color="primary"
+              >
+                New
+              </Button>
+            )}
+            {state.requestMode === "" && (
+              <LoadingButton
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                }}
+                onClick={() => {
+                  handleInputChange({
+                    target: { value: "edit", name: "requestMode" },
+                  });
+                  handleInputChange({
+                    target: { value: "", name: "RCPNo" },
+                  });
+
+                  mutateLoadRCPN({});
+                }}
+                color="secondary"
+                variant="contained"
+              >
+                Edit
+              </LoadingButton>
+            )}
+            {state.requestMode !== "" && (
+              <LoadingButton
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                }}
+                disabled={state.requestMode === ""}
+                onClick={handleOnSave}
+                color="success"
+                variant="contained"
+                loading={isLoadingSave}
+              >
+                Save
+              </LoadingButton>
+            )}
+
+            {state.requestMode !== "" && (
+              <LoadingButton
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                }}
+                variant="contained"
+                startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
+                color="error"
+                onClick={() => {
+                  Swal.fire({
+                    title: "Are you sure?",
+                    text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Yes, cancel it!",
+                  }).then((result) => {
+                    if (result.isConfirmed) {
+                      defaultState();
+                    }
+                  });
+                }}
+              >
+                Cancel
+              </LoadingButton>
+            )}
+          </div>
+        </div>
+
+        <div
+          ref={refParent}
+          style={{
+            marginTop: "10px",
+            width: "100%",
+            position: "relative",
+            flex: 1,
+          }}
+        >
+          <UpwardTable
+            isLoading={loadingLoadChecks}
+            ref={table}
+            rows={pulloutRequest}
+            column={pulloutRequestColumns}
+            width={width}
+            height={height}
+            dataReadOnly={true}
+            unSelectable={(row) => {
+              if (state.requestMode === "edit") {
+                return ["APPROVED", "DISAPPROVED"].includes(row.Status);
+              }
+              if (state.requestMode === "add") {
+                return ["PENDING", "APPROVED", "DISAPPROVED"].includes(
+                  row.Status
+                );
+              }
+              return false;
+            }}
+            isMultipleSelect={true}
+          />
+          {/* <Box
           style={{
             height: `${refParent.current?.getBoundingClientRect().height}px`,
             width: "100%",
@@ -889,8 +892,10 @@ function CheckPulloutRequest() {
             }}
           />
         </Box> */}
+        </div>
       </div>
-    </div>
+    </>
+
   );
 }
 function CheckPulloutResponse() {

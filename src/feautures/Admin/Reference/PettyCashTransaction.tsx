@@ -29,6 +29,7 @@ import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../lib/confirmationAlert";
+import PageHelmet from "../../../components/Helmet";
 
 const initialState = {
   Purpose: "",
@@ -251,6 +252,8 @@ export default function PettyCashTransaction() {
     });
   }
   return (
+   <>
+     <PageHelmet title="Petty Cash Transaction" />
     <div
       style={{
         display: "flex",
@@ -609,6 +612,7 @@ export default function PettyCashTransaction() {
       </div>
       {ModalChartAccount}
     </div>
+   </>
   );
 }
 export function setNewStateValue(dispatch: any, obj: any) {

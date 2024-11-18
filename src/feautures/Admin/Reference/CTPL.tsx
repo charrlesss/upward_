@@ -23,6 +23,7 @@ import {
   saveCondfirmationAlert,
 } from "../../../lib/confirmationAlert";
 import { pink } from "@mui/material/colors";
+import PageHelmet from "../../../components/Helmet";
 const initialState = {
   Prefix: "",
   NumSeriesFrom: 0,
@@ -178,363 +179,366 @@ export default function CTPL() {
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        width: "100%",
-        height: "100%",
-        flex: 1,
-      }}
-    >
-      {/* <Box>
+    <>
+      <PageHelmet title="CPTL" />
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          width: "100%",
+          height: "100%",
+          flex: 1,
+        }}
+      >
+        {/* <Box>
         <Typography variant="h5" sx={{ marginBottom: "10px" }}>
           CTPL Details
         </Typography>
       </Box> */}
-      <Box
-        sx={(theme) => ({
-          display: "flex",
-          alignItems: "center",
-          columnGap: "20px",
-          [theme.breakpoints.down("sm")]: {
-            flexDirection: "column",
-            alignItems: "flex-start",
-            flex: 1,
-            marginBottom: "15px",
-          },
-        })}
-      >
-        <div
-          style={{
-            marginTop: "10px",
-            marginBottom: "12px",
-            width: "100%",
-          }}
-        >
-          <TextField
-            label="Search"
-            fullWidth
-            size="small"
-            type="text"
-            name="search"
-            value={state.search}
-            onChange={handleInputChange}
-            InputProps={{
-              style: { height: "27px", fontSize: "14px" },
-            }}
-            sx={{
-              width: "500px",
-              height: "27px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-            onKeyDown={(e) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                e.preventDefault();
-                return refetchCtplSearch();
-              }
-            }}
-          />
-        </div>
-        <div
-          style={{
+        <Box
+          sx={(theme) => ({
             display: "flex",
             alignItems: "center",
             columnGap: "20px",
-          }}
+            [theme.breakpoints.down("sm")]: {
+              flexDirection: "column",
+              alignItems: "flex-start",
+              flex: 1,
+              marginBottom: "15px",
+            },
+          })}
         >
+          <div
+            style={{
+              marginTop: "10px",
+              marginBottom: "12px",
+              width: "100%",
+            }}
+          >
+            <TextField
+              label="Search"
+              fullWidth
+              size="small"
+              type="text"
+              name="search"
+              value={state.search}
+              onChange={handleInputChange}
+              InputProps={{
+                style: { height: "27px", fontSize: "14px" },
+              }}
+              sx={{
+                width: "500px",
+                height: "27px",
+                ".MuiFormLabel-root": { fontSize: "14px" },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              }}
+              onKeyDown={(e) => {
+                if (e.code === "Enter" || e.code === "NumpadEnter") {
+                  e.preventDefault();
+                  return refetchCtplSearch();
+                }
+              }}
+            />
+          </div>
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              columnGap: "5px",
+              columnGap: "20px",
             }}
           >
-            {state.mode === "" && (
-              <Button
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                }}
-                variant="contained"
-                startIcon={<AddIcon />}
-                id="entry-header-save-button"
-                onClick={() => {
-                  handleInputChange({ target: { value: "add", name: "mode" } });
-                }}
-              >
-                New
-              </Button>
-            )}
-
-            <LoadingButton
-              sx={{
-                height: "30px",
-                fontSize: "11px",
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                columnGap: "5px",
               }}
-              id="save-entry-header"
-              color="primary"
-              variant="contained"
-              type="submit"
-              onClick={handleOnSave}
-              disabled={state.mode === "" || state.mode === "edit"}
-              startIcon={<SaveIcon />}
-              loading={loadingAdd}
             >
-              Save
-            </LoadingButton>
-            {state.mode !== "" && (
-              <Button
+              {state.mode === "" && (
+                <Button
+                  sx={{
+                    height: "30px",
+                    fontSize: "11px",
+                  }}
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  id="entry-header-save-button"
+                  onClick={() => {
+                    handleInputChange({ target: { value: "add", name: "mode" } });
+                  }}
+                >
+                  New
+                </Button>
+              )}
+
+              <LoadingButton
                 sx={{
                   height: "30px",
                   fontSize: "11px",
                 }}
+                id="save-entry-header"
+                color="primary"
                 variant="contained"
-                startIcon={<CloseIcon />}
-                color="error"
+                type="submit"
+                onClick={handleOnSave}
+                disabled={state.mode === "" || state.mode === "edit"}
+                startIcon={<SaveIcon />}
+                loading={loadingAdd}
+              >
+                Save
+              </LoadingButton>
+              {state.mode !== "" && (
+                <Button
+                  sx={{
+                    height: "30px",
+                    fontSize: "11px",
+                  }}
+                  variant="contained"
+                  startIcon={<CloseIcon />}
+                  color="error"
+                  onClick={() => {
+                    Swal.fire({
+                      title: "Are you sure?",
+                      text: "You won't be able to revert this!",
+                      icon: "warning",
+                      showCancelButton: true,
+                      confirmButtonColor: "#3085d6",
+                      cancelButtonColor: "#d33",
+                      confirmButtonText: "Yes, cancel it!",
+                    }).then((result) => {
+                      if (result.isConfirmed) {
+                        resetModule();
+                      }
+                    });
+                  }}
+                >
+                  Cancel
+                </Button>
+              )}
+
+              <LoadingButton
+                variant="contained"
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                  backgroundColor: pink[500],
+                  "&:hover": {
+                    backgroundColor: pink[600],
+                  },
+                }}
+                disabled={state.mode !== "edit"}
+                startIcon={<DeleteIcon />}
+                loading={loadingDelete}
                 onClick={() => {
-                  Swal.fire({
-                    title: "Are you sure?",
-                    text: "You won't be able to revert this!",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#3085d6",
-                    cancelButtonColor: "#d33",
-                    confirmButtonText: "Yes, cancel it!",
-                  }).then((result) => {
-                    if (result.isConfirmed) {
-                      resetModule();
-                    }
+                  codeCondfirmationAlert({
+                    isUpdate: false,
+                    cb: (userCodeConfirmation) => {
+                      mutateDelete({
+                        ctplId: state.ctplId,
+                        userCodeConfirmation,
+                      });
+                    },
                   });
                 }}
               >
-                Cancel
-              </Button>
-            )}
-
-            <LoadingButton
-              variant="contained"
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-                backgroundColor: pink[500],
-                "&:hover": {
-                  backgroundColor: pink[600],
-                },
-              }}
-              disabled={state.mode !== "edit"}
-              startIcon={<DeleteIcon />}
-              loading={loadingDelete}
-              onClick={() => {
-                codeCondfirmationAlert({
-                  isUpdate: false,
-                  cb: (userCodeConfirmation) => {
-                    mutateDelete({
-                      ctplId: state.ctplId,
-                      userCodeConfirmation,
-                    });
-                  },
-                });
-              }}
-            >
-              Delete
-            </LoadingButton>
+                Delete
+              </LoadingButton>
+            </div>
           </div>
-        </div>
-      </Box>
-      <form
-        onSubmit={handleOnSave}
-        onKeyDown={(e) => {
-          if (e.code === "Enter" || e.code === "NumpadEnter") {
-            e.preventDefault();
-            handleOnSave(e);
-            return;
-          }
-        }}
-      >
-        <Box
-          sx={(theme) => ({
-            display: "flex",
-            columnGap: "15px",
-            flexDirection: "row",
-            [theme.breakpoints.down("md")]: {
-              flexDirection: "column",
-              rowGap: "10px",
-            },
-          })}
-        >
-          {isLoading ? (
-            <LinearProgress />
-          ) : (
-            <Autocomplete
-              disabled={state.mode === "" || state.mode === "edit"}
-              value={state.Prefix}
-              onChange={(event: any, value: string | null) => {
-                handleInputSelectionChange({ name: "Prefix", value });
-              }}
-              size="small"
-              freeSolo
-              disableClearable
-              options={(data as any).data?.ctpl?.prefix.map(
-                (option: any) => option.prefixName
-              )}
-              getOptionLabel={(option: any) => option}
-              sx={(theme) => ({
-                width: 500,
-                ".MuiFormLabel-root": {
-                  fontSize: "14px",
-                },
-                ".MuiInputBase-input": {
-                  width: "100% !important",
-                },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                ".MuiAutocomplete-input ": {
-                  position: "absolute",
-                },
-                [theme.breakpoints.down("md")]: { width: "100%" },
-              })}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Prefix"
-                  name="Prefix"
-                  InputProps={{
-                    ...params.InputProps,
-                    style: { height: "27px", fontSize: "14px" },
-                  }}
-                  onChange={handleInputChange}
-                />
-              )}
-            />
-          )}
-          <TextField
-            required
-            fullWidth
-            type="number"
-            variant="outlined"
-            size="small"
-            label="NumSeriesFrom"
-            name="NumSeriesFrom"
-            value={state.NumSeriesFrom}
-            onChange={handleInputChange}
-            disabled={state.mode === "" || state.mode === "edit"}
-            InputProps={{
-              style: { height: "27px", fontSize: "14px" },
-            }}
-            sx={{
-              flex: 1,
-              height: "27px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-          />
-          <TextField
-            required
-            fullWidth
-            type="number"
-            variant="outlined"
-            size="small"
-            label="NumSeriesTo"
-            name="NumSeriesTo"
-            value={state.NumSeriesTo}
-            onChange={handleInputChange}
-            disabled={state.mode === "" || state.mode === "edit"}
-            InputProps={{
-              style: { height: "27px", fontSize: "14px" },
-            }}
-            sx={{
-              flex: 1,
-              height: "27px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-          />
-          <TextField
-            required
-            fullWidth
-            type="text"
-            variant="outlined"
-            size="small"
-            label="Cost"
-            name="Cost"
-            value={state.Cost}
-            onChange={handleInputChange}
-            disabled={state.mode === "" || state.mode === "edit"}
-            placeholder="0.00"
-            InputProps={{
-              style: { height: "27px", fontSize: "14px" },
-              inputComponent: NumericFormatCustom as any,
-            }}
-            sx={{
-              flex: 1,
-              height: "27px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-            onBlur={() => {
-              dispatch({
-                type: "UPDATE_FIELD",
-                field: "Cost",
-                value: parseFloat(state.Cost).toFixed(2),
-              });
-            }}
-          />
         </Box>
-      </form>
-      <div
-        ref={refParent}
-        style={{
-          marginTop: "10px",
-          width: "100%",
-          position: "relative",
-          flex: 1,
-        }}
-      >
-        <Box
-          style={{
-            height: `${refParent.current?.getBoundingClientRect().height}px`,
-            width: "100%",
-            overflowX: "scroll",
-            position: "absolute",
+        <form
+          onSubmit={handleOnSave}
+          onKeyDown={(e) => {
+            if (e.code === "Enter" || e.code === "NumpadEnter") {
+              e.preventDefault();
+              handleOnSave(e);
+              return;
+            }
           }}
         >
-          <Table
-            ref={table}
-            isLoading={loadingAdd || isLoading}
-            columns={ctplColumn}
-            rows={rows}
-            table_id={"ctplId"}
-            isSingleSelection={true}
-            isRowFreeze={false}
-            dataSelection={(selection, data, code) => {
-              const rowSelected = data.filter(
-                (item: any) => item.ctplId === selection[0]
-              )[0];
-              if (rowSelected === undefined || rowSelected.length <= 0) {
-                setNewStateValue(dispatch, initialState);
-                handleInputChange({ target: { value: "", name: "mode" } });
-                return;
-              }
-              handleInputChange({ target: { value: "edit", name: "mode" } });
-              if (code === "Delete" || code === "Backspace") {
-                codeCondfirmationAlert({
-                  isUpdate: false,
-                  cb: (userCodeConfirmation) => {
-                    mutateDelete({
-                      ctplId: rowSelected.ctplId,
-                      userCodeConfirmation,
-                    });
+          <Box
+            sx={(theme) => ({
+              display: "flex",
+              columnGap: "15px",
+              flexDirection: "row",
+              [theme.breakpoints.down("md")]: {
+                flexDirection: "column",
+                rowGap: "10px",
+              },
+            })}
+          >
+            {isLoading ? (
+              <LinearProgress />
+            ) : (
+              <Autocomplete
+                disabled={state.mode === "" || state.mode === "edit"}
+                value={state.Prefix}
+                onChange={(event: any, value: string | null) => {
+                  handleInputSelectionChange({ name: "Prefix", value });
+                }}
+                size="small"
+                freeSolo
+                disableClearable
+                options={(data as any).data?.ctpl?.prefix.map(
+                  (option: any) => option.prefixName
+                )}
+                getOptionLabel={(option: any) => option}
+                sx={(theme) => ({
+                  width: 500,
+                  ".MuiFormLabel-root": {
+                    fontSize: "14px",
                   },
+                  ".MuiInputBase-input": {
+                    width: "100% !important",
+                  },
+                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                  ".MuiAutocomplete-input ": {
+                    position: "absolute",
+                  },
+                  [theme.breakpoints.down("md")]: { width: "100%" },
+                })}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Prefix"
+                    name="Prefix"
+                    InputProps={{
+                      ...params.InputProps,
+                      style: { height: "27px", fontSize: "14px" },
+                    }}
+                    onChange={handleInputChange}
+                  />
+                )}
+              />
+            )}
+            <TextField
+              required
+              fullWidth
+              type="number"
+              variant="outlined"
+              size="small"
+              label="NumSeriesFrom"
+              name="NumSeriesFrom"
+              value={state.NumSeriesFrom}
+              onChange={handleInputChange}
+              disabled={state.mode === "" || state.mode === "edit"}
+              InputProps={{
+                style: { height: "27px", fontSize: "14px" },
+              }}
+              sx={{
+                flex: 1,
+                height: "27px",
+                ".MuiFormLabel-root": { fontSize: "14px" },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              }}
+            />
+            <TextField
+              required
+              fullWidth
+              type="number"
+              variant="outlined"
+              size="small"
+              label="NumSeriesTo"
+              name="NumSeriesTo"
+              value={state.NumSeriesTo}
+              onChange={handleInputChange}
+              disabled={state.mode === "" || state.mode === "edit"}
+              InputProps={{
+                style: { height: "27px", fontSize: "14px" },
+              }}
+              sx={{
+                flex: 1,
+                height: "27px",
+                ".MuiFormLabel-root": { fontSize: "14px" },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              }}
+            />
+            <TextField
+              required
+              fullWidth
+              type="text"
+              variant="outlined"
+              size="small"
+              label="Cost"
+              name="Cost"
+              value={state.Cost}
+              onChange={handleInputChange}
+              disabled={state.mode === "" || state.mode === "edit"}
+              placeholder="0.00"
+              InputProps={{
+                style: { height: "27px", fontSize: "14px" },
+                inputComponent: NumericFormatCustom as any,
+              }}
+              sx={{
+                flex: 1,
+                height: "27px",
+                ".MuiFormLabel-root": { fontSize: "14px" },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              }}
+              onBlur={() => {
+                dispatch({
+                  type: "UPDATE_FIELD",
+                  field: "Cost",
+                  value: parseFloat(state.Cost).toFixed(2),
                 });
-                return;
-              }
-              setNewStateValue(dispatch, rowSelected);
+              }}
+            />
+          </Box>
+        </form>
+        <div
+          ref={refParent}
+          style={{
+            marginTop: "10px",
+            width: "100%",
+            position: "relative",
+            flex: 1,
+          }}
+        >
+          <Box
+            style={{
+              height: `${refParent.current?.getBoundingClientRect().height}px`,
+              width: "100%",
+              overflowX: "scroll",
+              position: "absolute",
             }}
-          />
-        </Box>
+          >
+            <Table
+              ref={table}
+              isLoading={loadingAdd || isLoading}
+              columns={ctplColumn}
+              rows={rows}
+              table_id={"ctplId"}
+              isSingleSelection={true}
+              isRowFreeze={false}
+              dataSelection={(selection, data, code) => {
+                const rowSelected = data.filter(
+                  (item: any) => item.ctplId === selection[0]
+                )[0];
+                if (rowSelected === undefined || rowSelected.length <= 0) {
+                  setNewStateValue(dispatch, initialState);
+                  handleInputChange({ target: { value: "", name: "mode" } });
+                  return;
+                }
+                handleInputChange({ target: { value: "edit", name: "mode" } });
+                if (code === "Delete" || code === "Backspace") {
+                  codeCondfirmationAlert({
+                    isUpdate: false,
+                    cb: (userCodeConfirmation) => {
+                      mutateDelete({
+                        ctplId: rowSelected.ctplId,
+                        userCodeConfirmation,
+                      });
+                    },
+                  });
+                  return;
+                }
+                setNewStateValue(dispatch, rowSelected);
+              }}
+            />
+          </Box>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 export function setNewStateValue(dispatch: any, obj: any) {

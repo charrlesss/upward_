@@ -18,6 +18,7 @@ import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../lib/confirmationAlert";
+import PageHelmet from "../../../components/Helmet";
 
 const initialState = {
   Bank_Code: "",
@@ -184,315 +185,318 @@ export default function Bank() {
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        width: "100%",
-        height: "100%",
-        flex: 1,
-      }}
-    >
-      {/* <Box>
+    <>
+      <PageHelmet title="Bank" />
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          width: "100%",
+          height: "100%",
+          flex: 1,
+        }}
+      >
+        {/* <Box>
         <Typography variant="h5" sx={{ marginBottom: "10px" }}>
           Bank Details
         </Typography>
       </Box> */}
-      <Box
-        sx={(theme) => ({
-          display: "flex",
-          alignItems: "center",
-          columnGap: "20px",
-          [theme.breakpoints.down("sm")]: {
-            flexDirection: "column",
-            alignItems: "flex-start",
-            marginBottom: "15px",
-          },
-        })}
-      >
-        <div
-          style={{
-            marginTop: "10px",
-            marginBottom: "12px",
-            width: "100%",
-          }}
-        >
-          <TextField
-            label="Search"
-            fullWidth
-            size="small"
-            type="text"
-            value={state.search}
-            name="search"
-            onChange={handleInputChange}
-            InputProps={{
-              style: { height: "27px", fontSize: "14px" },
-            }}
-            onKeyDown={(e) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                e.preventDefault();
-                return refetchBankSearch();
-              }
-            }}
-            sx={{
-              height: "27px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-          />
-        </div>
-        <div
-          style={{
+        <Box
+          sx={(theme) => ({
             display: "flex",
             alignItems: "center",
             columnGap: "20px",
-          }}
+            [theme.breakpoints.down("sm")]: {
+              flexDirection: "column",
+              alignItems: "flex-start",
+              marginBottom: "15px",
+            },
+          })}
         >
+          <div
+            style={{
+              marginTop: "10px",
+              marginBottom: "12px",
+              width: "100%",
+            }}
+          >
+            <TextField
+              label="Search"
+              fullWidth
+              size="small"
+              type="text"
+              value={state.search}
+              name="search"
+              onChange={handleInputChange}
+              InputProps={{
+                style: { height: "27px", fontSize: "14px" },
+              }}
+              onKeyDown={(e) => {
+                if (e.code === "Enter" || e.code === "NumpadEnter") {
+                  e.preventDefault();
+                  return refetchBankSearch();
+                }
+              }}
+              sx={{
+                height: "27px",
+                ".MuiFormLabel-root": { fontSize: "14px" },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              }}
+            />
+          </div>
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              columnGap: "5px",
+              columnGap: "20px",
             }}
           >
-            {state.mode === "" && (
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                id="entry-header-save-button"
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                }}
-                onClick={() => {
-                  handleInputChange({ target: { value: "add", name: "mode" } });
-                }}
-              >
-                New
-              </Button>
-            )}
-            <LoadingButton
-              id="save-entry-header"
-              color="primary"
-              variant="contained"
-              type="submit"
-              sx={{
-                height: "30px",
-                fontSize: "11px",
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                columnGap: "5px",
               }}
-              onClick={handleOnSave}
-              startIcon={<SaveIcon />}
-              disabled={state.mode === ""}
-              loading={loadingAdd || loadingEdit}
             >
-              Save
-            </LoadingButton>
-            {state.mode !== "" && (
-              <Button
+              {state.mode === "" && (
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  id="entry-header-save-button"
+                  sx={{
+                    height: "30px",
+                    fontSize: "11px",
+                  }}
+                  onClick={() => {
+                    handleInputChange({ target: { value: "add", name: "mode" } });
+                  }}
+                >
+                  New
+                </Button>
+              )}
+              <LoadingButton
+                id="save-entry-header"
+                color="primary"
+                variant="contained"
+                type="submit"
                 sx={{
                   height: "30px",
                   fontSize: "11px",
                 }}
-                variant="contained"
-                startIcon={<CloseIcon />}
-                color="error"
-                onClick={() => {
-                  Swal.fire({
-                    title: "Are you sure?",
-                    text: "You won't be able to revert this!",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#3085d6",
-                    cancelButtonColor: "#d33",
-                    confirmButtonText: "Yes, cancel it!",
-                  }).then((result) => {
-                    if (result.isConfirmed) {
-                      resetModule();
-                    }
-                  });
-                }}
+                onClick={handleOnSave}
+                startIcon={<SaveIcon />}
+                disabled={state.mode === ""}
+                loading={loadingAdd || loadingEdit}
               >
-                Cancel
-              </Button>
-            )}
-
-            <LoadingButton
-              id="save-entry-header"
-              variant="contained"
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-                backgroundColor: pink[500],
-                "&:hover": {
-                  backgroundColor: pink[600],
-                },
-              }}
-              loading={loadingDelete}
-              startIcon={<DeleteIcon />}
-              disabled={state.mode !== "edit"}
-              onClick={() => {
-                codeCondfirmationAlert({
-                  isUpdate: false,
-                  cb: (userCodeConfirmation) => {
-                    mutateDelete({
-                      Bank_Code: state.Bank_Code,
-                      userCodeConfirmation,
+                Save
+              </LoadingButton>
+              {state.mode !== "" && (
+                <Button
+                  sx={{
+                    height: "30px",
+                    fontSize: "11px",
+                  }}
+                  variant="contained"
+                  startIcon={<CloseIcon />}
+                  color="error"
+                  onClick={() => {
+                    Swal.fire({
+                      title: "Are you sure?",
+                      text: "You won't be able to revert this!",
+                      icon: "warning",
+                      showCancelButton: true,
+                      confirmButtonColor: "#3085d6",
+                      cancelButtonColor: "#d33",
+                      confirmButtonText: "Yes, cancel it!",
+                    }).then((result) => {
+                      if (result.isConfirmed) {
+                        resetModule();
+                      }
                     });
+                  }}
+                >
+                  Cancel
+                </Button>
+              )}
+
+              <LoadingButton
+                id="save-entry-header"
+                variant="contained"
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                  backgroundColor: pink[500],
+                  "&:hover": {
+                    backgroundColor: pink[600],
                   },
-                });
-              }}
-            >
-              Delete
-            </LoadingButton>
-          </div>
-        </div>
-      </Box>
-      <form
-        onSubmit={handleOnSave}
-        onKeyDown={(e) => {
-          if (e.code === "Enter" || e.code === "NumpadEnter") {
-            e.preventDefault();
-            handleOnSave(e);
-            return;
-          }
-        }}
-      >
-        <Box
-          sx={(theme) => ({
-            width: "100%",
-            display: "flex",
-            columnGap: "15px",
-            flexDirection: "row",
-            [theme.breakpoints.down("md")]: {
-              flexDirection: "column",
-              rowGap: "10px",
-            },
-          })}
-        >
-          <TextField
-            InputProps={{
-              style: { height: "27px", fontSize: "14px" },
-            }}
-            sx={{
-              width: "100%",
-              height: "27px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-            required
-            variant="outlined"
-            size="small"
-            label="Bank Code"
-            name="Bank_Code"
-            value={state.Bank_Code}
-            onChange={handleInputChange}
-            disabled={state.mode === "edit" || state.mode === ""}
-          />
-          <TextField
-            required
-            InputProps={{
-              style: { height: "27px", fontSize: "14px" },
-            }}
-            sx={{
-              width: "100%",
-              height: "27px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-            variant="outlined"
-            size="small"
-            label="Bank Name"
-            name="Bank"
-            value={state.Bank}
-            onChange={handleInputChange}
-            disabled={state.mode === ""}
-          />
-          <FormControlLabel
-            sx={{
-              ".MuiTypography-root": {
-                fontSize: "14px",
-              },
-              minWidth: "200px",
-            }}
-            disabled={state.mode === ""}
-            control={
-              <Checkbox
-                size="small"
-                name="Inactive"
-                checked={state.Inactive}
-                onChange={(e) => {
-                  dispatch({
-                    type: "UPDATE_FIELD",
-                    field: "Inactive",
-                    value: e.target.checked,
-                  });
                 }}
-              />
-            }
-            label="Mark As Inactive"
-          />
-        </Box>
-      </form>
-      <div
-        ref={refParent}
-        style={{
-          marginTop: "10px",
-          width: "100%",
-          position: "relative",
-          flex: 1,
-        }}
-      >
-        <Box
-          style={{
-            height: `${refParent.current?.getBoundingClientRect().height}px`,
-            width: "100%",
-            overflowX: "scroll",
-            position: "absolute",
-          }}
-        >
-          <Table
-            ref={table}
-            isLoading={isLoading || loadingDelete || loadingEdit || loadingAdd}
-            columns={bankColumn}
-            rows={rows}
-            table_id={"Bank_Code"}
-            isSingleSelection={true}
-            isRowFreeze={false}
-            dataSelection={(selection, data, code) => {
-              const rowSelected = data.filter(
-                (item: any) => item.Bank_Code === selection[0]
-              )[0];
-              if (rowSelected === undefined || rowSelected.length <= 0) {
-                setNewStateValue(dispatch, initialState);
-                handleInputChange({ target: { value: "", name: "mode" } });
-                return;
-              }
-              const newState = {
-                Bank_Code: rowSelected.Bank_Code,
-                Bank: rowSelected.Bank,
-                Inactive: rowSelected.Inactive === "NO",
-                mode: "edit",
-              };
-              setNewStateValue(dispatch, newState);
-              if (code === "Delete" || code === "Backspace") {
-                wait(350).then(() => {
+                loading={loadingDelete}
+                startIcon={<DeleteIcon />}
+                disabled={state.mode !== "edit"}
+                onClick={() => {
                   codeCondfirmationAlert({
                     isUpdate: false,
                     cb: (userCodeConfirmation) => {
                       mutateDelete({
-                        Bank_Code: rowSelected.Bank_Code,
+                        Bank_Code: state.Bank_Code,
                         userCodeConfirmation,
                       });
                     },
                   });
-                });
-                return;
-              }
-            }}
-          />
+                }}
+              >
+                Delete
+              </LoadingButton>
+            </div>
+          </div>
         </Box>
+        <form
+          onSubmit={handleOnSave}
+          onKeyDown={(e) => {
+            if (e.code === "Enter" || e.code === "NumpadEnter") {
+              e.preventDefault();
+              handleOnSave(e);
+              return;
+            }
+          }}
+        >
+          <Box
+            sx={(theme) => ({
+              width: "100%",
+              display: "flex",
+              columnGap: "15px",
+              flexDirection: "row",
+              [theme.breakpoints.down("md")]: {
+                flexDirection: "column",
+                rowGap: "10px",
+              },
+            })}
+          >
+            <TextField
+              InputProps={{
+                style: { height: "27px", fontSize: "14px" },
+              }}
+              sx={{
+                width: "100%",
+                height: "27px",
+                ".MuiFormLabel-root": { fontSize: "14px" },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              }}
+              required
+              variant="outlined"
+              size="small"
+              label="Bank Code"
+              name="Bank_Code"
+              value={state.Bank_Code}
+              onChange={handleInputChange}
+              disabled={state.mode === "edit" || state.mode === ""}
+            />
+            <TextField
+              required
+              InputProps={{
+                style: { height: "27px", fontSize: "14px" },
+              }}
+              sx={{
+                width: "100%",
+                height: "27px",
+                ".MuiFormLabel-root": { fontSize: "14px" },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              }}
+              variant="outlined"
+              size="small"
+              label="Bank Name"
+              name="Bank"
+              value={state.Bank}
+              onChange={handleInputChange}
+              disabled={state.mode === ""}
+            />
+            <FormControlLabel
+              sx={{
+                ".MuiTypography-root": {
+                  fontSize: "14px",
+                },
+                minWidth: "200px",
+              }}
+              disabled={state.mode === ""}
+              control={
+                <Checkbox
+                  size="small"
+                  name="Inactive"
+                  checked={state.Inactive}
+                  onChange={(e) => {
+                    dispatch({
+                      type: "UPDATE_FIELD",
+                      field: "Inactive",
+                      value: e.target.checked,
+                    });
+                  }}
+                />
+              }
+              label="Mark As Inactive"
+            />
+          </Box>
+        </form>
+        <div
+          ref={refParent}
+          style={{
+            marginTop: "10px",
+            width: "100%",
+            position: "relative",
+            flex: 1,
+          }}
+        >
+          <Box
+            style={{
+              height: `${refParent.current?.getBoundingClientRect().height}px`,
+              width: "100%",
+              overflowX: "scroll",
+              position: "absolute",
+            }}
+          >
+            <Table
+              ref={table}
+              isLoading={isLoading || loadingDelete || loadingEdit || loadingAdd}
+              columns={bankColumn}
+              rows={rows}
+              table_id={"Bank_Code"}
+              isSingleSelection={true}
+              isRowFreeze={false}
+              dataSelection={(selection, data, code) => {
+                const rowSelected = data.filter(
+                  (item: any) => item.Bank_Code === selection[0]
+                )[0];
+                if (rowSelected === undefined || rowSelected.length <= 0) {
+                  setNewStateValue(dispatch, initialState);
+                  handleInputChange({ target: { value: "", name: "mode" } });
+                  return;
+                }
+                const newState = {
+                  Bank_Code: rowSelected.Bank_Code,
+                  Bank: rowSelected.Bank,
+                  Inactive: rowSelected.Inactive === "NO",
+                  mode: "edit",
+                };
+                setNewStateValue(dispatch, newState);
+                if (code === "Delete" || code === "Backspace") {
+                  wait(350).then(() => {
+                    codeCondfirmationAlert({
+                      isUpdate: false,
+                      cb: (userCodeConfirmation) => {
+                        mutateDelete({
+                          Bank_Code: rowSelected.Bank_Code,
+                          userCodeConfirmation,
+                        });
+                      },
+                    });
+                  });
+                  return;
+                }
+              }}
+            />
+          </Box>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 export function setNewStateValue(dispatch: any, obj: any) {

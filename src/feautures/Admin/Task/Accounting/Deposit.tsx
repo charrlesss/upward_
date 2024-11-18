@@ -30,6 +30,7 @@ import { format } from 'date-fns'
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import '../../../../style/laoding.css'
+import PageHelmet from "../../../../components/Helmet";
 const defaultCashBreakDown = [
   { value1: "1,000.00", value2: "", value3: "0.00" },
   { value1: "500.00", value2: "", value3: "0.00" },
@@ -63,6 +64,52 @@ const buttons = [
   {
     title: "Collection for Deposit",
     index: 3,
+  },
+];
+
+const cashColumns = [
+  {
+    key: "OR_No",
+    label: "OR No.",
+    width: 270,
+  },
+  {
+    key: "OR_Date",
+    label: "OR Date",
+    width: 270,
+  },
+  {
+    key: "Amount",
+    label: "Amount",
+    width: 200,
+    type: "number",
+    cellClassName: "super-app-theme--cell",
+  },
+  {
+    key: "Client_Name",
+    label: "Client Name",
+    flex: 1,
+    width: 540,
+  },
+  {
+    key: "DRCode",
+    label: "DRCode",
+    hide: true,
+  },
+  {
+    key: "ID_No",
+    label: "ID_No",
+    hide: true,
+  },
+  {
+    key: "Short",
+    label: "Short",
+    hide: true,
+  },
+  {
+    key: "Temp_OR",
+    label: "Temp_OR",
+    hide: true,
   },
 ];
 
@@ -125,13 +172,18 @@ export default function Deposit() {
   const [cashCollection, setCashCollection] = useState<any>([])
   const [checkCollection, setCheckCollection] = useState<any>([])
   const [selectedRows, setSelectedRows] = useState<any>([])
-  const [selectedRowsCashIndex, setSelectedRowsCashIndex] = useState<any>([])
-  const [selectedRowsCheckedIndex, setSelectedRowsCheckedIndex] = useState<any>([])
   const [collectionForDeposit, setCollectionForDeposit] = useState<any>([]);
   const [tableRowsInputValue, setTableRowsInputValue] =
     useState<Array<{ value1: string; value2: string; value3: string }>>(
       defaultCashBreakDown
     );
+
+
+  const [selectedRowsCashIndex, setSelectedRowsCashIndex] = useState<any>([])
+  const [selectedRowsCheckedIndex, setSelectedRowsCheckedIndex] = useState<any>([])
+
+
+
   const [depositMode, setDepositMode] = useState('')
   const [total, setTotal] = useState("0.00");
   const TotalCashForDeposit = selectedRows
@@ -329,15 +381,23 @@ export default function Deposit() {
         const check = res.data.data.checks
         const cash_breakdown = res.data.data.cash_breakdown
 
+        setCashCollection([])
+        setCheckCollection([])
+        setSelectedRows([])
+        setCollectionForDeposit([])
+        setTableRowsInputValue([])
         wait(100).then(() => {
+          collectionCheckTable.current.resetTable()
+          selectedTable.current.resetTable()
+          cashTable.current.resetTable()
+          checkTable.current.resetTable()
+
           if (refBankAcctCode.current)
             refBankAcctCode.current.value = obj.refBankAcctCode
           if (refBankAcctName.current)
             refBankAcctName.current.value = obj.refBankAcctName
           if (refDateDepo.current)
             refDateDepo.current.value = format(new Date(obj.refDate), "yyyy-MM-dd")
-
-
 
           refBankAcctCodeTag.current = obj?.refBankAcctCodeTag
           refBankAcctNameTag.current = obj?.refBankAcctNameTag
@@ -347,87 +407,40 @@ export default function Deposit() {
           refClassification.current = obj?.refClassification
           refSubAccount.current = obj?.refSubAccount
 
-          const cashIndex = cash
-            .map((obj: any, index: number) => obj.SlipCode !== null && obj.SlipCode !== '' ? index : null)
-            .filter((index: number) => index !== null);
-
-          const checkIndex = check
-            .map((obj: any, index: number) => obj.SlipCode !== null && obj.SlipCode !== '' ? index : null)
-            .filter((index: number) => index !== null);
-
-
-          setSelectedRowsCashIndex(cashIndex)
-          setSelectedRowsCheckedIndex(checkIndex)
-          setCashCollection(cash);
-          setCheckCollection(check);
-
-
-          const filteredCash = cash.filter((itm: any) => itm.SlipCode !== '' && itm.SlipCode === refSlipCode.current?.value)
-          const filteredCheck = check.filter((itm: any) => itm.SlipCode !== '' && itm.SlipCode === refSlipCode.current?.value)
-
-          if (filteredCash.length > 0) {
-            filteredCash.forEach((rowSelected: any) => {
-              setSelectedRows((d: any) => {
-
-                const newSelected: any = {
-                  Deposit: "Cash",
-                  Check_No: "",
-                  Check_Date: "",
-                  Bank: "",
-                  Amount: rowSelected.Amount,
-                  Name: rowSelected.Client_Name,
-                  RowIndex: d.length + 1,
-                  DRCode: rowSelected.DRCode,
-                  ORNo: rowSelected.OR_No,
-                  DRRemarks: "",
-                  IDNo: rowSelected.ID_No,
-                  TempOR: rowSelected.Temp_OR,
-                  Short: rowSelected.Short,
-                };
-
-                d = [...d, newSelected];
-                return d;
-              });
-            });
-          }
-          if (filteredCheck.length > 0) {
-            filteredCheck.forEach((rowSelected: any) => {
-              setSelectedRows((d: any) => {
-                const newSelected: any = {
-                  Deposit: "Check",//0
-                  Check_No: rowSelected.Check_No,//1
-                  Check_Date: rowSelected.Check_Date,//2
-                  Bank: rowSelected.Bank_Branch,//3
-                  Amount: rowSelected.Amount,//4
-                  Name: rowSelected.Client_Name,//5
-                  RowIndex: d.length + 1,//6
-                  DRCode: rowSelected.DRCode,//7
-                  ORNo: rowSelected.OR_No,//8
-                  DRRemarks: rowSelected.DRRemarks,//9
-                  IDNo: rowSelected.ID_No,//10
-                  TempOR: rowSelected.Temp_OR,//11
-                  Short: rowSelected.Short,//12
-                };
-                d = [...d, newSelected];
-                return d;
-              });
-
-
-              setCollectionForDeposit((d: any) => {
-                const newSelectedCheckForDeposit: any = {
-                  Bank: rowSelected.Bank_Branch,
-                  Check_No: rowSelected.Check_No,
-                  Amount: rowSelected.Amount,
-                  TempOR: rowSelected.Temp_OR,
-                };
-                d = [...d, newSelectedCheckForDeposit];
-                return d;
-              });
-            });
-          }
+          cashTable.current.setDataFormated(cash)
+          checkTable.current.setDataFormated(check)
+          setCashCollection(cash)
+          setCheckCollection(check)
           setTableRowsInputValue(cash_breakdown)
-        })
 
+
+
+          setTimeout(() => {
+            cash.forEach((d: any, idx: number) => {
+              if (refSlipCode.current && d.SlipCode === refSlipCode.current.value) {
+                const row = cashTable.current.parentElement().querySelector(`.tr-row-${idx}`);
+                const col = row.querySelectorAll('td')[0]
+                const checkbox = col.querySelector('input') as HTMLInputElement
+                if (checkbox) {
+                  checkbox.click()
+                }
+              }
+            });
+
+            check.forEach((d: any, idx: number) => {
+              if (refSlipCode.current && d.SlipCode === refSlipCode.current.value) {
+                const row = checkTable.current.parentElement().querySelector(`.tr-row-${idx}`);
+                const col = row.querySelectorAll('td')[0]
+                const checkbox = col.querySelector('input') as HTMLInputElement
+                if (checkbox) {
+                  checkbox.click()
+                }
+              }
+            });
+
+          }, 200)
+
+        })
         setDepositMode('edit')
 
       },
@@ -617,184 +630,222 @@ export default function Deposit() {
   const disabledFields = depositMode === "";
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        width: "100%",
-        height: "100%",
-        flex: 1,
-      }}
-    >
+    <>
+      <PageHelmet title="Deposit" />
       <div
         style={{
           display: "flex",
-          alignItems: "center",
-          columnGap: "5px",
+          flexDirection: "column",
+          width: "100%",
+          height: "100%",
+          flex: 1,
         }}
       >
-        {isLoadingDeposit ? (
-          <LoadingButton loading={isLoadingDeposit} />
-        ) : (
-          <TextInput
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            columnGap: "5px",
+          }}
+        >
+          {isLoadingDeposit ? (
+            <LoadingButton loading={isLoadingDeposit} />
+          ) : (
+            <TextInput
+              label={{
+                title: "Search: ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "50px",
+                },
+              }}
+              input={{
+                className: "search-input-up-on-key-down",
+                type: "search",
+                onKeyDown: (e) => {
+                  if (e.key === "Enter" || e.key === "NumpadEnter") {
+                    e.preventDefault();
+                    openDeposit(inputSearchRef.current?.value);
+                  }
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    const datagridview = document.querySelector(
+                      ".grid-container"
+                    ) as HTMLDivElement;
+                    datagridview.focus();
+                  }
+                },
+                style: { width: "500px" },
+              }}
+              inputRef={inputSearchRef}
+            />
+          )}
+          {disabledFields && (
+            <Button
+              sx={{
+                height: "30px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+              id="entry-header-save-button"
+              onClick={() => {
+                setDepositMode("add")
+
+              }}
+            >
+              New
+            </Button>
+          )}
+          <LoadingButton
+            sx={{
+              height: "30px",
+              fontSize: "11px",
+            }}
+            id="save-entry-header"
+            color="primary"
+            variant="contained"
+            type="submit"
+            onClick={handleOnSave}
+            disabled={disabledFields}
+            startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
+            loading={updateDepositMutationLoading || addDepositMutationLoading}
+          >
+            Save
+          </LoadingButton>
+          {!disabledFields && (
+            <Button
+              sx={{
+                height: "30px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
+              color="error"
+              onClick={() => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, cancel it!",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    setDepositMode("")
+                    setSelectedRows([]);
+                    setCollectionForDeposit([]);
+                    RefetchDepositSlipCode();
+                    setTableRowsInputValue(defaultCashBreakDown);
+                    resetRefs()
+                    refetchCheckCollection()
+                    refetchCashCollection()
+                    wait(100).then(() => {
+                      collectionCheckTable.current.resetTable()
+                      selectedTable.current.resetTable()
+                      cashTable.current.resetTable()
+                      checkTable.current.resetTable()
+                    })
+                  }
+                });
+              }}
+            >
+              Cancel
+            </Button>
+          )}
+        </div>
+        <br />
+        <form
+          onKeyDown={(e) => {
+            if (e.code === "Enter" || e.code === "NumpadEnter") {
+              e.preventDefault();
+              return;
+            }
+          }}
+          style={{
+            display: "flex",
+            gap: "10px",
+          }}
+        >
+          {LoadingDepositSlipCode ? "Loading..." : <TextInput
             label={{
-              title: "Search: ",
+              title: "Slip Code: ",
               style: {
                 fontSize: "12px",
                 fontWeight: "bold",
-                width: "50px",
+                width: "70px",
+              },
+            }}
+            input={{
+              disabled: disabledFields,
+              className: "search-input-up-on-key-down",
+              type: "text",
+              style: { width: "200px" },
+            }}
+            inputRef={refSlipCode}
+            icon={<AutorenewIcon sx={{ fontSize: "18px" }} />}
+            onIconClick={(e) => {
+              e.preventDefault()
+              RefetchDepositSlipCode()
+            }}
+          />}
+          <TextInput
+            label={{
+              title: "Deposit Date: ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "80px",
               },
             }}
             input={{
               className: "search-input-up-on-key-down",
-              type: "search",
-              onKeyDown: (e) => {
-                if (e.key === "Enter" || e.key === "NumpadEnter") {
-                  e.preventDefault();
-                  openDeposit(inputSearchRef.current?.value);
-                }
-                if (e.key === "ArrowDown") {
-                  e.preventDefault();
-                  const datagridview = document.querySelector(
-                    ".grid-container"
-                  ) as HTMLDivElement;
-                  datagridview.focus();
-                }
-              },
-              style: { width: "500px" },
+              type: "date",
+              style: { width: "200px" },
+              disabled: disabledFields
             }}
-            inputRef={inputSearchRef}
+            inputRef={refDateDepo}
           />
-        )}
-        {disabledFields && (
-          <Button
-            sx={{
-              height: "30px",
-              fontSize: "11px",
-            }}
-            variant="contained"
-            startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
-            id="entry-header-save-button"
-            onClick={() => {
-              setDepositMode("add")
 
-            }}
-          >
-            New
-          </Button>
-        )}
-        <LoadingButton
-          sx={{
-            height: "30px",
-            fontSize: "11px",
-          }}
-          id="save-entry-header"
-          color="primary"
-          variant="contained"
-          type="submit"
-          onClick={handleOnSave}
-          disabled={disabledFields}
-          startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
-          loading={updateDepositMutationLoading || addDepositMutationLoading}
-        >
-          Save
-        </LoadingButton>
-        {!disabledFields && (
-          <Button
-            sx={{
-              height: "30px",
-              fontSize: "11px",
-            }}
-            variant="contained"
-            startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
-            color="error"
-            onClick={() => {
-              Swal.fire({
-                title: "Are you sure?",
-                text: "You won't be able to revert this!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, cancel it!",
-              }).then((result) => {
-                if (result.isConfirmed) {
-                  setDepositMode("")
-                  setSelectedRows([]);
-                  setCollectionForDeposit([]);
-                  RefetchDepositSlipCode();
-                  setTableRowsInputValue(defaultCashBreakDown);
-                  resetRefs()
-                  refetchCheckCollection()
-                  refetchCashCollection()
+          {isLoadingDepostitBanks ? (
+            "Loading..."
+          ) : (
+            <TextInput
+              label={{
+                title: "Bank Account: ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
+              }}
+              input={{
+                className: "search-input-up-on-key-down",
+                type: "text",
+                style: { width: "200px" },
+                onKeyDown: (e) => {
+                  if (e.key === "Enter" || e.key === "NumpadEnter") {
+                    e.preventDefault();
+                    openDepositBanks(refBankAcctCode.current?.value)
+                  }
 
-                }
-              });
-            }}
-          >
-            Cancel
-          </Button>
-        )}
-      </div>
-      <br />
-      <form
-        onKeyDown={(e) => {
-          if (e.code === "Enter" || e.code === "NumpadEnter") {
-            e.preventDefault();
-            return;
-          }
-        }}
-        style={{
-          display: "flex",
-          gap: "10px",
-        }}
-      >
-        {LoadingDepositSlipCode ? "Loading..." : <TextInput
-          label={{
-            title: "Slip Code: ",
-            style: {
-              fontSize: "12px",
-              fontWeight: "bold",
-              width: "70px",
-            },
-          }}
-          input={{
-            disabled: disabledFields,
-            className: "search-input-up-on-key-down",
-            type: "text",
-            style: { width: "200px" },
-          }}
-          inputRef={refSlipCode}
-          icon={<AutorenewIcon sx={{ fontSize: "18px" }} />}
-          onIconClick={(e) => {
-            e.preventDefault()
-            RefetchDepositSlipCode()
-          }}
-        />}
-        <TextInput
-          label={{
-            title: "Deposit Date: ",
-            style: {
-              fontSize: "12px",
-              fontWeight: "bold",
-              width: "80px",
-            },
-          }}
-          input={{
-            className: "search-input-up-on-key-down",
-            type: "date",
-            style: { width: "200px" },
-            disabled: disabledFields
-          }}
-          inputRef={refDateDepo}
-        />
+                },
+                disabled: disabledFields
+              }}
+              inputRef={refBankAcctCode}
+              icon={<AccountBalanceIcon sx={{ fontSize: "18px", color: disabledFields ? "gray" : "black" }} />}
+              onIconClick={(e) => {
+                e.preventDefault()
+                openDepositBanks(refBankAcctCode.current?.value)
+              }}
+              disableIcon={disabledFields}
+            />)}
 
-        {isLoadingDepostitBanks ? (
-          "Loading..."
-        ) : (
           <TextInput
             label={{
-              title: "Bank Account: ",
+              title: "Account Name: ",
               style: {
                 fontSize: "12px",
                 fontWeight: "bold",
@@ -805,154 +856,125 @@ export default function Deposit() {
               className: "search-input-up-on-key-down",
               type: "text",
               style: { width: "200px" },
-              onKeyDown: (e) => {
-                if (e.key === "Enter" || e.key === "NumpadEnter") {
-                  e.preventDefault();
-                  openDepositBanks(refBankAcctCode.current?.value)
-                }
-
-              },
+              readOnly: true,
               disabled: disabledFields
-            }}
-            inputRef={refBankAcctCode}
-            icon={<AccountBalanceIcon sx={{ fontSize: "18px", color: disabledFields ? "gray" : "black" }} />}
-            onIconClick={(e) => {
-              e.preventDefault()
-              openDepositBanks(refBankAcctCode.current?.value)
-            }}
-            disableIcon={disabledFields}
-          />)}
 
-        <TextInput
-          label={{
-            title: "Account Name: ",
-            style: {
-              fontSize: "12px",
-              fontWeight: "bold",
-              width: "100px",
-            },
-          }}
-          input={{
-            className: "search-input-up-on-key-down",
-            type: "text",
-            style: { width: "200px" },
-            readOnly: true,
-            disabled: disabledFields
-
-          }}
-          inputRef={refBankAcctName}
-        />
-        <button
-          // ref={submitButton}
-          style={{ display: "none" }}
-          type="submit"
-        ></button>
-      </form>
-      <br />
-      <div>
-        <div style={{ display: "flex" }}>
-          {buttons.map((item, idx) => {
-            return (
-              <button
-                key={idx}
-                style={{
-                  border: "none",
-                  outline: "none",
-                  backgroundColor: "rgba(51, 51, 51, 0.05)",
-                  borderWidth: "0",
-                  color: currentStepIndex === idx ? "#7e22ce" : "#333333",
-                  cursor: "pointer",
-                  display: "inline-block",
-                  fontFamily: `"Haas Grot Text R Web", "Helvetica Neue", Helvetica, Arial, sans-serif`,
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  lineHeight: "20px",
-                  listStyle: "none",
-                  margin: "0",
-                  padding: "10px 12px",
-                  textAlign: "center",
-                  transition: "all 200ms",
-                  verticalAlign: "baseline",
-                  whiteSpace: "nowrap",
-                  userSelect: "none",
-                  touchAction: "manipulation",
-                  position: "relative",
-                  overflow: "hidden",
-                }}
-                onClick={() => goTo(idx)}
-              >
-                <span
+            }}
+            inputRef={refBankAcctName}
+          />
+          <button
+            // ref={submitButton}
+            style={{ display: "none" }}
+            type="submit"
+          ></button>
+        </form>
+        <br />
+        <div>
+          <div style={{ display: "flex" }}>
+            {buttons.map((item, idx) => {
+              return (
+                <button
+                  key={idx}
                   style={{
-                    position: "absolute",
-                    top: 0,
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    background: "rgba(206, 214, 211, 0.18)",
+                    border: "none",
+                    outline: "none",
+                    backgroundColor: "rgba(51, 51, 51, 0.05)",
+                    borderWidth: "0",
+                    color: currentStepIndex === idx ? "#7e22ce" : "#333333",
+                    cursor: "pointer",
+                    display: "inline-block",
+                    fontFamily: `"Haas Grot Text R Web", "Helvetica Neue", Helvetica, Arial, sans-serif`,
+                    fontSize: "14px",
+                    fontWeight: "500",
+                    lineHeight: "20px",
+                    listStyle: "none",
+                    margin: "0",
+                    padding: "10px 12px",
+                    textAlign: "center",
                     transition: "all 200ms",
-                    transform: slideAnimation(currentStepIndex, idx),
+                    verticalAlign: "baseline",
+                    whiteSpace: "nowrap",
+                    userSelect: "none",
+                    touchAction: "manipulation",
+                    position: "relative",
+                    overflow: "hidden",
                   }}
-                ></span>
-                {item.title}
-              </button>
-            );
-          })}
+                  onClick={() => goTo(idx)}
+                >
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      background: "rgba(206, 214, 211, 0.18)",
+                      transition: "all 200ms",
+                      transform: slideAnimation(currentStepIndex, idx),
+                    }}
+                  ></span>
+                  {item.title}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
-      <DepositContext.Provider
-        value={{
-          cashCollection,
-          setCashCollection,
-          checkCollection,
-          setCheckCollection,
-          selectedRows,
-          setSelectedRows,
-          collectionForDeposit,
-          setCollectionForDeposit,
-          total,
-          setTotal,
-          TotalCashForDeposit,
-          tableRows: tableRowsInputValue,
-          setTableRowsInputValue,
-          updateTableRowsInput,
-          loadingCheckCollection,
-          loadingCashCollection,
-          selectedRowsCashIndex,
-          setSelectedRowsCashIndex,
-          selectedRowsCheckedIndex,
-          setSelectedRowsCheckedIndex,
-          cashTable,
-          checkTable,
-          selectedTable,
-          collectionCheckTable
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            flex: 1,
+        <DepositContext.Provider
+          value={{
+            cashCollection,
+            setCashCollection,
+            checkCollection,
+            setCheckCollection,
+            selectedRows,
+            setSelectedRows,
+            collectionForDeposit,
+            setCollectionForDeposit,
+            total,
+            setTotal,
+            TotalCashForDeposit,
+            tableRows: tableRowsInputValue,
+            setTableRowsInputValue,
+            updateTableRowsInput,
+            loadingCheckCollection,
+            loadingCashCollection,
+            selectedRowsCashIndex,
+            setSelectedRowsCashIndex,
+            selectedRowsCheckedIndex,
+            setSelectedRowsCheckedIndex,
+            cashTable,
+            checkTable,
+            selectedTable,
+            collectionCheckTable
           }}
-          id="concatiner"
         >
-          <div style={{ display: currentStepIndex === 0 ? "block" : "none" }}>
-            <CashCollection />
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              flex: 1,
+            }}
+            id="concatiner"
+          >
+            <div style={{ display: currentStepIndex === 0 ? "block" : "none" }}>
+              <CashCollection />
+            </div>
+            <div style={{ display: currentStepIndex === 1 ? "block" : "none" }}>
+              <CheckCollection />
+            </div>
+            <div style={{ display: currentStepIndex === 2 ? "block" : "none" }}>
+              <SelectedCollection />
+            </div>
+            <div style={{ display: currentStepIndex === 3 ? "block" : "none" }}>
+              <CollectionForDeposit />
+            </div>
           </div>
-          <div style={{ display: currentStepIndex === 1 ? "block" : "none" }}>
-            <CheckCollection />
-          </div>
-          <div style={{ display: currentStepIndex === 2 ? "block" : "none" }}>
-            <SelectedCollection />
-          </div>
-          <div style={{ display: currentStepIndex === 3 ? "block" : "none" }}>
-            <CollectionForDeposit />
-          </div>
-        </div>
-      </DepositContext.Provider>
-      {ModalDepostitBanks}
-      {ModalDeposit}
-      {(loadingSearchByDepositSlip || updateDepositMutationLoading || addDepositMutationLoading) && <div className="loading-component"><div className="loader"></div></div>}
-    </div>
+        </DepositContext.Provider>
+        {ModalDepostitBanks}
+        {ModalDeposit}
+        {(loadingSearchByDepositSlip || updateDepositMutationLoading || addDepositMutationLoading) && <div className="loading-component"><div className="loader"></div></div>}
+      </div>
+    </>
+
   );
 }
 function slideAnimation(activeButton: number, idx: number) {
@@ -969,51 +991,7 @@ function CashCollection() {
     cashTable
   } = useContext(DepositContext);
 
-  const cashColumns = [
-    {
-      key: "OR_No",
-      label: "OR No.",
-      width: 270,
-    },
-    {
-      key: "OR_Date",
-      label: "OR Date",
-      width: 270,
-    },
-    {
-      key: "Amount",
-      label: "Amount",
-      width: 200,
-      type: "number",
-      cellClassName: "super-app-theme--cell",
-    },
-    {
-      key: "Client_Name",
-      label: "Client Name",
-      flex: 1,
-      width: 540,
-    },
-    {
-      key: "DRCode",
-      label: "DRCode",
-      hide: true,
-    },
-    {
-      key: "ID_No",
-      label: "ID_No",
-      hide: true,
-    },
-    {
-      key: "Short",
-      label: "Short",
-      hide: true,
-    },
-    {
-      key: "Temp_OR",
-      label: "Temp_OR",
-      hide: true,
-    },
-  ];
+
 
   return (
     <div
@@ -1419,16 +1397,13 @@ function CollectionForDeposit() {
           </thead>
           <tbody>
             {tableRows?.map((items: any, idx: number) => {
-              return items.value1 !== '2.00' &&
-                items.value1 !== '200.00' ? (
-                <TrComponent
-                  key={idx}
-                  value1={items.value1}
-                  value2={items.value2}
-                  value3={items.value3}
-                  idx={idx}
-                />
-              ) : null;
+              return <TrComponent
+                key={idx}
+                value1={items.value1}
+                value2={items.value2}
+                value3={items.value3}
+                idx={idx}
+              />
             })}
           </tbody>
           <tfoot>
@@ -1619,7 +1594,15 @@ const DepositTable = forwardRef(({
     resetTable: () => {
       setData([])
       setSelectedRow([])
-    }
+    },
+    setDataFormated: (newData: any) => {
+      setData(newData.map((itm: any) => {
+        return columns.map((col: any) => itm[col.key])
+      }))
+    },
+    parentElement: () => {
+      return parentElementRef.current
+    },
   }))
 
 
@@ -1658,7 +1641,7 @@ const DepositTable = forwardRef(({
               {
                 data?.map((rowItm: any, rowIdx: number) => {
                   return (
-                    <tr key={rowIdx}>
+                    <tr key={rowIdx} className={`tr-row-${rowIdx} `}>
                       <td style={{
                         position: "relative", borderBottom: "1px solid black",
                         borderLeft: "1px solid black",
@@ -1666,8 +1649,10 @@ const DepositTable = forwardRef(({
                         borderRight: "1px solid black",
                         cursor: "pointer",
                         background: selectedRow.includes(rowIdx) ? "#bae6fd" : "",
-                      }}>
+                      }}
+                      >
                         <input
+                          className="check-input"
                           style={{
                             cursor: "pointer",
                             height: "10px",
@@ -1783,11 +1768,16 @@ const DepositTableSelected = forwardRef(({
     resetTable: () => {
       setData([])
       setSelectedRow(0)
+    },
+    setDataFormated: (newData: any) => {
+      setData(newData.map((itm: any) => {
+        return columns.map((col: any) => itm[col.key])
+      }))
     }
   }))
 
 
-  
+
 
 
   return (

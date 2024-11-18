@@ -1,7 +1,11 @@
 import React from 'react'
+import PageHelmet from '../../../components/Helmet'
 
 export default function Booklet() {
   return (
-    <div>Booklet</div>
+    <>
+      <PageHelmet title="Booklet" />
+      <div>Booklet</div>
+    </>
   )
 }

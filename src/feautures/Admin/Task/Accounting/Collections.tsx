@@ -40,6 +40,7 @@ import {
   saveCondfirmationAlert,
 } from "../../../../lib/confirmationAlert";
 import { UpwardTable } from "../../../../components/UpwardTable";
+import PageHelmet from "../../../../components/Helmet";
 
 const CollectionContext = createContext<{
   debit: Array<any>;
@@ -188,6 +189,7 @@ export default function Collections() {
   const checkNoRef = useRef<HTMLInputElement>(null);
   const checkBankRef = useRef<HTMLInputElement>(null);
   const checkBranchRef = useRef<HTMLInputElement>(null);
+  const checkRemakrsRef = useRef<HTMLInputElement>(null);
   const checkAmountRef = useRef<HTMLInputElement>(null);
   const checkDateRef = useRef<HTMLInputElement>(null);
 
@@ -255,7 +257,7 @@ export default function Collections() {
       dispatch({
         type: "UPDATE_FIELD",
         field: "IDNo",
-        value: selectedRowData[0].ID,
+        value: selectedRowData[0].client_id,
       });
       dispatch({
         type: "UPDATE_FIELD",
@@ -377,6 +379,12 @@ export default function Collections() {
         value: selectedRowData[0].Bank_Code,
       });
       closeModalSearchBanks();
+
+      setTimeout(() => {
+        if (checkBranchRef.current) {
+          checkBranchRef.current.focus()
+        }
+      }, 100)
     },
 
     searchRef: bankSearchInput,
@@ -575,7 +583,7 @@ export default function Collections() {
       const debit: Array<any> = [];
       const credit: Array<any> = [];
 
-   
+
       function isValidDate(dateString: string): boolean {
         const date = new Date(dateString);
         return date instanceof Date && !isNaN(date.getTime());
@@ -991,947 +999,302 @@ export default function Collections() {
   const height = window.innerHeight - 500;
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        flex: 1,
-      }}
-    >
-      <CollectionContext.Provider value={{ credit, debit }}>
-        <div style={{ height: "auto" }}>
-          <Box
-            sx={(theme) => ({
-              display: "flex",
-              alignItems: "center",
-              columnGap: "20px",
-              [theme.breakpoints.down("sm")]: {
-                flexDirection: "column",
-                alignItems: "flex-start",
-                flex: 1,
-                marginBottom: "15px",
-              },
-            })}
-          >
-            <div
-              style={{
+    <>
+      <PageHelmet title="Collection" />
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          flex: 1,
+        }}
+      >
+        <CollectionContext.Provider value={{ credit, debit }}>
+          <div style={{ height: "auto" }}>
+            <Box
+              sx={(theme) => ({
                 display: "flex",
                 alignItems: "center",
                 columnGap: "20px",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  columnGap: "5px",
-                }}
-              >
-                {isLoadingModalSearchCollection ? (
-                  <LoadingButton loading={isLoadingModalSearchCollection} />
-                ) : (
-                  <TextField
-                    label="Search"
-                    size="small"
-                    name="search"
-                    value={state.search}
-                    onChange={handleInputChange}
-                    onKeyDown={(e) => {
-                      if (e.code === "Enter" || e.code === "NumpadEnter") {
-                        e.preventDefault();
-                        return openModalSearchCollection(
-                          (e.target as HTMLInputElement).value
-                        );
-                      }
-                    }}
-                    InputProps={{
-                      style: { height: "27px", fontSize: "14px" },
-                    }}
-                    sx={{
-                      width: "300px",
-                      height: "27px",
-                      ".MuiFormLabel-root": { fontSize: "14px" },
-                      ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                    }}
-                  />
-                )}
-                {!save && (
-                  <Button
-                    sx={{
-                      height: "30px",
-                      fontSize: "11px",
-                    }}
-                    variant="contained"
-                    startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
-                    id="entry-header-save-button"
-                    onClick={() => {
-                      setAddNew(true);
-                      setSave(true);
-                      setSearchParams((prev) => {
-                        prev.set("selected", "");
-                        return prev;
-                      });
-                      setDebit([]);
-                      setCredit([]);
-                      setHasSelected(false);
-                    }}
-                  >
-                    New
-                  </Button>
-                )}
-                <Box sx={{ position: "relative" }}>
-                  <Button
-                    sx={{
-                      height: "30px",
-                      fontSize: "11px",
-                    }}
-                    ref={saveCollectionButtonRef}
-                    id="save-entry-header"
-                    color="success"
-                    variant="contained"
-                    type="submit"
-                    onClick={handleOnSave}
-                    disabled={
-                      (loadingAddNew && variables.mode === undefined) || !save
-                    }
-                    startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
-                  >
-                    Save
-                  </Button>
-                  {loadingAddNew && variables.mode === undefined && (
-                    <CircularProgress
-                      size={24}
-                      sx={{
-                        color: green[500],
-                        position: "absolute",
-                        top: "50%",
-                        left: "50%",
-                        marginTop: "-12px",
-                        marginLeft: "-12px",
-                      }}
-                    />
-                  )}
-                </Box>
-                {save && (
-                  <Button
-                    sx={{
-                      height: "30px",
-                      fontSize: "11px",
-                    }}
-                    variant="contained"
-                    startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
-                    color="error"
-                    onClick={() => {
-                      Swal.fire({
-                        title: "Are you sure?",
-                        text: "You won't be able to revert this!",
-                        icon: "warning",
-                        showCancelButton: true,
-                        confirmButtonColor: "#3085d6",
-                        cancelButtonColor: "#d33",
-                        confirmButtonText: "Yes, cancel it!",
-                      }).then((result) => {
-                        if (result.isConfirmed) {
-                          setSave(false);
-                          setAddNew(false);
-                          setNewStateValue(dispatch, initialState);
-                          refetchNewOR();
-                          setDebit([]);
-                          setCredit([]);
-                          setHasSelected(false);
-                        }
-                      });
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                )}
-                <LoadingButton
-                  loading={isLoadingPrint}
-                  color="secondary"
-                  variant="contained"
-                  sx={{
-                    height: "30px",
-                    fontSize: "11px",
-                  }}
-                  disabled={!hasSelected}
-                  onClick={() => {
-                    mutataPrint({ ORNo: state.ORNo });
-                  }}
-                >
-                  Print
-                </LoadingButton>
-              </div>
-            </div>
-          </Box>
-          <form
-            onKeyDown={(e) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                e.preventDefault();
-                return;
-              }
-            }}
-          >
-            <Box
-              sx={(theme) => ({
-                [theme.breakpoints.down("md")]: {
+                [theme.breakpoints.down("sm")]: {
                   flexDirection: "column",
-                  rowGap: "10px",
+                  alignItems: "flex-start",
+                  flex: 1,
+                  marginBottom: "15px",
                 },
               })}
             >
               <div
                 style={{
                   display: "flex",
-                  gap: "10px",
-                  padding: "15px 0 ",
+                  alignItems: "center",
+                  columnGap: "20px",
                 }}
               >
-                {NewORNoLoading ? (
-                  <LoadingButton loading={NewORNoLoading} />
-                ) : (
-                  <FormControl
-                    sx={{
-                      width: "170px",
-                      ".MuiFormLabel-root": {
-                        fontSize: "14px",
-                        background: "white",
-                        zIndex: 99,
-                        padding: "0 3px",
-                      },
-                      ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                    }}
-                    variant="outlined"
-                    size="small"
-                    disabled={!addNew || hasSelected}
-                    required
-                  >
-                    <InputLabel htmlFor="collection-id-field">
-                      OR No.
-                    </InputLabel>
-                    <OutlinedInput
-                      sx={{
-                        height: "27px",
-                        fontSize: "14px",
-                      }}
-                      readOnly={user?.department !== "UCSMI"}
-
-                      // inputRef={checkBankRef}
-                      disabled={!addNew || hasSelected}
-                      label="OR No."
-                      name="ORNo"
-                      value={state.ORNo}
-                      onChange={handleInputChange}
-                      onKeyDown={(e) => {
-                        if (e.code === "Enter" || e.code === "NumpadEnter") {
-                          dateRef.current?.focus();
-                        }
-                      }}
-                      id="collection-id-field"
-                      endAdornment={
-                        <InputAdornment position="end">
-                          <IconButton
-                            disabled={!addNew || hasSelected}
-                            aria-label="search-client"
-                            color="secondary"
-                            edge="end"
-                            onClick={() => {
-                              refetchNewOR();
-                            }}
-                          >
-                            <RestartAltIcon />
-                          </IconButton>
-                        </InputAdornment>
-                      }
-                    />
-                  </FormControl>
-                )}
-                <CustomDatePicker
-                  textField={{
-                    InputLabelProps: {
-                      style: {
-                        fontSize: "14px",
-                      },
-                    },
-                    InputProps: {
-                      style: { height: "27px", fontSize: "14px" },
-                    },
-                  }}
-                  inputRef={dateRef}
-                  fullWidth={false}
-                  disabled={!addNew}
-                  label="OR Date"
-                  onChange={(value: any) => {
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "Date",
-                      value: value,
-                    });
-                  }}
-                  value={new Date(state.Date)}
-                  onKeyDown={(e: any) => {
-                    if (e.code === "Enter" || e.code === "NumpadEnter") {
-                      //saveCollectionButtonRef.current?.click();
-                      pnClientORRef.current?.focus()
-                    }
-                  }}
-
-                />
-                {paymentTypeLoading || isLoadingClientIdsModal ? (
-                  <LoadingButton
-                    loading={paymentTypeLoading || isLoadingClientIdsModal}
-                  />
-                ) : (
-                  <FormControl
-                    sx={{
-                      width: "170px",
-                      ".MuiFormLabel-root": {
-                        fontSize: "14px",
-                        background: "white",
-                        zIndex: 99,
-                        padding: "0 3px",
-                      },
-                      ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                    }}
-                    variant="outlined"
-                    size="small"
-                    disabled={!addNew}
-                  >
-                    <InputLabel htmlFor="client-id">PN/Client ID</InputLabel>
-                    <OutlinedInput
-                      sx={{
-                        height: "27px",
-                        fontSize: "14px",
-                      }}
-                      inputRef={pnClientORRef}
-                      name="PNo"
-                      value={state.PNo}
-                      onChange={handleInputChange}
-                      id="client-id"
-                      onKeyDown={(e) => {
-                        if (e.code === "Enter" || e.code === "NumpadEnter") {
-                          dispatch({
-                            type: "UPDATE_FIELD",
-                            field: "isFao",
-                            value: false,
-                          });
-                          return openCliendIDsModal(state.PNo);
-                        }
-                      }}
-                      endAdornment={
-                        <InputAdornment position="end">
-                          <IconButton
-                            disabled={!addNew}
-                            onClick={() => {
-                              openCliendIDsModal(state.PNo);
-                              dispatch({
-                                type: "UPDATE_FIELD",
-                                field: "isFao",
-                                value: false,
-                              });
-                            }}
-                            edge="end"
-                            color="secondary"
-                          >
-                            <PersonSearchIcon />
-                          </IconButton>
-                        </InputAdornment>
-                      }
-                      label="PN/Client ID"
-                    />
-                  </FormControl>
-                )}
-                <TextField
-                  required
-                  variant="outlined"
-                  size="small"
-                  label="Clients Name"
-                  name="Name"
-                  value={state.Name}
-                  onChange={handleInputChange}
-                  disabled={!addNew}
-                  InputProps={{
-                    readOnly: true,
-                    style: { height: "27px", fontSize: "14px" },
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.code === "Enter" || e.code === "NumpadEnter") {
-                      return openCliendIDsModal(state.PNo);
-                    }
-                  }}
-                  sx={{
-                    flex: 1,
-                    ".MuiFormLabel-root": { fontSize: "14px" },
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                  }}
-                />
-              </div>
-            </Box>
-          </form>
-        </div>
-        <div
-          style={{
-            position: "relative",
-            width: "100%",
-            overflow: "auto",
-            flex: 1,
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              width: "100%",
-              height: "auto",
-            }}
-          >
-            <fieldset
-              style={{
-                boxSizing: "border-box",
-                border: "1px solid #cbd5e1",
-                borderRadius: "5px",
-                position: "relative",
-                height: "420px",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              <legend>Particulars (Debit)</legend>
-              <div style={{ display: "flex", marginBottom: "10px" }}>
-                <FormControl
-                  sx={{
-                    width: "150px",
-                    marginRight: "10px",
-                    minWidth: 150,
-                    ".MuiFormLabel-root": {
-                      fontSize: "14px",
-                      background: "white",
-                      zIndex: 99,
-                      padding: "0 3px",
-                    },
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-1px" },
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    columnGap: "5px",
                   }}
                 >
-                  <InputLabel id="payment-check">Payment Type</InputLabel>
-                  <Select
-                    inputRef={paymentTypeRef}
-                    disabled={!addNew}
-                    labelId="payment-check"
-                    value={debitState.payamentType}
-                    onChange={handleDebitInputChange}
-                    autoWidth
-                    label="Payment Type"
-                    size="small"
-                    name="payamentType"
-                    sx={{
-                      height: "27px",
-                      fontSize: "14px",
-                    }}
-                  >
-                    <MenuItem
-                      value={"CHK"}
+                  {isLoadingModalSearchCollection ? (
+                    <LoadingButton loading={isLoadingModalSearchCollection} />
+                  ) : (
+                    <TextField
+                      label="Search"
+                      size="small"
+                      name="search"
+                      value={state.search}
+                      onChange={handleInputChange}
                       onKeyDown={(e) => {
                         if (e.code === "Enter" || e.code === "NumpadEnter") {
-                          if (debitState.payamentType === "CHK") {
-                            wait(150).then(() => {
-                              pdcAddbtnRef.current?.focus()
-                            })
-                          } else {
-                            wait(150).then(() => {
-                              amountRef.current?.focus()
-                            })
-                          }
+                          e.preventDefault();
+                          return openModalSearchCollection(
+                            (e.target as HTMLInputElement).value
+                          );
                         }
                       }}
-                    >Check</MenuItem>
-                    <MenuItem value={"CSH"} onKeyDown={(e) => {
-                      if (e.code === "Enter" || e.code === "NumpadEnter") {
-                        if (debitState.payamentType === "CHK") {
-                          wait(150).then(() => {
-                            pdcAddbtnRef.current?.focus()
-                          })
-                        } else {
-                          wait(150).then(() => {
-                            amountRef.current?.focus()
-                          })
-                        }
-                      }
-                    }}>Cash</MenuItem>
-                  </Select>
-                </FormControl>
-                {debitState.payamentType === "CHK" ? (
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    <Button
-                      disabled={!addNew}
-                      startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
-                      variant="outlined"
-                      sx={{
-                        height: "30px",
-                        fontSize: "11px",
-                      }}
-                      onClick={() => {
-                        const getLastCheck_No: any = debit[debit.length - 1];
-                        const newData = {
-                          CheckIdx: "",
-                          BankName: "",
-                          BankCode: "",
-                          Branch: "",
-                          Check_Date: new Date(),
-                          Check_No: incrementCheckNo(getLastCheck_No?.Check_No),
-                          Check_Amnt: "",
-                          Check_Remarks: "",
-                          CheckMode: "add",
-                        };
-                        setNewStateValue(modalDispatch, newData);
-                        flushSync(() => {
-                          setOpenPdcInputModal(true);
-                        });
-                        checkNoRef.current?.focus();
-                      }}
-                      ref={pdcAddbtnRef}
-                    >
-                      Add PDC Check
-                    </Button>
-                    <LoadingButton
-                      sx={{
-                        height: "30px",
-                        fontSize: "11px",
-                      }}
-                      loading={
-                        paymentTypeLoading || isLoadingModalSearchCheckList
-                      }
-                      disabled={!addNew}
-                      onClick={() => {
-                        mutateClientCheckedList({
-                          PNo: state.PNo,
-                          searchCheckedList: state.searchCheckedList,
-                        });
-                      }}
-                      startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
-                      variant="outlined"
-                      color="success"
-                    >
-                      Add Check From PDC Entry
-                    </LoadingButton>
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "10px",
-                      alignItems: "center",
-                    }}
-                  >
-                    <TextField
-                      inputRef={amountRef}
-                      disabled={!addNew || debitState.cashMode === ""}
-                      name="amount"
-                      label="Amount"
-                      size="small"
-                      value={debitState.amount}
-                      onChange={handleDebitInputChange}
-                      placeholder="0.00"
                       InputProps={{
-                        inputComponent: NumericFormatCustom as any,
                         style: { height: "27px", fontSize: "14px" },
                       }}
                       sx={{
-                        width: "160px",
+                        width: "300px",
+                        height: "27px",
                         ".MuiFormLabel-root": { fontSize: "14px" },
-                        ".MuiFormLabel-root[data-shrink=false]": {
-                          top: "-5px",
-                        },
+                        ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
                       }}
-                      onBlur={() => {
-                        debitDispatch({
-                          type: "UPDATE_FIELD",
-                          field: "amount",
-                          value: parseFloat(
-                            debitState.amount.replace(/,/g, "")
-                          ).toFixed(2),
-                        });
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.code === "Enter" || e.code === "NumpadEnter") {
-                          cashButtonSave.current?.click();
-                        }
-                      }}
-                    />
-                    {debitState.cashMode === "" ? (
-                      <Button
-                        sx={{
-                          height: "30px",
-                          fontSize: "11px",
-                        }}
-                        variant="outlined"
-                        onClick={() => {
-                          debitDispatch({
-                            type: "UPDATE_FIELD",
-                            field: "cashID",
-                            value: "",
-                          });
-                          debitDispatch({
-                            type: "UPDATE_FIELD",
-                            field: "cashMode",
-                            value: "add",
-                          });
-                        }}
-                      >
-                        Add Cash
-                      </Button>
-                    ) : (
-                      <LoadingButton
-                        sx={{
-                          height: "30px",
-                          fontSize: "11px",
-                        }}
-                        ref={cashButtonSave}
-                        loading={paymentTypeLoading}
-                        variant="outlined"
-                        color="success"
-                        disabled={!addNew}
-                        onClick={() => {
-                          if (
-                            parseFloat(debitState.amount.replace(/,/g, "")) <=
-                            0 ||
-                            isNaN(
-                              parseFloat(debitState.amount.replace(/,/g, ""))
-                            )
-                          ) {
-                            amountRef.current?.focus();
-                            return Swal.fire({
-                              position: "center",
-                              icon: "warning",
-                              title: "Please provide amount!",
-                              showConfirmButton: false,
-                              timer: 1500,
-                            });
-                          }
-                          let temp_id = "";
-                          debitState.amount = parseFloat(
-                            debitState.amount.replace(/,/g, "")
-                          ).toLocaleString("en-US", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          });
-                          myAxios
-                            .post(
-                              `/task/accounting/get-drcode-drtitle-from-collection`,
-                              { code: debitState.payamentType },
-                              {
-                                headers: {
-                                  "Content-Type": "application/json",
-                                  Authorization: `Bearer ${user?.accessToken}`,
-                                },
-                              }
-                            )
-                            .then((res) => {
-                              const { Acct_Code, Acct_Title } =
-                                res?.data.data[0];
-                              setDebit((d: any) => {
-                                temp_id = generateID(
-                                  d.length > 0
-                                    ? (d[d.length - 1] as any).temp_id
-                                    : "0"
-                                );
-
-                                if (debitState.cashMode === "edit") {
-                                  d = d.filter(
-                                    (itms: any) =>
-                                      itms.temp_id !== debitState.cashID
-                                  );
-                                  temp_id = debitState.cashID;
-                                }
-
-                                const data = {
-                                  Payment: "Cash",
-                                  Amount: debitState.amount,
-                                  Check_No: "",
-                                  Check_Date: "",
-                                  Bank_Branch: "",
-                                  Acct_Code,
-                                  Acct_Title,
-                                  Deposit_Slip: "",
-                                  Cntr: "",
-                                  Remarks: "",
-                                  TC: debitState.payamentType,
-                                  Bank: "",
-                                  BankName: "",
-                                  Check_Remarks: "",
-                                  Branch: "",
-                                  temp_id,
-                                };
-
-                                d = [...d, data];
-                                d.sort((a: any, b: any) => {
-                                  const idA = parseInt(a.temp_id, 10);
-                                  const idB = parseInt(b.temp_id, 10);
-                                  if (idA < idB) {
-                                    return -1;
-                                  }
-                                  if (idA > idB) {
-                                    return 1;
-                                  }
-                                  return 0;
-                                });
-                                return d;
-                              });
-                              debitDispatch({
-                                type: "UPDATE_FIELD",
-                                field: "amount",
-                                value: parseFloat(
-                                  "0".replace(/,/g, "")
-                                ).toFixed(2),
-                              });
-                              debitDispatch({
-                                type: "UPDATE_FIELD",
-                                field: "cashID",
-                                value: "",
-                              });
-                              debitDispatch({
-                                type: "UPDATE_FIELD",
-                                field: "cashMode",
-                                value: "add",
-                              });
-                              tableDebit.current?.resetTableSelected();
-                            });
-                        }}
-                      >
-                        Save Debit
-                      </LoadingButton>
-                    )}
-                  </div>
-                )}
-              </div>
-              <UpwardTable
-                isLoading={loadingAddNew || loadingCollectionDataSearch}
-                ref={tableDebit}
-                rows={debit}
-                column={debitColumn}
-                width={width}
-                height={height}
-                dataReadOnly={true}
-                onSelectionChange={(selectedRow) => {
-                  const rowSelected = selectedRow[0];
-                  if (selectedRow.length > 0) {
-                    DebitSelectedChange(rowSelected);
-                  } else {
-                    modalDispatch({
-                      type: "UPDATE_FIELD",
-                      field: "CheckIdx",
-                      value: "",
-                    });
-                    modalDispatch({
-                      type: "UPDATE_FIELD",
-                      field: "CheckMode",
-                      value: "",
-                    });
-                    debitDispatch({
-                      type: "UPDATE_FIELD",
-                      field: "cashID",
-                      value: "",
-                    });
-                    debitDispatch({
-                      type: "UPDATE_FIELD",
-                      field: "cashMode",
-                      value: "",
-                    });
-                    debitDispatch({
-                      type: "UPDATE_FIELD",
-                      field: "amount",
-                      value: "0.00",
-                    });
-                  }
-                }}
-                onKeyDown={(row, key) => {
-                  if (key === "Delete" || key === "Backspace") {
-                    const rowSelected = row[0];
-                    Swal.fire({
-                      title: "Are you sure?",
-                      text: `You won't to delete this?`,
-                      icon: "warning",
-                      showCancelButton: true,
-                      confirmButtonColor: "#3085d6",
-                      cancelButtonColor: "#d33",
-                      confirmButtonText: "Yes, delete it!",
-                    }).then((result) => {
-                      if (result.isConfirmed) {
-                        return setDebit((d) => {
-                          d = d.filter((item: any) => {
-                            return item.temp_id !== rowSelected.temp_id;
-                          });
-                          return d;
-                        });
-                      }
-                    });
-                  }
-                }}
-                inputsearchselector=".manok"
-              />
-              <div style={{ width: "100%", marginTop: "20px" }}>
-                <DebitFooterComponent />
-              </div>
-
-            </fieldset>
-            <br />
-            <fieldset
-              style={{
-                boxSizing: "border-box",
-                border: "1px solid #cbd5e1",
-                borderRadius: "5px",
-                position: "relative",
-                height: "460px",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              <legend>Payment Breakdown (Credit)</legend>
-              <div
-                style={{
-                  display: "flex",
-                  gap: "10px",
-                  flexDirection: "column",
-                  marginBottom: "10px"
-                }}
-              >
-                <div style={{ display: "flex", gap: "10px" }}>
-                  {paymentTypeLoading ? (
-                    <LoadingButton loading={paymentTypeLoading} />
-                  ) : (
-                    <Autocomplete
-                      freeSolo
-                      options={debitState.transaction_desc}
-                      value={creditState.transaction}
-                      onChange={(e, v: any) => {
-                        if (v) {
-                          creditDispatch({
-                            type: "UPDATE_FIELD",
-                            field: "Code",
-                            value: v.Acct_Code,
-                          });
-                          creditDispatch({
-                            type: "UPDATE_FIELD",
-                            field: "Title",
-                            value: v.Acct_Title,
-                          });
-                          creditDispatch({
-                            type: "UPDATE_FIELD",
-                            field: "TC",
-                            value: v.Code,
-                          });
-                          creditDispatch({
-                            type: "UPDATE_FIELD",
-                            field: "transaction",
-                            value: v.label,
-                          });
-                        } else {
-                          creditDispatch({
-                            type: "UPDATE_FIELD",
-                            field: "Code",
-                            value: "",
-                          });
-                          creditDispatch({
-                            type: "UPDATE_FIELD",
-                            field: "Title",
-                            value: "",
-                          });
-                          creditDispatch({
-                            type: "UPDATE_FIELD",
-                            field: "TC",
-                            value: "",
-                          });
-                          creditDispatch({
-                            type: "UPDATE_FIELD",
-                            field: "transaction",
-                            value: "",
-                          });
-                        }
-                      }}
-                      onInput={(e: any) => {
-                        creditDispatch({
-                          type: "UPDATE_FIELD",
-                          field: "transaction",
-                          value: e.target.value,
-                        });
-                      }}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          // inputRef={(input) => {
-                          //   creditTransactionRef = input;
-                          // }}
-                          InputProps={{
-                            ...params.InputProps,
-                            inputRef: creditTransactionRef,
-                            style: { height: "27px", fontSize: "14px" },
-                          }}
-                          label="Transaction"
-                        />
-                      )}
-                      sx={{
-                        flex: 1,
-                        ".MuiFormLabel-root": {
-                          fontSize: "14px",
-                        },
-                        ".MuiInputBase-input": {
-                          width: "100% !important",
-                        },
-                        ".MuiFormLabel-root[data-shrink=false]": {
-                          top: "-5px",
-                        },
-                        ".MuiAutocomplete-input ": {
-                          position: "absolute",
-                        },
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.code === "Enter" || e.code === "NumpadEnter") {
-                          wait(150).then(() => {
-                            creditAmountRef.current?.focus()
-                          })
-                        }
-                      }}
-                      size="small"
-                      disabled={!addNew}
                     />
                   )}
-                  <TextField
-                    disabled={!addNew}
-                    name="amount"
-                    label="Amount"
-                    size="small"
-                    value={creditState.amount}
-                    onChange={handleCreditInputChange}
-                    placeholder="0.00"
-                    InputProps={{
-                      inputComponent: NumericFormatCustom as any,
-                      inputRef: creditAmountRef,
-                      style: { height: "27px", fontSize: "14px" },
-                    }}
-                    onBlur={() => {
-                      creditDispatch({
-                        type: "UPDATE_FIELD",
-                        field: "amount",
-                        value: parseFloat(
-                          creditState.amount.replace(/,/g, "")
-                        ).toFixed(2),
-                      });
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.code === "Enter" || e.code === "NumpadEnter") {
-                        creditFaoRef.current?.focus()
+                  {!save && (
+                    <Button
+                      sx={{
+                        height: "30px",
+                        fontSize: "11px",
+                      }}
+                      variant="contained"
+                      startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+                      id="entry-header-save-button"
+                      onClick={() => {
+                        setAddNew(true);
+                        setSave(true);
+                        setSearchParams((prev) => {
+                          prev.set("selected", "");
+                          return prev;
+                        });
+                        setDebit([]);
+                        setCredit([]);
+                        setHasSelected(false);
+                      }}
+                    >
+                      New
+                    </Button>
+                  )}
+                  <Box sx={{ position: "relative" }}>
+                    <Button
+                      sx={{
+                        height: "30px",
+                        fontSize: "11px",
+                      }}
+                      ref={saveCollectionButtonRef}
+                      id="save-entry-header"
+                      color="success"
+                      variant="contained"
+                      type="submit"
+                      onClick={handleOnSave}
+                      disabled={
+                        (loadingAddNew && variables.mode === undefined) || !save
                       }
-                    }}
+                      startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
+                    >
+                      Save
+                    </Button>
+                    {loadingAddNew && variables.mode === undefined && (
+                      <CircularProgress
+                        size={24}
+                        sx={{
+                          color: green[500],
+                          position: "absolute",
+                          top: "50%",
+                          left: "50%",
+                          marginTop: "-12px",
+                          marginLeft: "-12px",
+                        }}
+                      />
+                    )}
+                  </Box>
+                  {save && (
+                    <Button
+                      sx={{
+                        height: "30px",
+                        fontSize: "11px",
+                      }}
+                      variant="contained"
+                      startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
+                      color="error"
+                      onClick={() => {
+                        Swal.fire({
+                          title: "Are you sure?",
+                          text: "You won't be able to revert this!",
+                          icon: "warning",
+                          showCancelButton: true,
+                          confirmButtonColor: "#3085d6",
+                          cancelButtonColor: "#d33",
+                          confirmButtonText: "Yes, cancel it!",
+                        }).then((result) => {
+                          if (result.isConfirmed) {
+                            setSave(false);
+                            setAddNew(false);
+                            setNewStateValue(dispatch, initialState);
+                            refetchNewOR();
+                            setDebit([]);
+                            setCredit([]);
+                            setHasSelected(false);
+                          }
+                        });
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  )}
+                  <LoadingButton
+                    loading={isLoadingPrint}
+                    color="secondary"
+                    variant="contained"
                     sx={{
-                      width: "160px",
-                      ".MuiFormLabel-root": { fontSize: "14px" },
-                      ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                      height: "30px",
+                      fontSize: "11px",
                     }}
-                  />
-                  {isLoadingCreditClientIdsModal ?
-                    <LoadingButton loading={isLoadingCreditClientIdsModal} />
-                    :
+                    disabled={!hasSelected}
+                    onClick={() => {
+                      mutataPrint({ ORNo: state.ORNo });
+                    }}
+                  >
+                    Print
+                  </LoadingButton>
+                </div>
+              </div>
+            </Box>
+            <form
+              onKeyDown={(e) => {
+                if (e.code === "Enter" || e.code === "NumpadEnter") {
+                  e.preventDefault();
+                  return;
+                }
+              }}
+            >
+              <Box
+                sx={(theme) => ({
+                  [theme.breakpoints.down("md")]: {
+                    flexDirection: "column",
+                    rowGap: "10px",
+                  },
+                })}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "10px",
+                    padding: "15px 0 ",
+                  }}
+                >
+                  {NewORNoLoading ? (
+                    <LoadingButton loading={NewORNoLoading} />
+                  ) : (
                     <FormControl
                       sx={{
-                        width: "150px",
+                        width: "170px",
+                        ".MuiFormLabel-root": {
+                          fontSize: "14px",
+                          background: "white",
+                          zIndex: 99,
+                          padding: "0 3px",
+                        },
+                        ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                      }}
+                      variant="outlined"
+                      size="small"
+                      disabled={!addNew || hasSelected}
+                      required
+                    >
+                      <InputLabel htmlFor="collection-id-field">
+                        OR No.
+                      </InputLabel>
+                      <OutlinedInput
+                        sx={{
+                          height: "27px",
+                          fontSize: "14px",
+                        }}
+                        readOnly={user?.department !== "UCSMI"}
+
+                        // inputRef={checkBankRef}
+                        disabled={!addNew || hasSelected}
+                        label="OR No."
+                        name="ORNo"
+                        value={state.ORNo}
+                        onChange={handleInputChange}
+                        onKeyDown={(e) => {
+                          if (e.code === "Enter" || e.code === "NumpadEnter") {
+                            dateRef.current?.focus();
+                          }
+                        }}
+                        id="collection-id-field"
+                        endAdornment={
+                          <InputAdornment position="end">
+                            <IconButton
+                              disabled={!addNew || hasSelected}
+                              aria-label="search-client"
+                              color="secondary"
+                              edge="end"
+                              onClick={() => {
+                                refetchNewOR();
+                              }}
+                            >
+                              <RestartAltIcon />
+                            </IconButton>
+                          </InputAdornment>
+                        }
+                      />
+                    </FormControl>
+                  )}
+                  <CustomDatePicker
+                    textField={{
+                      InputLabelProps: {
+                        style: {
+                          fontSize: "14px",
+                        },
+                      },
+                      InputProps: {
+                        style: { height: "27px", fontSize: "14px" },
+                      },
+                    }}
+                    inputRef={dateRef}
+                    fullWidth={false}
+                    disabled={!addNew}
+                    label="OR Date"
+                    onChange={(value: any) => {
+                      dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "Date",
+                        value: value,
+                      });
+                    }}
+                    value={new Date(state.Date)}
+                    onKeyDown={(e: any) => {
+                      if (e.code === "Enter" || e.code === "NumpadEnter") {
+                        //saveCollectionButtonRef.current?.click();
+                        pnClientORRef.current?.focus()
+                      }
+                    }}
+
+                  />
+                  {paymentTypeLoading || isLoadingClientIdsModal ? (
+                    <LoadingButton
+                      loading={paymentTypeLoading || isLoadingClientIdsModal}
+                    />
+                  ) : (
+                    <FormControl
+                      sx={{
+                        width: "170px",
                         ".MuiFormLabel-root": {
                           fontSize: "14px",
                           background: "white",
@@ -1944,25 +1307,25 @@ export default function Collections() {
                       size="small"
                       disabled={!addNew}
                     >
-                      <InputLabel htmlFor="fao">FAO</InputLabel>
+                      <InputLabel htmlFor="client-id">PN/Client ID</InputLabel>
                       <OutlinedInput
                         sx={{
                           height: "27px",
                           fontSize: "14px",
                         }}
-                        inputRef={creditFaoRef}
-                        name="FAO_Name"
-                        value={creditState.FAO_Name}
-                        onChange={handleCreditInputChange}
-                        id="fao"
+                        inputRef={pnClientORRef}
+                        name="PNo"
+                        value={state.PNo}
+                        onChange={handleInputChange}
+                        id="client-id"
                         onKeyDown={(e) => {
                           if (e.code === "Enter" || e.code === "NumpadEnter") {
                             dispatch({
                               type: "UPDATE_FIELD",
                               field: "isFao",
-                              value: true,
+                              value: false,
                             });
-                            return openCreditCliendIDsModal(creditState.FAO_Name);
+                            return openCliendIDsModal(state.PNo);
                           }
                         }}
                         endAdornment={
@@ -1970,12 +1333,12 @@ export default function Collections() {
                             <IconButton
                               disabled={!addNew}
                               onClick={() => {
+                                openCliendIDsModal(state.PNo);
                                 dispatch({
                                   type: "UPDATE_FIELD",
                                   field: "isFao",
-                                  value: true,
+                                  value: false,
                                 });
-                                openCreditCliendIDsModal(creditState.FAO_Name);
                               }}
                               edge="end"
                               color="secondary"
@@ -1984,424 +1347,1071 @@ export default function Collections() {
                             </IconButton>
                           </InputAdornment>
                         }
-                        label="FAO"
+                        label="PN/Client ID"
                       />
-                    </FormControl>}
+                    </FormControl>
+                  )}
                   <TextField
-                    disabled={!addNew}
-                    name="remarks"
-                    label="Remarks"
+                    required
+                    variant="outlined"
                     size="small"
-                    value={creditState.remarks ?? ""}
-                    onChange={handleCreditInputChange}
+                    label="Clients Name"
+                    name="Name"
+                    value={state.Name}
+                    onChange={handleInputChange}
+                    disabled={!addNew}
+                    InputProps={{
+                      readOnly: true,
+                      style: { height: "27px", fontSize: "14px" },
+                    }}
                     onKeyDown={(e) => {
                       if (e.code === "Enter" || e.code === "NumpadEnter") {
-                        vatRef.current.focus()
+                        return openCliendIDsModal(state.PNo);
                       }
                     }}
-                    InputProps={{
-                      style: { height: "27px", fontSize: "14px" },
-                      inputRef: creditRemarksRef
-                    }}
                     sx={{
-                      width: "160px",
+                      flex: 1,
                       ".MuiFormLabel-root": { fontSize: "14px" },
                       ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
                     }}
                   />
                 </div>
+              </Box>
+            </form>
+          </div>
+          <div
+            style={{
+              position: "relative",
+              width: "100%",
+              overflow: "auto",
+              flex: 1,
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                width: "100%",
+                height: "auto",
+              }}
+            >
+              <fieldset
+                style={{
+                  boxSizing: "border-box",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "5px",
+                  position: "relative",
+                  height: "420px",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <legend>Particulars (Debit)</legend>
+                <div style={{ display: "flex", marginBottom: "10px" }}>
+                  <FormControl
+                    sx={{
+                      width: "150px",
+                      marginRight: "10px",
+                      minWidth: 150,
+                      ".MuiFormLabel-root": {
+                        fontSize: "14px",
+                        background: "white",
+                        zIndex: 99,
+                        padding: "0 3px",
+                      },
+                      ".MuiFormLabel-root[data-shrink=false]": { top: "-1px" },
+                    }}
+                  >
+                    <InputLabel id="payment-check">Payment Type</InputLabel>
+                    <Select
+                      inputRef={paymentTypeRef}
+                      disabled={!addNew}
+                      labelId="payment-check"
+                      value={debitState.payamentType}
+                      onChange={handleDebitInputChange}
+                      autoWidth
+                      label="Payment Type"
+                      size="small"
+                      name="payamentType"
+                      sx={{
+                        height: "27px",
+                        fontSize: "14px",
+                      }}
+                    >
+                      <MenuItem
+                        value={"CHK"}
+                        onKeyDown={(e) => {
+                          if (e.code === "Enter" || e.code === "NumpadEnter") {
+                            if (debitState.payamentType === "CHK") {
+                              wait(150).then(() => {
+                                pdcAddbtnRef.current?.focus()
+                              })
+                            } else {
+                              wait(150).then(() => {
+                                amountRef.current?.focus()
+                              })
+                            }
+                          }
+                        }}
+                      >Check</MenuItem>
+                      <MenuItem value={"CSH"} onKeyDown={(e) => {
+                        if (e.code === "Enter" || e.code === "NumpadEnter") {
+                          if (debitState.payamentType === "CHK") {
+                            wait(150).then(() => {
+                              pdcAddbtnRef.current?.focus()
+                            })
+                          } else {
+                            wait(150).then(() => {
+                              amountRef.current?.focus()
+                            })
+                          }
+                        }
+                      }}>Cash</MenuItem>
+                    </Select>
+                  </FormControl>
+                  {debitState.payamentType === "CHK" ? (
+                    <div style={{ display: "flex", gap: "10px" }}>
+                      <Button
+                        disabled={!addNew}
+                        startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+                        variant="outlined"
+                        sx={{
+                          height: "30px",
+                          fontSize: "11px",
+                        }}
+                        onClick={() => {
+                          const getLastCheck_No: any = debit[debit.length - 1];
+                          const newData = {
+                            CheckIdx: "",
+                            BankName: "",
+                            BankCode: "",
+                            Branch: "",
+                            Check_Date: new Date(),
+                            Check_No: incrementCheckNo(getLastCheck_No?.Check_No),
+                            Check_Amnt: "",
+                            Check_Remarks: "",
+                            CheckMode: "add",
+                          };
+                          setNewStateValue(modalDispatch, newData);
+                          flushSync(() => {
+                            setOpenPdcInputModal(true);
+                          });
+                          checkNoRef.current?.focus();
+                        }}
+                        ref={pdcAddbtnRef}
+                      >
+                        Add PDC Check
+                      </Button>
+                      <LoadingButton
+                        sx={{
+                          height: "30px",
+                          fontSize: "11px",
+                        }}
+                        loading={
+                          paymentTypeLoading || isLoadingModalSearchCheckList
+                        }
+                        disabled={!addNew}
+                        onClick={() => {
+                          mutateClientCheckedList({
+                            PNo: state.PNo,
+                            searchCheckedList: state.searchCheckedList,
+                          });
+                        }}
+                        startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+                        variant="outlined"
+                        color="success"
+                      >
+                        Add Check From PDC Entry
+                      </LoadingButton>
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "10px",
+                        alignItems: "center",
+                      }}
+                    >
+                      <TextField
+                        inputRef={amountRef}
+                        disabled={!addNew || debitState.cashMode === ""}
+                        name="amount"
+                        label="Amount"
+                        size="small"
+                        value={debitState.amount}
+                        onChange={handleDebitInputChange}
+                        placeholder="0.00"
+                        InputProps={{
+                          inputComponent: NumericFormatCustom as any,
+                          style: { height: "27px", fontSize: "14px" },
+                        }}
+                        sx={{
+                          width: "160px",
+                          ".MuiFormLabel-root": { fontSize: "14px" },
+                          ".MuiFormLabel-root[data-shrink=false]": {
+                            top: "-5px",
+                          },
+                        }}
+                        onBlur={() => {
+                          debitDispatch({
+                            type: "UPDATE_FIELD",
+                            field: "amount",
+                            value: parseFloat(
+                              debitState.amount.replace(/,/g, "")
+                            ).toFixed(2),
+                          });
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.code === "Enter" || e.code === "NumpadEnter") {
+                            cashButtonSave.current?.click();
+                          }
+                        }}
+                      />
+                      {debitState.cashMode === "" ? (
+                        <Button
+                          sx={{
+                            height: "30px",
+                            fontSize: "11px",
+                          }}
+                          variant="outlined"
+                          onClick={() => {
+                            debitDispatch({
+                              type: "UPDATE_FIELD",
+                              field: "cashID",
+                              value: "",
+                            });
+                            debitDispatch({
+                              type: "UPDATE_FIELD",
+                              field: "cashMode",
+                              value: "add",
+                            });
+                          }}
+                        >
+                          Add Cash
+                        </Button>
+                      ) : (
+                        <LoadingButton
+                          sx={{
+                            height: "30px",
+                            fontSize: "11px",
+                          }}
+                          ref={cashButtonSave}
+                          loading={paymentTypeLoading}
+                          variant="outlined"
+                          color="success"
+                          disabled={!addNew}
+                          onClick={() => {
+                            if (
+                              parseFloat(debitState.amount.replace(/,/g, "")) <=
+                              0 ||
+                              isNaN(
+                                parseFloat(debitState.amount.replace(/,/g, ""))
+                              )
+                            ) {
+                              amountRef.current?.focus();
+                              return Swal.fire({
+                                position: "center",
+                                icon: "warning",
+                                title: "Please provide amount!",
+                                showConfirmButton: false,
+                                timer: 1500,
+                              });
+                            }
+                            let temp_id = "";
+                            debitState.amount = parseFloat(
+                              debitState.amount.replace(/,/g, "")
+                            ).toLocaleString("en-US", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            });
+                            myAxios
+                              .post(
+                                `/task/accounting/get-drcode-drtitle-from-collection`,
+                                { code: debitState.payamentType },
+                                {
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                    Authorization: `Bearer ${user?.accessToken}`,
+                                  },
+                                }
+                              )
+                              .then((res) => {
+                                const { Acct_Code, Acct_Title } =
+                                  res?.data.data[0];
+                                setDebit((d: any) => {
+                                  temp_id = generateID(
+                                    d.length > 0
+                                      ? (d[d.length - 1] as any).temp_id
+                                      : "0"
+                                  );
+
+                                  if (debitState.cashMode === "edit") {
+                                    d = d.filter(
+                                      (itms: any) =>
+                                        itms.temp_id !== debitState.cashID
+                                    );
+                                    temp_id = debitState.cashID;
+                                  }
+
+                                  const data = {
+                                    Payment: "Cash",
+                                    Amount: debitState.amount,
+                                    Check_No: "",
+                                    Check_Date: "",
+                                    Bank_Branch: "",
+                                    Acct_Code,
+                                    Acct_Title,
+                                    Deposit_Slip: "",
+                                    Cntr: "",
+                                    Remarks: "",
+                                    TC: debitState.payamentType,
+                                    Bank: "",
+                                    BankName: "",
+                                    Check_Remarks: "",
+                                    Branch: "",
+                                    temp_id,
+                                  };
+
+                                  d = [...d, data];
+                                  d.sort((a: any, b: any) => {
+                                    const idA = parseInt(a.temp_id, 10);
+                                    const idB = parseInt(b.temp_id, 10);
+                                    if (idA < idB) {
+                                      return -1;
+                                    }
+                                    if (idA > idB) {
+                                      return 1;
+                                    }
+                                    return 0;
+                                  });
+                                  return d;
+                                });
+                                debitDispatch({
+                                  type: "UPDATE_FIELD",
+                                  field: "amount",
+                                  value: parseFloat(
+                                    "0".replace(/,/g, "")
+                                  ).toFixed(2),
+                                });
+                                debitDispatch({
+                                  type: "UPDATE_FIELD",
+                                  field: "cashID",
+                                  value: "",
+                                });
+                                debitDispatch({
+                                  type: "UPDATE_FIELD",
+                                  field: "cashMode",
+                                  value: "add",
+                                });
+                                tableDebit.current?.resetTableSelected();
+                              });
+                          }}
+                        >
+                          Save Debit
+                        </LoadingButton>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <UpwardTable
+                  isLoading={loadingAddNew || loadingCollectionDataSearch}
+                  ref={tableDebit}
+                  rows={debit}
+                  column={debitColumn}
+                  width={width}
+                  height={height}
+                  dataReadOnly={true}
+                  onSelectionChange={(selectedRow) => {
+                    const rowSelected = selectedRow[0];
+                    if (selectedRow.length > 0) {
+                      DebitSelectedChange(rowSelected);
+                    } else {
+                      modalDispatch({
+                        type: "UPDATE_FIELD",
+                        field: "CheckIdx",
+                        value: "",
+                      });
+                      modalDispatch({
+                        type: "UPDATE_FIELD",
+                        field: "CheckMode",
+                        value: "",
+                      });
+                      debitDispatch({
+                        type: "UPDATE_FIELD",
+                        field: "cashID",
+                        value: "",
+                      });
+                      debitDispatch({
+                        type: "UPDATE_FIELD",
+                        field: "cashMode",
+                        value: "",
+                      });
+                      debitDispatch({
+                        type: "UPDATE_FIELD",
+                        field: "amount",
+                        value: "0.00",
+                      });
+                    }
+                  }}
+                  onKeyDown={(row, key) => {
+                    if (key === "Delete" || key === "Backspace") {
+                      const rowSelected = row[0];
+                      Swal.fire({
+                        title: "Are you sure?",
+                        text: `You won't to delete this?`,
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#3085d6",
+                        cancelButtonColor: "#d33",
+                        confirmButtonText: "Yes, delete it!",
+                      }).then((result) => {
+                        if (result.isConfirmed) {
+                          return setDebit((d) => {
+                            d = d.filter((item: any) => {
+                              return item.temp_id !== rowSelected.temp_id;
+                            });
+                            return d;
+                          });
+                        }
+                      });
+                    }
+                  }}
+                  inputsearchselector=".manok"
+                />
+                <div style={{ width: "100%", marginTop: "20px" }}>
+                  <DebitFooterComponent />
+                </div>
+
+              </fieldset>
+              <br />
+              <fieldset
+                style={{
+                  boxSizing: "border-box",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "5px",
+                  position: "relative",
+                  height: "460px",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <legend>Payment Breakdown (Credit)</legend>
                 <div
                   style={{
                     display: "flex",
                     gap: "10px",
-                    justifyContent: "space-between",
+                    flexDirection: "column",
+                    marginBottom: "10px"
                   }}
                 >
+                  <div style={{ display: "flex", gap: "10px" }}>
+                    {paymentTypeLoading ? (
+                      <LoadingButton loading={paymentTypeLoading} />
+                    ) : (
+                      <Autocomplete
+                        freeSolo
+                        options={debitState.transaction_desc}
+                        value={creditState.transaction}
+                        onChange={(e, v: any) => {
+                          if (v) {
+                            creditDispatch({
+                              type: "UPDATE_FIELD",
+                              field: "Code",
+                              value: v.Acct_Code,
+                            });
+                            creditDispatch({
+                              type: "UPDATE_FIELD",
+                              field: "Title",
+                              value: v.Acct_Title,
+                            });
+                            creditDispatch({
+                              type: "UPDATE_FIELD",
+                              field: "TC",
+                              value: v.Code,
+                            });
+                            creditDispatch({
+                              type: "UPDATE_FIELD",
+                              field: "transaction",
+                              value: v.label,
+                            });
+                          } else {
+                            creditDispatch({
+                              type: "UPDATE_FIELD",
+                              field: "Code",
+                              value: "",
+                            });
+                            creditDispatch({
+                              type: "UPDATE_FIELD",
+                              field: "Title",
+                              value: "",
+                            });
+                            creditDispatch({
+                              type: "UPDATE_FIELD",
+                              field: "TC",
+                              value: "",
+                            });
+                            creditDispatch({
+                              type: "UPDATE_FIELD",
+                              field: "transaction",
+                              value: "",
+                            });
+                          }
+                        }}
+                        onInput={(e: any) => {
+                          creditDispatch({
+                            type: "UPDATE_FIELD",
+                            field: "transaction",
+                            value: e.target.value,
+                          });
+                        }}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            // inputRef={(input) => {
+                            //   creditTransactionRef = input;
+                            // }}
+                            InputProps={{
+                              ...params.InputProps,
+                              inputRef: creditTransactionRef,
+                              style: { height: "27px", fontSize: "14px" },
+                            }}
+                            label="Transaction"
+                          />
+                        )}
+                        sx={{
+                          flex: 1,
+                          ".MuiFormLabel-root": {
+                            fontSize: "14px",
+                          },
+                          ".MuiInputBase-input": {
+                            width: "100% !important",
+                          },
+                          ".MuiFormLabel-root[data-shrink=false]": {
+                            top: "-5px",
+                          },
+                          ".MuiAutocomplete-input ": {
+                            position: "absolute",
+                          },
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.code === "Enter" || e.code === "NumpadEnter") {
+                            wait(150).then(() => {
+                              creditAmountRef.current?.focus()
+                            })
+                          }
+                        }}
+                        size="small"
+                        disabled={!addNew}
+                      />
+                    )}
+                    <TextField
+                      disabled={!addNew}
+                      name="amount"
+                      label="Amount"
+                      size="small"
+                      value={creditState.amount}
+                      onChange={handleCreditInputChange}
+                      placeholder="0.00"
+                      InputProps={{
+                        inputComponent: NumericFormatCustom as any,
+                        inputRef: creditAmountRef,
+                        style: { height: "27px", fontSize: "14px" },
+                      }}
+                      onBlur={() => {
+                        creditDispatch({
+                          type: "UPDATE_FIELD",
+                          field: "amount",
+                          value: parseFloat(
+                            creditState.amount.replace(/,/g, "")
+                          ).toFixed(2),
+                        });
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.code === "Enter" || e.code === "NumpadEnter") {
+                          creditFaoRef.current?.focus()
+                        }
+                      }}
+                      sx={{
+                        width: "160px",
+                        ".MuiFormLabel-root": { fontSize: "14px" },
+                        ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                      }}
+                    />
+                    {isLoadingCreditClientIdsModal ?
+                      <LoadingButton loading={isLoadingCreditClientIdsModal} />
+                      :
+                      <FormControl
+                        sx={{
+                          width: "150px",
+                          ".MuiFormLabel-root": {
+                            fontSize: "14px",
+                            background: "white",
+                            zIndex: 99,
+                            padding: "0 3px",
+                          },
+                          ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                        }}
+                        variant="outlined"
+                        size="small"
+                        disabled={!addNew}
+                      >
+                        <InputLabel htmlFor="fao">FAO</InputLabel>
+                        <OutlinedInput
+                          sx={{
+                            height: "27px",
+                            fontSize: "14px",
+                          }}
+                          inputRef={creditFaoRef}
+                          name="FAO_Name"
+                          value={creditState.FAO_Name}
+                          onChange={handleCreditInputChange}
+                          id="fao"
+                          onKeyDown={(e) => {
+                            if (e.code === "Enter" || e.code === "NumpadEnter") {
+                              dispatch({
+                                type: "UPDATE_FIELD",
+                                field: "isFao",
+                                value: true,
+                              });
+                              return openCreditCliendIDsModal(creditState.FAO_Name);
+                            }
+                          }}
+                          endAdornment={
+                            <InputAdornment position="end">
+                              <IconButton
+                                disabled={!addNew}
+                                onClick={() => {
+                                  dispatch({
+                                    type: "UPDATE_FIELD",
+                                    field: "isFao",
+                                    value: true,
+                                  });
+                                  openCreditCliendIDsModal(creditState.FAO_Name);
+                                }}
+                                edge="end"
+                                color="secondary"
+                              >
+                                <PersonSearchIcon />
+                              </IconButton>
+                            </InputAdornment>
+                          }
+                          label="FAO"
+                        />
+                      </FormControl>}
+                    <TextField
+                      disabled={!addNew}
+                      name="remarks"
+                      label="Remarks"
+                      size="small"
+                      value={creditState.remarks ?? ""}
+                      onChange={handleCreditInputChange}
+                      onKeyDown={(e) => {
+                        if (e.code === "Enter" || e.code === "NumpadEnter") {
+                          vatRef.current.focus()
+                        }
+                      }}
+                      InputProps={{
+                        style: { height: "27px", fontSize: "14px" },
+                        inputRef: creditRemarksRef
+                      }}
+                      sx={{
+                        width: "160px",
+                        ".MuiFormLabel-root": { fontSize: "14px" },
+                        ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                      }}
+                    />
+                  </div>
                   <div
                     style={{
                       display: "flex",
-                      alignItems: "center",
-                      columnGap: "10px",
+                      gap: "10px",
+                      justifyContent: "space-between",
                     }}
                   >
-                    <FormControl
-                      sx={{
-                        width: "150px",
-                        marginRight: "10px",
-                        minWidth: 150,
-                        ".MuiFormLabel-root": {
-                          fontSize: "14px",
-                          background: "white",
-                          zIndex: 99,
-                          padding: "0 3px",
-                        },
-                        ".MuiFormLabel-root[data-shrink=false]": { top: "-1px" },
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        columnGap: "10px",
                       }}
                     >
-                      <InputLabel id="payment-check">VAT Type</InputLabel>
-                      <Select
-                        inputRef={vatRef}
-                        disabled={!addNew}
-                        labelId="payment-check"
-                        value={creditState.option}
-                        onChange={handleCreditInputChange}
-                        autoWidth
-                        label="VAT Type"
-                        size="small"
-                        name="option"
+                      <FormControl
                         sx={{
-                          height: "27px",
-                          fontSize: "14px",
+                          width: "150px",
+                          marginRight: "10px",
+                          minWidth: 150,
+                          ".MuiFormLabel-root": {
+                            fontSize: "14px",
+                            background: "white",
+                            zIndex: 99,
+                            padding: "0 3px",
+                          },
+                          ".MuiFormLabel-root[data-shrink=false]": { top: "-1px" },
                         }}
                       >
-                        <MenuItem
-                          value={"Vat"}
-                          onKeyDown={(e) => {
+                        <InputLabel id="payment-check">VAT Type</InputLabel>
+                        <Select
+                          inputRef={vatRef}
+                          disabled={!addNew}
+                          labelId="payment-check"
+                          value={creditState.option}
+                          onChange={handleCreditInputChange}
+                          autoWidth
+                          label="VAT Type"
+                          size="small"
+                          name="option"
+                          sx={{
+                            height: "27px",
+                            fontSize: "14px",
+                          }}
+                        >
+                          <MenuItem
+                            value={"Vat"}
+                            onKeyDown={(e) => {
+                              if (e.code === "Enter" || e.code === "NumpadEnter") {
+                                wait(150).then(() => {
+                                  creditInvoiceRef.current?.focus()
+                                })
+                              }
+                            }}
+                          >VAT</MenuItem>
+                          <MenuItem value={"Non-Vat"} onKeyDown={(e) => {
                             if (e.code === "Enter" || e.code === "NumpadEnter") {
                               wait(150).then(() => {
                                 creditInvoiceRef.current?.focus()
                               })
                             }
-                          }}
-                        >VAT</MenuItem>
-                        <MenuItem value={"Non-Vat"} onKeyDown={(e) => {
-                          if (e.code === "Enter" || e.code === "NumpadEnter") {
-                            wait(150).then(() => {
-                              creditInvoiceRef.current?.focus()
-                            })
-                          }
-                        }}>Non-VAT</MenuItem>
-                      </Select>
-                    </FormControl>
+                          }}>Non-VAT</MenuItem>
+                        </Select>
+                      </FormControl>
 
-                    <TextField
-                      disabled={!addNew || creditState.creditMode === ""}
-                      name="invoice"
-                      label="Invoice"
-                      size="small"
-                      value={creditState.invoice}
-                      onChange={handleCreditInputChange}
-                      InputProps={{
-                        inputRef: creditInvoiceRef,
-                        style: { height: "27px", fontSize: "14px" },
-                      }}
-                      sx={{
-                        width: "300px",
-                        ".MuiFormLabel-root": { fontSize: "14px" },
-                        ".MuiFormLabel-root[data-shrink=false]": {
-                          top: "-5px",
-                        },
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.code === "Enter" || e.code === "NumpadEnter") {
-                          const timeout = setTimeout(() => {
-                            creditSaveButton.current?.click();
-                            clearTimeout(timeout);
-                          }, 100);
-                        }
-                      }}
-                    />
-                    {creditState.creditMode === "" ? (
-                      <Button
-                        sx={{
-                          height: "30px",
-                          fontSize: "11px",
-                        }}
-                        variant="outlined"
-                        onClick={() => {
-                          Object.entries(initialStateCredit).forEach(
-                            ([field, value]) => {
-                              creditDispatch({
-                                type: "UPDATE_FIELD",
-                                field,
-                                value,
-                              });
-                            }
-                          );
-                        }}
-                      >
-                        NEW
-                      </Button>
-                    ) : (
-                      <Button
+                      <TextField
                         disabled={!addNew || creditState.creditMode === ""}
-
-                        ref={creditSaveButton}
-                        sx={{
-                          height: "30px",
-                          fontSize: "11px",
+                        name="invoice"
+                        label="Invoice"
+                        size="small"
+                        value={creditState.invoice}
+                        onChange={handleCreditInputChange}
+                        InputProps={{
+                          inputRef: creditInvoiceRef,
+                          style: { height: "27px", fontSize: "14px" },
                         }}
-                        color="success"
-                        variant="outlined"
-                        onClick={() => {
-                          if (
-                            creditState.transaction === "" ||
-                            creditState.transaction === null ||
-                            creditState.transaction === undefined
-                          ) {
-                            return CustomSwalAlertWarning(
-                              "Please select a transaction!",
-                              () => {
-                                wait(300).then(() => {
-                                  creditTransactionRef.current?.focus();
+                        sx={{
+                          width: "300px",
+                          ".MuiFormLabel-root": { fontSize: "14px" },
+                          ".MuiFormLabel-root[data-shrink=false]": {
+                            top: "-5px",
+                          },
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.code === "Enter" || e.code === "NumpadEnter") {
+                            const timeout = setTimeout(() => {
+                              creditSaveButton.current?.click();
+                              clearTimeout(timeout);
+                            }, 100);
+                          }
+                        }}
+                      />
+                      {creditState.creditMode === "" ? (
+                        <Button
+                          sx={{
+                            height: "30px",
+                            fontSize: "11px",
+                          }}
+                          variant="outlined"
+                          onClick={() => {
+                            Object.entries(initialStateCredit).forEach(
+                              ([field, value]) => {
+                                creditDispatch({
+                                  type: "UPDATE_FIELD",
+                                  field,
+                                  value,
                                 });
                               }
                             );
-                          }
+                          }}
+                        >
+                          NEW
+                        </Button>
+                      ) : (
+                        <Button
+                          disabled={!addNew || creditState.creditMode === ""}
 
-                          if (
-                            debitState.transaction_desc.filter(
-                              (item: any) =>
-                                item.label === creditState.transaction
-                            ).length <= 0
-                          ) {
-                            return CustomSwalAlertWarning(
-                              "Transaction not yet defined!",
-                              () => {
-                                wait(300).then(() => {
-                                  creditTransactionRef.current?.focus();
-                                });
-                              }
-                            );
-                          }
-                          if (
-                            parseFloat(creditState.amount.replace(/,/g, "")) <=
-                            0 ||
-                            isNaN(
-                              parseFloat(creditState.amount.replace(/,/g, ""))
-                            )
-                          ) {
-                            return CustomSwalAlertWarning(
-                              "Please provide amount!",
-                              () => {
-                                wait(300).then(() => {
-                                  creditAmountRef.current?.focus();
-                                });
-                              }
-                            );
-                          }
-                          if (creditState.FAO_ID === "") {
-                            return CustomSwalAlertWarning(
-                              "Please provide FAO!",
-                              () => {
-                                wait(300).then(() => {
-                                  creditFaoRef.current?.focus();
-                                });
-                              }
-                            );
-                          }
-                          if (creditState.invoice === "") {
-                            return CustomSwalAlertWarning(
-                              "Please provide invoice!",
-                              () => {
-                                wait(300).then(() => {
-                                  creditInvoiceRef.current?.focus();
-                                });
-                              }
-                            );
-                          }
+                          ref={creditSaveButton}
+                          sx={{
+                            height: "30px",
+                            fontSize: "11px",
+                          }}
+                          color="success"
+                          variant="outlined"
+                          onClick={() => {
+                            if (
+                              creditState.transaction === "" ||
+                              creditState.transaction === null ||
+                              creditState.transaction === undefined
+                            ) {
+                              return CustomSwalAlertWarning(
+                                "Please select a transaction!",
+                                () => {
+                                  wait(300).then(() => {
+                                    creditTransactionRef.current?.focus();
+                                  });
+                                }
+                              );
+                            }
 
-                          if (creditState.invoice.length >= 200) {
-                            return CustomSwalAlertWarning(
-                              "Invoice is too long!",
-                              () => { }
-                            );
-                          }
-                          if (creditState.FAO_ID.length >= 200) {
-                            return CustomSwalAlertWarning(
-                              "ID is too long!",
-                              () => { }
-                            );
-                          }
-                          if (creditState.remarks.length >= 200) {
-                            return CustomSwalAlertWarning(
-                              "Remarks is too long!",
-                              () => { }
-                            );
-                          }
-                          if (creditState.amount.length >= 200) {
-                            return CustomSwalAlertWarning(
-                              "Amount is too long!",
-                              () => { }
-                            );
-                          }
+                            if (
+                              debitState.transaction_desc.filter(
+                                (item: any) =>
+                                  item.label === creditState.transaction
+                              ).length <= 0
+                            ) {
+                              return CustomSwalAlertWarning(
+                                "Transaction not yet defined!",
+                                () => {
+                                  wait(300).then(() => {
+                                    creditTransactionRef.current?.focus();
+                                  });
+                                }
+                              );
+                            }
+                            if (
+                              parseFloat(creditState.amount.replace(/,/g, "")) <=
+                              0 ||
+                              isNaN(
+                                parseFloat(creditState.amount.replace(/,/g, ""))
+                              )
+                            ) {
+                              return CustomSwalAlertWarning(
+                                "Please provide amount!",
+                                () => {
+                                  wait(300).then(() => {
+                                    creditAmountRef.current?.focus();
+                                  });
+                                }
+                              );
+                            }
+                            if (creditState.FAO_ID === "") {
+                              return CustomSwalAlertWarning(
+                                "Please provide FAO!",
+                                () => {
+                                  wait(300).then(() => {
+                                    creditFaoRef.current?.focus();
+                                  });
+                                }
+                              );
+                            }
+                            if (creditState.invoice === "") {
+                              return CustomSwalAlertWarning(
+                                "Please provide invoice!",
+                                () => {
+                                  wait(300).then(() => {
+                                    creditInvoiceRef.current?.focus();
+                                  });
+                                }
+                              );
+                            }
 
-                          function onSaveTransaction() {
-                            creditState.amount = parseFloat(
-                              creditState.amount
-                            ).toLocaleString("en-US", {
-                              style: "decimal",
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            });
-                            const temp_id =
-                              parseInt(
-                                credit.length <= 0
-                                  ? "0"
-                                  : (credit[credit.length - 1] as any).temp_id
-                              ) + 1;
+                            if (creditState.invoice.length >= 200) {
+                              return CustomSwalAlertWarning(
+                                "Invoice is too long!",
+                                () => { }
+                              );
+                            }
+                            if (creditState.FAO_ID.length >= 200) {
+                              return CustomSwalAlertWarning(
+                                "ID is too long!",
+                                () => { }
+                              );
+                            }
+                            if (creditState.remarks.length >= 200) {
+                              return CustomSwalAlertWarning(
+                                "Remarks is too long!",
+                                () => { }
+                              );
+                            }
+                            if (creditState.amount.length >= 200) {
+                              return CustomSwalAlertWarning(
+                                "Amount is too long!",
+                                () => { }
+                              );
+                            }
 
-                            const creditData = {
-                              transaction: creditState.transaction,
-                              amount: creditState.amount,
-                              Remarks: creditState.remarks,
-                              Code: creditState.Code,
-                              Title: creditState.Title,
-                              TC: creditState.TC,
-                              Account_No: creditState.FAO_ID,
-                              Name: creditState.FAO_Name,
-                              VATType: creditState.option,
-                              invoiceNo: creditState.invoice,
-                            };
-                            setCredit((d: any) => {
-                              if (creditState.creditMode === "add") {
-                                d = [...d, { temp_id, ...creditData }];
-                                return d;
-                              } else {
-                                const data = d.map((obj: any) => {
-                                  if (obj.temp_id === creditState.creditId) {
-                                    obj = { ...obj, ...creditData };
-                                  }
-                                  return obj;
-                                });
-                                return data;
-                              }
-                            });
-                            if (creditState.option === "Vat") {
-                              const taxableAmt =
-                                parseFloat(
-                                  creditState.amount.replace(/,/g, "")
-                                ) / 1.12;
-                              const inputTax = taxableAmt * 0.12;
-                              const newD = debitState.transaction_desc.filter(
-                                (item: any) => item.label === "Output Tax"
-                              )[0];
-                              const creditDataVat = {
-                                temp_id: temp_id + 1,
-                                transaction: "Output Tax",
-                                amount: inputTax.toFixed(2),
+                            function onSaveTransaction() {
+                              creditState.amount = parseFloat(
+                                creditState.amount
+                              ).toLocaleString("en-US", {
+                                style: "decimal",
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              });
+                              const temp_id =
+                                parseInt(
+                                  credit.length <= 0
+                                    ? "0"
+                                    : (credit[credit.length - 1] as any).temp_id
+                                ) + 1;
+
+                              const creditData = {
+                                transaction: creditState.transaction,
+                                amount: creditState.amount,
                                 Remarks: creditState.remarks,
-                                Code: newD.Acct_Code,
-                                Title: newD.Acct_Title,
-                                TC: newD.Code,
+                                Code: creditState.Code,
+                                Title: creditState.Title,
+                                TC: creditState.TC,
                                 Account_No: creditState.FAO_ID,
                                 Name: creditState.FAO_Name,
                                 VATType: creditState.option,
                                 invoiceNo: creditState.invoice,
                               };
                               setCredit((d: any) => {
-                                d = [...d, creditDataVat];
-                                return d;
+                                if (creditState.creditMode === "add") {
+                                  d = [...d, { temp_id, ...creditData }];
+                                  return d;
+                                } else {
+                                  const data = d.map((obj: any) => {
+                                    if (obj.temp_id === creditState.creditId) {
+                                      obj = { ...obj, ...creditData };
+                                    }
+                                    return obj;
+                                  });
+                                  return data;
+                                }
+                              });
+                              if (creditState.option === "Vat") {
+                                const taxableAmt =
+                                  parseFloat(
+                                    creditState.amount.replace(/,/g, "")
+                                  ) / 1.12;
+                                const inputTax = taxableAmt * 0.12;
+                                const newD = debitState.transaction_desc.filter(
+                                  (item: any) => item.label === "Output Tax"
+                                )[0];
+                                const creditDataVat = {
+                                  temp_id: temp_id + 1,
+                                  transaction: "Output Tax",
+                                  amount: inputTax.toFixed(2),
+                                  Remarks: creditState.remarks,
+                                  Code: newD.Acct_Code,
+                                  Title: newD.Acct_Title,
+                                  TC: newD.Code,
+                                  Account_No: creditState.FAO_ID,
+                                  Name: creditState.FAO_Name,
+                                  VATType: creditState.option,
+                                  invoiceNo: creditState.invoice,
+                                };
+                                setCredit((d: any) => {
+                                  d = [...d, creditDataVat];
+                                  return d;
+                                });
+                              }
+                              Swal.fire({
+                                text:
+                                  creditState.creditMode === "edit"
+                                    ? "Update Successfully"
+                                    : "Create Successfully",
+                                icon: "success",
+                                showCancelButton: false,
+                                timer: 1500,
+                              }).then(() => {
+                                setNewStateValue(
+                                  creditDispatch,
+                                  initialStateCredit
+                                );
+                                tableCredit.current.resetTableSelected();
                               });
                             }
-                            Swal.fire({
-                              text:
-                                creditState.creditMode === "edit"
-                                  ? "Update Successfully"
-                                  : "Create Successfully",
-                              icon: "success",
-                              showCancelButton: false,
-                              timer: 1500,
-                            }).then(() => {
-                              setNewStateValue(
-                                creditDispatch,
-                                initialStateCredit
-                              );
-                              tableCredit.current.resetTableSelected();
-                            });
-                          }
-                          if (creditState.creditMode === "edit") {
-                            return Swal.fire({
-                              title: "Are you sure?",
-                              text: `You won't to update this?`,
-                              icon: "warning",
-                              showCancelButton: true,
-                              confirmButtonColor: "#3085d6",
-                              cancelButtonColor: "#d33",
-                              confirmButtonText: "Yes, update it!",
-                            }).then((result) => {
-                              if (result.isConfirmed) {
-                                return onSaveTransaction();
-                              }
-                            });
-                          } else {
-                            onSaveTransaction();
-                          }
-                        }}
-                      >
-                        Save Credit
-                      </Button>
-                    )}
+                            if (creditState.creditMode === "edit") {
+                              return Swal.fire({
+                                title: "Are you sure?",
+                                text: `You won't to update this?`,
+                                icon: "warning",
+                                showCancelButton: true,
+                                confirmButtonColor: "#3085d6",
+                                cancelButtonColor: "#d33",
+                                confirmButtonText: "Yes, update it!",
+                              }).then((result) => {
+                                if (result.isConfirmed) {
+                                  return onSaveTransaction();
+                                }
+                              });
+                            } else {
+                              onSaveTransaction();
+                            }
+                          }}
+                        >
+                          Save Credit
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <UpwardTable
-                isLoading={loadingAddNew || loadingCollectionDataSearch}
-                ref={tableCredit}
-                rows={credit}
-                column={creditColumn}
-                width={width}
-                height={height}
-                dataReadOnly={true}
-                onSelectionChange={(selectedRow) => {
-                  const rowSelected = selectedRow[0];
-                  if (selectedRow.length > 0) {
-                    const updateData = {
-                      creditMode: "edit",
-                      creditId: rowSelected.temp_id,
-                      transaction: rowSelected.transaction,
-                      amount: rowSelected.amount,
-                      remarks: rowSelected.Remarks,
-                      Code: rowSelected.Code,
-                      Title: rowSelected.Title,
-                      TC: rowSelected.TC,
-                      FAO_ID: rowSelected.Account_No,
-                      FAO_Name: rowSelected.Name,
-                      option: rowSelected.VATType,
-                      invoice: rowSelected.invoiceNo,
-                    };
-                    setNewStateValue(creditDispatch, updateData);
-                  } else {
-                    Object.entries(initialStateCredit).forEach(
-                      ([field, value]) => {
-                        creditDispatch({
-                          type: "UPDATE_FIELD",
-                          field,
-                          value,
-                        });
-                      }
-                    );
-                  }
-                }}
-                onKeyDown={(row, key) => {
-                  if (key === "Delete" || key === "Backspace") {
-                    const rowSelected = row[0];
-                    Swal.fire({
-                      title: "Are you sure?",
-                      text: `You won't to delete this?`,
-                      icon: "warning",
-                      showCancelButton: true,
-                      confirmButtonColor: "#3085d6",
-                      cancelButtonColor: "#d33",
-                      confirmButtonText: "Yes, delete it!",
-                    }).then((result) => {
-                      if (result.isConfirmed) {
-                        return setCredit((d) => {
-                          d = d.filter((item: any) => {
-                            return item.temp_id !== rowSelected.temp_id;
+                <UpwardTable
+                  isLoading={loadingAddNew || loadingCollectionDataSearch}
+                  ref={tableCredit}
+                  rows={credit}
+                  column={creditColumn}
+                  width={width}
+                  height={height}
+                  dataReadOnly={true}
+                  onSelectionChange={(selectedRow) => {
+                    const rowSelected = selectedRow[0];
+                    if (selectedRow.length > 0) {
+                      const updateData = {
+                        creditMode: "edit",
+                        creditId: rowSelected.temp_id,
+                        transaction: rowSelected.transaction,
+                        amount: rowSelected.amount,
+                        remarks: rowSelected.Remarks,
+                        Code: rowSelected.Code,
+                        Title: rowSelected.Title,
+                        TC: rowSelected.TC,
+                        FAO_ID: rowSelected.Account_No,
+                        FAO_Name: rowSelected.Name,
+                        option: rowSelected.VATType,
+                        invoice: rowSelected.invoiceNo,
+                      };
+                      setNewStateValue(creditDispatch, updateData);
+                    } else {
+                      Object.entries(initialStateCredit).forEach(
+                        ([field, value]) => {
+                          creditDispatch({
+                            type: "UPDATE_FIELD",
+                            field,
+                            value,
                           });
-                          return d;
-                        });
-                      }
-                    });
-                  }
-                }}
-                inputsearchselector=".manok"
-              />
-              <div style={{ width: "100%", marginTop: "10px" }}>
-                <CreditFooterComponent />
-              </div>
-              {/* <div
+                        }
+                      );
+                    }
+                  }}
+                  onKeyDown={(row, key) => {
+                    if (key === "Delete" || key === "Backspace") {
+                      const rowSelected = row[0];
+                      Swal.fire({
+                        title: "Are you sure?",
+                        text: `You won't to delete this?`,
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#3085d6",
+                        cancelButtonColor: "#d33",
+                        confirmButtonText: "Yes, delete it!",
+                      }).then((result) => {
+                        if (result.isConfirmed) {
+                          return setCredit((d) => {
+                            d = d.filter((item: any) => {
+                              return item.temp_id !== rowSelected.temp_id;
+                            });
+                            return d;
+                          });
+                        }
+                      });
+                    }
+                  }}
+                  inputsearchselector=".manok"
+                />
+                <div style={{ width: "100%", marginTop: "10px" }}>
+                  <CreditFooterComponent />
+                </div>
+                {/* <div
                 style={{
                   marginTop: "10px",
                   width: "100%",
@@ -2488,577 +2498,582 @@ export default function Collections() {
                   />
                 </Box>
               </div> */}
-            </fieldset>
+              </fieldset>
+            </div>
           </div>
-        </div>
-        {ModalClientIDs}
-        {ModalSearchCollection}
-        {ModalSearchBanks}
-        {ModalSearchCheckList}
-        {ModalCreditClientIDs}
-        <Modal
-          open={openPdcInputModal}
-          onClose={() => {
-            setOpenPdcInputModal(false);
-            tableDebit.current?.resetTableSelected();
-          }}
-          aria-labelledby="modal-modal-title"
-          aria-describedby="modal-modal-description"
-        >
-          <Box
-            sx={{
-              position: "absolute" as "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              width: 700,
-              bgcolor: "background.paper",
-              p: 4,
+          {ModalClientIDs}
+          {ModalSearchCollection}
+          {ModalSearchBanks}
+          {ModalSearchCheckList}
+          {ModalCreditClientIDs}
+          <Modal
+            open={openPdcInputModal}
+            onClose={() => {
+              setOpenPdcInputModal(false);
+              tableDebit.current?.resetTableSelected();
             }}
+            aria-labelledby="modal-modal-title"
+            aria-describedby="modal-modal-description"
           >
-            <Typography id="modal-modal-title" variant="h6" component="h2">
-              Check Detail
-            </Typography>
-            <div
-              style={{
-                display: "flex",
-                columnGap: "10px",
+            <Box
+              sx={{
+                position: "absolute" as "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                width: 700,
+                bgcolor: "background.paper",
+                p: 4,
               }}
             >
+              <Typography id="modal-modal-title" variant="h6" component="h2">
+                Check Detail
+              </Typography>
               <div
                 style={{
                   display: "flex",
-                  flexDirection: "column",
-                  gap: "10px",
+                  columnGap: "10px",
                 }}
               >
-                <TextField
-                  required
-                  variant="outlined"
-                  size="small"
-                  label="Check No."
-                  name="Check_No"
-                  value={modalState.Check_No}
-                  onChange={handleModalInputChange}
-                  disabled={!addNew || modalState.CheckIdx !== ""}
-                  onKeyDown={(e: any) => {
-                    if (e.code === "Enter" || e.code === "NumpadEnter") {
-                      const timeout = setTimeout(() => {
-                        checkModalSaveButton.current?.click();
-                        clearTimeout(timeout);
-                      }, 100);
-                    }
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "10px",
                   }}
-                  InputProps={{
-                    style: { height: "27px", fontSize: "14px" },
-                    inputRef: checkNoRef,
-                  }}
-                  sx={{
-                    height: "27px",
-                    ".MuiFormLabel-root": { fontSize: "14px" },
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                  }}
-                />
-                {isLoadingModalSearchbanks ? (
-                  <LoadingButton loading={isLoadingModalSearchbanks} />
-                ) : (
-                  <FormControl
-                    sx={{
-                      width: "100%",
-                      ".MuiFormLabel-root": {
-                        fontSize: "14px",
-                        background: "white",
-                        zIndex: 99,
-                        padding: "0 3px",
-                      },
-                      ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                    }}
-                    fullWidth
+                >
+                  <TextField
+                    required
                     variant="outlined"
                     size="small"
-                    disabled={!addNew}
-                  >
-                    <InputLabel htmlFor="label-input-id">Bank</InputLabel>
-                    <OutlinedInput
-                      sx={{
-                        height: "27px",
-                        fontSize: "14px",
-                      }}
-                      inputRef={checkBankRef}
-                      disabled={!addNew}
-                      fullWidth
-                      label="Bank"
-                      name="BankName"
-                      value={modalState.BankName}
-                      onChange={handleModalInputChange}
-                      onKeyDown={(e) => {
-                        if (e.code === "Enter" || e.code === "NumpadEnter") {
-                          return openModalSearchBanks(modalState.BankName);
+                    label="Check No."
+                    name="Check_No"
+                    value={modalState.Check_No}
+                    onChange={handleModalInputChange}
+                    disabled={!addNew || modalState.CheckIdx !== ""}
+                    onKeyDown={(e: any) => {
+                      if (e.code === "Enter" || e.code === "NumpadEnter") {
+                        if (checkBankRef.current) {
+                          checkBankRef.current.focus()
                         }
-                      }}
-                      id="label-input-id"
-                      endAdornment={
-                        <InputAdornment position="end">
-                          <IconButton
-                            disabled={!addNew}
-                            aria-label="search-client"
-                            color="secondary"
-                            edge="end"
-                            onClick={() =>
-                              openModalSearchBanks(modalState.BankName)
-                            }
-                          >
-                            <PolicyIcon />
-                          </IconButton>
-                        </InputAdornment>
                       }
-                    />
-                  </FormControl>
-                )}
-                <TextField
-                  required
-                  variant="outlined"
-                  size="small"
-                  label="Branch"
-                  name="Branch"
-                  value={modalState.Branch}
-                  onChange={handleModalInputChange}
-                  disabled={!addNew}
-                  onKeyDown={(e: any) => {
-                    if (e.code === "Enter" || e.code === "NumpadEnter") {
-                      const timeout = setTimeout(() => {
-                        checkModalSaveButton.current?.click();
-                        clearTimeout(timeout);
-                      }, 100);
-                    }
+                    }}
+                    InputProps={{
+                      style: { height: "27px", fontSize: "14px" },
+                      inputRef: checkNoRef,
+                    }}
+                    sx={{
+                      height: "27px",
+                      ".MuiFormLabel-root": { fontSize: "14px" },
+                      ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                    }}
+                  />
+                  {isLoadingModalSearchbanks ? (
+                    <LoadingButton loading={isLoadingModalSearchbanks} />
+                  ) : (
+                    <FormControl
+                      sx={{
+                        width: "100%",
+                        ".MuiFormLabel-root": {
+                          fontSize: "14px",
+                          background: "white",
+                          zIndex: 99,
+                          padding: "0 3px",
+                        },
+                        ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                      }}
+                      fullWidth
+                      variant="outlined"
+                      size="small"
+                      disabled={!addNew}
+                    >
+                      <InputLabel htmlFor="label-input-id">Bank</InputLabel>
+                      <OutlinedInput
+                        sx={{
+                          height: "27px",
+                          fontSize: "14px",
+                        }}
+                        inputRef={checkBankRef}
+                        disabled={!addNew}
+                        fullWidth
+                        label="Bank"
+                        name="BankName"
+                        value={modalState.BankName}
+                        onChange={handleModalInputChange}
+                        onKeyDown={(e) => {
+                          if (e.code === "Enter" || e.code === "NumpadEnter") {
+                            return openModalSearchBanks(modalState.BankName);
+                          }
+                        }}
+                        id="label-input-id"
+                        endAdornment={
+                          <InputAdornment position="end">
+                            <IconButton
+                              disabled={!addNew}
+                              aria-label="search-client"
+                              color="secondary"
+                              edge="end"
+                              onClick={() =>
+                                openModalSearchBanks(modalState.BankName)
+                              }
+                            >
+                              <PolicyIcon />
+                            </IconButton>
+                          </InputAdornment>
+                        }
+                      />
+                    </FormControl>
+                  )}
+                  <TextField
+                    required
+                    variant="outlined"
+                    size="small"
+                    label="Branch"
+                    name="Branch"
+                    value={modalState.Branch}
+                    onChange={handleModalInputChange}
+                    disabled={!addNew}
+                    onKeyDown={(e: any) => {
+                      if (e.code === "Enter" || e.code === "NumpadEnter") {
+                        if (checkRemakrsRef.current) {
+                          checkRemakrsRef.current.focus()
+                        }
+                      }
+                    }}
+                    InputProps={{
+                      style: { height: "27px", fontSize: "14px" },
+                      inputRef: checkBranchRef,
+                    }}
+                    sx={{
+                      height: "27px",
+                      ".MuiFormLabel-root": { fontSize: "14px" },
+                      ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                    }}
+                  />
+                  <TextField
+                    required
+                    variant="outlined"
+                    size="small"
+                    label="Remarks"
+                    name="Check_Remarks"
+                    value={modalState.Check_Remarks}
+                    onChange={handleModalInputChange}
+                    disabled={!addNew}
+                    rows={4}
+                    multiline
+                    onKeyDown={(e: any) => {
+                      if (e.key === "Enter" && e.shiftKey) {
+                        return
+                      }
+
+                      if (e.code === "Enter" || e.code === "NumpadEnter") {
+                        e.preventDefault();
+                        if (checkDateRef.current) {
+                          checkDateRef.current.focus()
+                        }
+                      }
+                    }}
+                    InputProps={{
+                      style: { height: "auto", fontSize: "14px" },
+                      inputRef: checkRemakrsRef,
+
+                    }}
+                    sx={{
+                      flex: 1,
+                      height: "27px",
+                      ".MuiFormLabel-root": { fontSize: "14px" },
+                      ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                    }}
+                  />
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "10px",
+                    flexDirection: "column",
                   }}
-                  InputProps={{
-                    style: { height: "27px", fontSize: "14px" },
-                    inputRef: checkBranchRef,
-                  }}
-                  sx={{
-                    height: "27px",
-                    ".MuiFormLabel-root": { fontSize: "14px" },
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                  }}
-                />
-                <TextField
-                  required
-                  variant="outlined"
-                  size="small"
-                  label="Remarks"
-                  name="Check_Remarks"
-                  value={modalState.Check_Remarks}
-                  onChange={handleModalInputChange}
-                  disabled={!addNew}
-                  rows={4}
-                  multiline
-                  onKeyDown={(e: any) => {
-                    if (e.code === "Enter" || e.code === "NumpadEnter") {
-                      const timeout = setTimeout(() => {
-                        checkModalSaveButton.current?.click();
-                        clearTimeout(timeout);
-                      }, 100);
-                    }
-                  }}
-                  InputProps={{
-                    style: { height: "auto", fontSize: "14px" },
-                  }}
-                  sx={{
-                    flex: 1,
-                    height: "27px",
-                    ".MuiFormLabel-root": { fontSize: "14px" },
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                  }}
-                />
+                >
+                  <CustomDatePicker
+                    disabled={!addNew}
+                    label="Check Dated"
+                    onChange={(value: any) => {
+                      modalDispatch({
+                        type: "UPDATE_FIELD",
+                        field: "Check_Date",
+                        value: value,
+                      });
+                    }}
+                    onKeyDown={(e: any) => {
+
+                      if (e.code === "Enter" || e.code === "NumpadEnter") {
+                        e.preventDefault();
+                        if (checkAmountRef.current) {
+                          checkAmountRef.current.focus()
+                        }
+                      }
+                    }}
+                    value={new Date(modalState.Check_Date)}
+                    inputRef={checkDateRef}
+                    textField={{
+                      InputLabelProps: {
+                        style: {
+                          fontSize: "14px",
+                        },
+                      },
+                      InputProps: {
+                        style: { height: "27px", fontSize: "14px" },
+                      },
+                    }}
+                  />
+                  <TextField
+                    required
+                    variant="outlined"
+                    size="small"
+                    label="Amount"
+                    name="Check_Amnt"
+                    value={modalState.Check_Amnt}
+                    onChange={handleModalInputChange}
+                    onKeyDown={(e) => {
+                      if (e.code === "Enter" || e.code === "NumpadEnter") {
+                        const timeout = setTimeout(() => {
+                          checkModalSaveButton.current?.click();
+                          clearTimeout(timeout);
+                        }, 100);
+                      }
+                    }}
+                    disabled={!addNew}
+                    placeholder="0.00"
+                    InputProps={{
+                      style: { height: "27px", fontSize: "14px" },
+                      inputComponent: NumericFormatCustom as any,
+                      inputRef: checkAmountRef,
+                    }}
+                    sx={{
+                      flex: 1,
+                      height: "27px",
+                      ".MuiFormLabel-root": { fontSize: "14px" },
+                      ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                    }}
+                    onBlur={() => {
+                      modalDispatch({
+                        type: "UPDATE_FIELD",
+                        field: "Check_Amnt",
+                        value: parseFloat(
+                          modalState.Check_Amnt.replace(/,/g, "")
+                        ).toFixed(2),
+                      });
+                    }}
+                  />
+                </div>
               </div>
               <div
                 style={{
                   display: "flex",
-                  gap: "10px",
-                  flexDirection: "column",
+                  justifyContent: "flex-end",
+                  alignItems: "flex-end",
+                  gap: "20px",
                 }}
               >
-                <CustomDatePicker
-                  disabled={!addNew}
-                  label="Check Dated"
-                  onChange={(value: any) => {
-                    modalDispatch({
-                      type: "UPDATE_FIELD",
-                      field: "Check_Date",
-                      value: value,
-                    });
-                  }}
-                  onKeyDown={(e: any) => {
-                    if (e.code === "Enter" || e.code === "NumpadEnter") {
-                      const timeout = setTimeout(() => {
-                        checkModalSaveButton.current?.click();
-                        clearTimeout(timeout);
-                      }, 100);
-                    }
-                  }}
-                  value={new Date(modalState.Check_Date)}
-                  inputRef={checkDateRef}
-                  textField={{
-                    InputLabelProps: {
-                      style: {
-                        fontSize: "14px",
-                      },
-                    },
-                    InputProps: {
-                      style: { height: "27px", fontSize: "14px" },
-                    },
-                  }}
-                />
-                <TextField
-                  required
-                  variant="outlined"
-                  size="small"
-                  label="Amount"
-                  name="Check_Amnt"
-                  value={modalState.Check_Amnt}
-                  onChange={handleModalInputChange}
-                  onKeyDown={(e) => {
-                    if (e.code === "Enter" || e.code === "NumpadEnter") {
-                      const timeout = setTimeout(() => {
-                        checkModalSaveButton.current?.click();
-                        clearTimeout(timeout);
-                      }, 100);
-                    }
-                  }}
-                  disabled={!addNew}
-                  placeholder="0.00"
-                  InputProps={{
-                    style: { height: "27px", fontSize: "14px" },
-                    inputComponent: NumericFormatCustom as any,
-                    inputRef: checkAmountRef,
-                  }}
-                  sx={{
-                    flex: 1,
-                    height: "27px",
-                    ".MuiFormLabel-root": { fontSize: "14px" },
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                  }}
-                  onBlur={() => {
-                    modalDispatch({
-                      type: "UPDATE_FIELD",
-                      field: "Check_Amnt",
-                      value: parseFloat(
-                        modalState.Check_Amnt.replace(/,/g, "")
-                      ).toFixed(2),
-                    });
-                  }}
-                />
-              </div>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                alignItems: "flex-end",
-                gap: "20px",
-              }}
-            >
-              <Button
-                ref={checkModalSaveButton}
-                action={checkModalSaveActionButtonRef}
-                color="success"
-                variant="contained"
-                autoFocus={modalState.CheckIdx !== ""}
-                onClick={() => {
-                  if (modalState.Check_No === "") {
-                    setOpenPdcInputModal(false);
-                    return CustomSwalAlertWarning(
-                      "Please provide check!",
-                      (d) => {
-                        flushSync(() => {
-                          setOpenPdcInputModal(true);
-                        });
-                        checkNoRef.current?.focus();
-                      }
-                    );
-                  }
-                  if (
-                    parseFloat(modalState.Check_Amnt.replace(/,/g, "")) <= 0 ||
-                    isNaN(parseFloat(modalState.Check_Amnt.replace(/,/g, "")))
-                  ) {
-                    setOpenPdcInputModal(false);
-                    return CustomSwalAlertWarning(
-                      "Please provide check amount!",
-                      (d) => {
-                        flushSync(() => {
-                          setOpenPdcInputModal(true);
-                        });
-                        checkAmountRef.current?.focus();
-                      }
-                    );
-                  }
-                  if (modalState.BankName === "") {
-                    setOpenPdcInputModal(false);
-                    return CustomSwalAlertWarning(
-                      "Please provide bank!",
-                      (d) => {
-                        flushSync(() => {
-                          setOpenPdcInputModal(true);
-                        });
-                        checkBankRef.current?.focus();
-                      }
-                    );
-                  }
-                  if (modalState.Branch === "") {
-                    setOpenPdcInputModal(false);
-                    return CustomSwalAlertWarning(
-                      "Please provide branch!",
-                      (d) => {
-                        flushSync(() => {
-                          setOpenPdcInputModal(true);
-                        });
-                        checkBranchRef.current?.focus();
-                      }
-                    );
-                  }
-                  if (modalState.BankName.length >= 200) {
-                    setOpenPdcInputModal(false);
-                    return CustomSwalAlertWarning(
-                      "Bank Name is too long!",
-                      (d) => {
-                        flushSync(() => {
-                          setOpenPdcInputModal(true);
-                        });
-                        checkBankRef.current?.focus();
-                      }
-                    );
-                  }
-                  if (modalState.Branch.length >= 200) {
-                    setOpenPdcInputModal(false);
-                    return CustomSwalAlertWarning(
-                      "Branch is too long!",
-                      (d) => {
-                        flushSync(() => {
-                          setOpenPdcInputModal(true);
-                        });
-                        checkBranchRef.current?.focus();
-                      }
-                    );
-                  }
-                  if (modalState.Check_No.length >= 200) {
-                    setOpenPdcInputModal(false);
-                    return CustomSwalAlertWarning(
-                      "Check No is too long!",
-                      (d) => {
-                        flushSync(() => {
-                          setOpenPdcInputModal(true);
-                        });
-                        checkBranchRef.current?.focus();
-                      }
-                    );
-                  }
-                  if (modalState.Check_Amnt.length >= 200) {
-                    setOpenPdcInputModal(false);
-                    return CustomSwalAlertWarning(
-                      "Check Ammount is too long!",
-                      (d) => {
-                        flushSync(() => {
-                          setOpenPdcInputModal(true);
-                        });
-                        checkBranchRef.current?.focus();
-                      }
-                    );
-                  }
-
-                  modalState.Check_Amnt = parseFloat(
-                    modalState.Check_Amnt.replace(/,/g, "")
-                  ).toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  });
-
-                  function addPDCCheck() {
-                    let temp_id = "";
-                    myAxios
-                      .post(
-                        `/task/accounting/get-drcode-drtitle-from-collection`,
-                        { code: debitState.payamentType },
-                        {
-                          headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${user?.accessToken}`,
-                          },
-                        }
-                      )
-                      .then((res) => {
-                        const { Acct_Code, Acct_Title } = res?.data.data[0];
-                        setDebit((d: any) => {
-                          temp_id = generateID(
-                            d.length > 0
-                              ? (d[d.length - 1] as any).temp_id
-                              : "0"
-                          );
-
-                          if (modalState.CheckMode === "edit") {
-                            d = d.filter(
-                              (itms: any) =>
-                                itms.temp_id !== modalState.CheckIdx.toString()
-                            );
-                            temp_id = modalState.CheckIdx.toString();
-                          }
-
-                          const data = {
-                            Payment: "Check",
-                            Amount: modalState.Check_Amnt,
-                            Check_No: modalState.Check_No,
-                            Check_Date: new Date(
-                              modalState.Check_Date
-                            ).toLocaleDateString("en-US", {
-                              month: "2-digit",
-                              day: "2-digit",
-                              year: "numeric",
-                            }),
-                            Bank_Branch: `${modalState.BankName} / ${modalState.Branch}`,
-                            Acct_Code,
-                            Acct_Title,
-                            Deposit_Slip: "",
-                            Cntr: "",
-                            Remarks: modalState.Check_Remarks,
-                            TC: debitState.payamentType,
-                            temp_id: temp_id,
-                            Bank: modalState.BankCode,
-                            BankName: modalState.BankName,
-                            Check_Remarks: modalState.Check_Remarks,
-                            Branch: modalState.Branch,
-                          };
-                          d = [...d, data];
-                          d.sort((a: any, b: any) => {
-                            const idA = parseInt(a.temp_id, 10);
-                            const idB = parseInt(b.temp_id, 10);
-                            if (idA < idB) {
-                              return -1;
-                            }
-                            if (idA > idB) {
-                              return 1;
-                            }
-                            return 0;
-                          });
-
-                          return d;
-                        });
-                      });
-                  }
-                  if (modalState.CheckMode === "edit") {
-                    flushSync(() => {
+                <Button
+                  ref={checkModalSaveButton}
+                  action={checkModalSaveActionButtonRef}
+                  color="success"
+                  variant="contained"
+                  autoFocus={modalState.CheckIdx !== ""}
+                  onClick={() => {
+                    if (modalState.Check_No === "") {
                       setOpenPdcInputModal(false);
-                    });
-                    return Swal.fire({
-                      title:
-                        "Are you sure? You want to Update this " +
-                        modalState.Check_No +
-                        " Check No.",
-                      text: "You won't be able to revert this!",
-                      icon: "warning",
-                      showCancelButton: true,
-                      confirmButtonColor: "#3085d6",
-                      cancelButtonColor: "#d33",
-                      confirmButtonText: "Yes, update it!",
-                      focusConfirm: true,
-                    }).then((result) => {
-                      if (result.isConfirmed) {
-                        addPDCCheck();
-                        Swal.fire({
-                          text: "Update Successfully",
-                          icon: "success",
-                          showCancelButton: false,
-                          timer: 1500,
-                          didClose() {
-                            flushSync(() => {
-                              setOpenPdcInputModal(true);
-                            });
-                            checkModalSaveActionButtonRef.current?.focusVisible();
-                            tableDebit.current?.resetTableSelected();
-                          },
-                        });
-                      }
-                    });
-                  } else {
+                      return CustomSwalAlertWarning(
+                        "Please provide check!",
+                        (d) => {
+                          flushSync(() => {
+                            setOpenPdcInputModal(true);
+                          });
+                          checkNoRef.current?.focus();
+                        }
+                      );
+                    }
                     if (
-                      debit.filter(
-                        (item: any) => item.Check_No === modalState.Check_No
-                      ).length > 0
+                      parseFloat(modalState.Check_Amnt.replace(/,/g, "")) <= 0 ||
+                      isNaN(parseFloat(modalState.Check_Amnt.replace(/,/g, "")))
                     ) {
+                      setOpenPdcInputModal(false);
+                      return CustomSwalAlertWarning(
+                        "Please provide check amount!",
+                        (d) => {
+                          flushSync(() => {
+                            setOpenPdcInputModal(true);
+                          });
+                          checkAmountRef.current?.focus();
+                        }
+                      );
+                    }
+                    if (modalState.BankName === "") {
+                      setOpenPdcInputModal(false);
+                      return CustomSwalAlertWarning(
+                        "Please provide bank!",
+                        (d) => {
+                          flushSync(() => {
+                            setOpenPdcInputModal(true);
+                          });
+                          checkBankRef.current?.focus();
+                        }
+                      );
+                    }
+                    if (modalState.Branch === "") {
+                      setOpenPdcInputModal(false);
+                      return CustomSwalAlertWarning(
+                        "Please provide branch!",
+                        (d) => {
+                          flushSync(() => {
+                            setOpenPdcInputModal(true);
+                          });
+                          checkBranchRef.current?.focus();
+                        }
+                      );
+                    }
+                    if (modalState.BankName.length >= 200) {
+                      setOpenPdcInputModal(false);
+                      return CustomSwalAlertWarning(
+                        "Bank Name is too long!",
+                        (d) => {
+                          flushSync(() => {
+                            setOpenPdcInputModal(true);
+                          });
+                          checkBankRef.current?.focus();
+                        }
+                      );
+                    }
+                    if (modalState.Branch.length >= 200) {
+                      setOpenPdcInputModal(false);
+                      return CustomSwalAlertWarning(
+                        "Branch is too long!",
+                        (d) => {
+                          flushSync(() => {
+                            setOpenPdcInputModal(true);
+                          });
+                          checkBranchRef.current?.focus();
+                        }
+                      );
+                    }
+                    if (modalState.Check_No.length >= 200) {
+                      setOpenPdcInputModal(false);
+                      return CustomSwalAlertWarning(
+                        "Check No is too long!",
+                        (d) => {
+                          flushSync(() => {
+                            setOpenPdcInputModal(true);
+                          });
+                          checkBranchRef.current?.focus();
+                        }
+                      );
+                    }
+                    if (modalState.Check_Amnt.length >= 200) {
+                      setOpenPdcInputModal(false);
+                      return CustomSwalAlertWarning(
+                        "Check Ammount is too long!",
+                        (d) => {
+                          flushSync(() => {
+                            setOpenPdcInputModal(true);
+                          });
+                          checkBranchRef.current?.focus();
+                        }
+                      );
+                    }
+
+                    modalState.Check_Amnt = parseFloat(
+                      modalState.Check_Amnt.replace(/,/g, "")
+                    ).toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    });
+
+                    function addPDCCheck() {
+                      let temp_id = "";
+                      myAxios
+                        .post(
+                          `/task/accounting/get-drcode-drtitle-from-collection`,
+                          { code: debitState.payamentType },
+                          {
+                            headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `Bearer ${user?.accessToken}`,
+                            },
+                          }
+                        )
+                        .then((res) => {
+                          const { Acct_Code, Acct_Title } = res?.data.data[0];
+                          setDebit((d: any) => {
+                            temp_id = generateID(
+                              d.length > 0
+                                ? (d[d.length - 1] as any).temp_id
+                                : "0"
+                            );
+
+                            if (modalState.CheckMode === "edit") {
+                              d = d.filter(
+                                (itms: any) =>
+                                  itms.temp_id !== modalState.CheckIdx.toString()
+                              );
+                              temp_id = modalState.CheckIdx.toString();
+                            }
+
+                            const data = {
+                              Payment: "Check",
+                              Amount: modalState.Check_Amnt,
+                              Check_No: modalState.Check_No,
+                              Check_Date: new Date(
+                                modalState.Check_Date
+                              ).toLocaleDateString("en-US", {
+                                month: "2-digit",
+                                day: "2-digit",
+                                year: "numeric",
+                              }),
+                              Bank_Branch: `${modalState.BankName} / ${modalState.Branch}`,
+                              Acct_Code,
+                              Acct_Title,
+                              Deposit_Slip: "",
+                              Cntr: "",
+                              Remarks: modalState.Check_Remarks,
+                              TC: debitState.payamentType,
+                              temp_id: temp_id,
+                              Bank: modalState.BankCode,
+                              BankName: modalState.BankName,
+                              Check_Remarks: modalState.Check_Remarks,
+                              Branch: modalState.Branch,
+                            };
+                            d = [...d, data];
+                            d.sort((a: any, b: any) => {
+                              const idA = parseInt(a.temp_id, 10);
+                              const idB = parseInt(b.temp_id, 10);
+                              if (idA < idB) {
+                                return -1;
+                              }
+                              if (idA > idB) {
+                                return 1;
+                              }
+                              return 0;
+                            });
+
+                            return d;
+                          });
+                        });
+                    }
+                    if (modalState.CheckMode === "edit") {
                       flushSync(() => {
                         setOpenPdcInputModal(false);
                       });
                       return Swal.fire({
-                        text: `${modalState.Check_No} is already Exist!`,
+                        title:
+                          "Are you sure? You want to Update this " +
+                          modalState.Check_No +
+                          " Check No.",
+                        text: "You won't be able to revert this!",
                         icon: "warning",
-                        showCancelButton: false,
-                        timer: 1500,
-                      }).then(() => {
-                        setOpenPdcInputModal(false);
+                        showCancelButton: true,
+                        confirmButtonColor: "#3085d6",
+                        cancelButtonColor: "#d33",
+                        confirmButtonText: "Yes, update it!",
+                        focusConfirm: true,
+                      }).then((result) => {
+                        if (result.isConfirmed) {
+                          addPDCCheck();
+                          Swal.fire({
+                            text: "Update Successfully",
+                            icon: "success",
+                            showCancelButton: false,
+                            timer: 1500,
+                            didClose() {
+                              flushSync(() => {
+                                setOpenPdcInputModal(true);
+                              });
+                              checkModalSaveActionButtonRef.current?.focusVisible();
+                              tableDebit.current?.resetTableSelected();
+                            },
+                          });
+                        }
                       });
-                    }
-
-                    addPDCCheck();
-                    modalDispatch({
-                      type: "UPDATE_FIELD",
-                      field: "Check_No",
-                      value: incrementCheckNo(modalState.Check_No),
-                    });
-                    flushSync(() => {
-                      setOpenPdcInputModal(false);
-                    });
-                    Swal.fire({
-                      text: "Create New Check Successfully",
-                      icon: "success",
-                      showCancelButton: false,
-                      timer: 1500,
-                      didClose() {
+                    } else {
+                      if (
+                        debit.filter(
+                          (item: any) => item.Check_No === modalState.Check_No
+                        ).length > 0
+                      ) {
                         flushSync(() => {
                           setOpenPdcInputModal(false);
                         });
-                        checkModalSaveActionButtonRef.current?.focusVisible();
-                        tableDebit.current?.resetTableSelected();
-                      },
-                    });
-                    return;
-                  }
-                }}
-              >
-                Save
-              </Button>
-              <Button
-                color="warning"
-                variant="contained"
-                onClick={() => {
-                  setOpenPdcInputModal(false);
-                  tableDebit.current?.resetTableSelected();
-                }}
-              >
-                Cancel
-              </Button>
-              {modalState.CheckIdx !== "" && (
-                <Button
-                  color="error"
-                  variant="contained"
-                  onClick={() => {
-                    flushSync(() => {
-                      setOpenPdcInputModal(false);
-                    });
-                    DebitDeleteRow({
-                      Check_No: modalState.Check_No,
-                      temp_id: modalState.CheckIdx,
-                    });
+                        return Swal.fire({
+                          text: `${modalState.Check_No} is already Exist!`,
+                          icon: "warning",
+                          showCancelButton: false,
+                          timer: 1500,
+                        }).then(() => {
+                          setOpenPdcInputModal(false);
+                        });
+                      }
+
+                      addPDCCheck();
+                      modalDispatch({
+                        type: "UPDATE_FIELD",
+                        field: "Check_No",
+                        value: incrementCheckNo(modalState.Check_No),
+                      });
+                      flushSync(() => {
+                        setOpenPdcInputModal(false);
+                      });
+                      Swal.fire({
+                        text: "Create New Check Successfully",
+                        icon: "success",
+                        showCancelButton: false,
+                        timer: 1500,
+                        didClose() {
+                          flushSync(() => {
+                            setOpenPdcInputModal(false);
+                          });
+                          checkModalSaveActionButtonRef.current?.focusVisible();
+                          tableDebit.current?.resetTableSelected();
+                        },
+                      });
+                      return;
+                    }
                   }}
                 >
-                  Delete
+                  Save
                 </Button>
-              )}
-            </div>
-          </Box>
-        </Modal>
-      </CollectionContext.Provider>
-      {(loadingAddNew || isLoadingModalSearchCollection) && <div className="loading-component"><div className="loader"></div></div>}
-
-    </div>
+                <Button
+                  color="warning"
+                  variant="contained"
+                  onClick={() => {
+                    setOpenPdcInputModal(false);
+                    tableDebit.current?.resetTableSelected();
+                  }}
+                >
+                  Cancel
+                </Button>
+                {modalState.CheckIdx !== "" && (
+                  <Button
+                    color="error"
+                    variant="contained"
+                    onClick={() => {
+                      flushSync(() => {
+                        setOpenPdcInputModal(false);
+                      });
+                      DebitDeleteRow({
+                        Check_No: modalState.Check_No,
+                        temp_id: modalState.CheckIdx,
+                      });
+                    }}
+                  >
+                    Delete
+                  </Button>
+                )}
+              </div>
+            </Box>
+          </Modal>
+        </CollectionContext.Provider>
+        {(loadingAddNew || isLoadingModalSearchCollection) && <div className="loading-component"><div className="loader"></div></div>}
+      </div>
+    </>
   );
 }
 export function setNewStateValue(dispatch: any, obj: any) {

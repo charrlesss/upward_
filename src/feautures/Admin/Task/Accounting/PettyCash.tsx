@@ -32,6 +32,7 @@ import {
   saveCondfirmationAlert,
 } from "../../../../lib/confirmationAlert";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+import PageHelmet from "../../../../components/Helmet";
 
 const initialState = {
   sub_refNo: "",
@@ -562,352 +563,140 @@ export default function PettyCash() {
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        width: "100%",
-        height: "100%",
-        flex: 1,
-      }}
-    >
+    <>
+      <PageHelmet title="Petty Cash" />
+
       <div
         style={{
           display: "flex",
-          alignItems: "center",
-          columnGap: "5px",
-        }}
-      >
-        {isLoadingModalSearchPettyCash ? (
-          <LoadingButton loading={isLoadingModalSearchPettyCash} />
-        ) : (
-          <TextField
-            label="Search"
-            size="small"
-            name="search"
-            value={state.search}
-            onChange={handleInputChange}
-            onKeyDown={(e) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                e.preventDefault();
-                return openModalSearchPettyCash(
-                  (e.target as HTMLInputElement).value
-                );
-              }
-            }}
-            InputProps={{
-              style: { height: "27px", fontSize: "14px" },
-            }}
-            sx={{
-              width: "300px",
-              height: "27px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-          />
-        )}
-        {state.pettyCashMode === "" && (
-          <Button
-            sx={{
-              height: "30px",
-              fontSize: "11px",
-            }}
-            variant="contained"
-            startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
-            id="entry-header-save-button"
-            onClick={() => {
-              dispatch({
-                type: "UPDATE_FIELD",
-                field: "pettyCashMode",
-                value: "add",
-              });
-            }}
-          >
-            New
-          </Button>
-        )}
-        <LoadingButton
-          sx={{
-            height: "30px",
-            fontSize: "11px",
-          }}
-          id="save-entry-header"
-          color="primary"
-          variant="contained"
-          type="submit"
-          onClick={handleOnSave}
-          disabled={state.pettyCashMode === ""}
-          startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
-          loading={loadingAddUpdatePettyCash}
-        >
-          {state.pettyCashMode === "edit" ? "Update" : "Save"}
-        </LoadingButton>
-        {state.pettyCashMode !== "" && (
-          <Button
-            sx={{
-              height: "30px",
-              fontSize: "11px",
-            }}
-            variant="contained"
-            startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
-            color="error"
-            onClick={() => {
-              Swal.fire({
-                title: "Are you sure?",
-                text: "You won't be able to revert this!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, cancel it!",
-              }).then((result) => {
-                if (result.isConfirmed) {
-                  initialState.pettyCashMode = "";
-                  setNewStateValue(dispatch, initialState);
-                  refetchettyCashIdGenerator();
-                  setPettyCash([]);
-                }
-              });
-            }}
-          >
-            Cancel
-          </Button>
-        )}
-      </div>
-      <fieldset
-        style={{
-          border: "1px solid #cbd5e1",
-          borderRadius: "5px",
-          position: "relative",
+          flexDirection: "column",
           width: "100%",
-          height: "auto",
-          display: "flex",
-          marginTop: "10px",
-          gap: "10px",
-          padding: "15px",
-        }}
-      >
-        {loadingPettyCashIdGenerator ? (
-          <LoadingButton loading={loadingPettyCashIdGenerator} />
-        ) : (
-          <FormControl
-            sx={{
-              width: "160px",
-              ".MuiFormLabel-root": {
-                fontSize: "14px",
-                background: "white",
-                zIndex: 99,
-                padding: "0 3px",
-              },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-            variant="outlined"
-            size="small"
-            disabled={isDisableField}
-          >
-            <InputLabel htmlFor="return-check-id-field">Ref. No.</InputLabel>
-            <OutlinedInput
-
-              sx={{
-                height: "27px",
-                fontSize: "14px",
-              }}
-              disabled={isDisableField}
-              label="Ref. No."
-              name="refNo"
-              value={state.refNo}
-              onChange={handleInputChange}
-              onKeyDown={(e) => {
-                if (e.code === "Enter" || e.code === "NumpadEnter") {
-                  e.preventDefault();
-                  // return handleOnSave();
-                  dateRef.current?.focus()
-                }
-              }}
-              readOnly={user?.department !== "UCSMI"}
-              id="return-check-id-field"
-              endAdornment={
-                <InputAdornment position="end">
-                  <IconButton
-                    ref={reloadIDButtonRef}
-                    disabled={isDisableField}
-                    aria-label="search-client"
-                    color="secondary"
-                    edge="end"
-                    onClick={() => {
-                      refetchettyCashIdGenerator();
-                    }}
-                  >
-                    <RestartAltIcon />
-                  </IconButton>
-                </InputAdornment>
-              }
-            />
-          </FormControl>
-        )}
-        <CustomDatePicker
-          fullWidth={false}
-          disabled={isDisableField}
-          label="Date"
-          onChange={(value: any) => {
-            dispatch({
-              type: "UPDATE_FIELD",
-              field: "datePetty",
-              value: value,
-            });
-          }}
-          value={new Date(state.datePetty)}
-          onKeyDown={(e: any) => {
-            if (e.code === "Enter" || e.code === "NumpadEnter") {
-              // const timeout = setTimeout(() => {
-              //   datePickerRef.current?.querySelector("button")?.click();
-              //   clearTimeout(timeout);
-              // }, 150);
-              payeeInputRef.current?.focus()
-            }
-          }}
-          inputRef={dateRef}
-          textField={{
-            InputLabelProps: {
-              style: {
-                fontSize: "14px",
-              },
-            },
-            InputProps: {
-              style: { height: "27px", fontSize: "14px" },
-            },
-          }}
-          datePickerRef={datePickerRef}
-        />
-        <TextField
-          disabled={isDisableField}
-          label="Payee"
-          size="small"
-          name="payee"
-          value={state.payee}
-          onChange={handleInputChange}
-          onKeyDown={(e) => {
-            if (e.code === "Enter" || e.code === "NumpadEnter") {
-              e.preventDefault();
-              explanationInputRef.current?.focus()
-            }
-          }}
-          InputProps={{
-            style: { height: "27px", fontSize: "14px", width: "280px" },
-          }}
-          sx={{
-            ".MuiFormLabel-root": { fontSize: "14px" },
-            ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-          }}
-          inputRef={payeeInputRef}
-        />
-        <TextField
-          disabled={isDisableField}
-          label="Explanation"
-          size="small"
-          name="explanation"
-          value={state.explanation}
-          onChange={handleInputChange}
-          onKeyDown={(e) => {
-            if (e.code === "Enter" || e.code === "NumpadEnter") {
-              e.preventDefault();
-              // return handleOnSave();
-              accountRef.current?.focus()
-            }
-          }}
-          InputProps={{
-            style: { height: "27px", fontSize: "14px" },
-          }}
-          sx={{
-            flex: 1,
-            ".MuiFormLabel-root": { fontSize: "14px" },
-            ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-          }}
-          inputRef={explanationInputRef}
-        />
-      </fieldset>
-      <fieldset
-        style={{
-          border: "1px solid #cbd5e1",
-          borderRadius: "5px",
-          position: "relative",
-          width: "100%",
-          height: "auto",
-          marginTop: "10px",
-          padding: "15px",
+          height: "100%",
+          flex: 1,
         }}
       >
         <div
           style={{
             display: "flex",
-            gap: "10px",
+            alignItems: "center",
+            columnGap: "5px",
           }}
         >
-
-
-          {isLoadingChartAccount ? (
-            <LoadingButton loading={isLoadingChartAccount} />
+          {isLoadingModalSearchPettyCash ? (
+            <LoadingButton loading={isLoadingModalSearchPettyCash} />
           ) : (
-            <FormControl
-              variant="outlined"
+            <TextField
+              label="Search"
               size="small"
-              disabled={isDisableField}
-              sx={{
-                width: "350px",
-                ".MuiFormLabel-root": {
-                  fontSize: "14px",
-                  background: "white",
-                  zIndex: 99,
-                  padding: "0 3px",
-                },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            >
-              <InputLabel htmlFor="chart-account-id">Account</InputLabel>
-              <OutlinedInput
-                inputRef={accountRef}
-                sx={{
-                  height: "27px",
-                  fontSize: "14px",
-                }}
-                disabled={isDisableField}
-                fullWidth
-                label="Account"
-                name="transactionTitle"
-                value={state.transactionTitle}
-                onChange={handleInputChange}
-                onKeyDown={(e) => {
-                  if (e.code === "Enter" || e.code === "NumpadEnter") {
-                    e.preventDefault();
-                    return openChartAccount(state.transactionTitle);
-                  }
-                }}
-                id="chart-account-id"
-                endAdornment={
-                  <InputAdornment position="end">
-                    <IconButton
-                      disabled={isDisableField}
-                      aria-label="search-client"
-                      color="secondary"
-                      edge="end"
-                      onClick={() => {
-                        openChartAccount(state.transactionTitle);
-                      }}
-                    >
-                      <ManageAccountsIcon />
-                    </IconButton>
-                  </InputAdornment>
+              name="search"
+              value={state.search}
+              onChange={handleInputChange}
+              onKeyDown={(e) => {
+                if (e.code === "Enter" || e.code === "NumpadEnter") {
+                  e.preventDefault();
+                  return openModalSearchPettyCash(
+                    (e.target as HTMLInputElement).value
+                  );
                 }
-              />
-            </FormControl>
+              }}
+              InputProps={{
+                style: { height: "27px", fontSize: "14px" },
+              }}
+              sx={{
+                width: "300px",
+                height: "27px",
+                ".MuiFormLabel-root": { fontSize: "14px" },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              }}
+            />
           )}
-
-          {isLoadingClientIdsModal ? (
-            <LoadingButton loading={isLoadingClientIdsModal} />
+          {state.pettyCashMode === "" && (
+            <Button
+              sx={{
+                height: "30px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+              id="entry-header-save-button"
+              onClick={() => {
+                dispatch({
+                  type: "UPDATE_FIELD",
+                  field: "pettyCashMode",
+                  value: "add",
+                });
+              }}
+            >
+              New
+            </Button>
+          )}
+          <LoadingButton
+            sx={{
+              height: "30px",
+              fontSize: "11px",
+            }}
+            id="save-entry-header"
+            color="primary"
+            variant="contained"
+            type="submit"
+            onClick={handleOnSave}
+            disabled={state.pettyCashMode === ""}
+            startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
+            loading={loadingAddUpdatePettyCash}
+          >
+            {state.pettyCashMode === "edit" ? "Update" : "Save"}
+          </LoadingButton>
+          {state.pettyCashMode !== "" && (
+            <Button
+              sx={{
+                height: "30px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
+              color="error"
+              onClick={() => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, cancel it!",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    initialState.pettyCashMode = "";
+                    setNewStateValue(dispatch, initialState);
+                    refetchettyCashIdGenerator();
+                    setPettyCash([]);
+                  }
+                });
+              }}
+            >
+              Cancel
+            </Button>
+          )}
+        </div>
+        <fieldset
+          style={{
+            border: "1px solid #cbd5e1",
+            borderRadius: "5px",
+            position: "relative",
+            width: "100%",
+            height: "auto",
+            display: "flex",
+            marginTop: "10px",
+            gap: "10px",
+            padding: "15px",
+          }}
+        >
+          {loadingPettyCashIdGenerator ? (
+            <LoadingButton loading={loadingPettyCashIdGenerator} />
           ) : (
             <FormControl
               sx={{
-                minWidth: "400px",
+                width: "160px",
                 ".MuiFormLabel-root": {
                   fontSize: "14px",
                   background: "white",
@@ -920,250 +709,467 @@ export default function PettyCash() {
               size="small"
               disabled={isDisableField}
             >
-              <InputLabel htmlFor="client-list">Usage</InputLabel>
+              <InputLabel htmlFor="return-check-id-field">Ref. No.</InputLabel>
               <OutlinedInput
+
                 sx={{
                   height: "27px",
                   fontSize: "14px",
                 }}
-                inputRef={usageRef}
                 disabled={isDisableField}
-                label="Usage"
-                name="clientName"
-                value={state.clientName}
+                label="Ref. No."
+                name="refNo"
+                value={state.refNo}
                 onChange={handleInputChange}
                 onKeyDown={(e) => {
                   if (e.code === "Enter" || e.code === "NumpadEnter") {
                     e.preventDefault();
-                    return openCliendIDsModal(state.clientName);
+                    // return handleOnSave();
+                    dateRef.current?.focus()
                   }
                 }}
-                id="client-list"
+                readOnly={user?.department !== "UCSMI"}
+                id="return-check-id-field"
                 endAdornment={
                   <InputAdornment position="end">
                     <IconButton
                       ref={reloadIDButtonRef}
                       disabled={isDisableField}
+                      aria-label="search-client"
                       color="secondary"
                       edge="end"
                       onClick={() => {
-                        openCliendIDsModal(state.clientName);
+                        refetchettyCashIdGenerator();
                       }}
                     >
-                      <PersonSearchIcon />
+                      <RestartAltIcon />
                     </IconButton>
                   </InputAdornment>
                 }
               />
             </FormControl>
           )}
-          <Select
-            labelId="label-selection-reason"
-            value={state.option}
-            name="option"
-            onChange={handleInputChange}
+          <CustomDatePicker
+            fullWidth={false}
             disabled={isDisableField}
-            autoWidth
-            sx={{
-              height: "27px",
-              fontSize: "14px",
-              width: "200px",
-            }}
-            inputRef={vatRef}
-          >
-            <MenuItem onKeyDown={(e) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                e.preventDefault();
-                wait(200).then(() => {
-                  amountRef.current?.focus()
-                })
-              }
-            }} value="vat">VAT</MenuItem>
-            <MenuItem onKeyDown={(e) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                e.preventDefault();
-                wait(200).then(() => {
-                  amountRef.current?.focus()
-                })
-              }
-            }} value={"non-vat"}>NON-VAT</MenuItem>
-          </Select>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            gap: "10px",
-            marginTop: "10px",
-          }}
-        >
-          <TextField
-            sx={{
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-            disabled={isDisableField}
-            name="amount"
-            label="Amount"
-            size="small"
-            value={state.amount}
-            onChange={handleInputChange}
-            placeholder="0.00"
-            InputProps={{
-              inputComponent: NumericFormatCustom as any,
-              inputRef: amountRef,
-              style: { height: "27px", fontSize: "14px", width: "200px" },
-            }}
-            onBlur={() => {
+            label="Date"
+            onChange={(value: any) => {
               dispatch({
                 type: "UPDATE_FIELD",
-                field: "amount",
-                value: parseFloat(state.amount.replace(/,/g, "")).toFixed(2),
+                field: "datePetty",
+                value: value,
               });
             }}
+            value={new Date(state.datePetty)}
+            onKeyDown={(e: any) => {
+              if (e.code === "Enter" || e.code === "NumpadEnter") {
+                // const timeout = setTimeout(() => {
+                //   datePickerRef.current?.querySelector("button")?.click();
+                //   clearTimeout(timeout);
+                // }, 150);
+                payeeInputRef.current?.focus()
+              }
+            }}
+            inputRef={dateRef}
+            textField={{
+              InputLabelProps: {
+                style: {
+                  fontSize: "14px",
+                },
+              },
+              InputProps: {
+                style: { height: "27px", fontSize: "14px" },
+              },
+            }}
+            datePickerRef={datePickerRef}
+          />
+          <TextField
+            disabled={isDisableField}
+            label="Payee"
+            size="small"
+            name="payee"
+            value={state.payee}
+            onChange={handleInputChange}
             onKeyDown={(e) => {
               if (e.code === "Enter" || e.code === "NumpadEnter") {
                 e.preventDefault();
-                invoiceRef.current?.focus()
+                explanationInputRef.current?.focus()
               }
             }}
-          />
-          <TextField
+            InputProps={{
+              style: { height: "27px", fontSize: "14px", width: "280px" },
+            }}
             sx={{
               ".MuiFormLabel-root": { fontSize: "14px" },
               ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
             }}
-            InputProps={{
-              inputRef: invoiceRef,
-              style: { height: "27px", fontSize: "14px", width: "300px" },
-            }}
+            inputRef={payeeInputRef}
+          />
+          <TextField
             disabled={isDisableField}
-            label="Invoice"
+            label="Explanation"
             size="small"
-            name="invoice"
-            value={state.invoice}
+            name="explanation"
+            value={state.explanation}
             onChange={handleInputChange}
-            onKeyDown={(e: any) => {
+            onKeyDown={(e) => {
               if (e.code === "Enter" || e.code === "NumpadEnter") {
                 e.preventDefault();
-                return handleAddTransaction();
+                // return handleOnSave();
+                accountRef.current?.focus()
               }
             }}
-            inputRef={invoiceInputRef}
-          />
-          <Button
-            disabled={isDisableField}
-            color="success"
-            variant="contained"
-            style={{ gridArea: "button", height: "27px", fontSize: "14px" }}
-            startIcon={<AddIcon />}
-            onClick={() => {
-              handleAddTransaction();
+            InputProps={{
+              style: { height: "27px", fontSize: "14px" },
             }}
-          >
-            {editTransaction.edit ? "Update Transaction" : "add Transaction"}
-          </Button>
-        </div>
-      </fieldset>
-      <div
-        ref={refParent}
-        style={{
-          marginTop: "10px",
-          width: "100%",
-          position: "relative",
-          flex: 1,
-        }}
-      >
-        <Box
+            sx={{
+              flex: 1,
+              ".MuiFormLabel-root": { fontSize: "14px" },
+              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+            }}
+            inputRef={explanationInputRef}
+          />
+        </fieldset>
+        <fieldset
           style={{
-            height: `${refParent.current?.getBoundingClientRect().height}px`,
+            border: "1px solid #cbd5e1",
+            borderRadius: "5px",
+            position: "relative",
             width: "100%",
-            overflowX: "scroll",
-            position: "absolute",
+            height: "auto",
+            marginTop: "10px",
+            padding: "15px",
           }}
         >
-          <Table
-            ref={table}
-            isLoading={
-              loadingAddUpdatePettyCash || isLoadingLoadSelectedPettyCash
-            }
-            columns={selectedCollectionColumns}
-            rows={pettyCash}
-            table_id={"TempID"}
-            isSingleSelection={true}
-            isRowFreeze={false}
-            dataSelection={(selection, data, code) => {
-              const rowSelected = data.filter(
-                (item: any) => item.TempID === selection[0]
-              )[0];
-              if (rowSelected === undefined || rowSelected.length <= 0) {
-                setEditTransaction({
-                  edit: false,
-                  updateId: "",
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+            }}
+          >
+
+
+            {isLoadingChartAccount ? (
+              <LoadingButton loading={isLoadingChartAccount} />
+            ) : (
+              <FormControl
+                variant="outlined"
+                size="small"
+                disabled={isDisableField}
+                sx={{
+                  width: "350px",
+                  ".MuiFormLabel-root": {
+                    fontSize: "14px",
+                    background: "white",
+                    zIndex: 99,
+                    padding: "0 3px",
+                  },
+                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                }}
+              >
+                <InputLabel htmlFor="chart-account-id">Account</InputLabel>
+                <OutlinedInput
+                  inputRef={accountRef}
+                  sx={{
+                    height: "27px",
+                    fontSize: "14px",
+                  }}
+                  disabled={isDisableField}
+                  fullWidth
+                  label="Account"
+                  name="transactionTitle"
+                  value={state.transactionTitle}
+                  onChange={handleInputChange}
+                  onKeyDown={(e) => {
+                    if (e.code === "Enter" || e.code === "NumpadEnter") {
+                      e.preventDefault();
+                      return openChartAccount(state.transactionTitle);
+                    }
+                  }}
+                  id="chart-account-id"
+                  endAdornment={
+                    <InputAdornment position="end">
+                      <IconButton
+                        disabled={isDisableField}
+                        aria-label="search-client"
+                        color="secondary"
+                        edge="end"
+                        onClick={() => {
+                          openChartAccount(state.transactionTitle);
+                        }}
+                      >
+                        <ManageAccountsIcon />
+                      </IconButton>
+                    </InputAdornment>
+                  }
+                />
+              </FormControl>
+            )}
+
+            {isLoadingClientIdsModal ? (
+              <LoadingButton loading={isLoadingClientIdsModal} />
+            ) : (
+              <FormControl
+                sx={{
+                  minWidth: "400px",
+                  ".MuiFormLabel-root": {
+                    fontSize: "14px",
+                    background: "white",
+                    zIndex: 99,
+                    padding: "0 3px",
+                  },
+                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                }}
+                variant="outlined"
+                size="small"
+                disabled={isDisableField}
+              >
+                <InputLabel htmlFor="client-list">Usage</InputLabel>
+                <OutlinedInput
+                  sx={{
+                    height: "27px",
+                    fontSize: "14px",
+                  }}
+                  inputRef={usageRef}
+                  disabled={isDisableField}
+                  label="Usage"
+                  name="clientName"
+                  value={state.clientName}
+                  onChange={handleInputChange}
+                  onKeyDown={(e) => {
+                    if (e.code === "Enter" || e.code === "NumpadEnter") {
+                      e.preventDefault();
+                      return openCliendIDsModal(state.clientName);
+                    }
+                  }}
+                  id="client-list"
+                  endAdornment={
+                    <InputAdornment position="end">
+                      <IconButton
+                        ref={reloadIDButtonRef}
+                        disabled={isDisableField}
+                        color="secondary"
+                        edge="end"
+                        onClick={() => {
+                          openCliendIDsModal(state.clientName);
+                        }}
+                      >
+                        <PersonSearchIcon />
+                      </IconButton>
+                    </InputAdornment>
+                  }
+                />
+              </FormControl>
+            )}
+            <Select
+              labelId="label-selection-reason"
+              value={state.option}
+              name="option"
+              onChange={handleInputChange}
+              disabled={isDisableField}
+              autoWidth
+              sx={{
+                height: "27px",
+                fontSize: "14px",
+                width: "200px",
+              }}
+              inputRef={vatRef}
+            >
+              <MenuItem onKeyDown={(e) => {
+                if (e.code === "Enter" || e.code === "NumpadEnter") {
+                  e.preventDefault();
+                  wait(200).then(() => {
+                    amountRef.current?.focus()
+                  })
+                }
+              }} value="vat">VAT</MenuItem>
+              <MenuItem onKeyDown={(e) => {
+                if (e.code === "Enter" || e.code === "NumpadEnter") {
+                  e.preventDefault();
+                  wait(200).then(() => {
+                    amountRef.current?.focus()
+                  })
+                }
+              }} value={"non-vat"}>NON-VAT</MenuItem>
+            </Select>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+              marginTop: "10px",
+            }}
+          >
+            <TextField
+              sx={{
+                ".MuiFormLabel-root": { fontSize: "14px" },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              }}
+              disabled={isDisableField}
+              name="amount"
+              label="Amount"
+              size="small"
+              value={state.amount}
+              onChange={handleInputChange}
+              placeholder="0.00"
+              InputProps={{
+                inputComponent: NumericFormatCustom as any,
+                inputRef: amountRef,
+                style: { height: "27px", fontSize: "14px", width: "200px" },
+              }}
+              onBlur={() => {
+                dispatch({
+                  type: "UPDATE_FIELD",
+                  field: "amount",
+                  value: parseFloat(state.amount.replace(/,/g, "")).toFixed(2),
                 });
+              }}
+              onKeyDown={(e) => {
+                if (e.code === "Enter" || e.code === "NumpadEnter") {
+                  e.preventDefault();
+                  invoiceRef.current?.focus()
+                }
+              }}
+            />
+            <TextField
+              sx={{
+                ".MuiFormLabel-root": { fontSize: "14px" },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              }}
+              InputProps={{
+                inputRef: invoiceRef,
+                style: { height: "27px", fontSize: "14px", width: "300px" },
+              }}
+              disabled={isDisableField}
+              label="Invoice"
+              size="small"
+              name="invoice"
+              value={state.invoice}
+              onChange={handleInputChange}
+              onKeyDown={(e: any) => {
+                if (e.code === "Enter" || e.code === "NumpadEnter") {
+                  e.preventDefault();
+                  return handleAddTransaction();
+                }
+              }}
+              inputRef={invoiceInputRef}
+            />
+            <Button
+              disabled={isDisableField}
+              color="success"
+              variant="contained"
+              style={{ gridArea: "button", height: "27px", fontSize: "14px" }}
+              startIcon={<AddIcon />}
+              onClick={() => {
+                handleAddTransaction();
+              }}
+            >
+              {editTransaction.edit ? "Update Transaction" : "add Transaction"}
+            </Button>
+          </div>
+        </fieldset>
+        <div
+          ref={refParent}
+          style={{
+            marginTop: "10px",
+            width: "100%",
+            position: "relative",
+            flex: 1,
+          }}
+        >
+          <Box
+            style={{
+              height: `${refParent.current?.getBoundingClientRect().height}px`,
+              width: "100%",
+              overflowX: "scroll",
+              position: "absolute",
+            }}
+          >
+            <Table
+              ref={table}
+              isLoading={
+                loadingAddUpdatePettyCash || isLoadingLoadSelectedPettyCash
+              }
+              columns={selectedCollectionColumns}
+              rows={pettyCash}
+              table_id={"TempID"}
+              isSingleSelection={true}
+              isRowFreeze={false}
+              dataSelection={(selection, data, code) => {
+                const rowSelected = data.filter(
+                  (item: any) => item.TempID === selection[0]
+                )[0];
+                if (rowSelected === undefined || rowSelected.length <= 0) {
+                  setEditTransaction({
+                    edit: false,
+                    updateId: "",
+                  });
+                  setNewStateValue(dispatch, {
+                    ...state,
+                    ...{
+                      transactionPurpose: "",
+                      transactionCode: "",
+                      transactionTitle: "",
+                      transactionShort: "",
+                      clientName: "",
+                      clientID: "",
+                      amount: "",
+                      invoice: "",
+                      option: "non-vat",
+                    },
+                  });
+                  return;
+                }
+
+                if (code === "Delete" || code === "Backspace") {
+                  Swal.fire({
+                    title: "Are you sure?",
+                    text: `You won't to delete this Check No. ${rowSelected.Check_No}`,
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Yes, delete it!",
+                  }).then((result) => {
+                    if (result.isConfirmed) {
+                      return setPettyCash((dt) => {
+                        return dt.filter(
+                          (item: any) => item.TempID !== selection[0]
+                        );
+                      });
+                    }
+                    table.current?.removeSelection();
+                  });
+                  return;
+                }
                 setNewStateValue(dispatch, {
                   ...state,
                   ...{
-                    transactionPurpose: "",
-                    transactionCode: "",
-                    transactionTitle: "",
-                    transactionShort: "",
-                    clientName: "",
-                    clientID: "",
-                    amount: "",
-                    invoice: "",
-                    option: "non-vat",
+                    transactionPurpose: rowSelected.purpose,
+                    transactionCode: rowSelected.accountCode,
+                    transactionTitle: rowSelected.purpose,
+                    transactionShort: rowSelected.DRShort,
+                    clientName: rowSelected.clientName,
+                    clientID: rowSelected.clientID,
+                    amount: rowSelected.amount,
+                    invoice: rowSelected.invoice,
+                    option: rowSelected.vatType.toLowerCase(),
                   },
                 });
-                return;
-              }
-
-              if (code === "Delete" || code === "Backspace") {
-                Swal.fire({
-                  title: "Are you sure?",
-                  text: `You won't to delete this Check No. ${rowSelected.Check_No}`,
-                  icon: "warning",
-                  showCancelButton: true,
-                  confirmButtonColor: "#3085d6",
-                  cancelButtonColor: "#d33",
-                  confirmButtonText: "Yes, delete it!",
-                }).then((result) => {
-                  if (result.isConfirmed) {
-                    return setPettyCash((dt) => {
-                      return dt.filter(
-                        (item: any) => item.TempID !== selection[0]
-                      );
-                    });
-                  }
-                  table.current?.removeSelection();
+                setEditTransaction({
+                  edit: true,
+                  updateId: rowSelected.TempID,
                 });
-                return;
-              }
-              setNewStateValue(dispatch, {
-                ...state,
-                ...{
-                  transactionPurpose: rowSelected.purpose,
-                  transactionCode: rowSelected.accountCode,
-                  transactionTitle: rowSelected.purpose,
-                  transactionShort: rowSelected.DRShort,
-                  clientName: rowSelected.clientName,
-                  clientID: rowSelected.clientID,
-                  amount: rowSelected.amount,
-                  invoice: rowSelected.invoice,
-                  option: rowSelected.vatType.toLowerCase(),
-                },
-              });
-              setEditTransaction({
-                edit: true,
-                updateId: rowSelected.TempID,
-              });
-            }}
-          />
-        </Box>
+              }}
+            />
+          </Box>
+        </div>
+        {ModalClientIDs}
+        {ModalSearchPettyCash}
+        {ModalChartAccount}
       </div>
-      {ModalClientIDs}
-      {ModalSearchPettyCash}
-      {ModalChartAccount}
-    </div>
+    </>
+
   );
 }
 

@@ -29,6 +29,7 @@ import CustomDatePicker from "../../../../components/DatePicker";
 import { format } from "date-fns";
 import { flushSync } from "react-dom";
 import { UpwardTable } from "../../../../components/UpwardTable";
+import PageHelmet from "../../../../components/Helmet";
 
 const warehouseColumns = [
   { field: "PNo", headerName: "PN No.", width: 130 },
@@ -310,170 +311,46 @@ export default function WarehouseChecks() {
   const height = window.innerHeight - 55;
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        width: "100%",
-        height: "100%",
-        flex: 1,
-      }}
-    >
+    <>
+      <PageHelmet title="Treasury" />
       <div
-        style={
-          {
-            height: "80px",
-            display: "flex",
-            columnGap: "50px",
-            padding: "10px 40px",
-          } as any
-        }
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          width: "100%",
+          height: "100%",
+          flex: 1,
+        }}
       >
         <div
           style={
             {
+              height: "80px",
               display: "flex",
-              flex: 1,
-              flexDirection: "column",
-              gap: "10px  ",
+              columnGap: "50px",
+              padding: "10px 40px",
             } as any
           }
         >
-          <div style={{ display: "flex", columnGap: "10px" }}>
-            <FormControl
-              disabled={
-                state.warehouseMode !== "add" ||
-                state.pdcStatusDisableOnSearch ||
-                state.pdcStatusDisable
-              }
-              size="small"
-              variant="outlined"
-              sx={{
+          <div
+            style={
+              {
+                display: "flex",
                 flex: 1,
-                ".MuiFormLabel-root": {
-                  fontSize: "14px",
-                  background: "white",
-                  zIndex: 99,
-                  padding: "0 3px",
-                },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            >
-              <InputLabel id="label-selection-reason">PDC Status</InputLabel>
-              <Select
-                labelId="label-selection-reason"
-                value={state.pdcStatus}
-                name="pdcStatus"
-                onChange={(e) => {
-                  handleInputChange(e);
-                  if (e.target.value === "2") {
-                    return dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "remarks",
-                      value: "Fully Paid",
-                    });
-                  } else {
-                    return dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "remarks",
-                      value: "",
-                    });
-                  }
-                }}
-                autoWidth
-                sx={{
-                  height: "27px",
-                  fontSize: "14px",
-                }}
-              >
-                <MenuItem value=""></MenuItem>
-                <MenuItem value="0">Stored in Warehouse</MenuItem>
-                <MenuItem value="1">Endorse for Deposit</MenuItem>
-                <MenuItem value="2">Pull Out</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl
-              size="small"
-              variant="outlined"
-              disabled={
-                state.pdcStatus !== "2" || state.warehouseMode !== "add"
-              }
-              sx={{
-                flex: 1,
-                ".MuiFormLabel-root": {
-                  fontSize: "14px",
-                  background: "white",
-                  zIndex: 99,
-                  padding: "0 3px",
-                },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            >
-              <InputLabel id="remarks">Remarks</InputLabel>
-              <Select
-                labelId="remarks"
-                value={state.remarks}
-                name="remarks"
-                onChange={handleInputChange}
-                autoWidth
-                sx={{
-                  height: "27px",
-                  fontSize: "14px",
-                }}
-              >
-                <MenuItem value=""></MenuItem>
-                <MenuItem value="Fully Paid">Fully Paid</MenuItem>
-                <MenuItem value="Cash Replacement">Cash Replacement</MenuItem>
-                <MenuItem value={"Check Replacement"}>
-                  Check Replacement{" "}
-                </MenuItem>
-                <MenuItem value={"Account Closed"}>Account Closed </MenuItem>
-                <MenuItem value={"Hold"}>Hold </MenuItem>
-                <MenuItem value={"Not Renewed by"}>Not Renewed by </MenuItem>
-              </Select>
-            </FormControl>
-          </div>
-          <div style={{ display: "flex", columnGap: "10px" }}>
-            <FormControl
-              size="small"
-              variant="outlined"
-              disabled={state.warehouseMode !== "add"}
-              sx={{
-                flex: 1,
-                ".MuiFormLabel-root": {
-                  fontSize: "14px",
-                  background: "white",
-                  zIndex: 99,
-                  padding: "0 3px",
-                },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            >
-              <InputLabel id="search-type">Search Type</InputLabel>
-              <Select
-                labelId="search-type"
-                value={state.searchType}
-                name="searchType"
-                onChange={handleInputChange}
-                autoWidth
-                sx={{
-                  height: "27px",
-                  fontSize: "14px",
-                }}
-              >
-                <MenuItem value=""></MenuItem>
-                <MenuItem value={"0"}>Policy </MenuItem>
-                <MenuItem value={"1"}>ID No.</MenuItem>
-                <MenuItem value="2">Account Name</MenuItem>
-                <MenuItem value="3">Bank</MenuItem>
-              </Select>
-            </FormControl>
-            {isLoadingCheckSearch ? (
-              <LoadingButton loading={isLoadingCheckSearch} />
-            ) : (
+                flexDirection: "column",
+                gap: "10px  ",
+              } as any
+            }
+          >
+            <div style={{ display: "flex", columnGap: "10px" }}>
               <FormControl
-                variant="outlined"
+                disabled={
+                  state.warehouseMode !== "add" ||
+                  state.pdcStatusDisableOnSearch ||
+                  state.pdcStatusDisable
+                }
                 size="small"
+                variant="outlined"
                 sx={{
                   flex: 1,
                   ".MuiFormLabel-root": {
@@ -484,443 +361,571 @@ export default function WarehouseChecks() {
                   },
                   ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
                 }}
-                disabled={state.warehouseMode !== "add"}
               >
-                <InputLabel htmlFor="Search">Search</InputLabel>
-                <OutlinedInput
+                <InputLabel id="label-selection-reason">PDC Status</InputLabel>
+                <Select
+                  labelId="label-selection-reason"
+                  value={state.pdcStatus}
+                  name="pdcStatus"
+                  onChange={(e) => {
+                    handleInputChange(e);
+                    if (e.target.value === "2") {
+                      return dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "remarks",
+                        value: "Fully Paid",
+                      });
+                    } else {
+                      return dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "remarks",
+                        value: "",
+                      });
+                    }
+                  }}
+                  autoWidth
                   sx={{
                     height: "27px",
                     fontSize: "14px",
                   }}
-                  inputRef={inputRef}
-                  className="search-input-up-on-key-down"
-                  fullWidth
-                  label="Search"
-                  name="search"
-                  value={state.search}
-                  onChange={handleInputChange}
-                  onKeyDown={(e) => {
-                    if (e.code === "Enter" || e.code === "NumpadEnter") {
-                      e.preventDefault();
-                      if (state.pdcStatus === "") {
-                        return Swal.fire({
-                          position: "center",
-                          icon: "warning",
-                          title: "Please provide status!",
-                          showConfirmButton: false,
-                          timer: 1500,
-                        });
-                      }
-                      if (state.searchType === "") {
-                        return Swal.fire({
-                          position: "center",
-                          icon: "warning",
-                          title: "Please select search type!",
-                          showConfirmButton: false,
-                          timer: 1500,
-                        });
-                      }
-                      if (state.search === "") {
-                        return Swal.fire({
-                          position: "center",
-                          icon: "warning",
-                          title: "Type field you want to search!",
-                          showConfirmButton: false,
-                          timer: 1500,
-                        });
-                      }
-                      mutaterCheckSearch(state);
-                    }
-                    if (e.key === "ArrowDown") {
-                      e.preventDefault();
-                      const datagridview = document.querySelector(
-                        ".grid-container"
-                      ) as HTMLDivElement;
-                      datagridview.focus();
-                    }
-                  }}
-                  id="policy-client-ref-id"
-                  endAdornment={
-                    <InputAdornment position="end">
-                      <IconButton
-                        disabled={state.warehouseMode !== "add"}
-                        aria-label="search-client"
-                        color="secondary"
-                        edge="end"
-                        onClick={() => {
-                          if (state.pdcStatus === "") {
-                            return Swal.fire({
-                              position: "center",
-                              icon: "warning",
-                              title: "Please provide status!",
-                              showConfirmButton: false,
-                              timer: 1500,
-                            });
-                          }
-
-                          if (state.searchType === "") {
-                            return Swal.fire({
-                              position: "center",
-                              icon: "warning",
-                              title: "Please select search type!",
-                              showConfirmButton: false,
-                              timer: 1500,
-                            });
-                          }
-
-                          if (state.search === "") {
-                            return Swal.fire({
-                              position: "center",
-                              icon: "warning",
-                              title: "Type field you want to search!",
-                              showConfirmButton: false,
-                              timer: 1500,
-                            });
-                          }
-
-                          mutaterCheckSearch(state);
-                        }}
-                      >
-                        <SearchIcon />
-                      </IconButton>
-                    </InputAdornment>
-                  }
-                />
+                >
+                  <MenuItem value=""></MenuItem>
+                  <MenuItem value="0">Stored in Warehouse</MenuItem>
+                  <MenuItem value="1">Endorse for Deposit</MenuItem>
+                  <MenuItem value="2">Pull Out</MenuItem>
+                </Select>
               </FormControl>
-            )}
+              <FormControl
+                size="small"
+                variant="outlined"
+                disabled={
+                  state.pdcStatus !== "2" || state.warehouseMode !== "add"
+                }
+                sx={{
+                  flex: 1,
+                  ".MuiFormLabel-root": {
+                    fontSize: "14px",
+                    background: "white",
+                    zIndex: 99,
+                    padding: "0 3px",
+                  },
+                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                }}
+              >
+                <InputLabel id="remarks">Remarks</InputLabel>
+                <Select
+                  labelId="remarks"
+                  value={state.remarks}
+                  name="remarks"
+                  onChange={handleInputChange}
+                  autoWidth
+                  sx={{
+                    height: "27px",
+                    fontSize: "14px",
+                  }}
+                >
+                  <MenuItem value=""></MenuItem>
+                  <MenuItem value="Fully Paid">Fully Paid</MenuItem>
+                  <MenuItem value="Cash Replacement">Cash Replacement</MenuItem>
+                  <MenuItem value={"Check Replacement"}>
+                    Check Replacement{" "}
+                  </MenuItem>
+                  <MenuItem value={"Account Closed"}>Account Closed </MenuItem>
+                  <MenuItem value={"Hold"}>Hold </MenuItem>
+                  <MenuItem value={"Not Renewed by"}>Not Renewed by </MenuItem>
+                </Select>
+              </FormControl>
+            </div>
+            <div style={{ display: "flex", columnGap: "10px" }}>
+              <FormControl
+                size="small"
+                variant="outlined"
+                disabled={state.warehouseMode !== "add"}
+                sx={{
+                  flex: 1,
+                  ".MuiFormLabel-root": {
+                    fontSize: "14px",
+                    background: "white",
+                    zIndex: 99,
+                    padding: "0 3px",
+                  },
+                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                }}
+              >
+                <InputLabel id="search-type">Search Type</InputLabel>
+                <Select
+                  labelId="search-type"
+                  value={state.searchType}
+                  name="searchType"
+                  onChange={handleInputChange}
+                  autoWidth
+                  sx={{
+                    height: "27px",
+                    fontSize: "14px",
+                  }}
+                >
+                  <MenuItem value=""></MenuItem>
+                  <MenuItem value={"0"}>Policy </MenuItem>
+                  <MenuItem value={"1"}>ID No.</MenuItem>
+                  <MenuItem value="2">Account Name</MenuItem>
+                  <MenuItem value="3">Bank</MenuItem>
+                </Select>
+              </FormControl>
+              {isLoadingCheckSearch ? (
+                <LoadingButton loading={isLoadingCheckSearch} />
+              ) : (
+                <FormControl
+                  variant="outlined"
+                  size="small"
+                  sx={{
+                    flex: 1,
+                    ".MuiFormLabel-root": {
+                      fontSize: "14px",
+                      background: "white",
+                      zIndex: 99,
+                      padding: "0 3px",
+                    },
+                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                  }}
+                  disabled={state.warehouseMode !== "add"}
+                >
+                  <InputLabel htmlFor="Search">Search</InputLabel>
+                  <OutlinedInput
+                    sx={{
+                      height: "27px",
+                      fontSize: "14px",
+                    }}
+                    inputRef={inputRef}
+                    className="search-input-up-on-key-down"
+                    fullWidth
+                    label="Search"
+                    name="search"
+                    value={state.search}
+                    onChange={handleInputChange}
+                    onKeyDown={(e) => {
+                      if (e.code === "Enter" || e.code === "NumpadEnter") {
+                        e.preventDefault();
+                        if (state.pdcStatus === "") {
+                          return Swal.fire({
+                            position: "center",
+                            icon: "warning",
+                            title: "Please provide status!",
+                            showConfirmButton: false,
+                            timer: 1500,
+                          });
+                        }
+                        if (state.searchType === "") {
+                          return Swal.fire({
+                            position: "center",
+                            icon: "warning",
+                            title: "Please select search type!",
+                            showConfirmButton: false,
+                            timer: 1500,
+                          });
+                        }
+                        if (state.search === "") {
+                          return Swal.fire({
+                            position: "center",
+                            icon: "warning",
+                            title: "Type field you want to search!",
+                            showConfirmButton: false,
+                            timer: 1500,
+                          });
+                        }
+                        mutaterCheckSearch(state);
+                      }
+                      if (e.key === "ArrowDown") {
+                        e.preventDefault();
+                        const datagridview = document.querySelector(
+                          ".grid-container"
+                        ) as HTMLDivElement;
+                        datagridview.focus();
+                      }
+                    }}
+                    id="policy-client-ref-id"
+                    endAdornment={
+                      <InputAdornment position="end">
+                        <IconButton
+                          disabled={state.warehouseMode !== "add"}
+                          aria-label="search-client"
+                          color="secondary"
+                          edge="end"
+                          onClick={() => {
+                            if (state.pdcStatus === "") {
+                              return Swal.fire({
+                                position: "center",
+                                icon: "warning",
+                                title: "Please provide status!",
+                                showConfirmButton: false,
+                                timer: 1500,
+                              });
+                            }
+
+                            if (state.searchType === "") {
+                              return Swal.fire({
+                                position: "center",
+                                icon: "warning",
+                                title: "Please select search type!",
+                                showConfirmButton: false,
+                                timer: 1500,
+                              });
+                            }
+
+                            if (state.search === "") {
+                              return Swal.fire({
+                                position: "center",
+                                icon: "warning",
+                                title: "Type field you want to search!",
+                                showConfirmButton: false,
+                                timer: 1500,
+                              });
+                            }
+
+                            mutaterCheckSearch(state);
+                          }}
+                        >
+                          <SearchIcon />
+                        </IconButton>
+                      </InputAdornment>
+                    }
+                  />
+                </FormControl>
+              )}
+            </div>
           </div>
-        </div>
-        <div style={{ display: "flex", flex: 1 } as any}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-end",
-              columnGap: "10px",
-              paddingBottom: "5px",
-            }}
-          >
-            {state.warehouseMode === "" && (
+          <div style={{ display: "flex", flex: 1 } as any}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-end",
+                columnGap: "10px",
+                paddingBottom: "5px",
+              }}
+            >
+              {state.warehouseMode === "" && (
+                <Button
+                  sx={{
+                    height: "30px",
+                    fontSize: "11px",
+                  }}
+                  variant="contained"
+                  startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+                  id="entry-header-save-button"
+                  onClick={() => {
+                    handleInputChange({
+                      target: { value: "add", name: "warehouseMode" },
+                    });
+                  }}
+                  color="primary"
+                >
+                  New
+                </Button>
+              )}
+              <LoadingButton
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                }}
+                disabled={state.warehouseMode === ""}
+                onClick={handleOnSave}
+                color="success"
+                variant="contained"
+              >
+                Save
+              </LoadingButton>
+              {state.warehouseMode !== "" && (
+                <LoadingButton
+                  sx={{
+                    height: "30px",
+                    fontSize: "11px",
+                  }}
+                  variant="contained"
+                  startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
+                  color="error"
+                  onClick={() => {
+                    Swal.fire({
+                      title: "Are you sure?",
+                      text: "You won't be able to revert this!",
+                      icon: "warning",
+                      showCancelButton: true,
+                      confirmButtonColor: "#3085d6",
+                      cancelButtonColor: "#d33",
+                      confirmButtonText: "Yes, cancel it!",
+                    }).then((result) => {
+                      if (result.isConfirmed) {
+                        setNewStateValue(dispatch, initialState);
+                        table.current?.resetTableSelected();
+                        setWarehouseRows([]);
+                      }
+                    });
+                  }}
+                >
+                  Cancel
+                </LoadingButton>
+              )}
+              <LoadingButton
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                }}
+                disabled={
+                  state.warehouseMode === "" || state.warehouseMode === "add"
+                }
+                // onClick={handleOnSave}
+                color="success"
+                variant="contained"
+              >
+                Delete
+              </LoadingButton>
               <Button
                 sx={{
                   height: "30px",
                   fontSize: "11px",
                 }}
                 variant="contained"
-                startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
-                id="entry-header-save-button"
-                onClick={() => {
-                  handleInputChange({
-                    target: { value: "add", name: "warehouseMode" },
-                  });
-                }}
-                color="primary"
+                color="info"
+                onClick={() => setShowReportModal((d) => !d)}
               >
-                New
+                REPORT
               </Button>
-            )}
-            <LoadingButton
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-              }}
-              disabled={state.warehouseMode === ""}
-              onClick={handleOnSave}
-              color="success"
-              variant="contained"
-            >
-              Save
-            </LoadingButton>
-            {state.warehouseMode !== "" && (
               <LoadingButton
                 sx={{
                   height: "30px",
                   fontSize: "11px",
+                  background: brown[500],
+                  ":hover": {
+                    background: brown[600],
+                  },
                 }}
                 variant="contained"
-                startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
-                color="error"
                 onClick={() => {
-                  Swal.fire({
-                    title: "Are you sure?",
-                    text: "You won't be able to revert this!",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#3085d6",
-                    cancelButtonColor: "#d33",
-                    confirmButtonText: "Yes, cancel it!",
-                  }).then((result) => {
-                    if (result.isConfirmed) {
-                      setNewStateValue(dispatch, initialState);
-                      table.current?.resetTableSelected();
-                      setWarehouseRows([]);
-                    }
-                  });
+                  setShowModalPullout(true);
+                  mutatePulloutApprovedList({ RCPN: "" });
+                  mutateLoadRCPN({});
+                  setTimeout(() => {
+                    pulloutSearchInputRef.current?.focus();
+                  }, 250);
                 }}
+                disabled={state.warehouseMode === ""}
               >
-                Cancel
+                Check for pull-out
               </LoadingButton>
-            )}
-            <LoadingButton
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-              }}
-              disabled={
-                state.warehouseMode === "" || state.warehouseMode === "add"
-              }
-              // onClick={handleOnSave}
-              color="success"
-              variant="contained"
-            >
-              Delete
-            </LoadingButton>
-            <Button
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-              }}
-              variant="contained"
-              color="info"
-              onClick={() => setShowReportModal((d) => !d)}
-            >
-              REPORT
-            </Button>
-            <LoadingButton
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-                background: brown[500],
-                ":hover": {
-                  background: brown[600],
-                },
-              }}
-              variant="contained"
-              onClick={() => {
-                setShowModalPullout(true);
-                mutatePulloutApprovedList({ RCPN: "" });
-                mutateLoadRCPN({});
-                setTimeout(() => {
-                  pulloutSearchInputRef.current?.focus();
-                }, 250);
-              }}
-              disabled={state.warehouseMode === ""}
-            >
-              Check for pull-out
-            </LoadingButton>
+            </div>
           </div>
         </div>
-      </div>
-      <div
-        ref={refParent}
-        style={{
-          marginTop: "10px",
-          width: "100%",
-          position: "relative",
-          flex: 1,
-        }}
-      >
-        <UpwardTable
-          ref={table}
-          isLoading={loadingPulloutApprovedList || isLoadingSelectecCheckInPullout || saveLoading
-          }
-          rows={warehouseRows}
-          column={warehouseColumns}
-          width={width}
-          height={height}
-          dataReadOnly={true}
-          onSelectionChange={() => { }}
-          isMultipleSelect={!state.pdcStatusDisable}
-          isRowSelectable={!state.pdcStatusDisable}
-        />
-      </div>
-      <Modal
-        open={showModalPullout}
-        onClose={() => {
-          setShowModalPullout(false);
-        }}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
-        <Box
-          sx={{
-            position: "absolute" as "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            bgcolor: "background.paper",
-            p: 4,
+        <div
+          ref={refParent}
+          style={{
+            marginTop: "10px",
+            width: "100%",
+            position: "relative",
+            flex: 1,
           }}
         >
-          <Typography id="modal-modal-title" variant="h6" component="h2">
-            Pull Out Viewer
-          </Typography>
-          <br />
-          <div
-            style={{
-              display: "flex",
-              columnGap: "10px",
-              width: "800px",
-              height: "500px",
-              flexDirection: "column",
+          <UpwardTable
+            ref={table}
+            isLoading={loadingPulloutApprovedList || isLoadingSelectecCheckInPullout || saveLoading
+            }
+            rows={warehouseRows}
+            column={warehouseColumns}
+            width={width}
+            height={height}
+            dataReadOnly={true}
+            onSelectionChange={() => { }}
+            isMultipleSelect={!state.pdcStatusDisable}
+            isRowSelectable={!state.pdcStatusDisable}
+          />
+        </div>
+        <Modal
+          open={showModalPullout}
+          onClose={() => {
+            setShowModalPullout(false);
+          }}
+          aria-labelledby="modal-modal-title"
+          aria-describedby="modal-modal-description"
+        >
+          <Box
+            sx={{
+              position: "absolute" as "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              bgcolor: "background.paper",
+              p: 4,
             }}
           >
-            {isLoadingApprovedPulloutWarehouse ? (
-              <LoadingButton loading={isLoadingApprovedPulloutWarehouse} />
-            ) : (
-              <Autocomplete
-                loading={loadingPulloutRequestId}
-                freeSolo
-                options={pulloutRCPN.map((itm: any) => itm.RCPNo)}
-                value={state.modalRCPNoSearch}
-                onChange={(e, v: any) => {
-                  if (v) {
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "modalRCPNoSearch",
-                      value: v,
-                    });
-
-                    mutatePulloutApprovedList({ RCPN: v });
-                  }
-                }}
-                onInput={(e: any) => {
-                  dispatch({
-                    type: "UPDATE_FIELD",
-                    field: "modalRCPNoSearch",
-                    value: e.target.value,
-                  });
-                }}
-                onBlur={(e) => {
-                  const options = pulloutRCPN;
-                  const find = options.find(
-                    (itm) => itm.RCPNo === state.modalRCPNoSearch
-                  );
-                  if (find !== undefined) {
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "modalRCPNoSearch",
-                      value: find.RCPNo,
-                    });
-                    mutatePulloutApprovedList({ RCPN: find.RCPNo });
-                  }
-                }}
-                onKeyDown={(e) => {
-                  if (e.code === "NumpadEnter" || e.code === "Enter") {
-                    e.preventDefault();
-                    mutatePulloutApprovedList({ RCPN: state.modalRCPNoSearch });
-                  }
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    inputRef={pulloutSearchInputRef}
-                    InputProps={{
-                      ...params.InputProps,
-                      style: { height: "27px", fontSize: "14px" },
-                    }}
-                    label="PN No."
-                  />
-                )}
-                sx={{
-                  width: "100%",
-                  ".MuiFormLabel-root": {
-                    fontSize: "14px",
-                  },
-                  ".MuiInputBase-input": {
-                    width: "100% !important",
-                  },
-                  ".MuiFormLabel-root[data-shrink=false]": {
-                    top: "-5px",
-                  },
-                  ".MuiAutocomplete-input ": {
-                    position: "absolute",
-                  },
-                }}
-                size="small"
-              />
-            )}
+            <Typography id="modal-modal-title" variant="h6" component="h2">
+              Pull Out Viewer
+            </Typography>
+            <br />
             <div
               style={{
-                marginTop: "10px",
-                width: "100%",
-                position: "relative",
+                display: "flex",
+                columnGap: "10px",
+                width: "800px",
+                height: "500px",
+                flexDirection: "column",
               }}
             >
-              <UpwardTable
-                ref={tablePullout}
-                rows={pullout}
-                column={[
-                  { field: "RCPNo", headerName: "RCP No.", width: 150 },
-                  { field: "PNNo", headerName: "PN No.", width: 150 },
-                  {
-                    field: "Name",
-                    headerName: "Name",
-                    flex: 1,
-                    width: 300,
-                  },
-                  {
-                    field: "NoOfChecks",
-                    headerName: "No. of Checks",
-                    width: 100,
-                  },
-                  {
-                    field: "Reason",
-                    headerName: "Reason",
-                    flex: 1,
-                    width: 300,
-                  },
-                ]}
-                width={800}
-                height={550}
-                dataReadOnly={true}
-                onSelectionChange={(selectedRow: any) => {
-                  if (selectedRow.length > 0) {
+              {isLoadingApprovedPulloutWarehouse ? (
+                <LoadingButton loading={isLoadingApprovedPulloutWarehouse} />
+              ) : (
+                <Autocomplete
+                  loading={loadingPulloutRequestId}
+                  freeSolo
+                  options={pulloutRCPN.map((itm: any) => itm.RCPNo)}
+                  value={state.modalRCPNoSearch}
+                  onChange={(e, v: any) => {
+                    if (v) {
+                      dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "modalRCPNoSearch",
+                        value: v,
+                      });
+
+                      mutatePulloutApprovedList({ RCPN: v });
+                    }
+                  }}
+                  onInput={(e: any) => {
                     dispatch({
                       type: "UPDATE_FIELD",
-                      field: "pdcStatus",
-                      value: "2",
+                      field: "modalRCPNoSearch",
+                      value: e.target.value,
                     });
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "pdcStatusDisable",
-                      value: true,
-                    });
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "remarks",
-                      value: selectedRow[0].Reason,
-                    });
-                    mutateSelectecCheckInPullout({
-                      RCPNo: selectedRow[0].RCPNo,
-                    });
-                    setShowModalPullout(false);
-                  }
+                  }}
+                  onBlur={(e) => {
+                    const options = pulloutRCPN;
+                    const find = options.find(
+                      (itm) => itm.RCPNo === state.modalRCPNoSearch
+                    );
+                    if (find !== undefined) {
+                      dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "modalRCPNoSearch",
+                        value: find.RCPNo,
+                      });
+                      mutatePulloutApprovedList({ RCPN: find.RCPNo });
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      e.preventDefault();
+                      mutatePulloutApprovedList({ RCPN: state.modalRCPNoSearch });
+                    }
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      inputRef={pulloutSearchInputRef}
+                      InputProps={{
+                        ...params.InputProps,
+                        style: { height: "27px", fontSize: "14px" },
+                      }}
+                      label="PN No."
+                    />
+                  )}
+                  sx={{
+                    width: "100%",
+                    ".MuiFormLabel-root": {
+                      fontSize: "14px",
+                    },
+                    ".MuiInputBase-input": {
+                      width: "100% !important",
+                    },
+                    ".MuiFormLabel-root[data-shrink=false]": {
+                      top: "-5px",
+                    },
+                    ".MuiAutocomplete-input ": {
+                      position: "absolute",
+                    },
+                  }}
+                  size="small"
+                />
+              )}
+              <div
+                style={{
+                  marginTop: "10px",
+                  width: "100%",
+                  position: "relative",
                 }}
-              />
+              >
+                <UpwardTable
+                  ref={tablePullout}
+                  rows={pullout}
+                  column={[
+                    { field: "RCPNo", headerName: "RCP No.", width: 150 },
+                    { field: "PNNo", headerName: "PN No.", width: 150 },
+                    {
+                      field: "Name",
+                      headerName: "Name",
+                      flex: 1,
+                      width: 300,
+                    },
+                    {
+                      field: "NoOfChecks",
+                      headerName: "No. of Checks",
+                      width: 100,
+                    },
+                    {
+                      field: "Reason",
+                      headerName: "Reason",
+                      flex: 1,
+                      width: 300,
+                    },
+                  ]}
+                  width={800}
+                  height={550}
+                  dataReadOnly={true}
+                  onSelectionChange={(selectedRow: any) => {
+                    if (selectedRow.length > 0) {
+                      dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "pdcStatus",
+                        value: "2",
+                      });
+                      dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "pdcStatusDisable",
+                        value: true,
+                      });
+                      dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "remarks",
+                        value: selectedRow[0].Reason,
+                      });
+                      mutateSelectecCheckInPullout({
+                        RCPNo: selectedRow[0].RCPNo,
+                      });
+                      setShowModalPullout(false);
+                    }
+                  }}
+                />
+              </div>
+              <IconButton
+                style={{
+                  position: "absolute",
+                  top: "10px",
+                  right: "10px",
+                }}
+                aria-label="search-client"
+                onClick={() => {
+                  setShowModalPullout(false);
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
             </div>
-            <IconButton
-              style={{
-                position: "absolute",
-                top: "10px",
-                right: "10px",
-              }}
-              aria-label="search-client"
-              onClick={() => {
-                setShowModalPullout(false);
-              }}
-            >
-              <CloseIcon />
-            </IconButton>
-          </div>
-        </Box>
-      </Modal>
-      <ReportModal
-        showReportModal={showReportModal}
-        setShowReportModal={setShowReportModal}
-        myAxios={myAxios}
-        user={user}
-      />
-    </div>
+          </Box>
+        </Modal>
+        <ReportModal
+          showReportModal={showReportModal}
+          setShowReportModal={setShowReportModal}
+          myAxios={myAxios}
+          user={user}
+        />
+      </div>
+    </>
+
   );
 }
 

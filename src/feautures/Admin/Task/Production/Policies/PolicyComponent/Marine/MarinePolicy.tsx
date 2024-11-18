@@ -29,6 +29,7 @@ import {
   saveCondfirmationAlert,
 } from "../../../../../../../lib/confirmationAlert";
 import { addYears } from "date-fns";
+import PageHelmet from "../../../../../../../components/Helmet";
 
 const initialState = {
   form_action: "REG",
@@ -499,7 +500,7 @@ export default function MarinePolicy() {
     customInputchange(PointOfOrigin, "point_orig");
     customInputchange(PointofDestination, "point_dis");
 
-   
+
 
     customInputchange(formatNumber(parseFloat(InsuredValue)), "insuredValue");
     customInputchange(formatNumber(parseFloat(Percentage)), "percentagePremium");
@@ -529,257 +530,261 @@ export default function MarinePolicy() {
 
 
   return (
-    <MarineContext.Provider
-      value={{
-        state,
-        handleInputChange,
-        customInputchange,
-        Mortgagee,
-        setMortgagee,
-        showField,
-        setShowField,
-        myAxios,
-        user,
-        computation,
-        isAddOrEditMode,
-        dispatch,
-        keySave,
-      }}
-    >
-      <div style={{ display: "flex", columnGap: "5px" }}>
-        <div
-          style={{ display: "flex", columnGap: "8px", alignItems: "center" }}
-        >
-          <CustomButton
-            onClick={() => {
-              goTo(0);
-            }}
-            currentStepIndex={currentStepIndex}
-            index={0}
+    <>
+      <PageHelmet title="Marine Policy" />
+      <MarineContext.Provider
+        value={{
+          state,
+          handleInputChange,
+          customInputchange,
+          Mortgagee,
+          setMortgagee,
+          showField,
+          setShowField,
+          myAxios,
+          user,
+          computation,
+          isAddOrEditMode,
+          dispatch,
+          keySave,
+        }}
+      >
+        <div style={{ display: "flex", columnGap: "5px" }}>
+          <div
+            style={{ display: "flex", columnGap: "8px", alignItems: "center" }}
           >
-            Policy Information
-          </CustomButton>
-          <NavigateNextIcon fontSize="small" />
-        </div>
-        <div
-          style={{ display: "flex", columnGap: "8px", alignItems: "center" }}
-        >
-          <CustomButton
-            onClick={() => {
-              goTo(1);
-            }}
-            currentStepIndex={currentStepIndex}
-            index={1}
+            <CustomButton
+              onClick={() => {
+                goTo(0);
+              }}
+              currentStepIndex={currentStepIndex}
+              index={0}
+            >
+              Policy Information
+            </CustomButton>
+            <NavigateNextIcon fontSize="small" />
+          </div>
+          <div
+            style={{ display: "flex", columnGap: "8px", alignItems: "center" }}
           >
-            Policy Premium
-          </CustomButton>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            columnGap: "20px",
-            marginLeft: "30px",
-          }}
-        >
+            <CustomButton
+              onClick={() => {
+                goTo(1);
+              }}
+              currentStepIndex={currentStepIndex}
+              index={1}
+            >
+              Policy Premium
+            </CustomButton>
+          </div>
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              columnGap: "5px",
+              columnGap: "20px",
+              marginLeft: "30px",
             }}
           >
-            {state.marineActioMode === "" && (
-              <Button
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                }}
-                ref={newButtonRef}
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => {
-                  customInputchange("add", "marineActioMode");
-                }}
-              >
-                New
-              </Button>
-            )}
-
-            <LoadingButton
-              loading={loadingAddNew}
-              sx={{
-                height: "30px",
-                fontSize: "11px",
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                columnGap: "5px",
               }}
-              color="primary"
-              variant="contained"
-              type="submit"
-              onClick={handleOnSave}
-              disabled={state.marineActioMode === ""}
-              startIcon={<SaveIcon />}
             >
-              Save
-            </LoadingButton>
-            {state.marineActioMode !== "" && (
-              <Button
+              {state.marineActioMode === "" && (
+                <Button
+                  sx={{
+                    height: "30px",
+                    fontSize: "11px",
+                  }}
+                  ref={newButtonRef}
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => {
+                    customInputchange("add", "marineActioMode");
+                  }}
+                >
+                  New
+                </Button>
+              )}
+
+              <LoadingButton
+                loading={loadingAddNew}
                 sx={{
                   height: "30px",
                   fontSize: "11px",
                 }}
-                ref={cancelButtonRef}
+                color="primary"
                 variant="contained"
-                startIcon={<CloseIcon />}
-                color="error"
+                type="submit"
+                onClick={handleOnSave}
+                disabled={state.marineActioMode === ""}
+                startIcon={<SaveIcon />}
+              >
+                Save
+              </LoadingButton>
+              {state.marineActioMode !== "" && (
+                <Button
+                  sx={{
+                    height: "30px",
+                    fontSize: "11px",
+                  }}
+                  ref={cancelButtonRef}
+                  variant="contained"
+                  startIcon={<CloseIcon />}
+                  color="error"
+                  onClick={() => {
+                    Swal.fire({
+                      title: "Are you sure?",
+                      text: "You won't be able to revert this!",
+                      icon: "warning",
+                      showCancelButton: true,
+                      confirmButtonColor: "#3085d6",
+                      cancelButtonColor: "#d33",
+                      confirmButtonText: "Yes, cancel it!",
+                    }).then((result) => {
+                      if (result.isConfirmed) {
+                        customInputchange("", "marineActioMode");
+                        backToDefaultState(initialState, true);
+                      }
+                    });
+                  }}
+                >
+                  Cancel
+                </Button>
+              )}
+              <LoadingButton
+                loading={loadingDelete}
+                ref={deleteButtonRef}
+                id="save-entry-header"
+                variant="contained"
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                  backgroundColor: pink[500],
+                  "&:hover": {
+                    backgroundColor: pink[600],
+                  },
+                }}
+                disabled={state.marineActioMode !== "delete"}
+                startIcon={<DeleteIcon />}
                 onClick={() => {
-                  Swal.fire({
-                    title: "Are you sure?",
-                    text: "You won't be able to revert this!",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#3085d6",
-                    cancelButtonColor: "#d33",
-                    confirmButtonText: "Yes, cancel it!",
-                  }).then((result) => {
-                    if (result.isConfirmed) {
-                      customInputchange("", "marineActioMode");
-                      backToDefaultState(initialState, true);
-                    }
+                  codeCondfirmationAlert({
+                    isUpdate: false,
+                    cb: (userCodeConfirmation) => {
+                      mutateDelete({
+                        PolicyAccount: state.PolicyAccount,
+                        PolicyNo: state.PolicyNo,
+                        userCodeConfirmation,
+                      });
+                    },
                   });
                 }}
               >
-                Cancel
-              </Button>
-            )}
-            <LoadingButton
-              loading={loadingDelete}
-              ref={deleteButtonRef}
-              id="save-entry-header"
-              variant="contained"
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-                backgroundColor: pink[500],
-                "&:hover": {
-                  backgroundColor: pink[600],
-                },
-              }}
-              disabled={state.marineActioMode !== "delete"}
-              startIcon={<DeleteIcon />}
-              onClick={() => {
-                codeCondfirmationAlert({
-                  isUpdate: false,
-                  cb: (userCodeConfirmation) => {
-                    mutateDelete({
-                      PolicyAccount: state.PolicyAccount,
-                      PolicyNo: state.PolicyNo,
-                      userCodeConfirmation,
-                    });
-                  },
-                });
-              }}
-            >
-              Delete
-            </LoadingButton>
+                Delete
+              </LoadingButton>
+            </div>
           </div>
         </div>
-      </div>
-      <Box
-        sx={(theme) => ({
-          display: "flex",
-          alignItems: "center",
-          columnGap: "20px",
-          marginBottom: "10px",
-          [theme.breakpoints.down("sm")]: {
-            flexDirection: "column",
-            alignItems: "flex-start",
-            flex: 1,
-          },
-        })}
-      >
-        <div
-          style={{
-            marginTop: "10px",
-            marginBottom: "12px",
-            width: "100%",
-          }}
-        ></div>
-      </Box>
-      <div style={{ marginBottom: "5px", display: "flex", gap: "10px" }}>
-        {isLoadingModalSearchMPolicy ? (
-          <LoadingButton loading={isLoadingModalSearchMPolicy} />
-        ) : (
-          <TextField
-            label="Search"
-            size="small"
-            name="search"
-            value={search}
-            onChange={(e: any) => {
-              setSearch(e.target.value);
+        <Box
+          sx={(theme) => ({
+            display: "flex",
+            alignItems: "center",
+            columnGap: "20px",
+            marginBottom: "10px",
+            [theme.breakpoints.down("sm")]: {
+              flexDirection: "column",
+              alignItems: "flex-start",
+              flex: 1,
+            },
+          })}
+        >
+          <div
+            style={{
+              marginTop: "10px",
+              marginBottom: "12px",
+              width: "100%",
             }}
-            onKeyDown={(e) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                e.preventDefault();
-                openModalSearchMPolicy(search);
-              }
-            }}
-            InputProps={{
-              style: { height: "27px", fontSize: "14px" },
-            }}
-            sx={{
-              width: "300px",
-              height: "27px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-          />
-        )}
-        {isLoadingSubAccount ? (
-          <LoadingButton loading={isLoadingSubAccount} />
-        ) : (
-          <FormControl
-            size="small"
-            sx={(theme) => ({
-              width: "150px",
-              ".MuiFormLabel-root": {
-                fontSize: "14px",
-                background: "white",
-                zIndex: 99,
-                padding: "0 3px",
-              },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            })}
-          >
-            <InputLabel id="subAccount">Sub Account</InputLabel>
-            <Select
-              sx={{
-                height: "27px",
-                fontSize: "14px",
-              }}
+          ></div>
+        </Box>
+        <div style={{ marginBottom: "5px", display: "flex", gap: "10px" }}>
+          {isLoadingModalSearchMPolicy ? (
+            <LoadingButton loading={isLoadingModalSearchMPolicy} />
+          ) : (
+            <TextField
+              label="Search"
               size="small"
-              labelId="subAccount"
-              label="subAccount"
-              name="sub_account"
-              value={state.sub_account}
-              onChange={(e) => {
-                handleInputChange(e);
+              name="search"
+              value={search}
+              onChange={(e: any) => {
+                setSearch(e.target.value);
               }}
-            >
-              {(dataSubAccount?.data.sub_account).map(
-                (items: any, idx: number) => {
-                  return (
-                    <MenuItem key={idx} value={items.Acronym.trim()}>
-                      {items.Acronym}
-                    </MenuItem>
-                  );
+              onKeyDown={(e) => {
+                if (e.code === "Enter" || e.code === "NumpadEnter") {
+                  e.preventDefault();
+                  openModalSearchMPolicy(search);
                 }
-              )}
-            </Select>
-          </FormControl>
-        )}
-      </div>
-      {step}
-      {ModalSearchMPolicy}
-    </MarineContext.Provider>
+              }}
+              InputProps={{
+                style: { height: "27px", fontSize: "14px" },
+              }}
+              sx={{
+                width: "300px",
+                height: "27px",
+                ".MuiFormLabel-root": { fontSize: "14px" },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              }}
+            />
+          )}
+          {isLoadingSubAccount ? (
+            <LoadingButton loading={isLoadingSubAccount} />
+          ) : (
+            <FormControl
+              size="small"
+              sx={(theme) => ({
+                width: "150px",
+                ".MuiFormLabel-root": {
+                  fontSize: "14px",
+                  background: "white",
+                  zIndex: 99,
+                  padding: "0 3px",
+                },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              })}
+            >
+              <InputLabel id="subAccount">Sub Account</InputLabel>
+              <Select
+                sx={{
+                  height: "27px",
+                  fontSize: "14px",
+                }}
+                size="small"
+                labelId="subAccount"
+                label="subAccount"
+                name="sub_account"
+                value={state.sub_account}
+                onChange={(e) => {
+                  handleInputChange(e);
+                }}
+              >
+                {(dataSubAccount?.data.sub_account).map(
+                  (items: any, idx: number) => {
+                    return (
+                      <MenuItem key={idx} value={items.Acronym.trim()}>
+                        {items.Acronym}
+                      </MenuItem>
+                    );
+                  }
+                )}
+              </Select>
+            </FormControl>
+          )}
+        </div>
+        {step}
+        {ModalSearchMPolicy}
+      </MarineContext.Provider>
+    </>
+
   );
 }

@@ -16,6 +16,7 @@ import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../lib/confirmationAlert";
+import PageHelmet from "../../../components/Helmet";
 
 const initialState = {
   Description: "",
@@ -217,300 +218,303 @@ export default function SubAccount() {
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        width: "100%",
-        height: "100%",
-        flex: 1,
-      }}
-    >
-      <Box
-        sx={(theme) => ({
+    <>
+      <PageHelmet title="Sub Account" />
+      <div
+        style={{
           display: "flex",
-          alignItems: "center",
-          columnGap: "20px",
-          [theme.breakpoints.down("sm")]: {
-            flexDirection: "column",
-            alignItems: "flex-start",
-            marginBottom: "15px",
-          },
-        })}
-      >
-        <div
-          style={{
-            marginTop: "10px",
-            marginBottom: "12px",
-            width: "100%",
-          }}
-        >
-          <TextField
-            label="Search"
-            fullWidth
-            size="small"
-            type="text"
-            name="search"
-            value={state.search}
-            onChange={handleInputChange}
-            InputProps={{
-              style: { height: "27px", fontSize: "14px" },
-            }}
-            sx={{
-              height: "27px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-            onKeyDown={(e) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                e.preventDefault();
-                return refetchSubAccountSearch();
-              }
-            }}
-          />
-        </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            columnGap: "20px",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              columnGap: "5px",
-            }}
-          >
-            {state.mode === "" && (
-              <Button
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                }}
-                variant="contained"
-                startIcon={<AddIcon />}
-                id="entry-header-save-button"
-                onClick={() => {
-                  handleInputChange({ target: { value: "add", name: "mode" } });
-                }}
-              >
-                New
-              </Button>
-            )}
-
-            <LoadingButton
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-              }}
-              id="save-entry-header"
-              color="primary"
-              variant="contained"
-              type="submit"
-              onClick={handleOnSave}
-              disabled={state.mode === ""}
-              startIcon={<SaveIcon />}
-              loading={loadingAdd || loadingEdit}
-            >
-              Save
-            </LoadingButton>
-
-            {state.mode !== "" && (
-              <Button
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                }}
-                variant="contained"
-                startIcon={<CloseIcon />}
-                color="error"
-                onClick={() => {
-                  Swal.fire({
-                    title: "Are you sure?",
-                    text: "You won't be able to revert this!",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#3085d6",
-                    cancelButtonColor: "#d33",
-                    confirmButtonText: "Yes, cancel it!",
-                  }).then((result) => {
-                    if (result.isConfirmed) {
-                      resetModule();
-                    }
-                  });
-                }}
-              >
-                Cancel
-              </Button>
-            )}
-
-            <Button
-              id="save-entry-header"
-              variant="contained"
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-                backgroundColor: pink[500],
-                "&:hover": {
-                  backgroundColor: pink[600],
-                },
-              }}
-              disabled={state.mode !== "edit"}
-              startIcon={<DeleteIcon />}
-              onClick={() => {
-                codeCondfirmationAlert({
-                  isUpdate: false,
-                  cb: (userCodeConfirmation) => {
-                    mutateDelete({
-                      Sub_Acct: state.Sub_Acct,
-                      userCodeConfirmation,
-                    });
-                  },
-                });
-              }}
-            >
-              Delete
-            </Button>
-          </div>
-        </div>
-      </Box>
-      <form
-        onSubmit={handleOnSave}
-        onKeyDown={(e) => {
-          if (e.code === "Enter" || e.code === "NumpadEnter") {
-            e.preventDefault();
-            handleOnSave(e);
-            return;
-          }
+          flexDirection: "column",
+          width: "100%",
+          height: "100%",
+          flex: 1,
         }}
       >
         <Box
           sx={(theme) => ({
             display: "flex",
-            columnGap: "15px",
-            flexDirection: "row",
-            [theme.breakpoints.down("md")]: {
+            alignItems: "center",
+            columnGap: "20px",
+            [theme.breakpoints.down("sm")]: {
               flexDirection: "column",
-              rowGap: "10px",
+              alignItems: "flex-start",
+              marginBottom: "15px",
             },
           })}
         >
-          <TextField
-            size="small"
-            label="Acronym"
-            name="Acronym"
-            required
-            value={state.Acronym}
-            onChange={handleInputChange}
-            disabled={state.mode === ""}
-            InputProps={{
-              readOnly: true,
-              style: { height: "27px", fontSize: "14px" },
+          <div
+            style={{
+              marginTop: "10px",
+              marginBottom: "12px",
+              width: "100%",
             }}
-            sx={{
-              minWidth: "150px",
-              height: "27px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+          >
+            <TextField
+              label="Search"
+              fullWidth
+              size="small"
+              type="text"
+              name="search"
+              value={state.search}
+              onChange={handleInputChange}
+              InputProps={{
+                style: { height: "27px", fontSize: "14px" },
+              }}
+              sx={{
+                height: "27px",
+                ".MuiFormLabel-root": { fontSize: "14px" },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              }}
+              onKeyDown={(e) => {
+                if (e.code === "Enter" || e.code === "NumpadEnter") {
+                  e.preventDefault();
+                  return refetchSubAccountSearch();
+                }
+              }}
+            />
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              columnGap: "20px",
             }}
-          />
-          <TextField
-            size="small"
-            label="ShortName"
-            name="ShortName"
-            required
-            value={state.ShortName}
-            onChange={handleInputChange}
-            disabled={state.mode === ""}
-            InputProps={{
-              style: { height: "27px", fontSize: "14px" },
-            }}
-            sx={{
-              minWidth: "250px",
-              height: "27px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-          />
-          <TextField
-            fullWidth
-            size="small"
-            label="Description"
-            name="Description"
-            required
-            value={state.Description}
-            onChange={handleInputChange}
-            disabled={state.mode === ""}
-            InputProps={{
-              style: { height: "27px", fontSize: "14px" },
-            }}
-            sx={{
-              flex: 1,
-              height: "27px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-          />
-        </Box>
-      </form>
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                columnGap: "5px",
+              }}
+            >
+              {state.mode === "" && (
+                <Button
+                  sx={{
+                    height: "30px",
+                    fontSize: "11px",
+                  }}
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  id="entry-header-save-button"
+                  onClick={() => {
+                    handleInputChange({ target: { value: "add", name: "mode" } });
+                  }}
+                >
+                  New
+                </Button>
+              )}
 
-      <div
-        ref={refParent}
-        style={{
-          marginTop: "10px",
-          width: "100%",
-          position: "relative",
-          flex: 1,
-        }}
-      >
-        <Box
-          style={{
-            height: `${refParent.current?.getBoundingClientRect().height}px`,
-            width: "100%",
-            overflowX: "scroll",
-            position: "absolute",
+              <LoadingButton
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                }}
+                id="save-entry-header"
+                color="primary"
+                variant="contained"
+                type="submit"
+                onClick={handleOnSave}
+                disabled={state.mode === ""}
+                startIcon={<SaveIcon />}
+                loading={loadingAdd || loadingEdit}
+              >
+                Save
+              </LoadingButton>
+
+              {state.mode !== "" && (
+                <Button
+                  sx={{
+                    height: "30px",
+                    fontSize: "11px",
+                  }}
+                  variant="contained"
+                  startIcon={<CloseIcon />}
+                  color="error"
+                  onClick={() => {
+                    Swal.fire({
+                      title: "Are you sure?",
+                      text: "You won't be able to revert this!",
+                      icon: "warning",
+                      showCancelButton: true,
+                      confirmButtonColor: "#3085d6",
+                      cancelButtonColor: "#d33",
+                      confirmButtonText: "Yes, cancel it!",
+                    }).then((result) => {
+                      if (result.isConfirmed) {
+                        resetModule();
+                      }
+                    });
+                  }}
+                >
+                  Cancel
+                </Button>
+              )}
+
+              <Button
+                id="save-entry-header"
+                variant="contained"
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                  backgroundColor: pink[500],
+                  "&:hover": {
+                    backgroundColor: pink[600],
+                  },
+                }}
+                disabled={state.mode !== "edit"}
+                startIcon={<DeleteIcon />}
+                onClick={() => {
+                  codeCondfirmationAlert({
+                    isUpdate: false,
+                    cb: (userCodeConfirmation) => {
+                      mutateDelete({
+                        Sub_Acct: state.Sub_Acct,
+                        userCodeConfirmation,
+                      });
+                    },
+                  });
+                }}
+              >
+                Delete
+              </Button>
+            </div>
+          </div>
+        </Box>
+        <form
+          onSubmit={handleOnSave}
+          onKeyDown={(e) => {
+            if (e.code === "Enter" || e.code === "NumpadEnter") {
+              e.preventDefault();
+              handleOnSave(e);
+              return;
+            }
           }}
         >
-          <Table
-            ref={table}
-            isLoading={isLoading || loadingAdd || loadingEdit || loadingDelete}
-            columns={poliyAccountColumn}
-            rows={rows}
-            table_id={"Sub_Acct"}
-            isSingleSelection={true}
-            isRowFreeze={false}
-            dataSelection={(selection, data, code) => {
-              const rowSelected = data.filter(
-                (item: any) => item.Sub_Acct === selection[0]
-              )[0];
-              if (rowSelected === undefined || rowSelected.length <= 0) {
-                setNewStateValue(dispatch, initialState);
-                handleInputChange({ target: { value: "", name: "mode" } });
-                return;
-              }
+          <Box
+            sx={(theme) => ({
+              display: "flex",
+              columnGap: "15px",
+              flexDirection: "row",
+              [theme.breakpoints.down("md")]: {
+                flexDirection: "column",
+                rowGap: "10px",
+              },
+            })}
+          >
+            <TextField
+              size="small"
+              label="Acronym"
+              name="Acronym"
+              required
+              value={state.Acronym}
+              onChange={handleInputChange}
+              disabled={state.mode === ""}
+              InputProps={{
+                readOnly: true,
+                style: { height: "27px", fontSize: "14px" },
+              }}
+              sx={{
+                minWidth: "150px",
+                height: "27px",
+                ".MuiFormLabel-root": { fontSize: "14px" },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              }}
+            />
+            <TextField
+              size="small"
+              label="ShortName"
+              name="ShortName"
+              required
+              value={state.ShortName}
+              onChange={handleInputChange}
+              disabled={state.mode === ""}
+              InputProps={{
+                style: { height: "27px", fontSize: "14px" },
+              }}
+              sx={{
+                minWidth: "250px",
+                height: "27px",
+                ".MuiFormLabel-root": { fontSize: "14px" },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              }}
+            />
+            <TextField
+              fullWidth
+              size="small"
+              label="Description"
+              name="Description"
+              required
+              value={state.Description}
+              onChange={handleInputChange}
+              disabled={state.mode === ""}
+              InputProps={{
+                style: { height: "27px", fontSize: "14px" },
+              }}
+              sx={{
+                flex: 1,
+                height: "27px",
+                ".MuiFormLabel-root": { fontSize: "14px" },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              }}
+            />
+          </Box>
+        </form>
 
-              handleInputChange({ target: { value: "edit", name: "mode" } });
-              if (code === "Delete" || code === "Backspace") {
-                codeCondfirmationAlert({
-                  isUpdate: false,
-                  cb: (userCodeConfirmation) => {
-                    mutateDelete({
-                      Sub_Acct: rowSelected.Sub_Acct,
-                      userCodeConfirmation,
-                    });
-                  },
-                });
-
-                return;
-              }
-              setNewStateValue(dispatch, rowSelected);
+        <div
+          ref={refParent}
+          style={{
+            marginTop: "10px",
+            width: "100%",
+            position: "relative",
+            flex: 1,
+          }}
+        >
+          <Box
+            style={{
+              height: `${refParent.current?.getBoundingClientRect().height}px`,
+              width: "100%",
+              overflowX: "scroll",
+              position: "absolute",
             }}
-          />
-        </Box>
+          >
+            <Table
+              ref={table}
+              isLoading={isLoading || loadingAdd || loadingEdit || loadingDelete}
+              columns={poliyAccountColumn}
+              rows={rows}
+              table_id={"Sub_Acct"}
+              isSingleSelection={true}
+              isRowFreeze={false}
+              dataSelection={(selection, data, code) => {
+                const rowSelected = data.filter(
+                  (item: any) => item.Sub_Acct === selection[0]
+                )[0];
+                if (rowSelected === undefined || rowSelected.length <= 0) {
+                  setNewStateValue(dispatch, initialState);
+                  handleInputChange({ target: { value: "", name: "mode" } });
+                  return;
+                }
+
+                handleInputChange({ target: { value: "edit", name: "mode" } });
+                if (code === "Delete" || code === "Backspace") {
+                  codeCondfirmationAlert({
+                    isUpdate: false,
+                    cb: (userCodeConfirmation) => {
+                      mutateDelete({
+                        Sub_Acct: rowSelected.Sub_Acct,
+                        userCodeConfirmation,
+                      });
+                    },
+                  });
+
+                  return;
+                }
+                setNewStateValue(dispatch, rowSelected);
+              }}
+            />
+          </Box>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 export function setNewStateValue(dispatch: any, obj: any) {

@@ -43,6 +43,7 @@ import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import { format } from "date-fns";
+import PageHelmet from "../../../../components/Helmet";
 
 const initialState = {
 
@@ -999,7 +1000,9 @@ export default function GeneralJournal() {
 
 
   return (
-    <div
+    <>
+      <PageHelmet title="General Journal" />
+      <div
       style={{
         display: "flex",
         flexDirection: "column",
@@ -1872,6 +1875,8 @@ export default function GeneralJournal() {
       {ModalTransactionAccount}
       {ModalSearchGeneralJounal}
     </div>
+      </>
+   
   );
 }
 
