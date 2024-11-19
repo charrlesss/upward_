@@ -182,10 +182,11 @@ export default function Deposit() {
   const [selectedRowsCashIndex, setSelectedRowsCashIndex] = useState<any>([])
   const [selectedRowsCheckedIndex, setSelectedRowsCheckedIndex] = useState<any>([])
 
-
-
   const [depositMode, setDepositMode] = useState('')
   const [total, setTotal] = useState("0.00");
+
+  const disabledFields = depositMode === "";
+
   const TotalCashForDeposit = selectedRows
     .reduce((accumulator: number, currentValue: any) => {
       const dd =
@@ -293,22 +294,30 @@ export default function Deposit() {
       onSuccess: (res) => {
         const resposnse = res as any;
         if (resposnse.data.success) {
-          resetTables()
-          setSelectedRows([]);
-          setCollectionForDeposit([]);
-          RefetchDepositSlipCode();
-          setTableRowsInputValue(defaultCashBreakDown);
-          resetRefs()
-          refetchCashCollection()
-          refetchCheckCollection()
-          setSelectedRowsCashIndex([])
-          setSelectedRowsCheckedIndex([])
+          wait(100).then(() => {
+            resetTables()
+            resetRefs()
+            setTableRowsInputValue(defaultCashBreakDown);
+            setSelectedRows([]);
+            setCollectionForDeposit([]);
+            setSelectedRowsCashIndex([])
+            setSelectedRowsCheckedIndex([])
+
+            refetchCashCollection()
+            refetchCheckCollection()
+            RefetchDepositSlipCode();
+            setDepositMode('')
+            goTo(0)
+
+          })
+
+
           return Swal.fire({
             position: "center",
             icon: "success",
             title: resposnse.data.message,
             timer: 1500,
-          });
+          })
         }
         return Swal.fire({
           position: "center",
@@ -334,17 +343,23 @@ export default function Deposit() {
     onSuccess: (res) => {
       const resposnse = res as any;
       if (resposnse.data.success) {
-        resetRefs()
-        setSelectedRows([]);
-        setCollectionForDeposit([]);
-        RefetchDepositSlipCode();
-        setTableRowsInputValue(defaultCashBreakDown);
-        resetRefs()
-        refetchCashCollection()
-        refetchCheckCollection()
-        setSelectedRowsCashIndex([])
-        setSelectedRowsCheckedIndex([])
-        resetTables()
+        wait(100).then(() => {
+          resetTables()
+          resetRefs()
+          setTableRowsInputValue(defaultCashBreakDown);
+          setSelectedRows([]);
+          setCollectionForDeposit([]);
+          setSelectedRowsCashIndex([])
+          setSelectedRowsCheckedIndex([])
+
+          refetchCashCollection()
+          refetchCheckCollection()
+          RefetchDepositSlipCode();
+          setDepositMode('')
+          goTo(0)
+
+
+        })
         return Swal.fire({
           position: "center",
           icon: "success",
@@ -502,10 +517,21 @@ export default function Deposit() {
             Authorization: `Bearer ${user?.accessToken}`,
           },
         }),
-      refetchOnWindowFocus: false,
       onSuccess: (data) => {
         const response = data as any;
-        setCashCollection(response.data.cash)
+        if (depositMode === 'edit') {
+          setCashCollection((d: any) => {
+            const filteredData = d.filter((itm: any) => {
+              return refSlipCode.current && itm.SlipCode === refSlipCode.current.value
+            })
+            return [...response.data.cash, ...filteredData]
+          })
+        } else {
+          setCashCollection(response.data.cash)
+          wait(100).then(() => {
+            cashTable.current.setDataFormated(response.data.cash)
+          })
+        }
       },
     });
 
@@ -518,10 +544,22 @@ export default function Deposit() {
             Authorization: `Bearer ${user?.accessToken}`,
           },
         }),
-      refetchOnWindowFocus: false,
       onSuccess: (data) => {
         const response = data as any;
-        setCheckCollection(response.data.check)
+        if (depositMode === 'edit') {
+          setCashCollection((d: any) => {
+            const filteredData = d.filter((itm: any) => {
+              return refSlipCode.current && itm.SlipCode === refSlipCode.current.value
+            })
+            return [...response.data.check, ...filteredData]
+          })
+        } else {
+          setCheckCollection(response.data.check)
+          wait(100).then(() => {
+            checkTable.current.setDataFormated(response.data.check)
+          })
+        }
+
       },
     });
 
@@ -627,8 +665,6 @@ export default function Deposit() {
     selectedTable.current.resetTable()
     collectionCheckTable.current.resetTable()
   }
-  const disabledFields = depositMode === "";
-
   return (
     <>
       <PageHelmet title="Deposit" />
@@ -734,19 +770,20 @@ export default function Deposit() {
                   confirmButtonText: "Yes, cancel it!",
                 }).then((result) => {
                   if (result.isConfirmed) {
-                    setDepositMode("")
-                    setSelectedRows([]);
-                    setCollectionForDeposit([]);
-                    RefetchDepositSlipCode();
-                    setTableRowsInputValue(defaultCashBreakDown);
-                    resetRefs()
-                    refetchCheckCollection()
-                    refetchCashCollection()
                     wait(100).then(() => {
-                      collectionCheckTable.current.resetTable()
-                      selectedTable.current.resetTable()
-                      cashTable.current.resetTable()
-                      checkTable.current.resetTable()
+                      resetTables()
+                      resetRefs()
+                      setTableRowsInputValue(defaultCashBreakDown);
+                      setSelectedRows([]);
+                      setCollectionForDeposit([]);
+                      setSelectedRowsCashIndex([])
+                      setSelectedRowsCheckedIndex([])
+
+                      refetchCashCollection()
+                      refetchCheckCollection()
+                      RefetchDepositSlipCode();
+                      setDepositMode('')
+                      goTo(0)
                     })
                   }
                 });
@@ -875,12 +912,13 @@ export default function Deposit() {
               return (
                 <button
                   key={idx}
+                  disabled={disabledFields}
                   style={{
-                    border: "none",
+                    border: "1px solid #c0c0c0",
                     outline: "none",
-                    backgroundColor: "rgba(51, 51, 51, 0.05)",
+                    backgroundColor: currentStepIndex === idx ? "#c0c0c0" : "rgba(51, 51, 51, 0.05)",
                     borderWidth: "0",
-                    color: currentStepIndex === idx ? "#7e22ce" : "#333333",
+                    color: "black",
                     cursor: "pointer",
                     display: "inline-block",
                     fontFamily: `"Haas Grot Text R Web", "Helvetica Neue", Helvetica, Arial, sans-serif`,
@@ -891,15 +929,22 @@ export default function Deposit() {
                     margin: "0",
                     padding: "10px 12px",
                     textAlign: "center",
-                    transition: "all 200ms",
                     verticalAlign: "baseline",
                     whiteSpace: "nowrap",
                     userSelect: "none",
                     touchAction: "manipulation",
                     position: "relative",
                     overflow: "hidden",
+                    borderRadius: "0px",
                   }}
-                  onClick={() => goTo(idx)}
+                  onClick={() => {
+                    if (idx === 0) {
+                      refetchCashCollection()
+                    } else if (idx === 1) {
+                      refetchCheckCollection()
+                    }
+                    goTo(idx)
+                  }}
                 >
                   <span
                     style={{
@@ -944,7 +989,10 @@ export default function Deposit() {
             cashTable,
             checkTable,
             selectedTable,
-            collectionCheckTable
+            collectionCheckTable,
+            refetchCheckCollection,
+            refetchCashCollection,
+            disabledFields
           }}
         >
           <div
@@ -988,7 +1036,8 @@ function CashCollection() {
   const {
     cashCollection,
     setSelectedRows,
-    cashTable
+    cashTable,
+    disabledFields
   } = useContext(DepositContext);
 
 
@@ -1003,6 +1052,7 @@ function CashCollection() {
       }}
     >
       <DepositTable
+        disbaleTable={disabledFields}
         ref={cashTable}
         columns={cashColumns}
         rows={cashCollection}
@@ -1040,7 +1090,8 @@ function CheckCollection() {
     checkCollection,
     setSelectedRows,
     checkTable,
-    setCollectionForDeposit
+    setCollectionForDeposit,
+    disabledFields
   } = useContext(DepositContext)
   const checkColumns = [
     {
@@ -1104,6 +1155,8 @@ function CheckCollection() {
       hide: true,
     },
   ];
+
+
   return (
     <div
       style={{
@@ -1115,6 +1168,7 @@ function CheckCollection() {
     >
 
       <DepositTable
+        disbaleTable={disabledFields}
         ref={checkTable}
         columns={checkColumns}
         rows={checkCollection}
@@ -1314,7 +1368,8 @@ function CollectionForDeposit() {
         }}
       >
         <legend>Checks</legend>
-        <DepositTable
+        <DepositTableSelected
+          isTableSelectable={false}
           ref={collectionCheckTable}
           width="100%"
           columns={[
@@ -1550,9 +1605,11 @@ function TrComponent({ value1, value2, value3, idx }: any) {
 const DepositTable = forwardRef(({
   columns,
   rows,
-  height = "300px",
+  height = "400px",
   width = "calc(100vw - 40px)",
-  getSelectedItem
+  getSelectedItem,
+  disbaleTable = false
+
 }: any, ref) => {
   const parentElementRef = useRef<any>(null)
   const [data, setData] = useState([])
@@ -1608,12 +1665,22 @@ const DepositTable = forwardRef(({
 
   return (
     <Fragment>
-      <div ref={parentElementRef} style={{ width, height, overflow: "auto", position: "relative" }}>
+      <div ref={parentElementRef}
+        style={{
+          width,
+          height,
+          overflow: "auto",
+          position: "relative",
+          pointerEvents: disbaleTable ? "none" : "auto",
+          border: disbaleTable ? "2px solid #8c8f8e" : '2px solid #c0c0c0',
+          boxShadow: `inset -2px -2px 0 #ffffff, 
+                        inset 2px 2px 0 #808080`
+        }}>
         <div style={{ position: "absolute", width: `${totalRowWidth}px`, height: "auto" }}>
           <table style={{ borderCollapse: "collapse", width: "100%", position: "relative" }}>
             <thead >
               <tr>
-                <th style={{ width: '30px', border: "1px solid black", position: "sticky", top: 0, zIndex: 1, background: "white" }}
+                <th style={{ width: '30px', border: "1px solid black", position: "sticky", top: 0, zIndex: 1, background: "#f0f0f0" }}
                 ></th>
                 {
                   column.map((colItm: any, idx: number) => {
@@ -1626,7 +1693,7 @@ const DepositTable = forwardRef(({
                           position: "sticky",
                           top: 0,
                           zIndex: 1,
-                          background: "white",
+                          background: "#f0f0f0",
                           fontSize: "12px",
                           textAlign: "left",
                           padding: "0px 5px"
@@ -1731,8 +1798,10 @@ const DepositTable = forwardRef(({
 const DepositTableSelected = forwardRef(({
   columns,
   rows,
-  height = "300px",
-  getSelectedItem
+  height = "400px",
+  getSelectedItem,
+  disbaleTable = false,
+  isTableSelectable = true
 }: any, ref) => {
   const parentElementRef = useRef<any>(null)
   const [data, setData] = useState([])
@@ -1782,12 +1851,27 @@ const DepositTableSelected = forwardRef(({
 
   return (
     <Fragment>
-      <div ref={parentElementRef} style={{ width: "calc(100vw - 40px)", height, overflow: "auto", position: "relative" }}>
+      <div
+        ref={parentElementRef}
+        style={{
+          width: "100%",
+          height,
+          overflow: "auto",
+          position: "relative",
+          pointerEvents: disbaleTable ? "none" : "auto",
+          border: disbaleTable ? "2px solid #8c8f8e" : '2px solid #c0c0c0',
+          boxShadow: `inset -2px -2px 0 #ffffff, 
+                      inset 2px 2px 0 #808080`
+
+        }}>
         <div style={{ position: "absolute", width: `${totalRowWidth}px`, height: "auto" }}>
           <table style={{ borderCollapse: "collapse", width: "100%", position: "relative" }}>
             <thead >
               <tr>
-                <th style={{ width: '30px', border: "1px solid black", position: "sticky", top: 0, zIndex: 1, background: "white" }}
+                <th style={{
+                  width: '30px', border: "1px solid black",
+                  position: "sticky", top: 0, zIndex: 1, background: "#f0f0f0"
+                }}
                 ></th>
                 {
                   column.map((colItm: any, idx: number) => {
@@ -1800,7 +1884,7 @@ const DepositTableSelected = forwardRef(({
                           position: "sticky",
                           top: 0,
                           zIndex: 1,
-                          background: "white",
+                          background: "#f0f0f0",
                           fontSize: "12px",
                           textAlign: "left",
                           padding: "0px 5px"
@@ -1822,7 +1906,7 @@ const DepositTableSelected = forwardRef(({
                         borderTop: "none",
                         borderRight: "1px solid black",
                         cursor: "pointer",
-                        background: selectedRow === rowIdx ? "#bae6fd" : "",
+                        background: selectedRow === rowIdx ? "#bae6fd" : "#f0f0f0",
                       }}>
                         <input
                           style={{
@@ -1833,6 +1917,10 @@ const DepositTableSelected = forwardRef(({
                           checked={false}
                           type="checkbox"
                           onClick={() => {
+                            if (!isTableSelectable) {
+                              return
+                            }
+
                             if (getSelectedItem) {
                               getSelectedItem(rowItm, null, rowIdx, null)
                             }
@@ -1848,6 +1936,9 @@ const DepositTableSelected = forwardRef(({
                           return (
                             <td
                               onDoubleClick={() => {
+                                if (!isTableSelectable) {
+                                  return
+                                }
                                 if (getSelectedItem) {
                                   getSelectedItem(rowItm, null, rowIdx, null)
                                 }

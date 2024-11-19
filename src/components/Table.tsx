@@ -123,7 +123,7 @@ const Table = forwardRef(
             footer: CustomFooterComponent,
           }}
           initialState={{
-            pagination: { paginationModel: { pageSize: 35 } },
+            pagination: { paginationModel: { pageSize: 100 } },
           }}
           loading={isLoading}
           getRowId={(row) => row[table_id]}

@@ -81,13 +81,16 @@ const columns = [
     key: "checkNo", label: "Check No", width: 120, type: 'text',
     readonly: (rowItm: any, colItm: any, rowIdx: any, colIdx: any) => {
       return rowItm[0] !== '1.01.10'
-    }
+    },
   },
   {
     key: "checkDate", label: "Check Date", width: 120, type: 'date',
     readonly: (rowItm: any, colItm: any, rowIdx: any, colIdx: any) => {
       return rowItm[0] !== '1.01.10'
     },
+    typeLogic: (rowItm: any) => {
+      return rowItm[0] !== '1.01.10' ? "text" : "date"
+    }
   },
   {
     key: "TC_Code", label: "TC", width: 120, type: 'text'
@@ -145,7 +148,6 @@ export default function CashDisbursement() {
   const tableRef = useRef<any>(null)
   const { myAxios, user } = useContext(AuthContext);
   const [state, dispatch] = useReducer(reducer, initialState);
-
   const refNoRef = useRef<HTMLInputElement>(null)
   const dateRef = useRef<HTMLInputElement>(null)
   const expRef = useRef<HTMLInputElement>(null)
@@ -206,11 +208,13 @@ export default function CashDisbursement() {
     responseDataKey: "getChartOfAccount",
     onSelected: (selectedRowData, data) => {
       const RowIndex = tableRef.current.getSelectedIndex()
-      const tableData = tableRef.current.getData()
-      const newTableData = tableData
-      newTableData[RowIndex][0] = selectedRowData[0].Acct_Code
-      newTableData[RowIndex][1] = selectedRowData[0].Acct_Title
-      tableRef.current.updateData(newTableData)
+      tableRef.current.updateData((newTableData: any) => {
+        newTableData[RowIndex][0] = selectedRowData[0].Acct_Code
+        newTableData[RowIndex][1] = selectedRowData[0].Acct_Title
+        return newTableData
+      })
+
+
       wait(250).then(() => {
         const input = document.querySelector(`.input.row-${RowIndex}.col-3`) as HTMLInputElement
         input?.focus()
@@ -248,14 +252,14 @@ export default function CashDisbursement() {
     responseDataKey: "clientsId",
     onSelected: (selectedRowData) => {
       const RowIndex = tableRef.current.getSelectedIndex()
-      const tableData = tableRef.current.getData()
-      const newTableData = tableData
-      newTableData[RowIndex][3] = selectedRowData[0].Name
-      newTableData[RowIndex][14] = selectedRowData[0].IDNo
-      newTableData[RowIndex][17] = selectedRowData[0].sub_account
-      newTableData[RowIndex][2] = selectedRowData[0].ShortName
-      newTableData[RowIndex][16] = selectedRowData[0].address
-      tableRef.current.updateData(newTableData)
+      tableRef.current.updateData((newTableData: any) => {
+        newTableData[RowIndex][3] = selectedRowData[0].Name
+        newTableData[RowIndex][14] = selectedRowData[0].IDNo
+        newTableData[RowIndex][17] = selectedRowData[0].sub_account
+        newTableData[RowIndex][2] = selectedRowData[0].ShortName
+        newTableData[RowIndex][16] = selectedRowData[0].address
+        return newTableData
+      })
       wait(250).then(() => {
         const input = document.querySelector(`.input.row-${RowIndex}.col-4`) as HTMLInputElement
         input?.focus()
@@ -288,12 +292,11 @@ export default function CashDisbursement() {
     responseDataKey: "getTransactionAccount",
     onSelected: (selectedRowData) => {
       const RowIndex = tableRef.current.getSelectedIndex()
-      const tableData = tableRef.current.getData()
-      const newTableData = tableData
-      newTableData[RowIndex][8] = selectedRowData[0].Code
-      newTableData[RowIndex][18] = selectedRowData[0].Description
-
-      tableRef.current.updateData(newTableData)
+      tableRef.current.updateData((newTableData: any) => {
+        newTableData[RowIndex][8] = selectedRowData[0].Code
+        newTableData[RowIndex][18] = selectedRowData[0].Description
+        return newTableData
+      })
       wait(250).then(() => {
         const input = document.querySelector(`.input.row-${RowIndex}.col-9`) as HTMLInputElement
         input?.focus()
@@ -332,10 +335,10 @@ export default function CashDisbursement() {
     responseDataKey: "clientsId",
     onSelected: (selectedRowData) => {
       const RowIndex = tableRef.current.getSelectedIndex()
-      const tableData = tableRef.current.getData()
-      const newTableData = tableData
-      newTableData[RowIndex][10] = selectedRowData[0].Name
-      tableRef.current.updateData(newTableData)
+      tableRef.current.updateData((newTableData: any) => {
+        newTableData[RowIndex][10] = selectedRowData[0].Name
+        return newTableData
+      })
       wait(250).then(() => {
         const input = document.querySelector(`.input.row-${RowIndex}.col-11`) as HTMLInputElement
         input?.focus()
@@ -431,7 +434,7 @@ export default function CashDisbursement() {
 
       wait(250).then(() => {
         tableRef.current?.updateData(SearchData)
-        tableRef.current?.setNewRowIndex(0)
+        // tableRef.current?.setNewRowIndex(0)
 
         setTotals(SearchData)
         wait(250).then(() => {
@@ -871,10 +874,7 @@ export default function CashDisbursement() {
       tableData[RowIndex + 1][17] = tableData[RowIndex][17]
       tableData[RowIndex + 1][18] = tableData[RowIndex][18]
       tableRef.current.updateData(tableData)
-
     }
-
-    setTotals(tableData)
 
     return true
   }
@@ -885,20 +885,11 @@ export default function CashDisbursement() {
     setGetTotalDebit(0)
     setGetTotalCredit(0)
     setTotalRow(0)
-    wait(250).then(() => {
-      tableRef.current?.updateData([])
-      tableRef.current?.AddRow()
-      tableRef.current?.setNewRowIndex(0)
-      wait(250).then(() => {
-        const input = document.querySelector(`.input.row-${0}.col-0`) as HTMLInputElement
-        if (input) {
-          input.focus()
-        }
-      })
+    wait(100).then(() => {
+      tableRef.current?.resetTable()
     })
 
   }
-
   function printRow(rowItm: any) {
     flushSync(() => {
       localStorage.removeItem("printString");
@@ -974,6 +965,12 @@ export default function CashDisbursement() {
     };
   }, [handleOnSave]);
 
+
+  function valueIsNaN(input: any) {
+    const num = parseFloat(input);
+    return isNaN(num) ? '0.00' : input
+  }
+
   if (loadingGetSearchSelectedCashDisbursement || loadingGeneralJournalGenerator || isLoadingPolicyIdClientIdRefId || isLoadingChartAccountSearch || isLoadingPolicyIdPayTo || isLoadingTransactionAccount) {
     return <div>Loading...</div>
   }
@@ -1035,6 +1032,7 @@ export default function CashDisbursement() {
                 id="entry-header-save-button"
                 onClick={() => {
                   setCashDMode("add")
+                  tableRef.current.AddRow()
                 }}
                 color="primary"
               >
@@ -1304,6 +1302,7 @@ export default function CashDisbursement() {
           </fieldset>
         </div>
         <DataGridTableReact
+          disbaleTable={cashDMode === ""}
           height={"300px"}
           ref={tableRef}
           rows={[]}
@@ -1318,17 +1317,64 @@ export default function CashDisbursement() {
               openTransactionAccount(value)
             } else if (colIdx === 10 && tableData[rowIdx][0] === '1.01.10') {
               openPolicyIdPayTo(value)
-            } else if (colIdx === 5 && tableData[rowIdx][0] !== '1.01.10') {
-              const nextInput = document.querySelector(`.input.row-${rowIdx}.col-${colIdx + 3}`) as HTMLInputElement
-              if (nextInput) {
-                nextInput.focus()
-              }
+            } else if (colIdx === 5) {
+
+              tableRef.current.updateData((newTableData: any) => {
+                newTableData[rowIdx][colIdx] = valueIsNaN(value)
+                return newTableData
+              })
+              const tableData = tableRef.current.getData()
+              flushSync(() => {
+                setGetTotalCredit(tableData?.reduce((a: any, b: any) => {
+                  return a + parseFloat(b[5].replace(/,/g, ''))
+                }, 0))
+              })
+
+              setTimeout(() => {
+                if (tableData[rowIdx][0] !== '1.01.10') {
+                  const nextInput = document.querySelector(`.input.row-${rowIdx}.col-${colIdx + 3}`) as HTMLInputElement
+                  if (nextInput) {
+                    nextInput.focus()
+                  }
+                } else {
+                  const nextInput = document.querySelector(`.input.row-${rowIdx}.col-${colIdx + 1}`) as HTMLInputElement
+                  if (nextInput) {
+                    nextInput.focus()
+                  }
+                }
+              }, 100)
+
+            } else if (colIdx === 4) {
+              tableRef.current.updateData((newTableData: any) => {
+                newTableData[rowIdx][colIdx] = valueIsNaN(value)
+                return newTableData
+              })
+              const tableData = tableRef.current.getData()
+              flushSync(() => {
+                setGetTotalDebit(tableData?.reduce((a: any, b: any) => {
+                  return a + parseFloat(b[4].replace(/,/g, ''))
+                }, 0))
+              })
+
+              setTimeout(() => {
+                const nextInput = document.querySelector(`.input.row-${rowIdx}.col-${colIdx + 1}`) as HTMLInputElement
+                if (nextInput) {
+                  nextInput.focus()
+                }
+              }, 100)
+
             } else if (colIdx === 9 && tableData[rowIdx][0] !== '1.01.10') {
               const nextInput = document.querySelector(`.input.row-${rowIdx}.col-${colIdx + 2}`) as HTMLInputElement
               if (nextInput) {
                 nextInput.focus()
               }
             } else {
+
+              tableRef.current.updateData((newTableData: any) => {
+                newTableData[rowIdx][colIdx] = value
+                return newTableData
+              })
+
               const nextInput = document.querySelector(`.input.row-${rowIdx}.col-${colIdx + 1}`) as HTMLInputElement
               if (nextInput) {
                 nextInput.focus()
@@ -1356,6 +1402,7 @@ export default function CashDisbursement() {
                       })
                     }
                   }
+
                 }
               }
             }
@@ -1409,64 +1456,98 @@ const DataGridTableReact = forwardRef(({
   columns,
   onInputKeyDown,
   height,
-  RightClickComponent
+  RightClickComponent,
+  disbaleTable = false
 }: any, ref) => {
+  const miror = useRef<any>([])
   const parentElementRef = useRef<any>(null)
-  const dataCellRef = useRef<any>(null)
-  const mode = 'add'
-  const [pages, setPages] = useState<Array<any>>([])
-  const [pageNumber, setPageNumber] = useState(0)
-  const [data, setData] = useState(rows)
-  const [column, setColumn] = useState(columns)
-  const totalRowWidth = column.reduce((a: any, b: any) => a + b.width, 0)
+  const [data, setData] = useState<any>([])
+  const [column, setColumn] = useState<any>([])
   const [selectedRow, setSelectedRow] = useState<any>(0)
+  const totalRowWidth = column.reduce((a: any, b: any) => a + b.width, 0)
 
+  useEffect(() => {
+    if (columns.length > 0) {
+      setColumn(columns.filter((itm: any) => !itm.hide))
+    }
+  }, [columns])
 
-  const addRow = useRef(() => {
-    const defaultValue = column.map((itm: any) => {
-      if (itm.setDefaultValue) {
-        return itm.setDefaultValue()
-      }
-      return ''
+  useEffect(() => {
+    if (rows.length > 0) {
+      setData(rows.map((itm: any) => {
+        return columns.map((col: any) => itm[col.key])
+      }))
+    }
+  }, [rows, columns])
+
+  function AddRow() {
+    setData((d: any) => {
+      const newD = column.map((itm: any) => '')
+      return [...d, newD]
     })
-    setData((datas: any) => [...datas, defaultValue])
-  })
+  }
 
   useImperativeHandle(ref, () => ({
-    getSelectedIndex: () => {
-      return selectedRow
-    },
-    onInputKeyDown: (rowIdx: number, colIdx: number, e: any) => {
-      onInputKeyDown(rowIdx, colIdx, e)
-    },
-    updateData: (data: any) => {
-      setData(data)
-    },
-    updatePages: (newData: any) => {
-      const _pages = formatArrayIntoChunks(newData, 100)
-      setPages(_pages)
-    },
+    AddRow,
+    updateData: setData,
     getData: () => {
       return data
     },
-    AddRow: () => {
-      addRow.current()
+    getSelectedIndex: () => {
+      return selectedRow
     },
     setNewRowIndex: (rowIndex: number) => {
       setSelectedRow(rowIndex)
     },
-  }));
-
-  useEffect(() => {
-    if (mode === 'add') {
-      addRow.current()
+    resetTable: () => {
+      setData([])
+      setSelectedRow(0)
     }
-  }, [mode])
-
+  }))
   useEffect(() => {
-    const _pages = formatArrayIntoChunks(data, 100)
-    setPages(_pages)
+    miror.current = data
   }, [data])
+
+
+
+
+  // function onKeySelectionChange(rowIdx: any, colIdx: any, e: any) {
+  //   if (e.code === 'ArrowDown') {
+  //     setSelectedRow((d: any) => {
+  //       if (rowIdx >= pages[pageNumber].length - 1) {
+  //         return d
+  //       }
+
+  //       wait(150).then(() => {
+  //         const input = document.querySelector(`.input.row-${rowIdx + 1}.col-${colIdx}`) as HTMLInputElement
+  //         if (input) {
+  //           input.focus()
+  //         }
+  //       })
+
+
+  //       return rowIdx + 1
+  //     })
+  //   }
+  //   if (e.code === 'ArrowUp') {
+  //     setSelectedRow((d: any) => {
+  //       if (rowIdx <= 0) {
+  //         return d
+  //       }
+
+  //       wait(150).then(() => {
+  //         const input = document.querySelector(`.input.row-${rowIdx - 1}.col-${colIdx}`) as HTMLInputElement
+  //         if (input) {
+  //           input.focus()
+  //         }
+  //       })
+
+  //       return rowIdx - 1
+  //     })
+
+  //   }
+  // }
+
 
   const startResize = (index: any, e: any) => {
     e.preventDefault();
@@ -1494,7 +1575,13 @@ const DataGridTableReact = forwardRef(({
     return (
       <tr>
         <th className="header"
-          style={{ width: '30px', border: "1px solid black", position: "sticky", top: 0, zIndex: 1, background: "white" }}
+          style={{
+            width: '30px',
+            border: "1px solid black",
+            position: "sticky", top: 0,
+            zIndex: 1,
+            background: "#f0f0f0",
+          }}
         >
         </th>
         {
@@ -1518,332 +1605,149 @@ const DataGridTableReact = forwardRef(({
       </tr>
     )
   }
-  function onKeySelectionChange(rowIdx: any, colIdx: any, e: any) {
-    if (e.code === 'ArrowDown') {
-      setSelectedRow((d: any) => {
-        if (rowIdx >= pages[pageNumber].length - 1) {
-          return d
-        }
-
-        wait(150).then(() => {
-          const input = document.querySelector(`.input.row-${rowIdx + 1}.col-${colIdx}`) as HTMLInputElement
-          if (input) {
-            input.focus()
-          }
-        })
-
-
-        return rowIdx + 1
-      })
-    }
-    if (e.code === 'ArrowUp') {
-      setSelectedRow((d: any) => {
-        if (rowIdx <= 0) {
-          return d
-        }
-
-        wait(150).then(() => {
-          const input = document.querySelector(`.input.row-${rowIdx - 1}.col-${colIdx}`) as HTMLInputElement
-          if (input) {
-            input.focus()
-          }
-        })
-
-        return rowIdx - 1
-      })
-
-    }
-  }
   const CellInput = forwardRef(({
     rowIdx,
     colIdx,
     colItm,
     rowItm,
-    parentRef,
   }: any, ref: any) => {
-    const [input, setInput] = useState(rowItm[colIdx] === '' && colItm.type === 'date' && rowItm[0] === '1.01.10' ? new Date().toISOString().split("T")[0] : rowItm[colIdx])
-    const prevValueRef = useRef(rowItm[colIdx]); // Use ref to store the previous value
-    const menuRef = useRef<any>(null);
-    const [contextMenu, setContextMenu] = useState(false);
-
-    const handleContextMenu = (event: any) => {
-      event.preventDefault();
-      setContextMenu(true)
-    };
-
-    useEffect(() => {
-      const handleClickOutside = (event: any) => {
-        if (menuRef.current && !menuRef.current.contains(event.target)) {
-          setContextMenu(false);
-        }
-      };
-
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }, []);
-
-    let Component = null
     const fontColor = selectedRow === rowIdx ? "#082f49" : "black"
 
     if (selectedRow === rowIdx) {
       if (colItm.type === 'select') {
-        Component = (
-          <SelectInput
-            label={{
-              title: "",
-              style: {
-                width: "0px",
-                display: "none"
-              },
-            }}
-            select={{
-              readOnly: colItm.readonly && colItm?.readonly(rowItm, colItm, rowIdx, colIdx),
-              className: `input row-${rowIdx} col-${colIdx} ${colItm.key}`,
-              style: {
-                width: "100%",
-                height: "22px",
-                background: selectedRow === rowIdx ? "transparent" : "white",
-                padding: 0,
-                margin: 0,
-                border: "none",
-                cursor: "pointer",
-                color: fontColor
-              },
-              value: input,
-              onChange: (e) => {
-                setInput(e.target.value)
-              },
-              onKeyDown: (e) => {
-                if (e.code === 'Enter' || e.code === 'NumpadEnter') {
-                  setData((itm: any) => {
-                    itm[rowIdx][colIdx] = input
-                    return itm
-                  })
-                  prevValueRef.current = input
-                  if (parentRef.current) {
-                    parentRef.current.onInputKeyDown(rowIdx, colIdx, input)
-                  }
-
-                }
-                onKeySelectionChange(rowIdx, colIdx, e)
-              },
-              onBlur: () => {
-                setInput(prevValueRef.current)
-              },
-              onContextMenu: (e) => handleContextMenu(e)
-            }}
-            datasource={colItm.options}
-            values={"key"}
-            display={"key"}
-          />
-        )
+        return <SelectInput
+          label={{
+            title: "",
+            style: {
+              width: "0px",
+              display: "none"
+            },
+          }}
+          select={{
+            readOnly: colItm.readonly && colItm?.readonly(rowItm, colItm, rowIdx, colIdx),
+            className: `input row-${rowIdx} col-${colIdx} ${colItm.key}`,
+            defaultValue: rowItm[colIdx],
+            style: {
+              width: "100%",
+              height: "22px",
+              background: selectedRow === rowIdx ? "transparent" : "white",
+              padding: 0,
+              margin: 0,
+              border: "none",
+              cursor: "pointer",
+              color: fontColor
+            },
+            onKeyDown: (e) => {
+              if (e.code === 'Enter' || e.code === 'NumpadEnter') {
+                onInputKeyDown(rowIdx, colIdx, e.currentTarget.value)
+              }
+            },
+            onBlur: (e) => {
+              e.currentTarget.value = miror.current[rowIdx][colIdx]
+            }
+          }}
+          datasource={colItm.options}
+          values={"key"}
+          display={"key"}
+        />
       } else if (colItm.type === 'number') {
-        Component = (
-          <NumericFormat
-            readOnly={colItm.readonly && colItm?.readonly(rowItm, colItm, rowIdx, colIdx)}
-            className={`input row-${rowIdx} col-${colIdx} ${colItm.key}`}
-            value={input}
-            getInputRef={ref}
-            decimalScale={2}
-            fixedDecimalScale={true}
-            onValueChange={(values) => {
-              setInput(values.formattedValue)
-            }}
-            style={{
-              width: '100%',
-              height: "100%",
-              background: selectedRow === rowIdx ? "transparent" : "white",
-              margin: 0,
-              border: "none",
-              cursor: "pointer",
-              color: fontColor
+        return <NumericFormat
+          readOnly={colItm.readonly && colItm?.readonly(rowItm, colItm, rowIdx, colIdx)}
+          className={`input row-${rowIdx} col-${colIdx} ${colItm.key}`}
+          getInputRef={ref}
+          decimalScale={2}
+          fixedDecimalScale={true}
+          style={{
+            width: '100%',
+            height: "100%",
+            background: selectedRow === rowIdx ? "transparent" : "white",
+            margin: 0,
+            border: "none",
+            cursor: "pointer",
+            color: fontColor
 
-            }}
-            onKeyDown={(e) => {
-              if (e.code === 'Enter' || e.code === 'NumpadEnter') {
-
-                const valueInput = e.currentTarget.value
-                if (valueInput !== '' && valueInput !== null && valueInput !== undefined) {
-                  if (isNaN(parseFloat(valueInput.replace(/,/g, '')))) {
-                    setInput('0.00')
-                    setData((itm: any) => {
-                      itm[rowIdx][colIdx] = '0.00'
-                      return itm
-                    })
-                    prevValueRef.current = '0.00'
-                  } else {
-                    setData((itm: any) => {
-                      itm[rowIdx][colIdx] = input
-                      return itm
-                    })
-                    prevValueRef.current = input
-                  }
-                } else {
-                  setInput('0.00')
-                  setData((itm: any) => {
-                    itm[rowIdx][colIdx] = '0.00'
-                    return itm
-                  })
-                  prevValueRef.current = '0.00'
-
-                }
-
-                if (parentRef.current) {
-                  parentRef.current.onInputKeyDown(rowIdx, colIdx, input)
-                }
-              }
-              onKeySelectionChange(rowIdx, colIdx, e)
-
-            }}
-            onBlur={(e) => {
-              setInput(prevValueRef.current)
-            }}
-            onContextMenu={(e: any) => {
-              handleContextMenu(e)
-            }}
-            allowNegative={false}
-            thousandSeparator
-            valueIsNumericString
-          />
-        )
+          }}
+          onKeyDown={(e) => {
+            if (e.code === 'Enter' || e.code === 'NumpadEnter') {
+              onInputKeyDown(rowIdx, colIdx, e.currentTarget.value)
+            }
+          }}
+          onBlur={(e) => {
+            e.currentTarget.value = miror.current[rowIdx][colIdx]
+          }}
+          defaultValue={rowItm[colIdx]}
+          allowNegative={false}
+          thousandSeparator
+          valueIsNumericString
+        />
       } else if (colItm.type === 'date') {
-        Component = (
-          <input
-            readOnly={colItm.readonly && colItm?.readonly(rowItm, colItm, rowIdx, colIdx)}
-            className={`input row-${rowIdx} col-${colIdx} ${colItm.key}`}
-            style={{
-              width: '100%',
-              height: "100%",
-              background: selectedRow === rowIdx ? "transparent" : "white",
-              margin: 0,
-              border: "none",
-              cursor: "pointer",
-              color: fontColor
-
-            }}
-            type={input === "" ? "text" : "date"}
-            value={input}
-            onChange={(e) => {
-              setInput(e.target.value)
-            }}
-            onKeyDown={(e) => {
-              if (e.code === 'Enter' || e.code === 'NumpadEnter') {
-                setData((itm: any) => {
-                  itm[rowIdx][colIdx] = input
-                  return itm
-                })
-                prevValueRef.current = input
-                if (parentRef.current) {
-                  parentRef.current.onInputKeyDown(rowIdx, colIdx, input)
-                }
-
-              }
-              onKeySelectionChange(rowIdx, colIdx, e)
-
-            }}
-            onBlur={() => {
-              setInput(prevValueRef.current)
-            }}
-            onContextMenu={(e: any) => {
-              handleContextMenu(e)
-            }}
-          />
-        )
-      } else {
-        Component = (
-          <input
-            readOnly={colItm.readonly && colItm?.readonly(rowItm, colItm, rowIdx, colIdx)}
-            className={`input row-${rowIdx} col-${colIdx} ${colItm.key}`}
-            style={{
-              width: '100%',
-              height: "100%",
-              background: selectedRow === rowIdx ? "transparent" : "white",
-              margin: 0,
-              border: "none",
-              cursor: "pointer",
-              color: fontColor
-
-            }}
-            value={input}
-            onChange={(e) => {
-              setInput(e.target.value)
-            }}
-            onKeyDown={(e) => {
-              if (e.code === 'Enter' || e.code === 'NumpadEnter') {
-                setData((itm: any) => {
-                  itm[rowIdx][colIdx] = input
-                  return itm
-                })
-                prevValueRef.current = input
-                if (parentRef.current) {
-                  parentRef.current.onInputKeyDown(rowIdx, colIdx, input)
-                }
-
-              }
-              onKeySelectionChange(rowIdx, colIdx, e)
-
-            }}
-            onBlur={() => {
-              setInput(prevValueRef.current)
-            }}
-            onContextMenu={(e: any) => {
-              handleContextMenu(e)
-            }}
-          />
-        )
-      }
-    } else {
-      Component = (
-        <input
-          readOnly={selectedRow !== rowIdx}
+        return <input
+          type={colItm.typeLogic && colItm.typeLogic(rowItm)}
+          readOnly={colItm.readonly && colItm?.readonly(rowItm, colItm, rowIdx, colIdx)}
           className={`input row-${rowIdx} col-${colIdx} ${colItm.key}`}
           style={{
             width: '100%',
             height: "100%",
+            background: selectedRow === rowIdx ? "transparent" : "white",
+            margin: 0,
             border: "none",
             cursor: "pointer",
             color: fontColor
           }}
-          value={rowItm[colIdx]}
-          onDoubleClick={(e) => {
-            setSelectedRow(rowIdx)
-          }}
-          onContextMenu={(e: any) => {
-            e.preventDefault()
-          }}
+          defaultValue={rowItm[colIdx]}
           onKeyDown={(e) => {
-            onKeySelectionChange(rowIdx, colIdx, e)
+            if (e.code === 'Enter' || e.code === 'NumpadEnter') {
+              onInputKeyDown(rowIdx, colIdx, e.currentTarget.value)
+            }
+          }}
+          onBlur={(e) => {
+            e.currentTarget.value = miror.current[rowIdx][colIdx]
           }}
         />
-      )
+      } else {
+        return <input
+          readOnly={colItm.readonly && colItm?.readonly(rowItm, colItm, rowIdx, colIdx)}
+          className={`input row-${rowIdx} col-${colIdx} ${colItm.key}`}
+          style={{
+            width: '100%',
+            height: "100%",
+            background: selectedRow === rowIdx ? "transparent" : "white",
+            margin: 0,
+            border: "none",
+            cursor: "pointer",
+            color: fontColor
+
+          }}
+          onBlur={(e) => {
+            e.currentTarget.value = miror.current[rowIdx][colIdx]
+          }}
+          defaultValue={rowItm[colIdx]}
+          onKeyDown={(e) => {
+            if (e.code === 'Enter' || e.code === 'NumpadEnter') {
+              onInputKeyDown(rowIdx, colIdx, e.currentTarget.value)
+            }
+
+          }}
+        />
+      }
+    } else {
+      return <input
+        readOnly={selectedRow !== rowIdx}
+        className={`input row-${rowIdx} col-${colIdx} ${colItm.key}`}
+        style={{
+          width: '100%',
+          height: "100%",
+          border: "none",
+          cursor: "pointer",
+          color: fontColor
+        }}
+        defaultValue={rowItm[colIdx]}
+        onDoubleClick={(e) => {
+          setSelectedRow(rowIdx)
+        }}
+      />
     }
 
-
-
-
-    return (
-      <>
-        {Component}
-        {contextMenu && <div
-          ref={menuRef}
-          style={{
-            position: "absolute",
-            top: "110%",
-            left: "0px",
-            background: "#e2e8f0",
-            width: "80px",
-            height: "auto",
-            padding: "7px 0",
-            boxShadow: "-3px -1px 13px -8px rgba(0,0,0,0.75)",
-            border: "1px solid #cbd5e1",
-            zIndex: "99999"
-          }}>
-          <RightClickComponent rowItm={rowItm} colItm={colItm} rowIdx={rowIdx} colIdx={colIdx} />
-        </div>}
-      </>
-    )
   })
   const ColumnData = forwardRef(({
     rowItm,
@@ -1961,17 +1865,14 @@ const DataGridTableReact = forwardRef(({
       </>
     )
   })
-
   const DrawDataColumn = forwardRef(({ parentRef }: any, ref) => {
     return (
       <tbody>
         {
-          pages[pageNumber]?.map((rowItm: any, rowIdx: any) => {
-
+          data?.map((rowItm: any, rowIdx: any) => {
             return (
               <tr key={rowIdx} className={`tr row-${rowIdx}`}>
                 <ColumnData parentRef={parentRef} rowItm={rowItm} rowIdx={rowIdx} />
-
               </tr>
             )
           })
@@ -1981,9 +1882,20 @@ const DataGridTableReact = forwardRef(({
   })
 
 
+
   return (
     <Fragment>
-      <div ref={parentElementRef} style={{ width: "calc(100vw - 40px)", height, overflow: "auto", position: "relative" }}>
+      <div ref={parentElementRef}
+        style={{
+          height,
+          overflow: "auto",
+          position: "relative",
+          width: "100%",
+          pointerEvents: disbaleTable ? "none" : "auto",
+          border: disbaleTable ? "2px solid #8c8f8e" : '2px solid #c0c0c0',
+          boxShadow: `inset -2px -2px 0 #ffffff, 
+                    inset 2px 2px 0 #808080`
+        }}>
         <div style={{ position: "absolute", width: `${totalRowWidth}px`, height: "auto" }}>
           <table style={{ borderCollapse: "collapse", width: "100%", position: "relative" }}>
             <thead >
@@ -1991,28 +1903,15 @@ const DataGridTableReact = forwardRef(({
                 <DrawHeaderColumn />
               }
             </thead>
-            {<DrawDataColumn ref={dataCellRef} parentRef={ref} />}
+            {<DrawDataColumn />}
           </table>
         </div>
       </div>
       <div style={{ width: "calc(100vw - 40px)", display: "flex", height: "40px" }}>
         <div style={{ width: "50%", display: "flex", alignItems: "center" }}><span style={{ fontSize: "14px" }}>Records : {data.length}</span></div>
-        <div style={{ width: "50%", display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
-          <Pagination
-            count={pages.length}
-            onChange={(e, value) => {
-              setPageNumber(value - 1)
-            }} />
-        </div>
       </div>
     </Fragment>
   )
 })
-function formatArrayIntoChunks(arr: Array<any>, chunkSize = 100) {
-  let result = [];
-  for (let i = 0; i < arr.length; i += chunkSize) {
-    result.push(arr.slice(i, i + chunkSize));
-  }
-  return result;
-}
+
 

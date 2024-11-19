@@ -126,8 +126,8 @@ export default function FirePolicy() {
       queryUrlName: "searchFirePolicy",
     },
     columns: [
-      { field: "_DateIssued", headerName: "Date", width: 200 },
-      { field: "PolicyNo", headerName: "Policy No", width: 250 },
+      { field: "_DateIssued", headerName: "Date", width: 100 },
+      { field: "PolicyNo", headerName: "Policy No", width: 200 },
       {
         field: "Account",
         headerName: "Account",
