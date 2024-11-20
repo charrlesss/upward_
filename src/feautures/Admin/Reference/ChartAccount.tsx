@@ -306,6 +306,8 @@ export default function ChartAccount() {
         style={{
           flex: 1,
           backgroundColor: "#F8F8FF",
+          padding: "5px"
+
         }}
       >
         <div

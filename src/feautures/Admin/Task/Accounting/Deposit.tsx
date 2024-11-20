@@ -31,6 +31,7 @@ import AutorenewIcon from '@mui/icons-material/Autorenew';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import '../../../../style/laoding.css'
 import PageHelmet from "../../../../components/Helmet";
+
 const defaultCashBreakDown = [
   { value1: "1,000.00", value2: "", value3: "0.00" },
   { value1: "500.00", value2: "", value3: "0.00" },
@@ -124,6 +125,7 @@ export const reducer = (state: any, action: any) => {
       return state;
   }
 };
+
 const DepositContext = createContext<any>({
   cashCollection: [],
   setCashCollection: () => { },
@@ -231,9 +233,7 @@ export default function Deposit() {
             refSlipCode.current.value = response.data.slipcode[0].collectionID
             _refTempSlipCode.current = response.data.slipcode[0].collectionID
           }
-          if (refDateDepo.current) {
-            refDateDepo.current.value = format(new Date(), "yyyy-MM-dd")
-          }
+
         })
       },
     });
@@ -675,6 +675,8 @@ export default function Deposit() {
           width: "100%",
           height: "100%",
           flex: 1,
+          padding: "5px",
+          background: "#F1F1F1"
         }}
       >
         <div
@@ -838,6 +840,7 @@ export default function Deposit() {
               },
             }}
             input={{
+              defaultValue: format(new Date(), "yyyy-MM-dd"),
               className: "search-input-up-on-key-down",
               type: "date",
               style: { width: "200px" },
@@ -1413,10 +1416,12 @@ function CollectionForDeposit() {
           Cash ( {TotalCashForDeposit} )
         </legend>
         <table
+          id="cash-breakdown-table"
           style={{
             border: "2px solid black",
             borderCollapse: "collapse",
             width: "100%",
+            background: "white"
           }}
         >
 
@@ -1531,18 +1536,23 @@ function TrComponent({ value1, value2, value3, idx }: any) {
     padding: "0 8px",
     width: "100%",
     fontSize: "11px",
-    margin: "0",
+    margin: "0 !important",
 
   };
 
   return (
-    <tr style={{ margin: "0", padding: "0 !important" }} >
+    <tr  >
       <td
         style={{
-          borderRight: "2px solid black", margin: "0", padding: "0"
+          borderRight: "2px solid black",
+          margin: "0",
+          padding: "0",
+          height: "15px"
+
         }}
       >
         <input
+          className={`row-${idx} col-0`}
           type="text"
           style={InputStyle}
           value={input1}
@@ -1554,10 +1564,15 @@ function TrComponent({ value1, value2, value3, idx }: any) {
       <td
         style={{
           borderRight: "2px solid black",
-          overflow: "hidden", margin: 0, padding: "0 !important"
+          overflow: "hidden",
+          margin: 0,
+          padding: "0 !important",
+          height: "15px"
+
         }}
       >
         <input
+          className={`row-${idx} col-1`}
           style={InputStyle}
           value={input2}
           onChange={(e) => {
@@ -1584,14 +1599,27 @@ function TrComponent({ value1, value2, value3, idx }: any) {
               idx
             );
           }}
+          onKeyDown={(e) => {
+            if (e.code === 'Enter' || e.code === 'NumpadEnter') {
+              e.preventDefault()
+              const nextInput = document.querySelector(`#cash-breakdown-table td .row-${idx + 1}.col-1`) as HTMLInputElement
+              if (nextInput) {
+                nextInput.focus()
+              }
+            }
+          }}
         />
       </td>
       <td
         style={{
-          borderRight: "2px solid black", margin: "0", padding: "0 !important"
+          borderRight: "2px solid black",
+          margin: "0",
+          padding: "0 !important",
+          height: "15px"
         }}
       >
         <input
+          className={`row-${idx} col-2`}
           type="text"
           style={InputStyle}
           value={input3}
@@ -1870,7 +1898,10 @@ const DepositTableSelected = forwardRef(({
               <tr>
                 <th style={{
                   width: '30px', border: "1px solid black",
-                  position: "sticky", top: 0, zIndex: 1, background: "#f0f0f0"
+                  position: "sticky",
+                  top: 0,
+                  zIndex: 1,
+                  background: "#f0f0f0"
                 }}
                 ></th>
                 {

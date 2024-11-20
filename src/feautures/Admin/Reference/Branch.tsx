@@ -5,7 +5,10 @@ export default function Branch() {
   return (
     <>
       <PageHelmet title="Branch" />
-      <div>Branch sadasd</div>
+      <div style={{
+        padding: "5px"
+
+      }}>Branch sadasd</div>
     </>
   )
 }

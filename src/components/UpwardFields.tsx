@@ -13,9 +13,9 @@ interface TextInputProps {
 }
 
 interface TextAreaPrps {
-  textarea:TextareaHTMLAttributes<HTMLTextAreaElement>
+  textarea: TextareaHTMLAttributes<HTMLTextAreaElement>
   label: HtmlHTMLAttributes<HTMLLabelElement>;
-  _inputRef:LegacyRef<HTMLTextAreaElement>
+  _inputRef: LegacyRef<HTMLTextAreaElement>
   icon?: ReactNode; // New prop for the icon
   iconPosition?: 'start' | 'end'; // New prop to choose icon position
   onIconClick?: React.MouseEventHandler<HTMLDivElement> | undefined,
@@ -62,9 +62,9 @@ export function TextFormatedInput({
   const ensureTwoDecimals = (value: string) => {
     // If the value has no decimal part, append '.00'
     if (!value.includes('.')) {
-      if(value === ''){
-        return   '0.00';
-      }else{
+      if (value === '') {
+        return '0.00';
+      } else {
 
         return value + '.00';
       }
@@ -269,7 +269,7 @@ export function TextAreaInput({
           height: '100%',
           ...textarea.style,
         }}
-      
+
       />
       {icon && iconPosition === 'end' && (
         <div onClick={onIconClick}
@@ -303,6 +303,7 @@ export function SelectInput({
   datasource = [],
   values = "",
   display = "",
+  containerStyle
 }: {
   selectRef?: React.RefObject<HTMLSelectElement>;
   labelRef?: React.RefObject<HTMLLabelElement>;
@@ -311,6 +312,7 @@ export function SelectInput({
   datasource: Array<any>;
   values: string;
   display: string;
+  containerStyle?: React.CSSProperties | undefined
 }) {
   const id = useId();
   return (
@@ -319,6 +321,7 @@ export function SelectInput({
         display: "flex",
         height: "18px",
         alignItems: "center",
+        ...containerStyle
       }}
     >
       <label {...label} htmlFor={id}>

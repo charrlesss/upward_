@@ -5,7 +5,9 @@ export default function Booklet() {
   return (
     <>
       <PageHelmet title="Booklet" />
-      <div>Booklet</div>
+      <div style={{
+        padding: "5px"
+      }}>Booklet</div>
     </>
   )
 }

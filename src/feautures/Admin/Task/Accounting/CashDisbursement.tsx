@@ -1,8 +1,6 @@
 import { useReducer, useContext, useState, useRef, useEffect, forwardRef, useImperativeHandle, Fragment, useCallback } from "react";
 import {
-  TextField,
   Button,
-  Pagination,
 } from "@mui/material";
 import LoadingButton from "@mui/lab/LoadingButton";
 import AddIcon from "@mui/icons-material/Add";
@@ -16,12 +14,12 @@ import NotInterestedIcon from "@mui/icons-material/NotInterested";
 import { deepOrange, grey } from "@mui/material/colors";
 import { SelectInput, TextAreaInput, TextInput } from "../../../../components/UpwardFields";
 import { format } from "date-fns";
-import "../../../../style/datagridviewinput.css"
 import { setNewStateValue } from "./PostDateChecks";
 import { codeCondfirmationAlert, saveCondfirmationAlert } from "../../../../lib/confirmationAlert";
 import { flushSync } from "react-dom";
 import { NumericFormat } from "react-number-format";
 import PageHelmet from "../../../../components/Helmet";
+
 
 const initialState = {
   sub_refNo: "",
@@ -56,7 +54,8 @@ const columns = [
     key: "code", label: "Code", width: 150, type: 'text'
   },
   {
-    key: "acctName", label: "Account Name", width: 400, type: 'text'
+    key: "acctName", label: "Account Name", width: 400, type: 'text',
+    readonly: () => true
   },
   {
     key: "subAcctName",
@@ -148,6 +147,7 @@ export default function CashDisbursement() {
   const tableRef = useRef<any>(null)
   const { myAxios, user } = useContext(AuthContext);
   const [state, dispatch] = useReducer(reducer, initialState);
+  const inputSearchRef = useRef<HTMLInputElement>(null)
   const refNoRef = useRef<HTMLInputElement>(null)
   const dateRef = useRef<HTMLInputElement>(null)
   const expRef = useRef<HTMLInputElement>(null)
@@ -158,7 +158,6 @@ export default function CashDisbursement() {
   const [getTotalDebit, setGetTotalDebit] = useState(0)
   const [getTotalCredit, setGetTotalCredit] = useState(0)
   const [totalRow, setTotalRow] = useState(0)
-
   const isDisableField = cashDMode === "";
 
 
@@ -930,23 +929,20 @@ export default function CashDisbursement() {
     }).then((result) => {
       if (result.isConfirmed) {
         if (tableData.length === 1) {
-          tableRef.current?.updateData([])
-          tableRef.current?.AddRow()
-          tableRef.current?.setNewRowIndex(0)
-          wait(250).then(() => {
-            const input = document.querySelector(`.input.row-${0}.col-0`) as HTMLInputElement
-            if (input) {
-              input.focus()
-            }
-          })
-        } else {
-          const indexToRemove = SelectedIndex;
-          if (indexToRemove > -1 && indexToRemove < tableData.length) {
-            tableData.splice(indexToRemove, 1);
-          }
-          const dd = tableData
-          tableRef.current?.updatePages(dd)
+          return
         }
+        const indexToRemove = SelectedIndex;
+        if (indexToRemove > -1 && indexToRemove < tableData.length) {
+          tableData.splice(indexToRemove, 1);
+        }
+        tableRef.current?.updateData(tableData)
+        wait(100).then(() => {
+          const input = document.querySelector(`.tr.row-${indexToRemove - 1} td input`) as HTMLInputElement
+          if (input) {
+            input.click()
+          }
+        })
+
       }
     });
   }
@@ -978,7 +974,12 @@ export default function CashDisbursement() {
   return (
     <>
       <PageHelmet title="Cash Disbursement" />
-      <div>
+      <div style={{
+        background: "#F1F1F1",
+        padding: "5px",
+        flex: 1,
+
+      }} >
         <div
           style={{
             display: "flex",
@@ -996,28 +997,35 @@ export default function CashDisbursement() {
             {isLoadingSearchCashDisbursement ? (
               <LoadingButton loading={isLoadingSearchCashDisbursement} />
             ) : (
-              <TextField
-                label="Search"
-                size="small"
-                name="search"
-                onKeyDown={(e) => {
-                  if (e.code === "Enter" || e.code === "NumpadEnter") {
-                    e.preventDefault();
-                    return openSearchCashDisbursement(
-                      (e.target as HTMLInputElement).value
-                    );
-                  }
-                }}
-                InputProps={{
-                  style: { height: "27px", fontSize: "14px" },
 
+              <TextInput
+                label={{
+                  title: "Search: ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "50px",
+                  },
                 }}
-                sx={{
-                  width: "300px",
-                  height: "27px",
-                  ".MuiFormLabel-root": { fontSize: "14px" },
-                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                input={{
+                  className: "search-input-up-on-key-down",
+                  type: "search",
+                  onKeyDown: (e) => {
+                    if (e.key === "Enter" || e.key === "NumpadEnter") {
+                      e.preventDefault();
+                      openSearchCashDisbursement(e.currentTarget.value);
+                    }
+                    if (e.key === "ArrowDown") {
+                      e.preventDefault();
+                      const datagridview = document.querySelector(
+                        ".grid-container"
+                      ) as HTMLDivElement;
+                      datagridview.focus();
+                    }
+                  },
+                  style: { width: "500px" },
                 }}
+                inputRef={inputSearchRef}
               />
             )}
 
@@ -1122,7 +1130,7 @@ export default function CashDisbursement() {
         <div style={{ display: "flex", marginBottom: "10px" }}>
           <fieldset
             style={{
-              border: "1px solid #cbd5e1",
+              border: "1px solid black",
               borderRadius: "5px",
               position: "relative",
               flex: 1,
@@ -1249,7 +1257,7 @@ export default function CashDisbursement() {
           </fieldset>
           <fieldset
             style={{
-              border: "1px solid #cbd5e1",
+              border: "1px solid black",
               borderRadius: "5px",
               position: "relative",
               width: "400px",
@@ -1451,6 +1459,7 @@ export default function CashDisbursement() {
 
   );
 };
+
 const DataGridTableReact = forwardRef(({
   rows,
   columns,
@@ -1466,6 +1475,13 @@ const DataGridTableReact = forwardRef(({
   const [selectedRow, setSelectedRow] = useState<any>(0)
   const totalRowWidth = column.reduce((a: any, b: any) => a + b.width, 0)
 
+  function AddRow() {
+    setData((d: any) => {
+      const newD = column.map((itm: any) => '')
+      return [...d, newD]
+    })
+  }
+
   useEffect(() => {
     if (columns.length > 0) {
       setColumn(columns.filter((itm: any) => !itm.hide))
@@ -1480,12 +1496,9 @@ const DataGridTableReact = forwardRef(({
     }
   }, [rows, columns])
 
-  function AddRow() {
-    setData((d: any) => {
-      const newD = column.map((itm: any) => '')
-      return [...d, newD]
-    })
-  }
+  useEffect(() => {
+    miror.current = data
+  }, [data])
 
   useImperativeHandle(ref, () => ({
     AddRow,
@@ -1504,51 +1517,43 @@ const DataGridTableReact = forwardRef(({
       setSelectedRow(0)
     }
   }))
-  useEffect(() => {
-    miror.current = data
-  }, [data])
+
+  function onKeySelectionChange(rowIdx: any, colIdx: any, e: any) {
+    if (e.code === 'ArrowDown') {
+      setSelectedRow((d: any) => {
+        if (rowIdx >= data.length - 1) {
+          return d
+        }
+
+        wait(150).then(() => {
+          const input = document.querySelector(`.input.row-${rowIdx + 1}.col-${colIdx}`) as HTMLInputElement
+          if (input) {
+            input.focus()
+          }
+        })
 
 
+        return rowIdx + 1
+      })
+    }
+    if (e.code === 'ArrowUp') {
+      setSelectedRow((d: any) => {
+        if (rowIdx <= 0) {
+          return d
+        }
 
+        wait(150).then(() => {
+          const input = document.querySelector(`.input.row-${rowIdx - 1}.col-${colIdx}`) as HTMLInputElement
+          if (input) {
+            input.focus()
+          }
+        })
 
-  // function onKeySelectionChange(rowIdx: any, colIdx: any, e: any) {
-  //   if (e.code === 'ArrowDown') {
-  //     setSelectedRow((d: any) => {
-  //       if (rowIdx >= pages[pageNumber].length - 1) {
-  //         return d
-  //       }
+        return rowIdx - 1
+      })
 
-  //       wait(150).then(() => {
-  //         const input = document.querySelector(`.input.row-${rowIdx + 1}.col-${colIdx}`) as HTMLInputElement
-  //         if (input) {
-  //           input.focus()
-  //         }
-  //       })
-
-
-  //       return rowIdx + 1
-  //     })
-  //   }
-  //   if (e.code === 'ArrowUp') {
-  //     setSelectedRow((d: any) => {
-  //       if (rowIdx <= 0) {
-  //         return d
-  //       }
-
-  //       wait(150).then(() => {
-  //         const input = document.querySelector(`.input.row-${rowIdx - 1}.col-${colIdx}`) as HTMLInputElement
-  //         if (input) {
-  //           input.focus()
-  //         }
-  //       })
-
-  //       return rowIdx - 1
-  //     })
-
-  //   }
-  // }
-
-
+    }
+  }
   const startResize = (index: any, e: any) => {
     e.preventDefault();
     e.stopPropagation();
@@ -1573,14 +1578,16 @@ const DataGridTableReact = forwardRef(({
   };
   const DrawHeaderColumn = () => {
     return (
-      <tr>
+      <tr style={{ border: "1px solid red" }}>
         <th className="header"
           style={{
             width: '30px',
             border: "1px solid black",
-            position: "sticky", top: 0,
-            zIndex: 1,
+            position: "sticky",
+            top: -1,
+            zIndex: 2,
             background: "#f0f0f0",
+
           }}
         >
         </th>
@@ -1589,7 +1596,19 @@ const DataGridTableReact = forwardRef(({
             return (
               <th
                 className={`header col-${colIdx} ${colItm.key}`} key={colIdx}
-                style={{ width: colItm.width, border: "1px solid black", position: "sticky", top: 0, zIndex: 1, background: "white" }}
+                style={{
+                  width: colItm.width,
+                  border: "1px solid black",
+                  position: "sticky",
+                  top: -1,
+                  zIndex: 2,
+                  background: "#f0f0f0",
+                  fontSize: "12px",
+                  textAlign: "left",
+                  padding: "0px 5px",
+                  boxShadow: '0px -1px 0px black'
+
+                }}
               >
                 <div
                   className="resize-handle"
@@ -1598,7 +1617,8 @@ const DataGridTableReact = forwardRef(({
                     startResize(colIdx, e);
                   }}
                 />
-                {colItm.label}</th>
+                {colItm.label}
+              </th>
             )
           })
         }
@@ -1611,11 +1631,14 @@ const DataGridTableReact = forwardRef(({
     colItm,
     rowItm,
   }: any, ref: any) => {
-    const fontColor = selectedRow === rowIdx ? "#082f49" : "black"
+    const fontColor = "black"
 
     if (selectedRow === rowIdx) {
       if (colItm.type === 'select') {
         return <SelectInput
+          containerStyle={{
+            width: "100%"
+          }}
           label={{
             title: "",
             style: {
@@ -1628,9 +1651,10 @@ const DataGridTableReact = forwardRef(({
             className: `input row-${rowIdx} col-${colIdx} ${colItm.key}`,
             defaultValue: rowItm[colIdx],
             style: {
-              width: "100%",
-              height: "22px",
-              background: selectedRow === rowIdx ? "transparent" : "white",
+              width: "100% !important",
+              flex: 1,
+              height: "100% !important",
+              background: selectedRow === rowIdx ? "transparent" : "#cbd5e1",
               padding: 0,
               margin: 0,
               border: "none",
@@ -1641,6 +1665,7 @@ const DataGridTableReact = forwardRef(({
               if (e.code === 'Enter' || e.code === 'NumpadEnter') {
                 onInputKeyDown(rowIdx, colIdx, e.currentTarget.value)
               }
+              onKeySelectionChange(rowIdx, colIdx, e)
             },
             onBlur: (e) => {
               e.currentTarget.value = miror.current[rowIdx][colIdx]
@@ -1660,7 +1685,7 @@ const DataGridTableReact = forwardRef(({
           style={{
             width: '100%',
             height: "100%",
-            background: selectedRow === rowIdx ? "transparent" : "white",
+            background: selectedRow === rowIdx ? "transparent" : "#cbd5e1",
             margin: 0,
             border: "none",
             cursor: "pointer",
@@ -1671,6 +1696,8 @@ const DataGridTableReact = forwardRef(({
             if (e.code === 'Enter' || e.code === 'NumpadEnter') {
               onInputKeyDown(rowIdx, colIdx, e.currentTarget.value)
             }
+            onKeySelectionChange(rowIdx, colIdx, e)
+
           }}
           onBlur={(e) => {
             e.currentTarget.value = miror.current[rowIdx][colIdx]
@@ -1688,7 +1715,7 @@ const DataGridTableReact = forwardRef(({
           style={{
             width: '100%',
             height: "100%",
-            background: selectedRow === rowIdx ? "transparent" : "white",
+            background: selectedRow === rowIdx ? "transparent" : "#cbd5e1",
             margin: 0,
             border: "none",
             cursor: "pointer",
@@ -1699,6 +1726,8 @@ const DataGridTableReact = forwardRef(({
             if (e.code === 'Enter' || e.code === 'NumpadEnter') {
               onInputKeyDown(rowIdx, colIdx, e.currentTarget.value)
             }
+            onKeySelectionChange(rowIdx, colIdx, e)
+
           }}
           onBlur={(e) => {
             e.currentTarget.value = miror.current[rowIdx][colIdx]
@@ -1711,7 +1740,7 @@ const DataGridTableReact = forwardRef(({
           style={{
             width: '100%',
             height: "100%",
-            background: selectedRow === rowIdx ? "transparent" : "white",
+            background: selectedRow === rowIdx ? "transparent" : "#cbd5e1",
             margin: 0,
             border: "none",
             cursor: "pointer",
@@ -1726,6 +1755,8 @@ const DataGridTableReact = forwardRef(({
             if (e.code === 'Enter' || e.code === 'NumpadEnter') {
               onInputKeyDown(rowIdx, colIdx, e.currentTarget.value)
             }
+            onKeySelectionChange(rowIdx, colIdx, e)
+
 
           }}
         />
@@ -1739,11 +1770,21 @@ const DataGridTableReact = forwardRef(({
           height: "100%",
           border: "none",
           cursor: "pointer",
-          color: fontColor
+          color: fontColor,
+          fontSize: "12px"
         }}
         defaultValue={rowItm[colIdx]}
         onDoubleClick={(e) => {
           setSelectedRow(rowIdx)
+          wait(100).then(() => {
+            const input = document.querySelector(`.input.row-${rowIdx}.col-${colIdx}`) as HTMLInputElement
+            if (input) {
+              input.focus()
+            }
+          })
+        }}
+        onKeyDown={(e) => {
+          onKeySelectionChange(rowIdx, colIdx, e)
         }}
       />
     }
@@ -1770,48 +1811,62 @@ const DataGridTableReact = forwardRef(({
       };
     }, []);
 
+    const tdstyle: any = {
+      position: "relative",
+      borderBottom: "1px solid #808080",
+      borderLeft: "1px solid #808080",
+      borderTop: "none",
+      borderRight: "1px solid #808080",
+      cursor: "pointer",
+      background: selectedRow === rowIdx ? "#f1f5f9" : "",
+      height: "18px important",
+    }
+
     return (
       <>
-        <td style={{
-          position: "relative",
-          borderBottom: "1px solid black",
-          borderLeft: "1px solid black",
-          borderTop: "none",
-          borderRight: "1px solid black",
-          cursor: "pointer",
-          background: selectedRow === rowIdx ? "#bae6fd" : "",
-        }}>
-          <input
-            style={{
-              cursor: "pointer"
-            }}
-            readOnly={true}
-            type="checkbox"
-            checked={selectedRow === rowIdx}
-            onClick={() => {
-              setSelectedRow(rowIdx)
-              wait(150).then(() => {
-                const input = document.querySelector(`.input.row-${rowIdx}.col-0`) as HTMLInputElement
-                if (input) {
-                  input.focus()
-                }
-              })
-            }}
-            onContextMenu={(e) => {
-              e.preventDefault()
-              if (rowIdx === selectedRow) {
-                setMenuCheckBox(true)
-                setTimeout(() => {
-                  if (menuCheckBoxRef.current) {
-                    menuCheckBoxRef.current.scrollIntoView({
-                      behavior: "smooth"
-                    });
-                  }
-                }, 100)
+        <td style={tdstyle} className="" >
+          <div style={{
+            height: "15px",
+            width: "100%",
+            position: "relative",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center"
+          }}>
+            <input
+              style={{
+                cursor: "pointer",
 
-              }
-            }}
-          />
+              }}
+              readOnly={true}
+              type="checkbox"
+              checked={selectedRow === rowIdx}
+              onClick={() => {
+                setSelectedRow(rowIdx)
+                wait(150).then(() => {
+                  const input = document.querySelector(`.input.row-${rowIdx}.col-0`) as HTMLInputElement
+                  if (input) {
+                    input.focus()
+                  }
+                })
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault()
+                if (rowIdx === selectedRow) {
+                  setMenuCheckBox(true)
+                  setTimeout(() => {
+                    if (menuCheckBoxRef.current) {
+                      menuCheckBoxRef.current.scrollIntoView({
+                        behavior: "smooth"
+                      });
+                    }
+                  }, 100)
+
+                }
+              }}
+            />
+          </div>
+
           {menuCheckBox && <div
             ref={menuCheckBoxRef}
             style={{
@@ -1833,30 +1888,31 @@ const DataGridTableReact = forwardRef(({
           column.map((colItm: any, colIdx: any) => {
             return (
               <td
-
                 key={colIdx}
                 className={`td row-${rowIdx} col-${colIdx} ${colItm.key}`}
                 style={{
                   width: colItm.width,
-                  padding: '0 important',
-                  margin: 0,
-                  background: selectedRow === rowIdx ? "#bae6fd" : "",
-                  position: "relative",
-                  height: "22px",
-                  borderBottom: "1px solid black",
-                  borderLeft: "1px solid black",
-                  borderTop: "none",
-                  borderRight: "1px solid black",
-                  cursor: "pointer",
+                  ...tdstyle
                 }}
               >
-                <CellInput
-                  rowIdx={rowIdx}
-                  colIdx={colIdx}
-                  colItm={colItm}
-                  rowItm={rowItm}
-                  parentRef={parentRef}
-                />
+                <div
+                  style={{
+                    height: "15px",
+                    width: "100%",
+                    position: "relative",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center"
+                  }}>
+
+                  <CellInput
+                    rowIdx={rowIdx}
+                    colIdx={colIdx}
+                    colItm={colItm}
+                    rowItm={rowItm}
+                    parentRef={parentRef}
+                  />
+                </div>
               </td>
             )
           })
@@ -1881,8 +1937,6 @@ const DataGridTableReact = forwardRef(({
     )
   })
 
-
-
   return (
     <Fragment>
       <div ref={parentElementRef}
@@ -1894,7 +1948,8 @@ const DataGridTableReact = forwardRef(({
           pointerEvents: disbaleTable ? "none" : "auto",
           border: disbaleTable ? "2px solid #8c8f8e" : '2px solid #c0c0c0',
           boxShadow: `inset -2px -2px 0 #ffffff, 
-                    inset 2px 2px 0 #808080`
+                    inset 2px 2px 0 #808080`,
+          background: "white"
         }}>
         <div style={{ position: "absolute", width: `${totalRowWidth}px`, height: "auto" }}>
           <table style={{ borderCollapse: "collapse", width: "100%", position: "relative" }}>

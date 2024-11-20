@@ -1006,6 +1006,7 @@ export default function Collections() {
           display: "flex",
           flexDirection: "column",
           flex: 1,
+          padding: "5px"
         }}
       >
         <CollectionContext.Provider value={{ credit, debit }}>

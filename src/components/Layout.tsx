@@ -33,7 +33,7 @@ const Main = styled("main", { shouldForwardProp: (prop) => prop !== "open" })<{
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
-//  marginLeft: `-${drawerWidth}px`,
+  //  marginLeft: `-${drawerWidth}px`,
   ...(open && {
     transition: theme.transitions.create("margin", {
       easing: theme.transitions.easing.easeOut,
@@ -156,7 +156,11 @@ export default function Layout() {
   }, []);
 
   return (
-    <Box sx={{ display: "flex" ,flexDirection:"column" }}>
+    <Box sx={{
+      display: "flex",
+      flexDirection: "column",
+      height: "100vh",
+    }}>
       <CssBaseline />
       {/* {matchQuery ? (
         <SidebarMobile
@@ -222,10 +226,8 @@ export default function Layout() {
           id="page-content"
           sx={(theme) => ({
             width: "100%",
-            minHeight: "calc(100vh - 64px)",
-            maxHeight: "100%",
+            height: "100%",
             position: "relative",
-            padding: "10px",
             flex: 1,
             display: "flex",
             flexDirection: "column",

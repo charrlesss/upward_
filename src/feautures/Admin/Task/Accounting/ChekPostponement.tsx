@@ -128,6 +128,8 @@ export default function ChekPostponement() {
           maxHeight: "100%",
           display: "flex",
           flexDirection: "column",
+          padding: "5px",
+          flex: 1,
         }}
       >
         <div style={{ display: "flex" }}>

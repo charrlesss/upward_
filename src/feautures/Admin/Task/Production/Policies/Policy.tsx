@@ -5,7 +5,7 @@ import useUrlParams from "../../../../../hooks/useUrlParams";
 
 export default function Policy() {
   return (
-    <div>
+    <div style={{padding:"5px"}}>
       <ChipsButton />
       <Divider sx={{ mt: 2 }} />
       <div style={{ padding: 10 }}>

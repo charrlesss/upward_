@@ -112,6 +112,8 @@ export default function CheckPullout() {
         maxHeight: "100%",
         display: "flex",
         flexDirection: "column",
+        flex: 1,
+        padding: "5px",
       }}
     >
       <div style={{ display: "flex" }}>
@@ -344,7 +346,7 @@ function CheckPulloutRequest() {
           flexDirection: "column",
           width: "100%",
           height: "100%",
-          flex: 1,
+
         }}
       >
         <div

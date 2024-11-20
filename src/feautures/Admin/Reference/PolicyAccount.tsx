@@ -219,6 +219,8 @@ export default function PolicyAccount() {
           flexDirection: "column",
           flex: 1,
           width: "100%",
+          padding: "5px"
+
         }}
       >
         <Box

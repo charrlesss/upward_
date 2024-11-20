@@ -104,6 +104,8 @@ export default function GeneralJournal() {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const [mode, setMode] = useState<"update" | "add" | "">("")
 
+  const inputSearchRef = useRef<HTMLInputElement>(null)
+
   const refRefNo = useRef<HTMLInputElement>(null)
   const _refSubRefNo = useRef<HTMLInputElement>(null)
   const refDate = useRef<HTMLInputElement>(null)
@@ -209,19 +211,32 @@ export default function GeneralJournal() {
     onSuccess: (res) => {
       const response = res as any;
       if (response.data.success) {
-        queryClient.invalidateQueries("search-general-journal");
-
-        setNewStateValue(dispatch, initialState);
-        refetchGeneralJournalGenerator();
-        setGeneralJournal([]);
-        setMode('')
 
         return Swal.fire({
           position: "center",
           icon: "success",
           title: response.data.message,
           timer: 1500,
-        });
+        }).then(() => {
+          Swal.fire({
+            text: "Do you want to print it?",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, save it!",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              handleClickPrint()
+            }
+            wait(100).then(() => {
+              queryClient.invalidateQueries("search-general-journal");
+              setNewStateValue(dispatch, initialState);
+              refetchGeneralJournalGenerator();
+              setGeneralJournal([]);
+              setMode('')
+            })
+          });
+        })
       }
       return Swal.fire({
         position: "center",
@@ -1003,20 +1018,14 @@ export default function GeneralJournal() {
     <>
       <PageHelmet title="General Journal" />
       <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        width: "100%",
-        height: "100%",
-        flex: 1,
-        padding: "10px"
-      }}
-    >
-      <div
         style={{
           display: "flex",
-          alignItems: "center",
-          columnGap: "5px",
+          flexDirection: "column",
+          width: "100%",
+          height: "100%",
+          flex: 1,
+          padding: "10px",
+          background: "#F1F1F1"
         }}
       >
         <div
@@ -1026,291 +1035,420 @@ export default function GeneralJournal() {
             columnGap: "5px",
           }}
         >
-          {isLoadingSearchGeneralJounal ? (
-            <LoadingButton loading={isLoadingSearchGeneralJounal} />
-          ) : (
-            <TextField
-              label="Search"
-              size="small"
-              name="search"
-              value={state.search}
-              onChange={handleInputChange}
-              onKeyDown={(e) => {
-                if (e.code === "Enter" || e.code === "NumpadEnter") {
-                  e.preventDefault();
-                  return openSearchGeneralJounal(
-                    (e.target as HTMLInputElement).value
-                  );
-                }
-                if (e.key === "ArrowDown") {
-                  e.preventDefault();
-                  const datagridview = document.querySelector(
-                    ".grid-container"
-                  ) as HTMLDivElement;
-                  datagridview.focus();
-                }
-              }}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-                className: "manok"
-              }}
-              sx={{
-                width: "300px",
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            />
-          )}
-          {modeDefault && (
-            <Button
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-              }}
-              variant="contained"
-              startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
-              id="entry-header-save-button"
-              onClick={() => {
-                setMode('add')
-              }}
-              color="primary"
-            >
-              New
-            </Button>
-          )}
-          <LoadingButton
-            sx={{
-              height: "30px",
-              fontSize: "11px",
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              columnGap: "5px",
             }}
-            loading={loadingGeneralJournalMutate}
-            disabled={modeDefault}
-            onClick={handleOnSave}
-            color="success"
-            variant="contained"
           >
-            Save
-          </LoadingButton>
-          {(modeAdd || modeUpdate) && (
+            {isLoadingSearchGeneralJounal ? (
+              <LoadingButton loading={isLoadingSearchGeneralJounal} />
+            ) : (
+              <TextInput
+                label={{
+                  title: "Search: ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "50px",
+                  },
+                }}
+                input={{
+                  className: "search-input-up-on-key-down",
+                  type: "search",
+                  onKeyDown: (e) => {
+                    if (e.key === "Enter" || e.key === "NumpadEnter") {
+                      e.preventDefault();
+                      openSearchGeneralJounal(e.currentTarget.value);
+                    }
+                    if (e.key === "ArrowDown") {
+                      e.preventDefault();
+                      const datagridview = document.querySelector(
+                        ".grid-container"
+                      ) as HTMLDivElement;
+                      datagridview.focus();
+                    }
+                  },
+                  style: { width: "500px" },
+                }}
+                inputRef={inputSearchRef}
+              />
+
+            )}
+            {modeDefault && (
+              <Button
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                }}
+                variant="contained"
+                startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+                id="entry-header-save-button"
+                onClick={() => {
+                  setMode('add')
+                }}
+                color="primary"
+              >
+                New
+              </Button>
+            )}
             <LoadingButton
               sx={{
                 height: "30px",
                 fontSize: "11px",
               }}
-              variant="contained"
-              startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
-              color="error"
-              onClick={() => {
-                Swal.fire({
-                  title: "Are you sure?",
-                  text: "You won't be able to revert this!",
-                  icon: "warning",
-                  showCancelButton: true,
-                  confirmButtonColor: "#3085d6",
-                  cancelButtonColor: "#d33",
-                  confirmButtonText: "Yes, cancel it!",
-                }).then((result) => {
-                  if (result.isConfirmed) {
-                    onCancel()
-                  }
-                });
-              }}
+              loading={loadingGeneralJournalMutate}
               disabled={modeDefault}
+              onClick={handleOnSave}
+              color="success"
+              variant="contained"
             >
-              Cancel
+              Save
             </LoadingButton>
-          )}
-          <LoadingButton
-            sx={{
-              height: "30px",
-              fontSize: "11px",
-              background: deepOrange[500],
-              ":hover": {
-                background: deepOrange[600],
-              },
-            }}
-            onClick={handleVoid}
-            loading={loadingVoidGeneralJournalMutate}
-            disabled={modeDefault}
-            variant="contained"
-            startIcon={<NotInterestedIcon sx={{ width: 20, height: 20 }} />}
-          >
-            Void
-          </LoadingButton>
-          <LoadingButton
-            sx={{
-              height: "30px",
-              fontSize: "11px",
-              background: brown[500],
-              ":hover": {
-                background: brown[600],
-              },
-            }}
-            onClick={handleJobs}
-            loading={isLoadingJob}
-            variant="contained"
-            startIcon={<CardTravelIcon sx={{ width: 20, height: 20 }} />}
-          >
-            Jobs
-          </LoadingButton>
-          <Button
-            disabled={modeDefault}
-            id="basic-button"
-            aria-haspopup="true"
-            onClick={handleClickPrint}
-            sx={{
-              height: "30px",
-              fontSize: "11px",
-              color: "white",
-              backgroundColor: grey[600],
-              "&:hover": {
-                backgroundColor: grey[700],
-              },
-            }}
-          >
-            Print
-          </Button>
-        </div>
-        <div
-          style={{
-            fontSize: "13px",
-            border: "1px solid #d4d4d8",
-            width: "100%",
-            display: "flex",
-            columnGap: "50px",
-            height: "30px",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <p style={{ margin: 0, padding: 0, color: "black" }}>
-            <span style={{ fontSize: "12px" }}>Total Rows:</span> <strong>{generalJournal.length}</strong>
-          </p>
-          <p style={{ margin: 0, padding: 0, color: "black" }}>
-            <span style={{ fontSize: "12px" }}>Total Debit:</span> <strong>{state.totalDebit}</strong>
-          </p>
-          <p style={{ margin: 0, padding: 0, color: "black" }}>
-            <span style={{ fontSize: "12px" }}>Total Credit:</span> <strong>{state.totalCredit}</strong>
-          </p>
-          <p style={{ margin: 0, padding: 0, color: "black" }}>
-            <span style={{ fontSize: "12px" }}>Balance:</span>{" "}
-            <strong
-              style={{
-                color:
-                  parseFloat(state.totalBalance.replace(/,/g, "")) > 0
-                    ? "red"
-                    : "black",
+            {(modeAdd || modeUpdate) && (
+              <LoadingButton
+                sx={{
+                  height: "30px",
+                  fontSize: "11px",
+                }}
+                variant="contained"
+                startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
+                color="error"
+                onClick={() => {
+                  Swal.fire({
+                    title: "Are you sure?",
+                    text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Yes, cancel it!",
+                  }).then((result) => {
+                    if (result.isConfirmed) {
+                      onCancel()
+                    }
+                  });
+                }}
+                disabled={modeDefault}
+              >
+                Cancel
+              </LoadingButton>
+            )}
+            <LoadingButton
+              sx={{
+                height: "30px",
+                fontSize: "11px",
+                background: deepOrange[500],
+                ":hover": {
+                  background: deepOrange[600],
+                },
+              }}
+              onClick={handleVoid}
+              loading={loadingVoidGeneralJournalMutate}
+              disabled={modeDefault}
+              variant="contained"
+              startIcon={<NotInterestedIcon sx={{ width: 20, height: 20 }} />}
+            >
+              Void
+            </LoadingButton>
+            <LoadingButton
+              sx={{
+                height: "30px",
+                fontSize: "11px",
+                background: brown[500],
+                ":hover": {
+                  background: brown[600],
+                },
+              }}
+              onClick={handleJobs}
+              loading={isLoadingJob}
+              variant="contained"
+              startIcon={<CardTravelIcon sx={{ width: 20, height: 20 }} />}
+            >
+              Jobs
+            </LoadingButton>
+            <Button
+              disabled={modeDefault}
+              id="basic-button"
+              aria-haspopup="true"
+              onClick={handleClickPrint}
+              sx={{
+                height: "30px",
+                fontSize: "11px",
+                color: "white",
+                backgroundColor: grey[600],
+                "&:hover": {
+                  backgroundColor: grey[700],
+                },
               }}
             >
-              {state.totalBalance}
-            </strong>
-          </p>
+              Print
+            </Button>
+          </div>
+          <div
+            style={{
+              fontSize: "13px",
+              border: "1px solid #d4d4d8",
+              width: "100%",
+              display: "flex",
+              columnGap: "50px",
+              height: "30px",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <p style={{ margin: 0, padding: 0, color: "black" }}>
+              <span style={{ fontSize: "12px" }}>Total Rows:</span> <strong>{generalJournal.length}</strong>
+            </p>
+            <p style={{ margin: 0, padding: 0, color: "black" }}>
+              <span style={{ fontSize: "12px" }}>Total Debit:</span> <strong>{state.totalDebit}</strong>
+            </p>
+            <p style={{ margin: 0, padding: 0, color: "black" }}>
+              <span style={{ fontSize: "12px" }}>Total Credit:</span> <strong>{state.totalCredit}</strong>
+            </p>
+            <p style={{ margin: 0, padding: 0, color: "black" }}>
+              <span style={{ fontSize: "12px" }}>Balance:</span>{" "}
+              <strong
+                style={{
+                  color:
+                    parseFloat(state.totalBalance.replace(/,/g, "")) > 0
+                      ? "red"
+                      : "black",
+                }}
+              >
+                {state.totalBalance}
+              </strong>
+            </p>
+          </div>
         </div>
-      </div>
-      <div
-        style={{
-          position: "relative",
-          width: "100%",
-          height: "auto",
-          display: "flex",
-          marginTop: "10px",
-          gap: "10px",
-          padding: "5px",
-        }}
-      >
-        {loadingGeneralJournalGenerator ? (
-          <LoadingButton loading={loadingGeneralJournalGenerator} />
-        ) : (
-          <TextInput
-            label={{
-              title: "Ref. No. : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "70px",
-              },
-            }}
-            input={{
-              disabled: modeDefault || modeUpdate,
-              type: "text",
-              style: { width: "190px" },
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                  refDate.current?.focus()
-                }
-              }
-            }}
-            inputRef={refRefNo}
-          />
-        )}
-        <TextInput
-          label={{
-            title: "Date : ",
-            style: {
-              fontSize: "12px",
-              fontWeight: "bold",
-              width: "50px",
-            },
-          }}
-          input={{
-            disabled: modeDefault,
-            type: "date",
-            style: { width: "190px" },
-            onKeyDown: (e) => {
-              if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                refExplanation.current?.focus()
-              }
-            }
-          }}
-          inputRef={refDate}
-        />
-        <TextInput
-          label={{
-            title: "Explanation : ",
-            style: {
-              fontSize: "12px",
-              fontWeight: "bold",
-              width: "90px",
-            },
-          }}
-          input={{
-            disabled: modeDefault,
-            type: "text",
-            style: { width: "600px" },
-            onKeyDown: (e) => {
-              if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                refCode.current?.focus()
-              }
-            }
-          }}
-          inputRef={refExplanation}
-        />
-      </div>
-      <fieldset
-        style={{
-          border: "1px solid #cbd5e1",
-          borderRadius: "5px",
-          position: "relative",
-          width: "100%",
-          height: "auto",
-          marginTop: "10px",
-
-          padding: "15px",
-        }}
-      >
         <div
           style={{
+            position: "relative",
+            width: "100%",
+            height: "auto",
             display: "flex",
+            marginTop: "10px",
             gap: "10px",
+            padding: "5px",
           }}
         >
-          {isLoadingChartAccountSearch ? (
-            <LoadingButton loading={isLoadingChartAccountSearch} />
+          {loadingGeneralJournalGenerator ? (
+            <LoadingButton loading={loadingGeneralJournalGenerator} />
           ) : (
             <TextInput
               label={{
-                title: "Code : ",
+                title: "Ref. No. : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "70px",
+                },
+              }}
+              input={{
+                disabled: modeDefault || modeUpdate,
+                type: "text",
+                style: { width: "190px" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                    refDate.current?.focus()
+                  }
+                }
+              }}
+              inputRef={refRefNo}
+            />
+          )}
+          <TextInput
+            label={{
+              title: "Date : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "50px",
+              },
+            }}
+            input={{
+              disabled: modeDefault,
+              type: "date",
+              style: { width: "190px" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                  refExplanation.current?.focus()
+                }
+              }
+            }}
+            inputRef={refDate}
+          />
+          <TextInput
+            label={{
+              title: "Explanation : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "90px",
+              },
+            }}
+            input={{
+              disabled: modeDefault,
+              type: "text",
+              style: { width: "600px" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                  refCode.current?.focus()
+                }
+              }
+            }}
+            inputRef={refExplanation}
+          />
+        </div>
+        <fieldset
+          style={{
+            border: "1px solid #cbd5e1",
+            borderRadius: "5px",
+            position: "relative",
+            width: "100%",
+            height: "auto",
+            marginTop: "10px",
+
+            padding: "15px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+            }}
+          >
+            {isLoadingChartAccountSearch ? (
+              <LoadingButton loading={isLoadingChartAccountSearch} />
+            ) : (
+              <TextInput
+                label={{
+                  title: "Code : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "70px",
+                  },
+                }}
+                input={{
+                  disabled: modeDefault,
+                  type: "text",
+                  style: { width: "190px" },
+                  onKeyDown: (e) => {
+                    if (e.key === "Enter" || e.key === "NumpadEnter") {
+                      e.preventDefault();
+                      if (refCode.current) {
+                        openChartAccountSearch(refCode.current.value)
+                      }
+                    }
+                  }
+                }}
+                inputRef={refCode}
+                icon={<SupervisorAccountIcon sx={{ fontSize: "18px", color: modeDefault ? "gray" : "black" }} />}
+                onIconClick={(e) => {
+                  e.preventDefault()
+                  if (refCode.current) {
+                    openChartAccountSearch(refCode.current.value)
+                  }
+                }}
+                disableIcon={modeDefault}
+              />
+            )}
+
+            <TextInput
+              label={{
+                title: "Account Name : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
+              }}
+              input={{
+                disabled: modeDefault,
+                type: "text",
+                style: { width: "190px" },
+                readOnly: true,
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                    refSubAccount.current?.focus()
+                  }
+                }
+              }}
+              inputRef={refAccountName}
+            />
+
+            <TextInput
+              label={{
+                title: "Sub Account : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
+              }}
+              input={{
+                disabled: modeDefault,
+                type: "text",
+                style: { width: "190px" },
+                readOnly: true,
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                    refName.current?.focus()
+                  }
+                }
+              }}
+              inputRef={refSubAccount}
+            />
+
+            {isLoadingPolicyIdClientIdRefId ? (
+              <LoadingButton loading={isLoadingPolicyIdClientIdRefId} />
+            ) : (
+              <TextInput
+                label={{
+                  title: "I.D : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "70px",
+                  },
+                }}
+                input={{
+                  disabled: modeDefault,
+                  type: "text",
+                  style: { width: "300px" },
+                  onKeyDown: (e) => {
+                    if (e.key === "Enter" || e.key === "NumpadEnter") {
+                      e.preventDefault();
+                      if (refName.current) {
+                        openPolicyIdClientIdRefId(refName.current.value)
+                      }
+                    }
+                  }
+                }}
+                inputRef={refName}
+                icon={<AccountCircleIcon sx={{ fontSize: "18px", color: modeDefault ? "gray" : "black" }} />}
+                onIconClick={(e) => {
+                  e.preventDefault()
+                  if (refName.current) {
+                    openPolicyIdClientIdRefId(refName.current.value)
+                  }
+                }}
+                disableIcon={modeDefault}
+              />
+            )}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+              marginTop: "10px",
+            }}
+          >
+            <TextFormatedInput
+              label={{
+                title: "Debit : ",
                 style: {
                   fontSize: "12px",
                   fontWeight: "bold",
@@ -1322,164 +1460,16 @@ export default function GeneralJournal() {
                 type: "text",
                 style: { width: "190px" },
                 onKeyDown: (e) => {
-                  if (e.key === "Enter" || e.key === "NumpadEnter") {
-                    e.preventDefault();
-                    if (refCode.current) {
-                      openChartAccountSearch(refCode.current.value)
-                    }
+                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                    refCredit.current?.focus()
                   }
                 }
               }}
-              inputRef={refCode}
-              icon={<SupervisorAccountIcon sx={{ fontSize: "18px", color: modeDefault ? "gray" : "black" }} />}
-              onIconClick={(e) => {
-                e.preventDefault()
-                if (refCode.current) {
-                  openChartAccountSearch(refCode.current.value)
-                }
-              }}
-              disableIcon={modeDefault}
+              inputRef={refDebit}
             />
-          )}
-
-          <TextInput
-            label={{
-              title: "Account Name : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-              },
-            }}
-            input={{
-              disabled: modeDefault,
-              type: "text",
-              style: { width: "190px" },
-              readOnly: true,
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                  refSubAccount.current?.focus()
-                }
-              }
-            }}
-            inputRef={refAccountName}
-          />
-
-          <TextInput
-            label={{
-              title: "Sub Account : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-              },
-            }}
-            input={{
-              disabled: modeDefault,
-              type: "text",
-              style: { width: "190px" },
-              readOnly: true,
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                  refName.current?.focus()
-                }
-              }
-            }}
-            inputRef={refSubAccount}
-          />
-
-          {isLoadingPolicyIdClientIdRefId ? (
-            <LoadingButton loading={isLoadingPolicyIdClientIdRefId} />
-          ) : (
-            <TextInput
+            <TextFormatedInput
               label={{
-                title: "I.D : ",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "70px",
-                },
-              }}
-              input={{
-                disabled: modeDefault,
-                type: "text",
-                style: { width: "300px" },
-                onKeyDown: (e) => {
-                  if (e.key === "Enter" || e.key === "NumpadEnter") {
-                    e.preventDefault();
-                    if (refName.current) {
-                      openPolicyIdClientIdRefId(refName.current.value)
-                    }
-                  }
-                }
-              }}
-              inputRef={refName}
-              icon={<AccountCircleIcon sx={{ fontSize: "18px", color: modeDefault ? "gray" : "black" }} />}
-              onIconClick={(e) => {
-                e.preventDefault()
-                if (refName.current) {
-                  openPolicyIdClientIdRefId(refName.current.value)
-                }
-              }}
-              disableIcon={modeDefault}
-            />
-          )}
-        </div>
-        <div
-          style={{
-            display: "flex",
-            gap: "10px",
-            marginTop: "10px",
-          }}
-        >
-          <TextFormatedInput
-            label={{
-              title: "Debit : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "70px",
-              },
-            }}
-            input={{
-              disabled: modeDefault,
-              type: "text",
-              style: { width: "190px" },
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                  refCredit.current?.focus()
-                }
-              }
-            }}
-            inputRef={refDebit}
-          />
-          <TextFormatedInput
-            label={{
-              title: "Credit : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-              },
-            }}
-            input={{
-              disabled: modeDefault,
-              type: "text",
-              style: { width: "190px" },
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                  refTC.current?.focus()
-                }
-              }
-            }}
-            inputRef={refCredit}
-          />
-          {isLoadingTransactionAccount ? (
-            <LoadingButton loading={isLoadingTransactionAccount} />
-          ) : (
-            <TextInput
-              label={{
-                title: "TC : ",
+                title: "Credit : ",
                 style: {
                   fontSize: "12px",
                   fontWeight: "bold",
@@ -1491,392 +1481,416 @@ export default function GeneralJournal() {
                 type: "text",
                 style: { width: "190px" },
                 onKeyDown: (e) => {
-                  if (e.key === "Enter" || e.key === "NumpadEnter") {
-                    e.preventDefault();
-                    if (refTC.current) {
-                      openTransactionAccount(refTC.current.value)
-                    }
+                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                    refTC.current?.focus()
                   }
                 }
               }}
-              inputRef={refTC}
-              icon={<AccountBalanceWalletIcon sx={{ fontSize: "18px", color: modeDefault ? "gray" : "black" }} />}
-              onIconClick={(e) => {
-                e.preventDefault()
-                if (refTC.current) {
-                  openTransactionAccount(refTC.current.value)
-                }
-              }}
-              disableIcon={modeDefault}
+              inputRef={refCredit}
             />
-          )}
-          <TextInput
-            label={{
-              title: "Remarks : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "70px",
-              },
-            }}
-            input={{
-              disabled: modeDefault,
-              type: "text",
-              style: { width: "300px" },
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                  refVat.current?.focus()
-                }
-              }
-            }}
-            inputRef={refRemarks}
-          />
-        </div>
-        <div style={{
-          display: "flex",
-          gap: "10px",
-          marginTop: "10px",
-        }}>
-
-          <SelectInput
-            label={{
-              title: "Vat Type : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "70px",
-              },
-            }}
-            selectRef={refVat}
-            select={{
-              disabled: modeDefault,
-              style: { width: "190px", height: "22px" },
-              defaultValue: "Non-VAT",
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                  e.preventDefault()
-                  refInvoice.current?.focus()
-                }
-              }
-            }}
-            datasource={[
-              { key: "VAT" },
-              { key: "Non-VAT" },
-            ]}
-            values={"key"}
-            display={"key"}
-          />
-          <TextInput
-            label={{
-              title: "OR/Invoice No. : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-              },
-            }}
-            input={{
-              disabled: modeDefault,
-              type: "text",
-              style: { width: "300px" },
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                  e.preventDefault()
-                  handleRowSave()
-                }
-              }
-            }}
-            inputRef={refInvoice}
-          />
-
-          <Button
-            disabled={modeDefault}
-            sx={{
-              height: "22px",
-              fontSize: "11px",
-            }}
-            variant="contained"
-            startIcon={<SaveIcon sx={{ fontSize: "12px", }} />}
-            onClick={() => {
-              handleRowSave()
-            }}
-            color="primary"
-          >
-            Save Row
-          </Button>
-        </div>
-      </fieldset>
-      <div
-        ref={refParent}
-        className={mainId}
-        style={{
-          marginTop: "10px",
-          width: "100%",
-          position: "relative",
-          flex: 1,
-        }}
-      >
-        <UpwardTable
-          isLoading={loadingGeneralJournalMutate ||
-            loadingGetSearchSelectedGeneralJournal ||
-            isLoadingJob}
-          ref={table}
-          rows={generalJournal}
-          column={selectedCollectionColumns}
-          width={width}
-          height={height}
-          dataReadOnly={true}
-          onSelectionChange={(selected, rowIndex) => {
-            const rowSelected = selected[0]
-            if (selected.length > 0) {
-              refIDNo.current = rowSelected.IDNo
-              refSubAcct.current = rowSelected.BranchCode
-
-              if (refName.current) {
-                refName.current.value = rowSelected.ClientName
-              }
-              if (refTC.current) {
-                refTC.current.value = rowSelected.TC_Code
-              }
-              if (refAccountName.current) {
-                refAccountName.current.value = rowSelected.acctName
-              }
-              if (refCode.current) {
-                refCode.current.value = rowSelected.code
-              }
-              if (refCredit.current) {
-                refCredit.current.value = rowSelected.credit
-              }
-              if (refDebit.current) {
-                refDebit.current.value = rowSelected.debit
-              }
-              if (refInvoice.current) {
-                refInvoice.current.value = rowSelected.invoice
-              }
-              if (refRemarks.current) {
-                refRemarks.current.value = rowSelected.remarks
-              }
-              if (refSubAccount.current) {
-                refSubAccount.current.value = rowSelected.subAcctName
-              }
-              if (refVat.current) {
-                refVat.current.value = rowSelected.vatType
-              }
-              setSelectedIndex(rowIndex)
-            } else {
-              setSelectedIndex(null)
-              resetRow()
-            }
-          }}
-          onKeyDown={(row, key, rowIndex) => {
-            if (key === "Delete" || key === "Backspace") {
-              Swal.fire({
-                title: `Are you sure you want to delete?`,
-                text: "You won't be able to revert this!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, delete it!",
-              }).then((result) => {
-                if (result.isConfirmed) {
-                  return setGeneralJournal((d: any) => {
-                    return d.filter(
-                      (items: any, index: number) => index !== rowIndex
-                    );
-                  });
-                }
-              });
-              return;
-            }
-          }}
-          inputsearchselector=".manok"
-        />
-      </div>
-      <Modal open={openJobs} onClose={() => setOpenJobs(false)}>
-        <Box
-          sx={{
-            position: "absolute" as "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: 470,
-            bgcolor: "background.paper",
-            p: 4,
-          }}
-        >
-          <IconButton
-            style={{
-              position: "absolute",
-              top: "10px",
-              right: "10px",
-            }}
-            aria-label="search-client"
-            onClick={() => setOpenJobs(false)}
-          >
-            <CloseIcon />
-          </IconButton>
-          <Typography
-            id="modal-modal-title"
-            variant="h6"
-            component="h2"
-            sx={{ marginBottom: "20px" }}
-          >
-            Jobs
-          </Typography>
-          <div
-            style={{
-              width: "400px",
-            }}
-          >
-            <div
-              style={{
-                width: "100%",
-                display: "flex",
-                marginBottom: "10px",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <DatePicker
-                  sx={{
-                    width: "200px",
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                  }}
-                  slotProps={{
-                    textField: {
-                      size: "small",
-                      name: "",
-                      InputLabelProps: {
-                        style: {
-                          fontSize: "14px",
-                        },
-                      },
-                      InputProps: {
-                        style: { height: "27px", fontSize: "14px" },
-                      },
-                    },
-                  }}
-                  label={"Transaction Date: "}
-                  views={["month", "year"]}
-                  value={state.jobTransactionDate}
-                  onChange={(value) => {
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "jobTransactionDate",
-                      value: value,
-                    });
-                  }}
-                />
-              </LocalizationProvider>
-              <FormControlLabel
-                sx={{
-                  height: "30px",
-                  "& .MuiTypography-root": {
-                    fontSize: "14px",
+            {isLoadingTransactionAccount ? (
+              <LoadingButton loading={isLoadingTransactionAccount} />
+            ) : (
+              <TextInput
+                label={{
+                  title: "TC : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "100px",
                   },
                 }}
-                control={
-                  <Checkbox
-                    size="small"
-                    checked={state.jobAutoExp}
-                    onChange={(e) => {
+                input={{
+                  disabled: modeDefault,
+                  type: "text",
+                  style: { width: "190px" },
+                  onKeyDown: (e) => {
+                    if (e.key === "Enter" || e.key === "NumpadEnter") {
+                      e.preventDefault();
+                      if (refTC.current) {
+                        openTransactionAccount(refTC.current.value)
+                      }
+                    }
+                  }
+                }}
+                inputRef={refTC}
+                icon={<AccountBalanceWalletIcon sx={{ fontSize: "18px", color: modeDefault ? "gray" : "black" }} />}
+                onIconClick={(e) => {
+                  e.preventDefault()
+                  if (refTC.current) {
+                    openTransactionAccount(refTC.current.value)
+                  }
+                }}
+                disableIcon={modeDefault}
+              />
+            )}
+            <TextInput
+              label={{
+                title: "Remarks : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "70px",
+                },
+              }}
+              input={{
+                disabled: modeDefault,
+                type: "text",
+                style: { width: "300px" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                    refVat.current?.focus()
+                  }
+                }
+              }}
+              inputRef={refRemarks}
+            />
+          </div>
+          <div style={{
+            display: "flex",
+            gap: "10px",
+            marginTop: "10px",
+          }}>
+
+            <SelectInput
+              label={{
+                title: "Vat Type : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "70px",
+                },
+              }}
+              selectRef={refVat}
+              select={{
+                disabled: modeDefault,
+                style: { width: "190px", height: "22px" },
+                defaultValue: "Non-VAT",
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                    e.preventDefault()
+                    refInvoice.current?.focus()
+                  }
+                }
+              }}
+              datasource={[
+                { key: "VAT" },
+                { key: "Non-VAT" },
+              ]}
+              values={"key"}
+              display={"key"}
+            />
+            <TextInput
+              label={{
+                title: "OR/Invoice No. : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
+              }}
+              input={{
+                disabled: modeDefault,
+                type: "text",
+                style: { width: "300px" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                    e.preventDefault()
+                    handleRowSave()
+                  }
+                }
+              }}
+              inputRef={refInvoice}
+            />
+
+            <Button
+              disabled={modeDefault}
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<SaveIcon sx={{ fontSize: "12px", }} />}
+              onClick={() => {
+                handleRowSave()
+              }}
+              color="primary"
+            >
+              Save Row
+            </Button>
+          </div>
+        </fieldset>
+        <div
+          ref={refParent}
+          className={mainId}
+          style={{
+            marginTop: "10px",
+            width: "100%",
+            position: "relative",
+            flex: 1,
+          }}
+        >
+          <UpwardTable
+            isLoading={loadingGeneralJournalMutate ||
+              loadingGetSearchSelectedGeneralJournal ||
+              isLoadingJob}
+            ref={table}
+            rows={generalJournal}
+            column={selectedCollectionColumns}
+            width={width}
+            height={height}
+            dataReadOnly={true}
+            onSelectionChange={(selected, rowIndex) => {
+              const rowSelected = selected[0]
+              if (selected.length > 0) {
+                refIDNo.current = rowSelected.IDNo
+                refSubAcct.current = rowSelected.BranchCode
+
+                if (refName.current) {
+                  refName.current.value = rowSelected.ClientName
+                }
+                if (refTC.current) {
+                  refTC.current.value = rowSelected.TC_Code
+                }
+                if (refAccountName.current) {
+                  refAccountName.current.value = rowSelected.acctName
+                }
+                if (refCode.current) {
+                  refCode.current.value = rowSelected.code
+                }
+                if (refCredit.current) {
+                  refCredit.current.value = rowSelected.credit
+                }
+                if (refDebit.current) {
+                  refDebit.current.value = rowSelected.debit
+                }
+                if (refInvoice.current) {
+                  refInvoice.current.value = rowSelected.invoice
+                }
+                if (refRemarks.current) {
+                  refRemarks.current.value = rowSelected.remarks
+                }
+                if (refSubAccount.current) {
+                  refSubAccount.current.value = rowSelected.subAcctName
+                }
+                if (refVat.current) {
+                  refVat.current.value = rowSelected.vatType
+                }
+                setSelectedIndex(rowIndex)
+              } else {
+                setSelectedIndex(null)
+                resetRow()
+              }
+            }}
+            onKeyDown={(row, key, rowIndex) => {
+              if (key === "Delete" || key === "Backspace") {
+                Swal.fire({
+                  title: `Are you sure you want to delete?`,
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, delete it!",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    return setGeneralJournal((d: any) => {
+                      return d.filter(
+                        (items: any, index: number) => index !== rowIndex
+                      );
+                    });
+                  }
+                });
+                return;
+              }
+            }}
+            inputsearchselector=".manok"
+          />
+        </div>
+        <Modal open={openJobs} onClose={() => setOpenJobs(false)}>
+          <Box
+            sx={{
+              position: "absolute" as "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: 470,
+              bgcolor: "background.paper",
+              p: 4,
+            }}
+          >
+            <IconButton
+              style={{
+                position: "absolute",
+                top: "10px",
+                right: "10px",
+              }}
+              aria-label="search-client"
+              onClick={() => setOpenJobs(false)}
+            >
+              <CloseIcon />
+            </IconButton>
+            <Typography
+              id="modal-modal-title"
+              variant="h6"
+              component="h2"
+              sx={{ marginBottom: "20px" }}
+            >
+              Jobs
+            </Typography>
+            <div
+              style={{
+                width: "400px",
+              }}
+            >
+              <div
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  marginBottom: "10px",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <DatePicker
+                    sx={{
+                      width: "200px",
+                      ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                    }}
+                    slotProps={{
+                      textField: {
+                        size: "small",
+                        name: "",
+                        InputLabelProps: {
+                          style: {
+                            fontSize: "14px",
+                          },
+                        },
+                        InputProps: {
+                          style: { height: "27px", fontSize: "14px" },
+                        },
+                      },
+                    }}
+                    label={"Transaction Date: "}
+                    views={["month", "year"]}
+                    value={state.jobTransactionDate}
+                    onChange={(value) => {
                       dispatch({
                         type: "UPDATE_FIELD",
-                        field: "jobAutoExp",
-                        value: !state.jobAutoExp,
+                        field: "jobTransactionDate",
+                        value: value,
                       });
                     }}
                   />
-                }
-                label="Auto Explanation"
-              />
-            </div>
-            <FormControl
-              fullWidth
-              size="small"
-              variant="outlined"
-              sx={{
-                ".MuiFormLabel-root": {
-                  fontSize: "14px",
-                  background: "white",
-                  zIndex: 99,
-                  padding: "0 3px",
-                },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            >
-              <InputLabel id="label-selection-job-type">Type of Job</InputLabel>
-              <Select
-                labelId="label-selection-job-type"
-                value={state.jobType}
-                name="jobType"
-                onChange={handleInputChange}
-                autoWidth
+                </LocalizationProvider>
+                <FormControlLabel
+                  sx={{
+                    height: "30px",
+                    "& .MuiTypography-root": {
+                      fontSize: "14px",
+                    },
+                  }}
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={state.jobAutoExp}
+                      onChange={(e) => {
+                        dispatch({
+                          type: "UPDATE_FIELD",
+                          field: "jobAutoExp",
+                          value: !state.jobAutoExp,
+                        });
+                      }}
+                    />
+                  }
+                  label="Auto Explanation"
+                />
+              </div>
+              <FormControl
+                fullWidth
+                size="small"
+                variant="outlined"
                 sx={{
-                  height: "27px",
-                  fontSize: "14px",
+                  ".MuiFormLabel-root": {
+                    fontSize: "14px",
+                    background: "white",
+                    zIndex: 99,
+                    padding: "0 3px",
+                  },
+                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
                 }}
               >
-                <MenuItem value={""}> </MenuItem>
-                <MenuItem value={"0"}>Reversal of Accrued Interest </MenuItem>
-                <MenuItem value={"1"}>
-                  {" "}
-                  Income Recognition & Accrual of Interest
-                </MenuItem>
-                <MenuItem value={"2"}>Penalty Charges</MenuItem>
-                <MenuItem value={"3"}>Penalty Income</MenuItem>
-                <MenuItem value={"4"}>RPT Transaction (NIL-HN)</MenuItem>
-                <MenuItem value={"5"}>RPT Transaction (AMIFIN)</MenuItem>
-                <MenuItem value={"6"}>RPT Income</MenuItem>
-                <MenuItem value={"7"}>Monthly Accrual Expenses</MenuItem>
-                <MenuItem value={"8"}>Monthly Accrual Income</MenuItem>
-                <MenuItem value={"9"}>
-                  Production (Milestone Guarantee)
-                </MenuItem>
-                <MenuItem value={"10"}>
-                  Production (Liberty Insurance Co.)
-                </MenuItem>
-                <MenuItem value={"11"}>Production (Federal Phoenix)</MenuItem>
-              </Select>
-            </FormControl>
-          </div>
+                <InputLabel id="label-selection-job-type">Type of Job</InputLabel>
+                <Select
+                  labelId="label-selection-job-type"
+                  value={state.jobType}
+                  name="jobType"
+                  onChange={handleInputChange}
+                  autoWidth
+                  sx={{
+                    height: "27px",
+                    fontSize: "14px",
+                  }}
+                >
+                  <MenuItem value={""}> </MenuItem>
+                  <MenuItem value={"0"}>Reversal of Accrued Interest </MenuItem>
+                  <MenuItem value={"1"}>
+                    {" "}
+                    Income Recognition & Accrual of Interest
+                  </MenuItem>
+                  <MenuItem value={"2"}>Penalty Charges</MenuItem>
+                  <MenuItem value={"3"}>Penalty Income</MenuItem>
+                  <MenuItem value={"4"}>RPT Transaction (NIL-HN)</MenuItem>
+                  <MenuItem value={"5"}>RPT Transaction (AMIFIN)</MenuItem>
+                  <MenuItem value={"6"}>RPT Income</MenuItem>
+                  <MenuItem value={"7"}>Monthly Accrual Expenses</MenuItem>
+                  <MenuItem value={"8"}>Monthly Accrual Income</MenuItem>
+                  <MenuItem value={"9"}>
+                    Production (Milestone Guarantee)
+                  </MenuItem>
+                  <MenuItem value={"10"}>
+                    Production (Liberty Insurance Co.)
+                  </MenuItem>
+                  <MenuItem value={"11"}>Production (Federal Phoenix)</MenuItem>
+                </Select>
+              </FormControl>
+            </div>
 
-          <div
-            style={{
-              display: "flex",
-              columnGap: "30px",
-              alignItems: "flex-end",
-              marginTop: "20px",
-            }}
-          >
-            <LoadingButton
-              loading={isLoadingJob}
-              color="success"
-              variant="contained"
-              onClick={() => mutateJob(state)}
+            <div
+              style={{
+                display: "flex",
+                columnGap: "30px",
+                alignItems: "flex-end",
+                marginTop: "20px",
+              }}
             >
-              Create Job
-            </LoadingButton>
-            <Button
-              // ref={checkModalSaveButton}
-              color="error"
-              variant="contained"
-              onClick={() => setOpenJobs(false)}
-            >
-              Cancel
-            </Button>
-          </div>
-        </Box>
-      </Modal>
-      {ModalChartAccountSearch}
-      {ModalPolicyIdClientIdRefId}
-      {ModalTransactionAccount}
-      {ModalSearchGeneralJounal}
-    </div>
-      </>
-   
+              <LoadingButton
+                loading={isLoadingJob}
+                color="success"
+                variant="contained"
+                onClick={() => mutateJob(state)}
+              >
+                Create Job
+              </LoadingButton>
+              <Button
+                // ref={checkModalSaveButton}
+                color="error"
+                variant="contained"
+                onClick={() => setOpenJobs(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </Box>
+        </Modal>
+        {ModalChartAccountSearch}
+        {ModalPolicyIdClientIdRefId}
+        {ModalTransactionAccount}
+        {ModalSearchGeneralJounal}
+      </div>
+    </>
+
   );
 }
 

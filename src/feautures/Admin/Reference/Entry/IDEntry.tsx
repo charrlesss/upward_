@@ -102,6 +102,7 @@ export default function IDEntry() {
         flex: 1,
         display: "flex",
         flexDirection: "column",
+        padding: "5px"
       }}
     >
       <Box>

@@ -33,6 +33,9 @@ import {
 } from "../../../../lib/confirmationAlert";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import PageHelmet from "../../../../components/Helmet";
+import { SelectInput, TextInput } from "../../../../components/UpwardFields";
+import { NumericFormat } from "react-number-format";
+import { format } from "date-fns";
 
 const initialState = {
   sub_refNo: "",
@@ -97,6 +100,29 @@ export const chartColumn = [
 
 export default function PettyCash() {
   const refParent = useRef<HTMLDivElement>(null);
+  const inputSearchRef = useRef<HTMLInputElement>(null)
+
+  const subrefNoRef = useRef('')
+  const refNoRef = useRef<HTMLInputElement>(null)
+  const dateRef = useRef<HTMLInputElement>(null)
+  const payeeRef = useRef<HTMLInputElement>(null)
+  const explanationRef = useRef<HTMLInputElement>(null)
+
+
+  const accountRef = useRef<HTMLInputElement>(null);
+  const usageRef = useRef<HTMLInputElement>(null);
+  const amountRef = useRef<HTMLInputElement>(null);
+  const vatRef = useRef<HTMLSelectElement>(null);
+  const invoiceRef = useRef<HTMLInputElement>(null);
+
+  const transactionCodeRef = useRef('')
+  const transactionShortRef = useRef('')
+  const clientIdRef = useRef('')
+
+
+
+
+
   const { myAxios, user } = useContext(AuthContext);
   const [state, dispatch] = useReducer(reducer, initialState);
   const [editTransaction, setEditTransaction] = useState({
@@ -104,13 +130,9 @@ export default function PettyCash() {
     updateId: "",
   });
   const [pettyCash, setPettyCash] = useState<GridRowSelectionModel>([]);
-  const datePickerRef = useRef<HTMLElement>(null);
-  const reloadIDButtonRef = useRef<HTMLButtonElement>(null);
   const payeeInputRef = useRef<HTMLInputElement>(null);
   const explanationInputRef = useRef<HTMLInputElement>(null);
-  const invoiceInputRef = useRef<HTMLInputElement>(null);
   let creditTransactionRef = useRef<HTMLInputElement>(null);
-  const amountRef = useRef<HTMLInputElement>(null);
   const pdcSearchInput = useRef<HTMLInputElement>(null);
   const queryClient = new QueryClient();
   const isDisableField = state.pettyCashMode === "";
@@ -118,11 +140,7 @@ export default function PettyCash() {
   const chartAccountSearchRef = useRef<HTMLInputElement>(null);
 
 
-  const dateRef = useRef<HTMLInputElement>(null);
-  const accountRef = useRef<HTMLInputElement>(null);
-  const usageRef = useRef<HTMLInputElement>(null);
-  const vatRef = useRef<HTMLInputElement>(null);
-  const invoiceRef = useRef<HTMLInputElement>(null);
+
 
   const {
     isLoading: loadingPettyCashIdGenerator,
@@ -138,16 +156,12 @@ export default function PettyCash() {
     refetchOnWindowFocus: false,
     onSuccess: (data) => {
       const response = data as any;
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "refNo",
-        value: response.data.pettyCashId[0].petty_cash_id,
-      });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "sub_refNo",
-        value: response.data.pettyCashId[0].petty_cash_id,
-      });
+      wait(100).then(() => {
+        subrefNoRef.current = response.data.pettyCashId[0].petty_cash_id
+        if (refNoRef.current) {
+          refNoRef.current.value = response.data.pettyCashId[0].petty_cash_id
+        }
+      })
     },
   });
   const {
@@ -233,27 +247,18 @@ export default function PettyCash() {
     uniqueId: "Acct_Code",
     responseDataKey: "chartAccount",
     onSelected: (selectedRowData) => {
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "transactionCode",
-        value: selectedRowData[0].Acct_Code,
-      });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "transactionTitle",
-        value: selectedRowData[0].Acct_Title,
-      });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "transactionShort",
-        value: selectedRowData[0].Short,
-      });
-      closeChartAccount();
+      wait(100).then(() => {
+        transactionCodeRef.current = selectedRowData[0].Acct_Code
+        transactionShortRef.current = selectedRowData[0].Short
+        if (accountRef.current) {
+          accountRef.current.value = selectedRowData[0].Acct_Title
+        }
+      })
       wait(200).then(() => {
         usageRef.current?.focus()
       })
+      closeChartAccount();
     },
-
     searchRef: chartAccountSearchRef,
   });
 
@@ -297,8 +302,13 @@ export default function PettyCash() {
         value: selectedRowData[0].IDNo,
       });
       closeCliendIDsModal();
+      wait(100).then(() => {
+        clientIdRef.current = selectedRowData[0].IDNo
+        if (usageRef.current)
+          usageRef.current.value = selectedRowData[0].Name
+      })
       wait(200).then(() => {
-        vatRef.current?.focus()
+        amountRef.current?.focus()
       })
     },
     searchRef: pdcSearchInput,
@@ -350,10 +360,7 @@ export default function PettyCash() {
     },
     searchRef: pdcSearchInput,
   });
-  const handleInputChange = (e: any) => {
-    const { name, value } = e.target;
-    dispatch({ type: "UPDATE_FIELD", field: name, value });
-  };
+
   function handleOnSave() {
     if (state.payee.length >= 200) {
       return Swal.fire({
@@ -449,8 +456,9 @@ export default function PettyCash() {
       });
     }
   }
+
   function handleAddTransaction() {
-    if (state.transactionCode === "") {
+    if (transactionCodeRef.current === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -462,7 +470,7 @@ export default function PettyCash() {
         });
       });
     }
-    if (state.clientID === "") {
+    if (clientIdRef.current === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -474,7 +482,7 @@ export default function PettyCash() {
         });
       });
     }
-    if (state.amount === "" || parseFloat(state.amount.replace(/,/g, "")) < 1) {
+    if (amountRef.current && (amountRef.current.value === "" || parseFloat(amountRef.current.value.replace(/,/g, "")) < 1)) {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -562,10 +570,17 @@ export default function PettyCash() {
     setEditTransaction({ edit: false, updateId: "" });
   }
 
+  function valueIsNaN(input: any) {
+    if (input !== '' && input !== null) {
+      const num = parseFloat(input.replace(/,/g, ''));
+      return isNaN(num) ? '0.00' : input
+    }
+    return '0.00'
+  }
+
   return (
     <>
       <PageHelmet title="Petty Cash" />
-
       <div
         style={{
           display: "flex",
@@ -573,6 +588,8 @@ export default function PettyCash() {
           width: "100%",
           height: "100%",
           flex: 1,
+          padding: "5px",
+          background: "#F1F1F1",
         }}
       >
         <div
@@ -580,35 +597,43 @@ export default function PettyCash() {
             display: "flex",
             alignItems: "center",
             columnGap: "5px",
+            marginBottom: "10px"
           }}
         >
           {isLoadingModalSearchPettyCash ? (
             <LoadingButton loading={isLoadingModalSearchPettyCash} />
           ) : (
-            <TextField
-              label="Search"
-              size="small"
-              name="search"
-              value={state.search}
-              onChange={handleInputChange}
-              onKeyDown={(e) => {
-                if (e.code === "Enter" || e.code === "NumpadEnter") {
-                  e.preventDefault();
-                  return openModalSearchPettyCash(
-                    (e.target as HTMLInputElement).value
-                  );
-                }
+            <TextInput
+              label={{
+                title: "Search: ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "50px",
+                },
               }}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
+              input={{
+                className: "search-input-up-on-key-down",
+                type: "search",
+                onKeyDown: (e) => {
+                  if (e.key === "Enter" || e.key === "NumpadEnter") {
+                    e.preventDefault();
+                    openModalSearchPettyCash(e.currentTarget.value);
+                  }
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    const datagridview = document.querySelector(
+                      ".grid-container"
+                    ) as HTMLDivElement;
+                    datagridview.focus();
+                  }
+                },
+                style: { width: "500px" },
               }}
-              sx={{
-                width: "300px",
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
+              inputRef={inputSearchRef}
             />
+
+
           )}
           {state.pettyCashMode === "" && (
             <Button
@@ -678,159 +703,324 @@ export default function PettyCash() {
             </Button>
           )}
         </div>
-        <fieldset
+        <div
           style={{
-            border: "1px solid #cbd5e1",
-            borderRadius: "5px",
-            position: "relative",
-            width: "100%",
-            height: "auto",
             display: "flex",
-            marginTop: "10px",
-            gap: "10px",
-            padding: "15px",
+            flexDirection: "row",
+            width: "100%",
+            borderBottom: "1px dashed  #334155",
+            paddingBottom: "20px",
+            gap: "50px",
+            marginTop: "5px",
           }}
         >
-          {loadingPettyCashIdGenerator ? (
-            <LoadingButton loading={loadingPettyCashIdGenerator} />
-          ) : (
-            <FormControl
-              sx={{
-                width: "160px",
-                ".MuiFormLabel-root": {
-                  fontSize: "14px",
-                  background: "white",
-                  zIndex: 99,
-                  padding: "0 3px",
-                },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-              variant="outlined"
-              size="small"
-              disabled={isDisableField}
-            >
-              <InputLabel htmlFor="return-check-id-field">Ref. No.</InputLabel>
-              <OutlinedInput
-
-                sx={{
-                  height: "27px",
-                  fontSize: "14px",
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              rowGap: "10px",
+            }}
+          >
+            {loadingPettyCashIdGenerator ? (
+              <LoadingButton loading={loadingPettyCashIdGenerator} />
+            ) : (
+              <TextInput
+                label={{
+                  title: "Ref. No. : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "80px",
+                  },
                 }}
-                disabled={isDisableField}
-                label="Ref. No."
-                name="refNo"
-                value={state.refNo}
-                onChange={handleInputChange}
-                onKeyDown={(e) => {
-                  if (e.code === "Enter" || e.code === "NumpadEnter") {
-                    e.preventDefault();
-                    // return handleOnSave();
-                    dateRef.current?.focus()
+                input={{
+                  disabled: isDisableField,
+                  type: "text",
+                  style: { width: "200px" },
+                  readOnly: true,
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                      dateRef.current?.focus()
+                    }
                   }
                 }}
-                readOnly={user?.department !== "UCSMI"}
-                id="return-check-id-field"
-                endAdornment={
-                  <InputAdornment position="end">
-                    <IconButton
-                      ref={reloadIDButtonRef}
-                      disabled={isDisableField}
-                      aria-label="search-client"
-                      color="secondary"
-                      edge="end"
-                      onClick={() => {
-                        refetchettyCashIdGenerator();
-                      }}
-                    >
-                      <RestartAltIcon />
-                    </IconButton>
-                  </InputAdornment>
-                }
+                icon={<RestartAltIcon sx={{ fontSize: "18px" }} />}
+                onIconClick={(e) => {
+                  e.preventDefault()
+                  refetchettyCashIdGenerator()
+                }}
+                inputRef={refNoRef}
               />
-            </FormControl>
-          )}
-          <CustomDatePicker
-            fullWidth={false}
-            disabled={isDisableField}
-            label="Date"
-            onChange={(value: any) => {
-              dispatch({
-                type: "UPDATE_FIELD",
-                field: "datePetty",
-                value: value,
-              });
-            }}
-            value={new Date(state.datePetty)}
-            onKeyDown={(e: any) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                // const timeout = setTimeout(() => {
-                //   datePickerRef.current?.querySelector("button")?.click();
-                //   clearTimeout(timeout);
-                // }, 150);
-                payeeInputRef.current?.focus()
-              }
-            }}
-            inputRef={dateRef}
-            textField={{
-              InputLabelProps: {
+            )}
+            <TextInput
+              label={{
+                title: "Deposit Date: ",
                 style: {
-                  fontSize: "14px",
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "80px",
                 },
-              },
-              InputProps: {
-                style: { height: "27px", fontSize: "14px" },
-              },
-            }}
-            datePickerRef={datePickerRef}
-          />
-          <TextField
-            disabled={isDisableField}
-            label="Payee"
-            size="small"
-            name="payee"
-            value={state.payee}
-            onChange={handleInputChange}
-            onKeyDown={(e) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                e.preventDefault();
-                explanationInputRef.current?.focus()
-              }
-            }}
-            InputProps={{
-              style: { height: "27px", fontSize: "14px", width: "280px" },
-            }}
-            sx={{
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-            inputRef={payeeInputRef}
-          />
-          <TextField
-            disabled={isDisableField}
-            label="Explanation"
-            size="small"
-            name="explanation"
-            value={state.explanation}
-            onChange={handleInputChange}
-            onKeyDown={(e) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                e.preventDefault();
-                // return handleOnSave();
-                accountRef.current?.focus()
-              }
-            }}
-            InputProps={{
-              style: { height: "27px", fontSize: "14px" },
-            }}
-            sx={{
+              }}
+              input={{
+                defaultValue: format(new Date(), "yyyy-MM-dd"),
+                className: "search-input-up-on-key-down",
+                type: "date",
+                style: { width: "200px" },
+                disabled: isDisableField,
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                    payeeRef.current?.focus()
+                  }
+                }
+              }}
+              inputRef={dateRef}
+            />
+          </div>
+          <div
+            style={{
               flex: 1,
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-            inputRef={explanationInputRef}
-          />
-        </fieldset>
-        <fieldset
+              display: "flex",
+              flexDirection: "column",
+              rowGap: "10px",
+            }}>
+            <TextInput
+              label={{
+                title: "Payee : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
+              }}
+              input={{
+                disabled: isDisableField,
+                type: "text",
+                style: { width: '400px' },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                    explanationRef.current?.focus()
+                  }
+                }
+              }}
+              inputRef={payeeRef}
+            />
+            <TextInput
+              label={{
+                title: "Explanation : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
+              }}
+              input={{
+                disabled: isDisableField,
+                type: "text",
+                style: { flex: 1 },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                    accountRef.current?.focus()
+                  }
+                }
+              }}
+              inputRef={explanationRef}
+            />
+          </div>
+        </div>
+        <div style={{
+          display: "flex",
+          flexDirection: "row",
+          width: "100%",
+          paddingTop: "20px",
+          gap: "50px",
+          borderRadius: "3px",
+        }}>
+          <div style={{
+            display: "flex",
+            flexDirection: "column",
+            rowGap: "10px"
+          }}>
+            {isLoadingChartAccount ? (
+              <LoadingButton loading={isLoadingChartAccount} />
+            ) : (
+              <TextInput
+                label={{
+                  title: "Transaction : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "90px",
+                  },
+                }}
+                input={{
+                  disabled: isDisableField,
+                  type: "text",
+                  style: { width: "100%" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                      openChartAccount(e.currentTarget.value)
+                    }
+                  }
+                }}
+                icon={<RestartAltIcon sx={{ fontSize: "18px" }} />}
+                onIconClick={(e) => {
+                  e.preventDefault()
+                  if (accountRef.current) {
+                    openChartAccount(accountRef.current.value)
+                  }
+                }}
+                inputRef={accountRef}
+              />
+            )}
+            <div
+              style={{
+                display: "flex",
+                columnGap: "20px"
+              }}
+            >
+              {isLoadingClientIdsModal ? (
+                <LoadingButton loading={isLoadingClientIdsModal} />
+              ) : (
+                <TextInput
+                  label={{
+                    title: "Usage : ",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "80px",
+                    },
+                  }}
+                  input={{
+                    disabled: isDisableField,
+                    type: "text",
+                    style: { width: "450px" },
+                    onKeyDown: (e) => {
+                      if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                        openCliendIDsModal(e.currentTarget.value)
+                      }
+                    }
+                  }}
+                  icon={<RestartAltIcon sx={{ fontSize: "18px" }} />}
+                  onIconClick={(e) => {
+                    e.preventDefault()
+                    if (usageRef.current) {
+                      openCliendIDsModal(usageRef.current.value)
+                    }
+                  }}
+                  inputRef={usageRef}
+                />
+              )}
+              <div style={{
+                display: "flex",
+              }}>
+                <label style={{
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "70px",
+                }}>Amount :</label>
+                <NumericFormat
+                  disabled={isDisableField}
+                  getInputRef={amountRef}
+                  decimalScale={2}
+                  fixedDecimalScale={true}
+                  style={{
+                    width: '200px',
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.code === 'Enter' || e.code === 'NumpadEnter') {
+                      vatRef.current?.focus()
+                      e.currentTarget.value = valueIsNaN(e.currentTarget.value)
+                    }
+
+                  }}
+                  onBlur={(e) => {
+                    console.log(e.currentTarget.value)
+                    if (e.currentTarget.value === '') {
+                      e.currentTarget.value = '0.00'
+                    }
+                  }}
+                  allowNegative={false}
+                  thousandSeparator
+                  valueIsNumericString
+                />
+              </div>
+
+            </div>
+            <div style={{
+              display: "flex",
+              columnGap: "20px"
+            }}>
+              <SelectInput
+                containerStyle={{
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                }}
+                label={{
+                  title: "VAT Type",
+                  style: {
+                    width: "80px",
+                  },
+                }}
+                select={{
+                  disabled: isDisableField,
+                  style: {
+                    width: "100% !important",
+                    flex: 1,
+                    height: "100% !important",
+                    padding: 0,
+                    margin: 0,
+                    cursor: "pointer",
+                  },
+                  onKeyDown: (e) => {
+                    if (e.code === 'Enter' || e.code === 'NumpadEnter') {
+                      invoiceRef.current?.focus()
+                    }
+                  },
+                }}
+                datasource={[{ key: 'NON-VAT' }, { key: 'VAT' }]}
+                values={"key"}
+                display={"key"}
+                selectRef={vatRef}
+              />
+              <TextInput
+                label={{
+                  title: "Invoice : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "80px",
+                  },
+                }}
+                input={{
+                  disabled: isDisableField,
+                  type: "text",
+                  style: { width: '270px' },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                      e.preventDefault()
+                      handleAddTransaction();
+                    }
+                  }
+                }}
+                inputRef={invoiceRef}
+              />
+
+              <Button
+                disabled={isDisableField}
+                color="success"
+                variant="contained"
+                style={{ gridArea: "button", height: "22px", fontSize: "12px", width: "270px" }}
+                startIcon={<AddIcon />}
+                onClick={() => {
+                  handleAddTransaction();
+                }}
+              >
+                {editTransaction.edit ? "Update Transaction" : "add Transaction"}
+              </Button>
+            </div>
+          </div>
+        </div>
+        {/* <fieldset
           style={{
             border: "1px solid #cbd5e1",
             borderRadius: "5px",
@@ -1067,7 +1257,7 @@ export default function PettyCash() {
               {editTransaction.edit ? "Update Transaction" : "add Transaction"}
             </Button>
           </div>
-        </fieldset>
+        </fieldset> */}
         <div
           ref={refParent}
           style={{
