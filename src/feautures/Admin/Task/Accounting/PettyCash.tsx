@@ -1,18 +1,7 @@
-import { useReducer, useContext, useState, useRef } from "react";
+import { useReducer, useContext, useState, useRef, useEffect, useImperativeHandle, forwardRef } from "react";
 import {
-  TextField,
   Button,
-  FormControl,
-  InputAdornment,
-  IconButton,
-  InputLabel,
-  OutlinedInput,
-  Autocomplete,
-  MenuItem,
-  Select,
-  Box,
 } from "@mui/material";
-import CustomDatePicker from "../../../../components/DatePicker";
 import LoadingButton from "@mui/lab/LoadingButton";
 import AddIcon from "@mui/icons-material/Add";
 import SaveIcon from "@mui/icons-material/Save";
@@ -21,17 +10,13 @@ import Swal from "sweetalert2";
 import { AuthContext } from "../../../../components/AuthContext";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { useMutation, useQuery, QueryClient } from "react-query";
-import { NumericFormatCustom } from "../../../../components/NumberFormat";
 import useQueryModalTable from "../../../../hooks/useQueryModalTable";
-import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import { wait } from "../../../../lib/wait";
 import { GridRowSelectionModel } from "@mui/x-data-grid";
-import Table from "../../../../components/Table";
 import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../../lib/confirmationAlert";
-import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import PageHelmet from "../../../../components/Helmet";
 import { SelectInput, TextInput } from "../../../../components/UpwardFields";
 import { NumericFormat } from "react-number-format";
@@ -66,40 +51,36 @@ export const reducer = (state: any, action: any) => {
       return state;
   }
 };
-const selectedCollectionColumns = [
-  { field: "purpose", headerName: "Purpose", flex: 1, minWidth: 400 },
-  { field: "amount", headerName: "Amount", minWidth: 170 },
+const columns = [
+  { key: "purpose", label: "Purpose", width: 400 },
+  { key: "amount", label: "Amount", width: 170 },
   {
-    field: "usage",
-    headerName: "Usage",
-    flex: 1,
-    minWidth: 300,
+    key: "usage",
+    label: "Usage",
+    width: 300,
   },
-  { field: "accountID", headerName: "Account ID", flex: 1, minWidth: 300 },
-  { field: "sub_account", headerName: "Sub Account", minWidth: 80 },
-  { field: "clientID", headerName: "ID No", minWidth: 100 },
+  { key: "accountID", label: "Account ID", width: 300 },
+  { key: "sub_account", label: "Sub Account", width: 80 },
+  { key: "clientID", label: "ID No", width: 100 },
   // hide
-  { field: "clientName", headerName: "Name", flex: 1, minWidth: 300 },
-  { field: "accountCode", headerName: "Accoount Code", minWidth: 200 },
+  { key: "clientName", label: "Name", width: 300 },
+  { key: "accountCode", label: "Accoount Code", width: 200 },
   {
-    field: "accountShort",
-    headerName: "Account Short",
-    flex: 1,
-    minWidth: 200,
+    key: "accountShort",
+    label: "Account Short",
+    width: 200,
   },
-  { field: "vatType", headerName: "Vat Type", flex: 1, minWidth: 100 },
-  { field: "invoice", headerName: "Invoice", flex: 1, minWidth: 100 },
-  { field: "TempID", headerName: "TempId", hide: true },
+  { key: "vatType", label: "Vat Type", width: 100 },
+  { key: "invoice", label: "Invoice", width: 100 },
+  { key: "TempID", label: "TempId", hide: true },
 ];
-
 export const chartColumn = [
   { field: "Acct_Code", headerName: "Code", flex: 1 },
   { field: "Acct_Title", headerName: "Title", flex: 1 },
   { field: "Short", headerName: "Short Name", flex: 1 },
 ];
-
 export default function PettyCash() {
-  const refParent = useRef<HTMLDivElement>(null);
+  const tableRef = useRef<any>(null)
   const inputSearchRef = useRef<HTMLInputElement>(null)
 
   const subrefNoRef = useRef('')
@@ -138,6 +119,7 @@ export default function PettyCash() {
   const isDisableField = state.pettyCashMode === "";
   const table = useRef<any>(null);
   const chartAccountSearchRef = useRef<HTMLInputElement>(null);
+
 
 
 
@@ -233,33 +215,17 @@ export default function PettyCash() {
   });
 
   const {
-    ModalComponent: ModalChartAccount,
-    openModal: openChartAccount,
-    isLoading: isLoadingChartAccount,
-    closeModal: closeChartAccount,
-  } = useQueryModalTable({
-    link: {
-      url: "/reference/get-chart-accounts",
-      queryUrlName: "chartAccountSearch",
-    },
-    columns: chartColumn,
-    queryKey: "get-chart-accounts",
-    uniqueId: "Acct_Code",
-    responseDataKey: "chartAccount",
-    onSelected: (selectedRowData) => {
-      wait(100).then(() => {
-        transactionCodeRef.current = selectedRowData[0].Acct_Code
-        transactionShortRef.current = selectedRowData[0].Short
-        if (accountRef.current) {
-          accountRef.current.value = selectedRowData[0].Acct_Title
-        }
-      })
-      wait(200).then(() => {
-        usageRef.current?.focus()
-      })
-      closeChartAccount();
-    },
-    searchRef: chartAccountSearchRef,
+    isLoading: laodPettyCashTransaction,
+    data: dataCashTransaction
+  } = useQuery({
+    queryKey: "load-transcation",
+    queryFn: async () =>
+      await myAxios.get(`/task/accounting/load-transcation`, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      }),
+    refetchOnWindowFocus: false,
   });
 
   const {
@@ -458,116 +424,121 @@ export default function PettyCash() {
   }
 
   function handleAddTransaction() {
-    if (transactionCodeRef.current === "") {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Please provide transaction",
-        timer: 1500,
-      }).then(() => {
-        wait(300).then(() => {
-          creditTransactionRef.current?.focus();
-        });
-      });
-    }
-    if (clientIdRef.current === "") {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Please provide usage",
-        timer: 1500,
-      }).then(() => {
-        wait(300).then(() => {
-          openCliendIDsModal();
-        });
-      });
-    }
-    if (amountRef.current && (amountRef.current.value === "" || parseFloat(amountRef.current.value.replace(/,/g, "")) < 1)) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Please provide proper amount",
-        timer: 1500,
-      }).then(() => {
-        wait(300).then(() => {
-          amountRef.current?.focus();
-        });
-      });
-    }
-    setPettyCash((d) => {
-      let FirstTempId = "";
-      if (editTransaction.edit) {
-        FirstTempId = editTransaction.updateId;
-      } else {
-        FirstTempId = generateID(
-          d.length > 0 ? (d[d.length - 1] as any).TempID : "000"
-        );
-      }
+    // if (transactionCodeRef.current === "") {
+    //   return Swal.fire({
+    //     position: "center",
+    //     icon: "warning",
+    //     title: "Please provide transaction",
+    //     timer: 1500,
+    //   }).then(() => {
+    //     wait(300).then(() => {
+    //       creditTransactionRef.current?.focus();
+    //     });
+    //   });
+    // }
+    // if (clientIdRef.current === "") {
+    //   return Swal.fire({
+    //     position: "center",
+    //     icon: "warning",
+    //     title: "Please provide usage",
+    //     timer: 1500,
+    //   }).then(() => {
+    //     wait(300).then(() => {
+    //       openCliendIDsModal();
+    //     });
+    //   });
+    // }
+    // if (amountRef.current && (amountRef.current.value === "" || parseFloat(amountRef.current.value.replace(/,/g, "")) < 1)) {
+    //   return Swal.fire({
+    //     position: "center",
+    //     icon: "warning",
+    //     title: "Please provide proper amount",
+    //     timer: 1500,
+    //   }).then(() => {
+    //     wait(300).then(() => {
+    //       amountRef.current?.focus();
+    //     });
+    //   });
+    // }
+    // setPettyCash((d) => {
+    //   let FirstTempId = "";
+    //   if (editTransaction.edit) {
+    //     FirstTempId = editTransaction.updateId;
+    //   } else {
+    //     FirstTempId = generateID(
+    //       d.length > 0 ? (d[d.length - 1] as any).TempID : "000"
+    //     );
+    //   }
 
-      const addPettyCashTransaction: Array<any> = [];
-      d = d.filter((item: any) => item.TempID !== FirstTempId);
+    //   const addPettyCashTransaction: Array<any> = [];
+    //   d = d.filter((item: any) => item.TempID !== FirstTempId);
 
-      addPettyCashTransaction.push({
-        purpose: state.transactionPurpose,
-        amount: parseFloat(state.amount).toLocaleString("en-US", {
-          style: "decimal",
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        }),
-        usage: `${state.clientName} > ${state.clientID} > HO`,
-        accountID: `${state.transactionShort} > ${state.transactionCode}`,
-        sub_account: "HO",
-        clientID: state.clientID,
-        clientName: state.clientName,
-        accountCode: state.transactionCode,
-        accountShort: state.transactionShort,
-        vatType: state.option.toUpperCase(),
-        invoice: state.invoice,
-        TempID: FirstTempId,
-      });
+    //   addPettyCashTransaction.push({
+    //     purpose: state.transactionPurpose,
+    //     amount: parseFloat(state.amount).toLocaleString("en-US", {
+    //       style: "decimal",
+    //       minimumFractionDigits: 2,
+    //       maximumFractionDigits: 2,
+    //     }),
+    //     usage: `${state.clientName} > ${state.clientID} > HO`,
+    //     accountID: `${state.transactionShort} > ${state.transactionCode}`,
+    //     sub_account: "HO",
+    //     clientID: state.clientID,
+    //     clientName: state.clientName,
+    //     accountCode: state.transactionCode,
+    //     accountShort: state.transactionShort,
+    //     vatType: state.option.toUpperCase(),
+    //     invoice: state.invoice,
+    //     TempID: FirstTempId,
+    //   });
 
-      if (state.transactionPurpose !== "Input Tax" && state.option === "vat") {
-        const SecondTempId = generateID((d[d.length - 1] as any).TempID);
-        const taxableAmount = parseFloat(state.amount.replace(/,/g, "")) / 1.12;
-        const inputTax = taxableAmount * 0.12;
-        addPettyCashTransaction.push({
-          purpose: state.transactionPurpose,
-          amount: parseFloat(inputTax.toFixed(2)).toLocaleString("en-US", {
-            style: "decimal",
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          }),
-          usage: `${state.clientName} > ${state.clientID} > HO`,
-          accountID: `${state.transactionShort} > ${state.transactionCode}`,
-          sub_account: "HO",
-          clientID: state.clientID,
-          clientName: state.clientName,
-          accountCode: "1.06.02",
-          accountShort: "Input Tax",
-          vatType: state.option.toUpperCase(),
-          invoice: state.invoice,
-          TempID: SecondTempId,
-        });
-      }
+    //   if (state.transactionPurpose !== "Input Tax" && state.option === "vat") {
+    //     const SecondTempId = generateID((d[d.length - 1] as any).TempID);
+    //     const taxableAmount = parseFloat(state.amount.replace(/,/g, "")) / 1.12;
+    //     const inputTax = taxableAmount * 0.12;
+    //     addPettyCashTransaction.push({
+    //       purpose: state.transactionPurpose,
+    //       amount: parseFloat(inputTax.toFixed(2)).toLocaleString("en-US", {
+    //         style: "decimal",
+    //         minimumFractionDigits: 2,
+    //         maximumFractionDigits: 2,
+    //       }),
+    //       usage: `${state.clientName} > ${state.clientID} > HO`,
+    //       accountID: `${state.transactionShort} > ${state.transactionCode}`,
+    //       sub_account: "HO",
+    //       clientID: state.clientID,
+    //       clientName: state.clientName,
+    //       accountCode: "1.06.02",
+    //       accountShort: "Input Tax",
+    //       vatType: state.option.toUpperCase(),
+    //       invoice: state.invoice,
+    //       TempID: SecondTempId,
+    //     });
+    //   }
 
-      function generateID(lastItem: any) {
-        const numericPart = (parseInt(lastItem.match(/\d+/)[0]) + 1)
-          .toString()
-          .padStart(3, "0");
-        return numericPart;
-      }
+    //   function generateID(lastItem: any) {
+    //     const numericPart = (parseInt(lastItem.match(/\d+/)[0]) + 1)
+    //       .toString()
+    //       .padStart(3, "0");
+    //     return numericPart;
+    //   }
 
-      d = [...d, ...addPettyCashTransaction];
-      return d;
-    });
-    initialState.datePetty = state.datePetty;
-    initialState.payee = state.payee;
-    initialState.explanation = state.explanation;
-    initialState.pettyCashMode = state.pettyCashMode;
-    initialState.sub_refNo = state.sub_refNo;
-    initialState.refNo = state.refNo;
-    setNewStateValue(dispatch, initialState);
-    setEditTransaction({ edit: false, updateId: "" });
+    //   d = [...d, ...addPettyCashTransaction];
+    //   return d;
+    // });
+
+
+
+
+
+    // initialState.datePetty = state.datePetty;
+    // initialState.payee = state.payee;
+    // initialState.explanation = state.explanation;
+    // initialState.pettyCashMode = state.pettyCashMode;
+    // initialState.sub_refNo = state.sub_refNo;
+    // initialState.refNo = state.refNo;
+    // setNewStateValue(dispatch, initialState);
+    // setEditTransaction({ edit: false, updateId: "" });
   }
 
   function valueIsNaN(input: any) {
@@ -577,6 +548,9 @@ export default function PettyCash() {
     }
     return '0.00'
   }
+
+
+
 
   return (
     <>
@@ -840,38 +814,25 @@ export default function PettyCash() {
             flexDirection: "column",
             rowGap: "10px"
           }}>
-            {isLoadingChartAccount ? (
-              <LoadingButton loading={isLoadingChartAccount} />
-            ) : (
-              <TextInput
-                label={{
-                  title: "Transaction : ",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "90px",
-                  },
-                }}
-                input={{
-                  disabled: isDisableField,
-                  type: "text",
-                  style: { width: "100%" },
-                  onKeyDown: (e) => {
-                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                      openChartAccount(e.currentTarget.value)
+            {
+              laodPettyCashTransaction ?
+                <LoadingButton loading={laodPettyCashTransaction} /> :
+                <Autocomplete
+                  DisplayMember={'Purpose'}
+                  DataSource={dataCashTransaction?.data.laodTranscation}
+                  disableInput={isDisableField}
+                  inputRef={accountRef}
+                  onChange={(selected: any, e: any) => {
+                    console.log(selected)
+                  }}
+                  onKeydown={(e: any) => {
+                    if (e.key === "Enter" || e.key === 'NumpadEnter') {
+                      e.preventDefault()
+                      usageRef.current?.focus()
                     }
-                  }
-                }}
-                icon={<RestartAltIcon sx={{ fontSize: "18px" }} />}
-                onIconClick={(e) => {
-                  e.preventDefault()
-                  if (accountRef.current) {
-                    openChartAccount(accountRef.current.value)
-                  }
-                }}
-                inputRef={accountRef}
-              />
-            )}
+                  }}
+                />
+            }
             <div
               style={{
                 display: "flex",
@@ -1004,7 +965,6 @@ export default function PettyCash() {
                 }}
                 inputRef={invoiceRef}
               />
-
               <Button
                 disabled={isDisableField}
                 color="success"
@@ -1020,245 +980,18 @@ export default function PettyCash() {
             </div>
           </div>
         </div>
-        {/* <fieldset
-          style={{
-            border: "1px solid #cbd5e1",
-            borderRadius: "5px",
-            position: "relative",
-            width: "100%",
-            height: "auto",
-            marginTop: "10px",
-            padding: "15px",
+        <br />
+        <DepositTableSelected
+          ref={tableRef}
+          width="100%"
+          height="350px"
+          columns={columns}
+          rows={pettyCash}
+          getSelectedItem={(rowItm: any, colItm: any, rowIdx: any, colIdx: any) => {
           }}
-        >
-          <div
-            style={{
-              display: "flex",
-              gap: "10px",
-            }}
-          >
 
-
-            {isLoadingChartAccount ? (
-              <LoadingButton loading={isLoadingChartAccount} />
-            ) : (
-              <FormControl
-                variant="outlined"
-                size="small"
-                disabled={isDisableField}
-                sx={{
-                  width: "350px",
-                  ".MuiFormLabel-root": {
-                    fontSize: "14px",
-                    background: "white",
-                    zIndex: 99,
-                    padding: "0 3px",
-                  },
-                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                }}
-              >
-                <InputLabel htmlFor="chart-account-id">Account</InputLabel>
-                <OutlinedInput
-                  inputRef={accountRef}
-                  sx={{
-                    height: "27px",
-                    fontSize: "14px",
-                  }}
-                  disabled={isDisableField}
-                  fullWidth
-                  label="Account"
-                  name="transactionTitle"
-                  value={state.transactionTitle}
-                  onChange={handleInputChange}
-                  onKeyDown={(e) => {
-                    if (e.code === "Enter" || e.code === "NumpadEnter") {
-                      e.preventDefault();
-                      return openChartAccount(state.transactionTitle);
-                    }
-                  }}
-                  id="chart-account-id"
-                  endAdornment={
-                    <InputAdornment position="end">
-                      <IconButton
-                        disabled={isDisableField}
-                        aria-label="search-client"
-                        color="secondary"
-                        edge="end"
-                        onClick={() => {
-                          openChartAccount(state.transactionTitle);
-                        }}
-                      >
-                        <ManageAccountsIcon />
-                      </IconButton>
-                    </InputAdornment>
-                  }
-                />
-              </FormControl>
-            )}
-
-            {isLoadingClientIdsModal ? (
-              <LoadingButton loading={isLoadingClientIdsModal} />
-            ) : (
-              <FormControl
-                sx={{
-                  minWidth: "400px",
-                  ".MuiFormLabel-root": {
-                    fontSize: "14px",
-                    background: "white",
-                    zIndex: 99,
-                    padding: "0 3px",
-                  },
-                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                }}
-                variant="outlined"
-                size="small"
-                disabled={isDisableField}
-              >
-                <InputLabel htmlFor="client-list">Usage</InputLabel>
-                <OutlinedInput
-                  sx={{
-                    height: "27px",
-                    fontSize: "14px",
-                  }}
-                  inputRef={usageRef}
-                  disabled={isDisableField}
-                  label="Usage"
-                  name="clientName"
-                  value={state.clientName}
-                  onChange={handleInputChange}
-                  onKeyDown={(e) => {
-                    if (e.code === "Enter" || e.code === "NumpadEnter") {
-                      e.preventDefault();
-                      return openCliendIDsModal(state.clientName);
-                    }
-                  }}
-                  id="client-list"
-                  endAdornment={
-                    <InputAdornment position="end">
-                      <IconButton
-                        ref={reloadIDButtonRef}
-                        disabled={isDisableField}
-                        color="secondary"
-                        edge="end"
-                        onClick={() => {
-                          openCliendIDsModal(state.clientName);
-                        }}
-                      >
-                        <PersonSearchIcon />
-                      </IconButton>
-                    </InputAdornment>
-                  }
-                />
-              </FormControl>
-            )}
-            <Select
-              labelId="label-selection-reason"
-              value={state.option}
-              name="option"
-              onChange={handleInputChange}
-              disabled={isDisableField}
-              autoWidth
-              sx={{
-                height: "27px",
-                fontSize: "14px",
-                width: "200px",
-              }}
-              inputRef={vatRef}
-            >
-              <MenuItem onKeyDown={(e) => {
-                if (e.code === "Enter" || e.code === "NumpadEnter") {
-                  e.preventDefault();
-                  wait(200).then(() => {
-                    amountRef.current?.focus()
-                  })
-                }
-              }} value="vat">VAT</MenuItem>
-              <MenuItem onKeyDown={(e) => {
-                if (e.code === "Enter" || e.code === "NumpadEnter") {
-                  e.preventDefault();
-                  wait(200).then(() => {
-                    amountRef.current?.focus()
-                  })
-                }
-              }} value={"non-vat"}>NON-VAT</MenuItem>
-            </Select>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              gap: "10px",
-              marginTop: "10px",
-            }}
-          >
-            <TextField
-              sx={{
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-              disabled={isDisableField}
-              name="amount"
-              label="Amount"
-              size="small"
-              value={state.amount}
-              onChange={handleInputChange}
-              placeholder="0.00"
-              InputProps={{
-                inputComponent: NumericFormatCustom as any,
-                inputRef: amountRef,
-                style: { height: "27px", fontSize: "14px", width: "200px" },
-              }}
-              onBlur={() => {
-                dispatch({
-                  type: "UPDATE_FIELD",
-                  field: "amount",
-                  value: parseFloat(state.amount.replace(/,/g, "")).toFixed(2),
-                });
-              }}
-              onKeyDown={(e) => {
-                if (e.code === "Enter" || e.code === "NumpadEnter") {
-                  e.preventDefault();
-                  invoiceRef.current?.focus()
-                }
-              }}
-            />
-            <TextField
-              sx={{
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-              InputProps={{
-                inputRef: invoiceRef,
-                style: { height: "27px", fontSize: "14px", width: "300px" },
-              }}
-              disabled={isDisableField}
-              label="Invoice"
-              size="small"
-              name="invoice"
-              value={state.invoice}
-              onChange={handleInputChange}
-              onKeyDown={(e: any) => {
-                if (e.code === "Enter" || e.code === "NumpadEnter") {
-                  e.preventDefault();
-                  return handleAddTransaction();
-                }
-              }}
-              inputRef={invoiceInputRef}
-            />
-            <Button
-              disabled={isDisableField}
-              color="success"
-              variant="contained"
-              style={{ gridArea: "button", height: "27px", fontSize: "14px" }}
-              startIcon={<AddIcon />}
-              onClick={() => {
-                handleAddTransaction();
-              }}
-            >
-              {editTransaction.edit ? "Update Transaction" : "add Transaction"}
-            </Button>
-          </div>
-        </fieldset> */}
-        <div
+        />
+        {/* <div
           ref={refParent}
           style={{
             marginTop: "10px",
@@ -1353,15 +1086,349 @@ export default function PettyCash() {
               }}
             />
           </Box>
-        </div>
+        </div> */}
         {ModalClientIDs}
         {ModalSearchPettyCash}
-        {ModalChartAccount}
       </div>
     </>
 
   );
 }
+const DepositTableSelected = forwardRef(({
+  columns,
+  rows,
+  height = "400px",
+  getSelectedItem,
+  disbaleTable = false,
+  isTableSelectable = true
+}: any, ref) => {
+  const parentElementRef = useRef<any>(null)
+  const [data, setData] = useState([])
+  const [column, setColumn] = useState([])
+  const [selectedRow, setSelectedRow] = useState<any>(0)
+  const totalRowWidth = column.reduce((a: any, b: any) => a + b.width, 0)
+
+
+  useEffect(() => {
+    if (columns.length > 0) {
+      setColumn(columns.filter((itm: any) => !itm.hide))
+    }
+  }, [columns])
+
+  useEffect(() => {
+    if (rows.length > 0) {
+      setData(rows.map((itm: any) => {
+        return columns.map((col: any) => itm[col.key])
+      }))
+    }
+  }, [rows, columns])
+
+  useImperativeHandle(ref, () => ({
+    getData: () => {
+      return data
+    },
+    setData: (newData: any) => {
+      setData(newData)
+    },
+    getColumns: () => {
+      return columns
+    },
+    resetTable: () => {
+      setData([])
+      setSelectedRow(0)
+    },
+    setDataFormated: (newData: any) => {
+      setData(newData.map((itm: any) => {
+        return columns.map((col: any) => itm[col.key])
+      }))
+    }
+  }))
+
+
+  return (
+    <div
+      ref={parentElementRef}
+      style={{
+        width: "100%",
+        height,
+        overflow: "auto",
+        position: "relative",
+        pointerEvents: disbaleTable ? "none" : "auto",
+        border: disbaleTable ? "2px solid #8c8f8e" : '2px solid #c0c0c0',
+        boxShadow: `inset -2px -2px 0 #ffffff, 
+                      inset 2px 2px 0 #808080`
+
+      }}>
+      <div style={{ position: "absolute", width: `${totalRowWidth}px`, height: "auto" }}>
+        <table style={{ borderCollapse: "collapse", width: "100%", position: "relative" }}>
+          <thead >
+            <tr>
+              <th style={{
+                width: '30px', border: "1px solid black",
+                position: "sticky",
+                top: 0,
+                zIndex: 1,
+                background: "#f0f0f0"
+              }}
+              ></th>
+              {
+                column.map((colItm: any, idx: number) => {
+                  return (
+                    <th
+                      key={idx}
+                      style={{
+                        width: colItm.width,
+                        border: "1px solid black",
+                        position: "sticky",
+                        top: 0,
+                        zIndex: 1,
+                        background: "#f0f0f0",
+                        fontSize: "12px",
+                        textAlign: "left",
+                        padding: "0px 5px"
+                      }}
+                    >{colItm.label}</th>
+                  )
+                })
+              }
+            </tr>
+          </thead>
+          <tbody>
+            {
+              data?.map((rowItm: any, rowIdx: number) => {
+                return (
+                  <tr key={rowIdx}>
+                    <td style={{
+                      position: "relative", borderBottom: "1px solid black",
+                      borderLeft: "1px solid black",
+                      borderTop: "none",
+                      borderRight: "1px solid black",
+                      cursor: "pointer",
+                      background: selectedRow === rowIdx ? "#bae6fd" : "#f0f0f0",
+                    }}>
+                      <input
+                        style={{
+                          cursor: "pointer",
+                          height: "10px"
+                        }}
+                        readOnly={true}
+                        checked={false}
+                        type="checkbox"
+                        onClick={() => {
+                          if (!isTableSelectable) {
+                            return
+                          }
+
+                          if (getSelectedItem) {
+                            getSelectedItem(rowItm, null, rowIdx, null)
+                          }
+                          setSelectedRow(null)
+
+                        }}
+                        onDoubleClick={() => {
+
+                        }}
+                      />
+                    </td>
+
+                    {
+                      column.map((colItm: any, colIdx: number) => {
+                        return (
+                          <td
+                            onDoubleClick={() => {
+                              if (!isTableSelectable) {
+                                return
+                              }
+                              if (getSelectedItem) {
+                                getSelectedItem(rowItm, null, rowIdx, null)
+                              }
+                              setSelectedRow(null)
+
+                            }}
+                            onClick={() => {
+                              setSelectedRow(rowIdx)
+                            }}
+                            key={colIdx}
+                            style={{
+                              border: "1px solid black",
+                              background: selectedRow === rowIdx ? "#cbd5e1" : "transparent",
+                              fontSize: "12px",
+                              padding: "0px 5px",
+                              cursor: "pointer",
+                            }}
+                          >{
+                              <input
+                                readOnly={true}
+                                value={rowItm[colIdx]}
+                                style={{
+                                  width: colItm.width,
+                                  pointerEvents: "none",
+                                  border: "none",
+                                  background: "transparent",
+                                  userSelect: "none"
+                                }} />
+                            }</td>
+                        )
+                      })
+                    }
+                  </tr>
+                )
+              })
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+})
+const Autocomplete = ({
+  DisplayMember,
+  DataSource,
+  inputRef,
+  disableInput = false,
+  onKeydown,
+  onChange
+}: any) => {
+  const [inputValue, setInputValue] = useState("");
+  const [filteredSuggestions, setFilteredSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(0);
+
+  // Ref to store the suggestion container
+  const suggestionListRef = useRef<HTMLUListElement>(null);
+
+  useEffect(() => {
+    // Scroll the active suggestion into view
+    const activeElement = suggestionListRef.current?.children[activeSuggestionIndex];
+    if (activeElement) {
+      activeElement.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
+  }, [activeSuggestionIndex]);
+
+  const handleChange = (e: any) => {
+    const value = e.target.value;
+
+    setInputValue(value);
+
+    if (value.trim()) {
+      const filtered = DataSource.filter((item: any) =>
+        item[DisplayMember].toLowerCase().includes(value.toLowerCase())
+      );
+      setFilteredSuggestions(filtered);
+      setShowSuggestions(true);
+    } else {
+      setFilteredSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleClick = (suggestion: any) => {
+    setInputValue(suggestion[DisplayMember]);
+    setShowSuggestions(false);
+  };
+
+  const handleKeyDown = (e: any) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault()
+      setActiveSuggestionIndex((prevIndex) =>
+        Math.min(prevIndex + 1, filteredSuggestions.length - 1)
+      );
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault()
+
+      setActiveSuggestionIndex((prevIndex) =>
+        Math.max(prevIndex - 1, 0)
+      );
+    } else if (e.key === "Enter" || e.key === 'NumpadEnter') {
+      e.preventDefault()
+
+
+      if (filteredSuggestions.length > 0) {
+        const selectedSuggestion = filteredSuggestions[activeSuggestionIndex];
+        onChange(selectedSuggestion, e)
+        setInputValue(selectedSuggestion[DisplayMember]);
+        setShowSuggestions(false);
+      }
+
+    }
+
+    setTimeout(() => {
+      if (onKeydown)
+        onKeydown(e)
+    }, 150)
+  };
+
+  return (
+    <div>
+      <TextInput
+        label={{
+          title: "Transaction : ",
+          style: {
+            fontSize: "12px",
+            fontWeight: "bold",
+            width: "80px",
+          },
+        }}
+        input={{
+          disabled: disableInput,
+          type: "text",
+          style: { width: '740px' },
+          value: inputValue,
+          onKeyDown: handleKeyDown,
+          onChange: handleChange
+        }}
+        inputRef={inputRef}
+      />
+      {showSuggestions && filteredSuggestions.length > 0 && (
+        <ul className="suggestions" ref={suggestionListRef}>
+          {filteredSuggestions.map((suggestion, index) => (
+            <li
+              key={index}
+              onClick={(e) => {
+                handleClick(suggestion)
+                onChange(suggestion, e)
+              }}
+              className={index === activeSuggestionIndex ? "active" : ""}
+              onMouseEnter={(e) => {
+                e.preventDefault()
+                setActiveSuggestionIndex(Math.min(index, filteredSuggestions.length - 1));
+              }}
+            >
+              {suggestion[DisplayMember]}
+            </li>
+          ))}
+        </ul>
+      )}
+      <style>
+        {`
+          .suggestions {
+            border: 1px solid #ddd;
+            margin-top: 0;
+            padding: 0;
+            list-style: none;
+            max-height: 150px;
+            overflow-y: auto;
+            position:absolute;
+            z-index:100;
+            background:#F1F1F1;
+          }
+          .suggestions li {
+            padding:3px 10px;
+            cursor: pointer;
+            font-size:14px;
+          }
+          .suggestions li.active {
+            background-color: #e2e8f0;
+          }
+      
+        `}
+      </style>
+    </div>
+  );
+};
 
 function setNewStateValue(dispatch: any, obj: any) {
   Object.entries(obj).forEach(([field, value]) => {
