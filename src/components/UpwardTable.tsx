@@ -1,5 +1,3 @@
-
-
 import React, {
   useState,
   useRef,
@@ -7,10 +5,8 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
-
 import "../style/datagridview.css";
 import { Pagination } from "@mui/material";
-
 interface UpwardTablePropsType {
   rows: Array<any>;
   column: Array<any>;
@@ -27,7 +23,6 @@ interface UpwardTablePropsType {
   isLoading?: boolean,
   onRightClick?: (rowSelected: any, event: any) => any
 }
-
 const UpwardTable = forwardRef(
   (
     {
@@ -491,7 +486,6 @@ const UpwardTable = forwardRef(
     );
   }
 );
-
 function formatArrayIntoChunks(arr: Array<any>, chunkSize = 100) {
   let result = [];
 
@@ -501,9 +495,4 @@ function formatArrayIntoChunks(arr: Array<any>, chunkSize = 100) {
   }
   return result;
 }
-
-
-
-
-
 export { UpwardTable, };

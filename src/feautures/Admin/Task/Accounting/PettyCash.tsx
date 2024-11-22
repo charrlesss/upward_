@@ -21,6 +21,7 @@ import PageHelmet from "../../../../components/Helmet";
 import { SelectInput, TextInput } from "../../../../components/UpwardFields";
 import { NumericFormat } from "react-number-format";
 import { format } from "date-fns";
+import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
 
 const initialState = {
   sub_refNo: "",
@@ -53,25 +54,25 @@ export const reducer = (state: any, action: any) => {
 };
 const columns = [
   { key: "purpose", label: "Purpose", width: 400 },
-  { key: "amount", label: "Amount", width: 170 },
+  { key: "amount", label: "Amount", width: 140 },
   {
     key: "usage",
     label: "Usage",
-    width: 300,
+    width: 450,
   },
-  { key: "accountID", label: "Account ID", width: 300 },
+  { key: "accountID", label: "Account ID", width: 400 },
   { key: "sub_account", label: "Sub Account", width: 80 },
-  { key: "clientID", label: "ID No", width: 100 },
+  { key: "clientID", label: "ID No", width: 140 },
   // hide
-  { key: "clientName", label: "Name", width: 300 },
-  { key: "accountCode", label: "Accoount Code", width: 200 },
+  { key: "clientName", label: "Name", width: 350 },
+  { key: "accountCode", label: "Accoount Code", width: 130 },
   {
     key: "accountShort",
     label: "Account Short",
-    width: 200,
+    width: 300,
   },
   { key: "vatType", label: "Vat Type", width: 100 },
-  { key: "invoice", label: "Invoice", width: 100 },
+  { key: "invoice", label: "Invoice", width: 200 },
   { key: "TempID", label: "TempId", hide: true },
 ];
 export const chartColumn = [
@@ -79,7 +80,11 @@ export const chartColumn = [
   { field: "Acct_Title", headerName: "Title", flex: 1 },
   { field: "Short", headerName: "Short Name", flex: 1 },
 ];
+
 export default function PettyCash() {
+  const { myAxios, user } = useContext(AuthContext);
+  const [pettyCashMode, setPettyCashMode] = useState('')
+  const { executeQueryToClient } = useExecuteQueryFromClient()
   const tableRef = useRef<any>(null)
   const inputSearchRef = useRef<HTMLInputElement>(null)
 
@@ -96,32 +101,19 @@ export default function PettyCash() {
   const vatRef = useRef<HTMLSelectElement>(null);
   const invoiceRef = useRef<HTMLInputElement>(null);
 
+
+  const pdcSearchInput = useRef<HTMLInputElement>(null);
+
   const transactionCodeRef = useRef('')
   const transactionShortRef = useRef('')
   const clientIdRef = useRef('')
+  const subAcctRef = useRef('')
 
 
 
 
 
-  const { myAxios, user } = useContext(AuthContext);
-  const [state, dispatch] = useReducer(reducer, initialState);
-  const [editTransaction, setEditTransaction] = useState({
-    edit: false,
-    updateId: "",
-  });
-  const [pettyCash, setPettyCash] = useState<GridRowSelectionModel>([]);
-  const payeeInputRef = useRef<HTMLInputElement>(null);
-  const explanationInputRef = useRef<HTMLInputElement>(null);
-  let creditTransactionRef = useRef<HTMLInputElement>(null);
-  const pdcSearchInput = useRef<HTMLInputElement>(null);
-  const queryClient = new QueryClient();
-  const isDisableField = state.pettyCashMode === "";
-  const table = useRef<any>(null);
-  const chartAccountSearchRef = useRef<HTMLInputElement>(null);
-
-
-
+  const isDisableField = pettyCashMode === "";
 
 
   const {
@@ -160,11 +152,7 @@ export default function PettyCash() {
     onSuccess: (data) => {
       const response = data as any;
       if (response.data.success) {
-        initialState.pettyCashMode = "";
-        setNewStateValue(dispatch, initialState);
-        refetchettyCashIdGenerator();
-        setPettyCash([]);
-        queryClient.invalidateQueries("petty-cash-search");
+        resetPettyCash()
         return Swal.fire({
           position: "center",
           icon: "success",
@@ -198,19 +186,21 @@ export default function PettyCash() {
     onSuccess: (data) => {
       const response = data as any;
       const loadPettyCash = response.data.loadSelectedPettyCash;
+      subrefNoRef.current = loadPettyCash[0].PC_No
+      if (refNoRef.current) {
+        refNoRef.current.value = loadPettyCash[0].PC_No
+      }
+      if (dateRef.current) {
+        dateRef.current.value = loadPettyCash[0].PC_Date
+      }
+      if (payeeRef.current) {
+        payeeRef.current.value = loadPettyCash[0].Payee
+      }
+      if (explanationRef.current) {
+        explanationRef.current.value = loadPettyCash[0].Explanation
+      }
 
-      setNewStateValue(dispatch, {
-        ...state,
-        ...{
-          sub_refNo: loadPettyCash[0].PC_No,
-          refNo: loadPettyCash[0].PC_No,
-          datePetty: loadPettyCash[0].PC_Date,
-          payee: loadPettyCash[0].Payee,
-          explanation: loadPettyCash[0].Explanation,
-          pettyCashMode: "edit",
-        },
-      });
-      setPettyCash(loadPettyCash);
+      tableRef.current.setDataFormated(loadPettyCash)
     },
   });
 
@@ -257,24 +247,19 @@ export default function PettyCash() {
     uniqueId: "IDNo",
     responseDataKey: "clientsId",
     onSelected: (selectedRowData, data) => {
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "clientName",
-        value: selectedRowData[0].Name,
-      });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "clientID",
-        value: selectedRowData[0].IDNo,
-      });
       closeCliendIDsModal();
       wait(100).then(() => {
         clientIdRef.current = selectedRowData[0].IDNo
+        subAcctRef.current = selectedRowData[0].Acronym
         if (usageRef.current)
           usageRef.current.value = selectedRowData[0].Name
       })
       wait(200).then(() => {
-        amountRef.current?.focus()
+        if (amountRef.current) {
+          amountRef.current?.focus()
+          amountRef.current.value = ''
+        }
+
       })
     },
     searchRef: pdcSearchInput,
@@ -314,53 +299,17 @@ export default function PettyCash() {
     responseDataKey: "searchPettyCash",
     onSelected: (selectedRowData) => {
       mutateLoadSelectedPettyCash({ PC_No: selectedRowData[0].PC_No });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "pettyCashMode",
-        value: "edit",
-      });
+
+      setPettyCashMode("edit")
+
       closeModalSearchPettyCash();
     },
-    onCloseFunction: (value: any) => {
-      dispatch({ type: "UPDATE_FIELD", field: "search", value });
-    },
     searchRef: pdcSearchInput,
+
   });
 
   function handleOnSave() {
-    if (state.payee.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Payee is too long!",
-        timer: 1500,
-      });
-    }
-    if (state.invoice.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Invoice is too long!",
-        timer: 1500,
-      });
-    }
-    if (state.amount.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Amount is too long!",
-        timer: 1500,
-      });
-    }
-    if (state.clientID.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Usage is too long!",
-        timer: 1500,
-      });
-    }
-    if (state.payee === "") {
+    if (payeeRef.current && payeeRef.current.value === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -368,11 +317,11 @@ export default function PettyCash() {
         timer: 1500,
       }).then((result) => {
         wait(300).then(() => {
-          payeeInputRef.current?.focus();
+          payeeRef.current?.focus();
         });
       });
     }
-    if (state.explanation === "") {
+    if (explanationRef.current && explanationRef.current.value === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -380,11 +329,15 @@ export default function PettyCash() {
         timer: 1500,
       }).then((result) => {
         wait(300).then(() => {
-          explanationInputRef.current?.focus();
+          explanationRef.current?.focus();
         });
       });
     }
-    if (pettyCash.length <= 0) {
+
+    const currentData = tableRef.current.getDataFormatted()
+
+
+    if (currentData.length <= 0) {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -392,17 +345,18 @@ export default function PettyCash() {
         timer: 1500,
       });
     }
-    if (state.pettyCashMode === "edit") {
+
+    if (pettyCashMode === "edit") {
       codeCondfirmationAlert({
         isUpdate: true,
         cb: (userCodeConfirmation) => {
           mutateAddUpdatePettyCash({
-            refNo: state.refNo,
-            datePetty: state.datePetty,
-            payee: state.payee,
-            explanation: state.explanation,
-            hasSelected: state.pettyCashMode === "edit",
-            pettyCash,
+            refNo: refNoRef.current?.value,
+            datePetty: dateRef.current?.value,
+            payee: payeeRef.current?.value,
+            explanation: explanationRef.current?.value,
+            hasSelected: pettyCashMode === "edit",
+            pettyCash: currentData,
             userCodeConfirmation,
           });
         },
@@ -411,136 +365,150 @@ export default function PettyCash() {
       saveCondfirmationAlert({
         isConfirm: () => {
           mutateAddUpdatePettyCash({
-            refNo: state.refNo,
-            datePetty: state.datePetty,
-            payee: state.payee,
-            explanation: state.explanation,
-            hasSelected: state.pettyCashMode === "edit",
-            pettyCash,
+            refNo: refNoRef.current?.value,
+            datePetty: dateRef.current?.value,
+            payee: payeeRef.current?.value,
+            explanation: explanationRef.current?.value,
+            hasSelected: pettyCashMode === "edit",
+            pettyCash: currentData,
           });
         },
       });
     }
   }
 
-  function handleAddTransaction() {
-    // if (transactionCodeRef.current === "") {
-    //   return Swal.fire({
-    //     position: "center",
-    //     icon: "warning",
-    //     title: "Please provide transaction",
-    //     timer: 1500,
-    //   }).then(() => {
-    //     wait(300).then(() => {
-    //       creditTransactionRef.current?.focus();
-    //     });
-    //   });
-    // }
-    // if (clientIdRef.current === "") {
-    //   return Swal.fire({
-    //     position: "center",
-    //     icon: "warning",
-    //     title: "Please provide usage",
-    //     timer: 1500,
-    //   }).then(() => {
-    //     wait(300).then(() => {
-    //       openCliendIDsModal();
-    //     });
-    //   });
-    // }
-    // if (amountRef.current && (amountRef.current.value === "" || parseFloat(amountRef.current.value.replace(/,/g, "")) < 1)) {
-    //   return Swal.fire({
-    //     position: "center",
-    //     icon: "warning",
-    //     title: "Please provide proper amount",
-    //     timer: 1500,
-    //   }).then(() => {
-    //     wait(300).then(() => {
-    //       amountRef.current?.focus();
-    //     });
-    //   });
-    // }
-    // setPettyCash((d) => {
-    //   let FirstTempId = "";
-    //   if (editTransaction.edit) {
-    //     FirstTempId = editTransaction.updateId;
-    //   } else {
-    //     FirstTempId = generateID(
-    //       d.length > 0 ? (d[d.length - 1] as any).TempID : "000"
-    //     );
-    //   }
+  async function handleAddTransaction() {
+    if (accountRef.current && accountRef.current.value === "") {
+      return Swal.fire({
+        position: "center",
+        icon: "warning",
+        title: "Please provide transaction",
+        timer: 1500,
+      }).then(() => {
+        wait(300).then(() => {
+          accountRef.current?.focus();
+        });
+      });
+    }
+    if (clientIdRef.current === "") {
+      return Swal.fire({
+        position: "center",
+        icon: "warning",
+        title: "Please provide usage",
+        timer: 1500,
+      }).then(() => {
+        wait(300).then(() => {
+          openCliendIDsModal();
+        });
+      });
+    }
+    if (amountRef.current && (amountRef.current.value === "" || parseFloat(amountRef.current.value.replace(/,/g, "")) < 1)) {
+      return Swal.fire({
+        position: "center",
+        icon: "warning",
+        title: "Please provide proper amount",
+        timer: 1500,
+      }).then(() => {
+        wait(300).then(() => {
+          amountRef.current?.focus();
+        });
+      });
+    }
 
-    //   const addPettyCashTransaction: Array<any> = [];
-    //   d = d.filter((item: any) => item.TempID !== FirstTempId);
+    const TransDetail = await executeQueryToClient(`
+         SELECT DISTINCT
+              Chart_Account.Acct_Code,
+              Chart_Account.Acct_Title,
+              Chart_Account.Short
+          FROM
+              Petty_Log
+                  LEFT JOIN
+              Chart_Account ON Petty_Log.Acct_Code = Chart_Account.Acct_Code
+          WHERE
+              Petty_Log.Acct_Code = '${transactionCodeRef.current}'
+      `)
 
-    //   addPettyCashTransaction.push({
-    //     purpose: state.transactionPurpose,
-    //     amount: parseFloat(state.amount).toLocaleString("en-US", {
-    //       style: "decimal",
-    //       minimumFractionDigits: 2,
-    //       maximumFractionDigits: 2,
-    //     }),
-    //     usage: `${state.clientName} > ${state.clientID} > HO`,
-    //     accountID: `${state.transactionShort} > ${state.transactionCode}`,
-    //     sub_account: "HO",
-    //     clientID: state.clientID,
-    //     clientName: state.clientName,
-    //     accountCode: state.transactionCode,
-    //     accountShort: state.transactionShort,
-    //     vatType: state.option.toUpperCase(),
-    //     invoice: state.invoice,
-    //     TempID: FirstTempId,
-    //   });
+    const currentData = tableRef.current.getData()
+    let RowIndex = 0
+    if (currentData.length <= 0) {
+      currentData[0] = []
+    } else {
+      const getSelectedRow = tableRef.current.getSelectedRow()
+      if (getSelectedRow) {
+        RowIndex = getSelectedRow
+      } else {
+        RowIndex = currentData.length
+        currentData[currentData.length] = []
+      }
 
-    //   if (state.transactionPurpose !== "Input Tax" && state.option === "vat") {
-    //     const SecondTempId = generateID((d[d.length - 1] as any).TempID);
-    //     const taxableAmount = parseFloat(state.amount.replace(/,/g, "")) / 1.12;
-    //     const inputTax = taxableAmount * 0.12;
-    //     addPettyCashTransaction.push({
-    //       purpose: state.transactionPurpose,
-    //       amount: parseFloat(inputTax.toFixed(2)).toLocaleString("en-US", {
-    //         style: "decimal",
-    //         minimumFractionDigits: 2,
-    //         maximumFractionDigits: 2,
-    //       }),
-    //       usage: `${state.clientName} > ${state.clientID} > HO`,
-    //       accountID: `${state.transactionShort} > ${state.transactionCode}`,
-    //       sub_account: "HO",
-    //       clientID: state.clientID,
-    //       clientName: state.clientName,
-    //       accountCode: "1.06.02",
-    //       accountShort: "Input Tax",
-    //       vatType: state.option.toUpperCase(),
-    //       invoice: state.invoice,
-    //       TempID: SecondTempId,
-    //     });
-    //   }
-
-    //   function generateID(lastItem: any) {
-    //     const numericPart = (parseInt(lastItem.match(/\d+/)[0]) + 1)
-    //       .toString()
-    //       .padStart(3, "0");
-    //     return numericPart;
-    //   }
-
-    //   d = [...d, ...addPettyCashTransaction];
-    //   return d;
-    // });
+    }
+    currentData[RowIndex][0] = accountRef.current?.value
+    currentData[RowIndex][1] = amountRef.current?.value
+    currentData[RowIndex][2] = `${usageRef.current?.value} > ${clientIdRef.current} > ${subAcctRef.current}`
+    currentData[RowIndex][3] = `${TransDetail.data.data[0].Short} > ${TransDetail.data.data[0].Acct_Code}`
+    currentData[RowIndex][4] = subAcctRef.current
+    currentData[RowIndex][5] = clientIdRef.current
+    currentData[RowIndex][6] = usageRef.current?.value
+    currentData[RowIndex][7] = TransDetail.data.data[0].Acct_Code
+    currentData[RowIndex][8] = TransDetail.data.data[0].Short
+    currentData[RowIndex][9] = vatRef.current?.value
+    currentData[RowIndex][10] = invoiceRef.current?.value
+    tableRef.current.setData(currentData)
+    tableRef.current.setSelectedRow(null)
 
 
+    resetRefs()
 
-
-
-    // initialState.datePetty = state.datePetty;
-    // initialState.payee = state.payee;
-    // initialState.explanation = state.explanation;
-    // initialState.pettyCashMode = state.pettyCashMode;
-    // initialState.sub_refNo = state.sub_refNo;
-    // initialState.refNo = state.refNo;
-    // setNewStateValue(dispatch, initialState);
-    // setEditTransaction({ edit: false, updateId: "" });
+    if (accountRef.current) {
+      accountRef.current.focus()
+    }
   }
 
+  function resetRefs() {
+    setTimeout(() => {
+      if (accountRef.current) {
+        accountRef.current.value = ''
+      }
+      if (amountRef.current) {
+        amountRef.current.value = ''
+      }
+      if (usageRef.current) {
+        usageRef.current.value = ''
+      }
+      if (vatRef.current) {
+        vatRef.current.value = 'NON-VAT'
+      }
+      if (invoiceRef.current) {
+        invoiceRef.current.value = ''
+      }
+      subAcctRef.current = ''
+      clientIdRef.current = ''
+      transactionCodeRef.current = ''
+      transactionShortRef.current = ''
+    }, 100)
+  }
+  function resetRefsEntry() {
+    setTimeout(() => {
+      refetchettyCashIdGenerator()
+      if (dateRef.current) {
+        dateRef.current.value = format(new Date(), "yyyy-MM-dd")
+      }
+      if (payeeRef.current) {
+        payeeRef.current.value = ''
+      }
+      if (explanationRef.current) {
+        explanationRef.current.value = ''
+      }
+
+    }, 100)
+  }
+  function resetPettyCash() {
+    setPettyCashMode('');
+    refetchettyCashIdGenerator();
+    resetRefsEntry()
+    resetRefs()
+    tableRef.current.setData([])
+  }
   function valueIsNaN(input: any) {
     if (input !== '' && input !== null) {
       const num = parseFloat(input.replace(/,/g, ''));
@@ -609,7 +577,7 @@ export default function PettyCash() {
 
 
           )}
-          {state.pettyCashMode === "" && (
+          {pettyCashMode === "" && (
             <Button
               sx={{
                 height: "30px",
@@ -619,11 +587,7 @@ export default function PettyCash() {
               startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
               id="entry-header-save-button"
               onClick={() => {
-                dispatch({
-                  type: "UPDATE_FIELD",
-                  field: "pettyCashMode",
-                  value: "add",
-                });
+                setPettyCashMode('add')
               }}
             >
               New
@@ -639,13 +603,13 @@ export default function PettyCash() {
             variant="contained"
             type="submit"
             onClick={handleOnSave}
-            disabled={state.pettyCashMode === ""}
+            disabled={pettyCashMode === ""}
             startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
             loading={loadingAddUpdatePettyCash}
           >
-            {state.pettyCashMode === "edit" ? "Update" : "Save"}
+            {pettyCashMode === "edit" ? "Update" : "Save"}
           </LoadingButton>
-          {state.pettyCashMode !== "" && (
+          {pettyCashMode !== "" && (
             <Button
               sx={{
                 height: "30px",
@@ -665,10 +629,7 @@ export default function PettyCash() {
                   confirmButtonText: "Yes, cancel it!",
                 }).then((result) => {
                   if (result.isConfirmed) {
-                    initialState.pettyCashMode = "";
-                    setNewStateValue(dispatch, initialState);
-                    refetchettyCashIdGenerator();
-                    setPettyCash([]);
+                    resetPettyCash()
                   }
                 });
               }}
@@ -823,7 +784,8 @@ export default function PettyCash() {
                   disableInput={isDisableField}
                   inputRef={accountRef}
                   onChange={(selected: any, e: any) => {
-                    console.log(selected)
+                    transactionCodeRef.current = selected.Acct_Code
+                    transactionShortRef.current = selected.Short
                   }}
                   onKeydown={(e: any) => {
                     if (e.key === "Enter" || e.key === 'NumpadEnter') {
@@ -889,13 +851,12 @@ export default function PettyCash() {
                   }}
                   onKeyDown={(e) => {
                     if (e.code === 'Enter' || e.code === 'NumpadEnter') {
-                      vatRef.current?.focus()
                       e.currentTarget.value = valueIsNaN(e.currentTarget.value)
+                      vatRef.current?.focus()
                     }
 
                   }}
                   onBlur={(e) => {
-                    console.log(e.currentTarget.value)
                     if (e.currentTarget.value === '') {
                       e.currentTarget.value = '0.00'
                     }
@@ -923,6 +884,7 @@ export default function PettyCash() {
                   },
                 }}
                 select={{
+                  defaultValue: "NON-VAT",
                   disabled: isDisableField,
                   style: {
                     width: "100% !important",
@@ -975,118 +937,41 @@ export default function PettyCash() {
                   handleAddTransaction();
                 }}
               >
-                {editTransaction.edit ? "Update Transaction" : "add Transaction"}
+                Save Transaction
               </Button>
             </div>
           </div>
         </div>
         <br />
-        <DepositTableSelected
+        <PettyCashTableSelected
           ref={tableRef}
           width="100%"
           height="350px"
           columns={columns}
-          rows={pettyCash}
+          rows={[]}
           getSelectedItem={(rowItm: any, colItm: any, rowIdx: any, colIdx: any) => {
+            if (accountRef.current) {
+              accountRef.current.value = rowItm[0]
+            }
+            if (amountRef.current) {
+              amountRef.current.value = rowItm[1]
+            }
+            if (usageRef.current) {
+              usageRef.current.value = rowItm[6]
+            }
+            if (vatRef.current) {
+              vatRef.current.value = rowItm[9]
+            }
+            if (invoiceRef.current) {
+              invoiceRef.current.value = rowItm[10]
+            }
+            subAcctRef.current = rowItm[4]
+            clientIdRef.current = rowItm[5]
+            transactionCodeRef.current = rowItm[7]
+            transactionShortRef.current = rowItm[8]
           }}
 
         />
-        {/* <div
-          ref={refParent}
-          style={{
-            marginTop: "10px",
-            width: "100%",
-            position: "relative",
-            flex: 1,
-          }}
-        >
-          <Box
-            style={{
-              height: `${refParent.current?.getBoundingClientRect().height}px`,
-              width: "100%",
-              overflowX: "scroll",
-              position: "absolute",
-            }}
-          >
-            <Table
-              ref={table}
-              isLoading={
-                loadingAddUpdatePettyCash || isLoadingLoadSelectedPettyCash
-              }
-              columns={selectedCollectionColumns}
-              rows={pettyCash}
-              table_id={"TempID"}
-              isSingleSelection={true}
-              isRowFreeze={false}
-              dataSelection={(selection, data, code) => {
-                const rowSelected = data.filter(
-                  (item: any) => item.TempID === selection[0]
-                )[0];
-                if (rowSelected === undefined || rowSelected.length <= 0) {
-                  setEditTransaction({
-                    edit: false,
-                    updateId: "",
-                  });
-                  setNewStateValue(dispatch, {
-                    ...state,
-                    ...{
-                      transactionPurpose: "",
-                      transactionCode: "",
-                      transactionTitle: "",
-                      transactionShort: "",
-                      clientName: "",
-                      clientID: "",
-                      amount: "",
-                      invoice: "",
-                      option: "non-vat",
-                    },
-                  });
-                  return;
-                }
-
-                if (code === "Delete" || code === "Backspace") {
-                  Swal.fire({
-                    title: "Are you sure?",
-                    text: `You won't to delete this Check No. ${rowSelected.Check_No}`,
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#3085d6",
-                    cancelButtonColor: "#d33",
-                    confirmButtonText: "Yes, delete it!",
-                  }).then((result) => {
-                    if (result.isConfirmed) {
-                      return setPettyCash((dt) => {
-                        return dt.filter(
-                          (item: any) => item.TempID !== selection[0]
-                        );
-                      });
-                    }
-                    table.current?.removeSelection();
-                  });
-                  return;
-                }
-                setNewStateValue(dispatch, {
-                  ...state,
-                  ...{
-                    transactionPurpose: rowSelected.purpose,
-                    transactionCode: rowSelected.accountCode,
-                    transactionTitle: rowSelected.purpose,
-                    transactionShort: rowSelected.DRShort,
-                    clientName: rowSelected.clientName,
-                    clientID: rowSelected.clientID,
-                    amount: rowSelected.amount,
-                    invoice: rowSelected.invoice,
-                    option: rowSelected.vatType.toLowerCase(),
-                  },
-                });
-                setEditTransaction({
-                  edit: true,
-                  updateId: rowSelected.TempID,
-                });
-              }}
-            />
-          </Box>
-        </div> */}
         {ModalClientIDs}
         {ModalSearchPettyCash}
       </div>
@@ -1094,7 +979,7 @@ export default function PettyCash() {
 
   );
 }
-const DepositTableSelected = forwardRef(({
+const PettyCashTableSelected = forwardRef(({
   columns,
   rows,
   height = "400px",
@@ -1106,6 +991,7 @@ const DepositTableSelected = forwardRef(({
   const [data, setData] = useState([])
   const [column, setColumn] = useState([])
   const [selectedRow, setSelectedRow] = useState<any>(0)
+  const [selectedRowIndex, setSelectedRowIndex] = useState<any>(null)
   const totalRowWidth = column.reduce((a: any, b: any) => a + b.width, 0)
 
 
@@ -1124,8 +1010,10 @@ const DepositTableSelected = forwardRef(({
   }, [rows, columns])
 
   useImperativeHandle(ref, () => ({
+    selectedRow: () => selectedRow,
     getData: () => {
-      return data
+      const newData = [...data];
+      return newData
     },
     setData: (newData: any) => {
       setData(newData)
@@ -1137,12 +1025,30 @@ const DepositTableSelected = forwardRef(({
       setData([])
       setSelectedRow(0)
     },
+    getSelectedRow: () => {
+      return selectedRowIndex
+    },
+    setSelectedRow: (value: any) => {
+      return setSelectedRowIndex(value)
+    },
     setDataFormated: (newData: any) => {
       setData(newData.map((itm: any) => {
         return columns.map((col: any) => itm[col.key])
       }))
+    },
+    getDataFormatted: () => {
+      const newData = [...data];
+      const newDataFormatted = newData.map((itm: any) => {
+        let newItm = {
+            // tapusin moto
+        }
+        return newItm
+      })
+
+      return newDataFormatted
     }
   }))
+
 
 
   return (
@@ -1158,17 +1064,22 @@ const DepositTableSelected = forwardRef(({
         boxShadow: `inset -2px -2px 0 #ffffff, 
                       inset 2px 2px 0 #808080`
 
-      }}>
+      }}
+
+
+    >
       <div style={{ position: "absolute", width: `${totalRowWidth}px`, height: "auto" }}>
         <table style={{ borderCollapse: "collapse", width: "100%", position: "relative" }}>
           <thead >
             <tr>
               <th style={{
-                width: '30px', border: "1px solid black",
+                width: '30px',
+                border: "1px solid black",
                 position: "sticky",
                 top: 0,
                 zIndex: 1,
-                background: "#f0f0f0"
+                background: "#f0f0f0",
+
               }}
               ></th>
               {
@@ -1185,7 +1096,8 @@ const DepositTableSelected = forwardRef(({
                         background: "#f0f0f0",
                         fontSize: "12px",
                         textAlign: "left",
-                        padding: "0px 5px"
+                        padding: "0px 5px",
+
                       }}
                     >{colItm.label}</th>
                   )
@@ -1196,6 +1108,7 @@ const DepositTableSelected = forwardRef(({
           <tbody>
             {
               data?.map((rowItm: any, rowIdx: number) => {
+                const selectedRowBg = selectedRow === rowIdx && selectedRowIndex === rowIdx ? "#dedfe0" : selectedRow === rowIdx ? "#b6e4fc" : selectedRowIndex === rowIdx ? "#cbcfd4" : ""
                 return (
                   <tr key={rowIdx}>
                     <td style={{
@@ -1204,7 +1117,7 @@ const DepositTableSelected = forwardRef(({
                       borderTop: "none",
                       borderRight: "1px solid black",
                       cursor: "pointer",
-                      background: selectedRow === rowIdx ? "#bae6fd" : "#f0f0f0",
+                      background: selectedRowBg,
                     }}>
                       <input
                         style={{
@@ -1212,12 +1125,13 @@ const DepositTableSelected = forwardRef(({
                           height: "10px"
                         }}
                         readOnly={true}
-                        checked={false}
+                        checked={selectedRowIndex === rowIdx}
                         type="checkbox"
                         onClick={() => {
                           if (!isTableSelectable) {
                             return
                           }
+                          setSelectedRowIndex(rowIdx)
 
                           if (getSelectedItem) {
                             getSelectedItem(rowItm, null, rowIdx, null)
@@ -1225,9 +1139,7 @@ const DepositTableSelected = forwardRef(({
                           setSelectedRow(null)
 
                         }}
-                        onDoubleClick={() => {
 
-                        }}
                       />
                     </td>
 
@@ -1235,23 +1147,70 @@ const DepositTableSelected = forwardRef(({
                       column.map((colItm: any, colIdx: number) => {
                         return (
                           <td
+                            className={`td row-${rowIdx} col-${colIdx}`}
+                            tabIndex={0}
                             onDoubleClick={() => {
                               if (!isTableSelectable) {
                                 return
                               }
+
+                              setSelectedRowIndex(rowIdx)
                               if (getSelectedItem) {
                                 getSelectedItem(rowItm, null, rowIdx, null)
                               }
                               setSelectedRow(null)
-
                             }}
                             onClick={() => {
                               setSelectedRow(rowIdx)
                             }}
+                            onMouseEnter={(e) => {
+                              e.preventDefault()
+                              setSelectedRow(rowIdx)
+                            }}
+                            onMouseLeave={(e) => {
+                              e.preventDefault()
+                              setSelectedRow(null)
+                            }}
+                            onKeyDown={(e) => {
+
+                              if (e.key === "ArrowUp") {
+                                setSelectedRow((prev: any) => {
+                                  const index = Math.max(prev - 1, 0)
+                                  const td = document.querySelector(`.td.row-${index}`) as HTMLTableDataCellElement
+                                  if (td) {
+                                    td.focus()
+                                  }
+                                  return index
+                                });
+                              } else if (e.key === "ArrowDown") {
+                                setSelectedRow((prev: any) => {
+                                  const index = Math.min(prev + 1, data.length - 1)
+                                  const td = document.querySelector(`.td.row-${index}`) as HTMLTableDataCellElement
+                                  if (td) {
+                                    td.focus()
+                                  }
+                                  return index
+                                });
+                              }
+
+                              if (e.code === 'Enter' || e.code === 'NumpadEnter') {
+                                e.preventDefault()
+
+                                if (!isTableSelectable) {
+                                  return
+                                }
+
+                                setSelectedRowIndex(rowIdx)
+                                if (getSelectedItem) {
+                                  getSelectedItem(rowItm, null, rowIdx, null)
+                                }
+                                setSelectedRow(null)
+                              }
+                            }}
                             key={colIdx}
                             style={{
                               border: "1px solid black",
-                              background: selectedRow === rowIdx ? "#cbd5e1" : "transparent",
+                              background: selectedRowBg,
                               fontSize: "12px",
                               padding: "0px 5px",
                               cursor: "pointer",
@@ -1405,7 +1364,6 @@ const Autocomplete = ({
       <style>
         {`
           .suggestions {
-            border: 1px solid #ddd;
             margin-top: 0;
             padding: 0;
             list-style: none;
@@ -1413,7 +1371,10 @@ const Autocomplete = ({
             overflow-y: auto;
             position:absolute;
             z-index:100;
-            background:#F1F1F1;
+            background:white;
+            width:350px;
+            border:1px solid #e5e7eb;
+            box-shadow: 0px 23px 32px -17px rgba(0,0,0,0.75);
           }
           .suggestions li {
             padding:3px 10px;
@@ -1429,9 +1390,9 @@ const Autocomplete = ({
     </div>
   );
 };
-
 function setNewStateValue(dispatch: any, obj: any) {
   Object.entries(obj).forEach(([field, value]) => {
     dispatch({ type: "UPDATE_FIELD", field, value });
   });
 }
+
