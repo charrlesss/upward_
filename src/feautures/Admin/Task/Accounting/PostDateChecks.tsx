@@ -1,25 +1,18 @@
-import React, { useContext, useState, useRef, useReducer, useEffect, useCallback } from "react";
+import React, { useContext, useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
 import {
   Box,
   Typography,
-  TextField,
   Button,
   IconButton,
   Modal,
-  FormControl,
-  InputLabel,
-  OutlinedInput,
-  InputAdornment,
   MenuItem,
   Menu,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import { GridRowSelectionModel } from "@mui/x-data-grid";
-import { useMutation, useQuery, useQueryClient } from "react-query";
+import { useMutation, useQuery } from "react-query";
 import Swal from "sweetalert2";
 import SaveIcon from "@mui/icons-material/Save";
 import { AuthContext } from "../../../../components/AuthContext";
-import CustomDatePicker from "../../../../components/DatePicker";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import CloseIcon from "@mui/icons-material/Close";
 import { flushSync } from "react-dom";
@@ -34,43 +27,17 @@ import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
 import { DisplayFile, checkFile } from "../Claims/Claims";
 import ReactDOMServer from "react-dom/server";
 import { grey } from "@mui/material/colors";
-import { UpwardTable } from "../../../../components/UpwardTable";
 import { useUpwardTableModal } from "../../../../hooks/useUpwardTableModal";
 import { TextAreaInput, TextInput } from "../../../../components/UpwardFields";
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import { NumericFormat } from "react-number-format";
 import { format } from "date-fns";
 import PageHelmet from "../../../../components/Helmet";
+import { wait } from "@testing-library/user-event/dist/utils";
+import SearchIcon from '@mui/icons-material/Search';
 
-const initialState = {
-  Sub_Ref_No: "",
-  Ref_No: "",
-  PNo: "",
-  IDNo: "",
-  Date: new Date(),
-  Name: "",
-  Remarks: "",
-  PDC_Status: "",
-  Deposit_Slip: "",
-  DateDeposit: "",
-  OR_No: "",
-  search: "",
-  pdcMode: "",
-  checkMode: "",
-  sub_account: "",
-  Acronym: "",
-};
-const modalPdcCheckInititalState = {
-  CheckIdx: "0",
-  BankName: "",
-  BankCode: "",
-  Branch: "",
-  Check_Date: new Date(),
-  Check_No: "",
-  Check_Amnt: "",
-  Check_Remarks: "",
-  Check_Count: "",
-};
+
+
 export const reducer = (state: any, action: any) => {
   switch (action.type) {
     case "UPDATE_FIELD":
@@ -83,20 +50,20 @@ export const reducer = (state: any, action: any) => {
   }
 };
 export const pdcColumn = [
-  { field: "Check_No", headerName: "Check No.", width: 150 },
-  { field: "Check_Date", headerName: "Check Date", width: 150 },
-  { field: "Check_Amnt", headerName: "Amount", width: 150, type: "number" },
-  { field: "BankName", headerName: "Bank", width: 200 },
-  { field: "Branch", headerName: "Branch", width: 200 },
+  { key: "Check_No", label: "Check No.", width: 150 },
+  { key: "Check_Date", label: "Check Date", width: 150 },
+  { key: "Check_Amnt", label: "Amount", width: 150, type: "number" },
+  { key: "BankName", label: "Bank", width: 200 },
+  { key: "Branch", label: "Branch", width: 200 },
   {
-    field: "Check_Remarks",
-    headerName: "Checked Remarks",
+    key: "Check_Remarks",
+    label: "Checked Remarks",
     width: 350,
   },
-  { field: "Deposit_Slip", headerName: "Deposit Slip", width: 150 },
-  { field: "DateDeposit", headerName: "Date Deposit", width: 150 },
-  { field: "OR_No", headerName: "OR Num", width: 150 },
-  { field: "BankCode", headerName: "Bank Code", width: 150, hide: true },
+  { key: "Deposit_Slip", label: "Deposit Slip", width: 150 },
+  { key: "DateDeposit", label: "Date Deposit", width: 150 },
+  { key: "OR_No", label: "OR Num", width: 150 },
+  { key: "BankCode", label: "Bank Code", width: 150, hide: true },
 ];
 export const pdcSearchColumn = [
   { field: "Date", headerName: "Date Received", width: 160 },
@@ -112,7 +79,6 @@ export const pdcBanksColumn = [
   { field: "Bank", headerName: "Bank Name", flex: 1 },
 ];
 const queryKey = "pdc";
-const quertKeyPDCSearch = "pdc-search";
 
 export default function PostDateChecks() {
   const tableRef = useRef<any>(null);
@@ -126,14 +92,15 @@ export default function PostDateChecks() {
   };
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<Array<File>>([]);
-  const [pdcDataRows, setPdcDataRows] = useState<GridRowSelectionModel>([]);
   const [openPdcInputModal, setOpenPdcInputModal] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [state, dispatch] = useReducer(reducer, initialState);
-  const [stateModalPdcCheck, dispatchModalPdcCheck] = useReducer(
-    reducer,
-    modalPdcCheckInititalState
-  );
+
+
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const [hasSelectedRow, setHasSelectedRow] = useState(null)
+  const [pdcMode, setPdcMode] = useState('')
 
   const { myAxios, user } = useContext(AuthContext);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -141,7 +108,6 @@ export default function PostDateChecks() {
   // pdc form save button
   const fileInputRef = useRef<HTMLInputElement>(null);
   const savePDCButtonRef = useRef<HTMLButtonElement>(null);
-  const openIdsButtonRef = useRef<HTMLButtonElement>(null);
 
 
   //check modal refs
@@ -164,15 +130,19 @@ export default function PostDateChecks() {
   const _slipDateRef = useRef('');
   const _checkOR = useRef('');
 
-
   const addRefButton = useRef<HTMLButtonElement>(null);
-  const queryClient = useQueryClient();
 
-  const dateRef = useRef<HTMLButtonElement>(null);
-  const remakrsRef = useRef<HTMLButtonElement>(null);
-  const pnRef = useRef<HTMLButtonElement>(null);
-  const branchRef = useRef<HTMLButtonElement>(null);
-  const clientnameRef = useRef<HTMLButtonElement>(null);
+
+  const subRefNoRef = useRef('');
+  const PNoRef = useRef('');
+  const subAccountRef = useRef('');
+
+  const refNoRef = useRef<HTMLInputElement>(null);
+  const dateRef = useRef<HTMLInputElement>(null);
+  const remakrsRef = useRef<HTMLTextAreaElement>(null);
+  const pnRef = useRef<HTMLInputElement>(null);
+  const branchRef = useRef<HTMLInputElement>(null);
+  const clientnameRef = useRef<HTMLTextAreaElement>(null);
 
 
   const { isLoading: newRefNumberLoading, refetch: refetchNewRefNumber } =
@@ -188,23 +158,20 @@ export default function PostDateChecks() {
       refetchOnWindowFocus: false,
       onSuccess: (res) => {
         const response = res as any;
-        dispatch({
-          type: "UPDATE_FIELD",
-          field: "Ref_No",
-          value: response.data.RefNo[0].pdcID,
-        });
-        dispatch({
-          type: "UPDATE_FIELD",
-          field: "Sub_Ref_No",
-          value: response.data.RefNo[0].pdcID,
-        });
+        wait(100).then(() => {
+          subRefNoRef.current = response.data.RefNo[0].pdcID
+          if (refNoRef.current) {
+            refNoRef.current.value = response.data.RefNo[0].pdcID
+          }
+        })
 
       },
     });
+
   const { mutate, isLoading: loadingAddNew } = useMutation({
     mutationKey: queryKey,
     mutationFn: async (variables: any) => {
-      if (state.pdcMode === "update") {
+      if (pdcMode === "update") {
         delete variables.mode;
         return await myAxios.post("/task/accounting/update-pdc", variables, {
           headers: {
@@ -221,16 +188,7 @@ export default function PostDateChecks() {
     },
     onSuccess: (res) => {
       if (res.data.success) {
-        refetchNewRefNumber();
-        queryClient.invalidateQueries(quertKeyPDCSearch);
-        setNewStateValue(dispatch, initialState);
-        setPdcDataRows([]);
-        dispatch({
-          type: "UPDATE_FIELD",
-          field: "pdcMode",
-          value: "",
-        });
-
+        resetPDC()
         return Swal.fire({
           position: "center",
           icon: "success",
@@ -305,59 +263,34 @@ export default function PostDateChecks() {
           return newObjContainer;
         }
 
-        setPdcDataRows(
-          response.data.getSearchPDCCheck.map((item: any, idx: number) => {
-            return { ...item, CheckIdx: `${idx}` };
-          })
-        );
-        dispatch({
-          type: "UPDATE_FIELD",
-          field: "Ref_No",
-          value: response.data.getSearchPDCCheck[0].Ref_No,
-        });
-        dispatch({
-          type: "UPDATE_FIELD",
-          field: "Name",
-          value: response.data.getSearchPDCCheck[0].Name,
-        });
-        dispatch({
-          type: "UPDATE_FIELD",
-          field: "Date",
-          value: response.data.getSearchPDCCheck[0].Date,
-        });
-        dispatch({
-          type: "UPDATE_FIELD",
-          field: "PNo",
-          value: response.data.getSearchPDCCheck[0].PNo,
-        });
-        dispatch({
-          type: "UPDATE_FIELD",
-          field: "IDNo",
-          value: response.data.getSearchPDCCheck[0].IDNo,
-        });
+        tableRef.current.setDataFormated(response.data.getSearchPDCCheck)
 
-        dispatch({
-          type: "UPDATE_FIELD",
-          field: "Acronym",
-          value: response.data.getSearchPDCCheck[0].Acronym,
-        });
-        dispatch({
-          type: "UPDATE_FIELD",
-          field: "sub_account",
-          value: response.data.getSearchPDCCheck[0].sub_account,
-        });
-        dispatch({
-          type: "UPDATE_FIELD",
-          field: "Remarks",
-          value: response.data.getSearchPDCCheck[0].Remarks,
-        });
-        dispatch({
-          type: "UPDATE_FIELD",
-          field: "pdcMode",
-          value: "update",
-        });
+        if (refNoRef.current) {
+          refNoRef.current.value = response.data.getSearchPDCCheck[0].Ref_No
+        }
+        if (clientnameRef.current) {
+          clientnameRef.current.value = response.data.getSearchPDCCheck[0].Name
+        }
+        if (dateRef.current) {
+          dateRef.current.value = response.data.getSearchPDCCheck[0].Date
+        }
+        if (pnRef.current) {
+          pnRef.current.value = response.data.getSearchPDCCheck[0].PNo
+        }
+        if (branchRef.current) {
+          branchRef.current.value = response.data.getSearchPDCCheck[0].Acronym
+        }
+        if (remakrsRef.current) {
+          remakrsRef.current.value = response.data.getSearchPDCCheck[0].Remarks
+        }
+        PNoRef.current = response.data.getSearchPDCCheck[0].IDNo
+        subAccountRef.current = response.data.getSearchPDCCheck[0].sub_account
+
+
+
       },
     });
+
   // policy ids search table modal
   const {
     Modal: ModalSearchPdcIDs,
@@ -395,48 +328,32 @@ export default function PostDateChecks() {
     ],
     onSelectionChange: (selectedRow: any) => {
       if (selectedRow.length > 0) {
-        dispatch({
-          type: "UPDATE_FIELD",
-          field: "PNo",
-          value: selectedRow[0].IDNo,
-        });
-        dispatch({
-          type: "UPDATE_FIELD",
-          field: "IDNo",
-          value: selectedRow[0].client_id,
-        });
-        dispatch({
-          type: "UPDATE_FIELD",
-          field: "Name",
-          value: selectedRow[0].Name ?? "",
-        });
-        dispatch({
-          type: "UPDATE_FIELD",
-          field: "Remarks",
-          value: selectedRow[0].remarks ?? "",
-        });
-        dispatch({
-          type: "UPDATE_FIELD",
-          field: "sub_account",
-          value: selectedRow[0].sub_account,
-        });
-        dispatch({
-          type: "UPDATE_FIELD",
-          field: "Acronym",
-          value: selectedRow[0].Acronym,
-        });
+
+        wait(100).then(() => {
+          PNoRef.current = selectedRow[0].IDNo
+          subAccountRef.current = selectedRow[0].sub_account
+          if (pnRef.current) {
+            pnRef.current.value = selectedRow[0].client_id
+          }
+          if (clientnameRef.current) {
+            clientnameRef.current.value = selectedRow[0].Name
+          }
+          if (branchRef.current) {
+            branchRef.current.value = selectedRow[0].Acronym
+          }
+          if (remakrsRef.current) {
+            remakrsRef.current.value = selectedRow[0].Remarks || ""
+          }
+        })
 
         closeModalSearchPdcIDs();
-        if (pdcDataRows.length <= 0) {
-          setTimeout(() => {
-            addRefButton.current?.click();
-          }, 100);
-        }
+
       }
     },
 
     responseDataKey: "clientsId",
   });
+
   // bank search table modal
   const {
     Modal: ModalSearchBanks,
@@ -502,6 +419,7 @@ export default function PostDateChecks() {
     onSelectionChange: (selectedRow: any) => {
       if (selectedRow.length > 0) {
         mutateSelectedSearch({ ref_no: selectedRow[0].Ref_No });
+        setPdcMode('update')
         closeUpwardPDCModal();
         if (searchRef.current) {
           searchRef.current?.focus();
@@ -511,16 +429,10 @@ export default function PostDateChecks() {
     responseDataKey: "searchPDC",
   });
 
-  const handleInputChange = (e: any) => {
-    const { name, value } = e.target;
-    dispatch({ type: "UPDATE_FIELD", field: name, value });
-  };
-  // async function handleOnSave(e: any) {
-
-  // }
-
   const handleOnSave = useCallback(async (e: any) => {
-    if (state.PNo === "") {
+    const pdcTableData = tableRef.current.getDataFormatted()
+
+    if (pnRef.current && pnRef.current.value === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -528,11 +440,11 @@ export default function PostDateChecks() {
         timer: 1500,
       }).then(() => {
         setTimeout(() => {
-          openIdsButtonRef.current?.click();
+          pnRef.current?.click();
         }, 350);
       });
     }
-    if (pdcDataRows.length <= 0) {
+    if (pdcTableData.length <= 0) {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -542,22 +454,7 @@ export default function PostDateChecks() {
         setOpenPdcInputModal(true);
       });
     }
-    if (state.PNo.length >= 45) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Pno is too long!",
-        timer: 1500,
-      });
-    }
-    if (state.Remarks.length >= 220) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Remarks is too long!",
-        timer: 1500,
-      });
-    }
+
     const filePromises: Array<any> = [];
     function fileTransfer(filePromises: Array<any>) {
       const files = selectedFiles;
@@ -588,16 +485,16 @@ export default function PostDateChecks() {
     fileTransfer(filePromises);
     const fileToSave = await Promise.all(filePromises);
     const stateSubmited = {
-      Ref_No: state.Ref_No,
-      PNo: state.PNo,
-      IDNo: state.IDNo,
-      Date: state.Date,
-      Name: state.Name,
-      Remarks: state.Remarks,
-      BankCode: state.BankCode,
-      checks: JSON.stringify(pdcDataRows),
+      Ref_No: refNoRef.current?.value,
+      PNo: pnRef.current?.value,
+      IDNo: PNoRef.current,
+      Date: dateRef.current?.value,
+      Name: clientnameRef.current?.value,
+      Remarks: remakrsRef.current?.value,
+      Branch: branchRef.current?.value,
+      checks: JSON.stringify(pdcTableData),
     };
-    if (state.pdcMode === "update") {
+    if (pdcMode === "update") {
       codeCondfirmationAlert({
         isUpdate: true,
         cb: (userCodeConfirmation) => {
@@ -611,7 +508,8 @@ export default function PostDateChecks() {
         },
       });
     }
-  }, [state, mutate, pdcDataRows, selectedFiles])
+  }, [mutate, selectedFiles, pdcMode])
+
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
@@ -634,9 +532,21 @@ export default function PostDateChecks() {
     }
   };
   const clickPDCReceipt = () => {
+    const pdcTableData = tableRef.current.getDataFormatted()
+
     flushSync(() => {
+      const state = {
+        Ref_No: refNoRef.current?.value,
+        PNo: pnRef.current?.value,
+        IDNo: PNoRef.current,
+        Date: dateRef.current?.value,
+        Name: clientnameRef.current?.value,
+        Remarks: remakrsRef.current?.value,
+        Branch: branchRef.current?.value,
+      };
+
       localStorage.removeItem("printString");
-      localStorage.setItem("dataString", JSON.stringify(pdcDataRows));
+      localStorage.setItem("dataString", JSON.stringify(pdcTableData));
       localStorage.setItem("paper-width", "8.5in");
       localStorage.setItem("paper-height", "11in");
       localStorage.setItem("module", "pdc");
@@ -686,7 +596,7 @@ export default function PostDateChecks() {
               margin: 0,
             }}
           >
-            {state.Name}
+            {clientnameRef.current?.value}
           </p>
           <p
             style={{
@@ -697,7 +607,7 @@ export default function PostDateChecks() {
               margin: 0,
             }}
           >
-            {state.IDNo}
+            {PNoRef.current}
           </p>
           <p
             style={{
@@ -708,7 +618,7 @@ export default function PostDateChecks() {
               margin: "20px",
             }}
           >
-            {state.Ref_No}
+            {refNoRef.current?.value}
           </p>
         </div>
       );
@@ -723,47 +633,32 @@ export default function PostDateChecks() {
     });
     window.open("/dashboard/print", "_blank");
   };
-  const onSelectionChange = (selectedRow: any) => {
-    if (selectedRow.length > 0) {
-      const rowSelected = selectedRow[0];
-      setTimeout(() => {
-        if (
-          _checknoRef.current &&
-          _bankRef.current &&
-          _branchRef.current &&
-          _remarksRef.current &&
-          _chekdateRef.current &&
-          _amountRef.current &&
-          _checkcountRef.current
-        ) {
-          _checknoRef.current.value = rowSelected.Check_No
-          _bankRef.current.value = rowSelected.BankName
-          _branchRef.current.value = rowSelected.Branch
-          _remarksRef.current.value = rowSelected.Check_Remarks
-          _chekdateRef.current.value = rowSelected.Check_Date
-          _amountRef.current.value = formatNumber(parseFloat(rowSelected.Check_Amnt.replace(/,/g, '')))
-          _checkcountRef.current.value = '0'
-          _bankCode.current = rowSelected.BankCode
-          _slipCodeRef.current = rowSelected.Deposit_Slip
-          _slipDateRef.current = rowSelected.DateDeposit
-          _checkOR.current = rowSelected.Ref_No
-        }
-      }, 100)
 
+  function resetPDC() {
+    setPdcMode('')
+    tableRef.current.setSelectedRow(null)
+    tableRef.current.setData([])
+    refetchNewRefNumber()
 
-
-      flushSync(() => {
-        setOpenPdcInputModal(true);
-      });
-      checkModalSaveButtonActionRef.current?.focusVisible();
-    } else {
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "checkMode",
-        value: "",
-      });
+    if (dateRef.current) {
+      dateRef.current.value = format(new Date(), "yyyy-MM-dd")
     }
-  };
+    if (remakrsRef.current) {
+      remakrsRef.current.value = ''
+    }
+    if (pnRef.current) {
+      pnRef.current.value = ''
+    }
+    if (branchRef.current) {
+      branchRef.current.value = ''
+    }
+    if (clientnameRef.current) {
+      clientnameRef.current.value = ''
+    }
+
+
+
+  }
   function formatNumber(num: number) {
     return (num || 0).toLocaleString("en-US", {
       minimumFractionDigits: 2,
@@ -771,6 +666,7 @@ export default function PostDateChecks() {
     })
   }
   function handleCheckDetailsSave() {
+
     function incrementStringNumbers(
       str: string,
       increment: number
@@ -801,10 +697,17 @@ export default function PostDateChecks() {
       _amountRef.current &&
       _checkcountRef.current
     ) {
-      const filteredChecks = pdcDataRows.filter((itm: any) => {
+
+
+      const tableRows = tableRef.current.getDataFormatted()
+      const selectedIndex = tableRef.current.getSelectedRow()
+
+      const filteredChecks = tableRows.filter((itm: any) => {
         return _checknoRef.current && _checknoRef.current.value === itm.Check_No
       })
-      if (filteredChecks.length > 0) {
+
+
+      if (filteredChecks.length > 0 && selectedIndex === null) {
         alert('check no. is already exist!')
         _checknoRef.current.focus()
         return
@@ -832,95 +735,70 @@ export default function PostDateChecks() {
       }
 
 
-      setPdcDataRows((d: any) => {
-        if (
-          _checknoRef.current &&
-          _bankRef.current &&
-          _branchRef.current &&
-          _remarksRef.current &&
-          _chekdateRef.current &&
-          _amountRef.current &&
-          _checkcountRef.current
-        ) {
-          const selectedIndex = tableRef.current.getSelectedIndex()
 
-          if (selectedIndex !== null && selectedIndex !== undefined) {
-            const newData = d.map((itm: any, idx: number) => {
-              if (
-                _checknoRef.current &&
-                _bankRef.current &&
-                _branchRef.current &&
-                _remarksRef.current &&
-                _chekdateRef.current &&
-                _amountRef.current &&
-                _checkcountRef.current &&
-                idx === selectedIndex
-              ) {
-                itm = {
-                  Check_No: _checknoRef.current.value,
-                  Check_Date: _chekdateRef.current.value,
-                  Check_Amnt: _amountRef.current.value,
-                  BankName: _bankRef.current.value,
-                  BankCode: _bankCode.current,
-                  Branch: _branchRef.current.value,
-                  Check_Remarks: _remarksRef.current.value,
-                  Deposit_Slip: _slipCodeRef.current,
-                  DateDeposit: _slipDateRef.current,
-                  OR_No: _checkOR.current,
-                }
-              }
+      if (
+        _checknoRef.current &&
+        _bankRef.current &&
+        _branchRef.current &&
+        _remarksRef.current &&
+        _chekdateRef.current &&
+        _amountRef.current &&
+        _checkcountRef.current
+      ) {
 
-              return itm
-            })
-            return newData
-          } else {
-            const newData: any = []
-            for (
-              let i = 0;
-              i < parseInt(_checkcountRef.current.value);
-              i++
-            ) {
-              const data: any = {
-                Check_No: incrementStringNumbers(
-                  _checknoRef.current.value,
-                  i
-                ),
-                Check_Date: incrementDate(_chekdateRef.current.value, i),
-                Check_Amnt: _amountRef.current.value,
-                BankName: _bankRef.current.value,
-                BankCode: _bankCode.current,
-                Branch: _branchRef.current.value,
-                Check_Remarks: _remarksRef.current.value,
-                Deposit_Slip: _slipCodeRef.current,
-                DateDeposit: _slipDateRef.current,
-                OR_No: _checkOR.current,
-              };
-              newData.push(data)
-            }
-            return [...d, ...newData]
+
+
+        if (selectedIndex) {
+          const selectedRow = tableRef.current.getData()
+          selectedRow[selectedIndex][0] = _checknoRef.current.value
+          selectedRow[selectedIndex][1] = _chekdateRef.current.value
+          selectedRow[selectedIndex][2] = _amountRef.current.value
+          selectedRow[selectedIndex][3] = _bankRef.current.value
+          selectedRow[selectedIndex][4] = _branchRef.current.value
+          selectedRow[selectedIndex][5] = _remarksRef.current.value
+          selectedRow[selectedIndex][6] = _slipCodeRef.current
+          selectedRow[selectedIndex][7] = _slipDateRef.current
+          selectedRow[selectedIndex][8] = _checkOR.current
+          selectedRow[selectedIndex][9] = _bankCode.current
+          tableRef.current.setData(selectedRow)
+          tableRef.current.setSelectedRow(null)
+          setHasSelectedRow(null)
+        } else {
+          const newData: any = []
+          for (
+            let i = 0;
+            i < parseInt(_checkcountRef.current.value);
+            i++
+          ) {
+            const data: any = {
+              Check_No: incrementStringNumbers(
+                _checknoRef.current.value,
+                i
+              ),
+              Check_Date: incrementDate(_chekdateRef.current.value, i),
+              Check_Amnt: _amountRef.current.value,
+              BankName: _bankRef.current.value,
+              BankCode: _bankCode.current,
+              Branch: _branchRef.current.value,
+              Check_Remarks: _remarksRef.current.value,
+              Deposit_Slip: _slipCodeRef.current,
+              DateDeposit: _slipDateRef.current,
+              OR_No: _checkOR.current,
+            };
+            newData.push(data)
           }
+          tableRef.current.setDataFormated(newData)
 
         }
-        return d
-      })
+      }
+
+
 
       setOpenPdcInputModal(false);
-      focusOnTable()
     }
 
   }
-  function focusOnTable() {
-    setTimeout(() => {
-      tableRef.current?.resetTableSelected();
-      const datagridview = tableRef.current.getParentElement().querySelector(
-        `.grid-container .row-0.col-0 input`
-      ) as HTMLDivElement;
-      setTimeout(() => {
-        if (datagridview)
-          datagridview.focus();
-      }, 100)
-    }, 100)
-  }
+
 
   useEffect(() => {
     const handleKeyDown = (event: any) => {
@@ -936,10 +814,9 @@ export default function PostDateChecks() {
     };
   }, [handleOnSave]);
 
+  const isDisableField = pdcMode === "";
 
-  const isDisableField = state.pdcMode === "";
-  const width = window.innerWidth - 50;
-  const height = window.innerHeight - 145;
+
 
 
   return (
@@ -952,7 +829,8 @@ export default function PostDateChecks() {
           flex: 1,
           background: "red",
           padding: "10px",
-          backgroundColor: "#F8F8FF",
+          backgroundColor: "#F1F1F1",
+
         }}
       >
 
@@ -983,39 +861,38 @@ export default function PostDateChecks() {
             {isLoadingModalSearchPDC ? (
               <LoadingButton loading={isLoadingModalSearchPDC} />
             ) : (
-              <TextField
-                label="Search"
-                size="small"
-                name="search"
-                value={state.search}
-                onChange={handleInputChange}
-                onKeyDown={(e) => {
-                  if (e.code === "Enter" || e.code === "NumpadEnter") {
-                    e.preventDefault();
-                    openUpwardPDCModal((e.target as HTMLInputElement).value);
-                  }
-                  if (e.key === "ArrowDown") {
-                    e.preventDefault();
-                    const datagridview = document.querySelector(
-                      `.grid-container`
-                    ) as HTMLDivElement;
-                    datagridview.focus();
-                  }
+              <TextInput
+                label={{
+                  title: "Search: ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "50px",
+                  },
                 }}
-                InputProps={{
-                  style: { height: "27px", fontSize: "14px" },
-                  inputRef: searchRef,
-                  className: "manok",
+                input={{
+                  className: "search-input-up-on-key-down",
+                  type: "search",
+                  onKeyDown: (e) => {
+                    if (e.key === "Enter" || e.key === "NumpadEnter") {
+                      e.preventDefault();
+                      openUpwardPDCModal(e.currentTarget.value);
+                    }
+                  },
+                  style: { width: "500px" },
                 }}
-                sx={{
-                  width: "400px",
-                  height: "27px",
-                  ".MuiFormLabel-root": { fontSize: "14px" },
-                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+
+                icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+                onIconClick={(e) => {
+                  e.preventDefault()
+                  if (searchInputRef.current)
+                    openUpwardPDCModal(searchInputRef.current.value);
+
                 }}
+                inputRef={searchInputRef}
               />
             )}
-            {state.pdcMode === "" && (
+            {pdcMode === "" && (
               <Button
                 sx={{
                   height: "30px",
@@ -1026,11 +903,8 @@ export default function PostDateChecks() {
                 id="entry-header-save-button"
                 color="primary"
                 onClick={() => {
-                  dispatch({
-                    type: "UPDATE_FIELD",
-                    field: "pdcMode",
-                    value: "add",
-                  });
+
+                  setPdcMode('add')
                 }}
               >
                 New
@@ -1047,13 +921,13 @@ export default function PostDateChecks() {
               variant="contained"
               type="submit"
               onClick={handleOnSave}
-              disabled={state.pdcMode === ""}
+              disabled={pdcMode === ""}
               loading={loadingAddNew}
               startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
             >
               Save
             </LoadingButton>
-            {(state.pdcMode === "add" || state.pdcMode === "update") && (
+            {(pdcMode === "add" || pdcMode === "update") && (
               <Button
                 sx={{
                   height: "30px",
@@ -1072,15 +946,7 @@ export default function PostDateChecks() {
                     confirmButtonText: "Yes, cancel it!",
                   }).then((result) => {
                     if (result.isConfirmed) {
-                      initialState.Sub_Ref_No = state.Sub_Ref_No;
-                      initialState.Ref_No = state.Sub_Ref_No;
-                      setNewStateValue(dispatch, initialState);
-                      setPdcDataRows([]);
-                      dispatch({
-                        type: "UPDATE_FIELD",
-                        field: "pdcMode",
-                        value: "",
-                      });
+
                     }
                   });
                 }}
@@ -1094,28 +960,27 @@ export default function PostDateChecks() {
                 height: "30px",
                 fontSize: "11px",
               }}
-              disabled={state.pdcMode === ""}
+              disabled={pdcMode === ""}
               variant="contained"
               startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
               onClick={() => {
-                const getLastCheck_No: any = pdcDataRows[pdcDataRows.length - 1];
-                modalPdcCheckInititalState.Check_No = incrementCheckNo(
-                  getLastCheck_No?.Check_No
-                );
-                setNewStateValue(
-                  dispatchModalPdcCheck,
-                  modalPdcCheckInititalState
-                );
-                dispatch({
-                  type: "UPDATE_FIELD",
-                  field: "checkMode",
-                  value: "",
-                });
                 flushSync(() => {
                   setOpenPdcInputModal(true);
                 });
 
-                _checknoRef.current?.focus();
+                wait(100).then(() => {
+                  const tableRows = tableRef.current.getDataFormatted()
+                  const getLastCheck_No: any = tableRows[tableRows.length - 1];
+                  if (_checknoRef.current) {
+                    _checknoRef.current.value = incrementCheckNo(
+                      getLastCheck_No?.Check_No
+                    );
+                  }
+
+                  tableRef.current.setSelectedRow(null)
+                  setHasSelectedRow(null)
+                  _checknoRef.current?.focus();
+                })
               }}
               ref={addRefButton}
             >
@@ -1123,7 +988,7 @@ export default function PostDateChecks() {
             </Button>
             <div>
               <Button
-                disabled={state.pdcMode !== "update"}
+                disabled={pdcMode !== "update"}
                 id="basic-button"
                 aria-controls={open ? "basic-menu" : undefined}
                 aria-haspopup="true"
@@ -1201,122 +1066,92 @@ export default function PostDateChecks() {
                 <div
                   style={{
                     display: "flex",
-                    gap: "10px",
+                    gap: "15px",
                   }}
                 >
                   {newRefNumberLoading ? (
                     <LoadingButton loading={newRefNumberLoading} />
                   ) : (
-                    <FormControl
-                      fullWidth
-                      variant="outlined"
-                      size="small"
-                      disabled={isDisableField}
-                      sx={{
-                        ".MuiFormLabel-root": {
-                          fontSize: "14px",
-                          background: "white",
-                          zIndex: 99,
-                          padding: "0 3px",
+
+                    <TextInput
+                      label={{
+                        title: "Reference No.",
+                        style: {
+                          fontSize: "12px",
+                          fontWeight: "bold",
+                          width: "100px",
                         },
-                        ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
                       }}
-                    >
-                      <InputLabel htmlFor="pdc-id-field">
-                        Reference No.
-                      </InputLabel>
-                      <OutlinedInput
-                        readOnly={user?.department !== "UCSMI"}
-                        sx={{
-                          height: "27px",
-                          fontSize: "14px",
-                          fieldset: { borderColor: "black" },
-                        }}
-                        disabled={isDisableField}
-                        label="Reference No."
-                        name="Ref_No"
-                        value={state.Ref_No}
-                        onChange={handleInputChange}
-                        onKeyDown={(e) => {
-                          if (e.code === "Enter" || e.code === "NumpadEnter") {
+                      input={{
+                        disabled: isDisableField,
+                        type: "text",
+                        style: { width: "300px" },
+                        onKeyDown: (e) => {
+                          if (e.key === "Enter" || e.key === "NumpadEnter") {
+                            e.preventDefault();
                             dateRef.current?.focus()
                           }
-                        }}
-                        id="pdc-id-field"
-                        endAdornment={
-                          <InputAdornment position="end">
-                            <IconButton
-                              disabled={isDisableField}
-                              aria-label="search-client"
-                              color="secondary"
-                              edge="end"
-                            >
-                              <RestartAltIcon />
-                            </IconButton>
-                          </InputAdornment>
                         }
-                      />
-                    </FormControl>
+                      }}
+                      inputRef={refNoRef}
+                      icon={<RestartAltIcon sx={{ fontSize: "18px", color: isDisableField ? "gray" : "black" }} />}
+
+                      disableIcon={isDisableField}
+                    />
+
                   )}
-                  <CustomDatePicker
-                    fullWidth={true}
-                    disabled={isDisableField}
-                    label="Date Received"
-                    onChange={(value: any) => {
-                      dispatch({
-                        type: "UPDATE_FIELD",
-                        field: "Date",
-                        value: value,
-                      });
+
+                  <TextInput
+                    label={{
+                      title: "Date : ",
+                      style: {
+                        fontSize: "12px",
+                        fontWeight: "bold",
+                        width: "50px",
+                      },
                     }}
-                    inputRef={dateRef}
-                    value={new Date(state.Date)}
-                    onKeyDown={(e: any) => {
-                      if (e.code === "Enter" || e.code === "NumpadEnter") {
-                        // savePDCButtonRef.current?.click();
-                        remakrsRef.current?.focus()
+                    input={{
+                      disabled: isDisableField,
+                      type: "date",
+                      defaultValue: format(new Date(), "yyyy-MM-dd"),
+                      style: { width: "190px" },
+                      onKeyDown: (e) => {
+                        if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                          remakrsRef.current?.focus()
+                        }
                       }
                     }}
-                    textField={{
-                      InputLabelProps: {
-                        style: {
-                          fontSize: "14px",
-                        },
-                      },
-                      InputProps: {
-                        style: { height: "27px", fontSize: "14px" },
-                      },
-                    }}
+                    inputRef={dateRef}
                   />
+
+
                 </div>
-                <TextField
-                  InputLabelProps={{
-                    sx: {
-                      color: "black",
+
+                <TextAreaInput
+                  label={{
+                    title: "Remarks : ",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "100px",
                     },
                   }}
-                  variant="outlined"
-                  size="small"
-                  label="Remarks"
-                  name="Remarks"
-                  value={state.Remarks}
-                  onChange={handleInputChange}
-                  disabled={isDisableField}
-                  onKeyDown={(e) => {
-                    if (e.code === "Enter" || e.code === "NumpadEnter") {
-                      pnRef.current?.focus()
-                    }
+                  textarea={{
+                    rows: 2,
+                    disabled: isDisableField,
+                    style: { flex: 1 },
+                    onKeyDown: (e) => {
+                      e.stopPropagation()
+                      if ((e.code === "NumpadEnter" && !e.shiftKey) || (e.code === 'Enter' && !e.shiftKey)) {
+                        pnRef.current?.focus()
+                      }
+                    },
+
                   }}
-                  InputProps={{
-                    style: { height: "27px", fontSize: "14px" },
-                    inputRef: remakrsRef
-                  }}
-                  sx={{
-                    fieldset: { borderColor: "black" },
-                    ".MuiFormLabel-root": { fontSize: "14px" },
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                  }}
+                  _inputRef={remakrsRef}
                 />
+
+
               </fieldset>
               <fieldset
                 style={
@@ -1324,7 +1159,7 @@ export default function PostDateChecks() {
                     flex: 1,
                     display: "flex",
                     gap: "10px",
-                    padding: "15px",
+                    padding: " 15px",
                     border: "1px solid #cbd5e1",
                     borderRadius: "5px",
                     flexDirection: "column",
@@ -1332,137 +1167,102 @@ export default function PostDateChecks() {
                 }
               >
                 <div
-                  style={{ width: "100%", flex: 1, display: "flex", gap: "10px" }}
+                  style={{ width: "100%", flex: 1, display: "flex", gap: "15px" }}
                 >
                   {isLoadingModalSearchPdcIDs ? (
                     <LoadingButton loading={isLoadingModalSearchPdcIDs} />
                   ) : (
-                    <FormControl
-                      fullWidth
-                      variant="outlined"
-                      size="small"
-                      disabled={isDisableField}
-                      sx={{
-                        flex: 1,
-                        ".MuiFormLabel-root": {
-                          fontSize: "14px",
-                          background: "white",
-                          zIndex: 99,
-                          padding: "0 3px",
+                    <TextInput
+                      label={{
+                        title: "PN/Client ID : ",
+                        style: {
+                          fontSize: "12px",
+                          fontWeight: "bold",
+                          width: "100px",
                         },
-                        ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
                       }}
-                    >
-                      <InputLabel htmlFor="label-input-id">
-                        PN/Client ID
-                      </InputLabel>
-                      <OutlinedInput
-                        inputRef={pnRef}
-                        sx={{
-                          fieldset: { borderColor: "black" },
-
-                          height: "27px",
-                          fontSize: "14px",
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.code === "Enter" || e.code === "NumpadEnter") {
-                            openIdsButtonRef.current?.click();
+                      input={{
+                        disabled: isDisableField,
+                        type: "text",
+                        style: { width: "250px", height: "22px" },
+                        onKeyDown: (e) => {
+                          if (e.key === "Enter" || e.key === "NumpadEnter") {
+                            e.preventDefault();
+                            if (pnRef.current) {
+                              openModalSearchPdcIDs(pnRef.current.value)
+                            }
                           }
-                        }}
-                        name="PNo"
-                        value={state.PNo}
-                        onChange={handleInputChange}
-                        id="label-input-id"
-                        endAdornment={
-                          <InputAdornment position="end">
-                            <IconButton
-                              ref={openIdsButtonRef}
-                              disabled={isDisableField}
-                              aria-label="search-client"
-                              color="secondary"
-                              edge="end"
-                              onClick={() => openModalSearchPdcIDs(state.PNo)}
-                            >
-                              <PersonSearchIcon />
-                            </IconButton>
-                          </InputAdornment>
                         }
-                        label="PN/Client ID"
-                      />
-                    </FormControl>
+                      }}
+                      inputRef={pnRef}
+                      icon={<PersonSearchIcon sx={{ fontSize: "18px", color: isDisableField ? "gray" : "black" }} />}
+                      onIconClick={(e) => {
+                        e.preventDefault()
+                        if (pnRef.current) {
+                          openModalSearchPdcIDs(pnRef.current.value)
+                        }
+                      }}
+                      disableIcon={isDisableField}
+                    />
+
                   )}
-                  <TextField
-                    InputLabelProps={{
-                      sx: {
-                        color: "black",
+
+                  <TextInput
+                    label={{
+                      title: "Branch : ",
+                      style: {
+                        fontSize: "12px",
+                        fontWeight: "bold",
+                        width: "70px",
                       },
                     }}
-                    variant="outlined"
-                    size="small"
-                    label="Branch"
-                    name="Acronym"
-                    value={state.Acronym}
-                    onChange={handleInputChange}
-                    disabled={isDisableField}
-                    onKeyDown={(e) => {
-                      if (e.code === "Enter" || e.code === "NumpadEnter") {
-                        clientnameRef.current?.focus();
+                    input={{
+                      disabled: isDisableField,
+                      type: "text",
+                      style: { width: "auto", height: "22px" },
+                      onKeyDown: (e) => {
+                        if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                          clientnameRef.current?.focus()
+                        }
                       }
                     }}
-                    InputProps={{
-                      style: { height: "27px", fontSize: "14px" },
-                      readOnly: true,
-                      inputRef: branchRef
-                    }}
-                    sx={{
-                      fieldset: { borderColor: "black" },
-                      flex: 1,
-                      height: "27px",
-                      ".MuiFormLabel-root": { fontSize: "14px" },
-                      ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                    }}
+                    inputRef={branchRef}
                   />
+
                 </div>
+
                 <div
                   style={{ width: "100%", display: "flex", columnGap: "10px" }}
                 >
-                  <TextField
-                    InputLabelProps={{
-                      sx: {
-                        color: "black",
+                  <TextAreaInput
+                    label={{
+                      title: "Clients Name : ",
+                      style: {
+                        fontSize: "12px",
+                        fontWeight: "bold",
+                        width: "100px",
                       },
                     }}
-                    variant="outlined"
-                    size="small"
-                    label="Clients Name"
-                    name="Name"
-                    value={state.Name}
-                    onChange={handleInputChange}
-                    disabled={isDisableField}
-                    onKeyDown={(e) => {
-                      if (e.code === "Enter" || e.code === "NumpadEnter") {
-                        savePDCButtonRef.current?.click();
-                      }
+                    textarea={{
+                      rows: 2,
+                      disabled: isDisableField,
+                      style: { width: "325px" },
+                      onKeyDown: (e) => {
+                        e.stopPropagation()
+                        if ((e.code === "NumpadEnter" && !e.shiftKey) || (e.code === 'Enter' && !e.shiftKey)) {
+                          savePDCButtonRef.current?.click();
+                        }
+                      },
+
                     }}
-                    InputProps={{
-                      style: { height: "27px", fontSize: "14px" },
-                      readOnly: true,
-                      inputRef: clientnameRef
-                    }}
-                    sx={{
-                      fieldset: { borderColor: "black" },
-                      flex: 1,
-                      height: "27px",
-                      ".MuiFormLabel-root": { fontSize: "14px" },
-                      ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                    }}
+                    _inputRef={clientnameRef}
                   />
                   <Button
                     sx={{
                       height: "27px",
                       fontSize: "11px",
                     }}
-                    disabled={state.pdcMode === ""}
+                    disabled={pdcMode === ""}
                     variant="contained"
                     startIcon={<DownloadIcon sx={{ width: 15, height: 15 }} />}
                     onClick={() => {
@@ -1476,34 +1276,85 @@ export default function PostDateChecks() {
             </Box>
           </Box>
         </form>
-        <UpwardTable
-          isLoading={isLoadingSelectedSearch}
+        <PostDatedCheckTableSelected
+          disbaleTable={isDisableField}
           ref={tableRef}
-          rows={pdcDataRows}
-          column={pdcColumn}
-          width={width}
-          height={height}
-          dataReadOnly={true}
-          onSelectionChange={onSelectionChange}
-          onKeyDown={(row, key) => {
-            if (key === "Delete" || key === "Backspace") {
-              const rowSelected = row[0];
+          rows={[]}
+          columns={pdcColumn}
+          getSelectedItem={(rowSelected: any, _: any, RowIndex: any) => {
+            if (rowSelected) {
               if (
-                (rowSelected.Deposit_Slip && rowSelected.Deposit_Slip !== "") ||
-                (rowSelected.DateDeposit && rowSelected.DateDeposit !== "") ||
-                (rowSelected.OR_No && rowSelected.OR_No !== "")
+                (rowSelected[6] && rowSelected[6] !== "") ||
+                (rowSelected[7] && rowSelected[7] !== "") ||
+                (rowSelected[8] && rowSelected[8] !== "")
               ) {
+                setHasSelectedRow(null)
+                tableRef.current.setSelectedRow(null)
                 return Swal.fire({
                   position: "center",
                   icon: "warning",
-                  title: `Unable to delete. Check No ${rowSelected.Check_No} is already ${rowSelected.OR_No} issued of OR!`,
+                  title: `Unable to delete. Check No ${rowSelected[0]} is already ${rowSelected[8]} issued of OR!`,
                   showConfirmButton: false,
                   timer: 1500,
                 });
               }
+              flushSync(() => {
+                setOpenPdcInputModal(true);
+              })
+              wait(100).then(() => {
+                if (
+                  _checknoRef.current &&
+                  _bankRef.current &&
+                  _branchRef.current &&
+                  _remarksRef.current &&
+                  _chekdateRef.current &&
+                  _amountRef.current
+                ) {
+                  _checknoRef.current.value = rowSelected[0]
+                  _chekdateRef.current.value = rowSelected[1]
+                  _amountRef.current.value = formatNumber(parseFloat(rowSelected[2].replace(/,/g, '')))
+                  _bankRef.current.value = rowSelected[3]
+                  _branchRef.current.value = rowSelected[4]
+                  _remarksRef.current.value = rowSelected[5]
+                  _slipCodeRef.current = rowSelected[6] || ""
+                  _slipDateRef.current = rowSelected[7] || ""
+                  _checkOR.current = rowSelected[8] || ""
+                  _bankCode.current = rowSelected[9]
+
+                  console.log(rowSelected[0])
+                  _bankRef.current.focus()
+                }
+              })
+
+              setHasSelectedRow(RowIndex)
+            } else {
+              setHasSelectedRow(null)
+            }
+          }}
+          onKeyDown={(rowSelected: any, RowIndex: any, e: any) => {
+            if (e.code === "Delete" || e.code === "Backspace") {
+
+              if (
+                (rowSelected[6] && rowSelected[6] !== "") ||
+                (rowSelected[7] && rowSelected[7] !== "") ||
+                (rowSelected[8] && rowSelected[8] !== "")
+              ) {
+                setHasSelectedRow(null)
+                tableRef.current.setSelectedRow(null)
+
+                return Swal.fire({
+                  position: "center",
+                  icon: "warning",
+                  title: `Unable to delete. Check No ${rowSelected[0]} is already ${rowSelected[8]} issued of OR!`,
+                  showConfirmButton: false,
+                  timer: 1500,
+                });
+              }
+
+
               Swal.fire({
                 title: "Are you sure?",
-                text: `You won't to delete this Check No. ${rowSelected.Check_No}`,
+                text: `You won't to delete this Check No. ${rowSelected[0]}`,
                 icon: "warning",
                 showCancelButton: true,
                 confirmButtonColor: "#3085d6",
@@ -1512,27 +1363,26 @@ export default function PostDateChecks() {
               }).then((result) => {
                 if (result.isConfirmed) {
                   setTimeout(() => {
-                    const selectedIndex = tableRef.current.getSelectedRowsOnClick()
-                    setPdcDataRows((dt) => {
-                      return dt.filter(
-                        (item: any, idx: number) => idx !== selectedIndex
-                      );
-                    });
-                    tableRef.current?.resetTableSelected();
+                    const newData = tableRef.current.getData()
+                    newData.splice(RowIndex, 1);
+                    tableRef.current.setData(newData)
+
+                    setHasSelectedRow(null)
+                    tableRef.current.setSelectedRow(null)
                   }, 100)
                 }
               });
             }
           }}
-          inputsearchselector=".manok"
         />
 
         <Modal
           open={openPdcInputModal}
           onClose={() => {
-            tableRef.current?.resetTableSelected();
             setOpenPdcInputModal(false);
-            focusOnTable()
+            tableRef.current.setSelectedRow(null)
+            setHasSelectedRow(null)
+
           }}
           aria-labelledby="modal-modal-title"
           aria-describedby="modal-modal-description"
@@ -1575,6 +1425,7 @@ export default function PostDateChecks() {
                     },
                   }}
                   input={{
+                    disabled: hasSelectedRow !== null,
                     type: "text",
                     style: { width: "190px" },
                     onKeyDown: (e) => {
@@ -1600,8 +1451,6 @@ export default function PostDateChecks() {
                     input={{
                       type: "text",
                       style: { width: "190px" },
-                      value: state.refNo,
-                      name: "refNo",
                       onKeyDown: (e) => {
                         if (e.code === "NumpadEnter" || e.code === 'Enter') {
                           return openModalSearchBanks(
@@ -1736,7 +1585,7 @@ export default function PostDateChecks() {
                     }}
                   />
                 </div>
-                {state.checkMode !== "update" && (
+                {hasSelectedRow === null && (
                   <TextInput
                     label={{
                       title: "Check Count : ",
@@ -1778,7 +1627,7 @@ export default function PostDateChecks() {
                   action={checkModalSaveButtonActionRef}
                   color="primary"
                   variant="contained"
-                  autoFocus={state.checkMode !== ""}
+                  autoFocus={hasSelectedRow !== null}
                   onClick={() => {
                     handleCheckDetailsSave()
                   }}
@@ -1787,45 +1636,8 @@ export default function PostDateChecks() {
                     fontSize: "11px",
                   }}
                 >
-                  {state.checkMode === "update" ? "Update" : "Save"}
+                  {hasSelectedRow !== null ? "Update" : "Save"}
                 </Button>
-                {state.checkMode === "update" && (
-                  <Button
-                    color="error"
-                    variant="contained"
-                    onClick={() => {
-                      flushSync(() => {
-                        setOpenPdcInputModal(false);
-                      });
-                      Swal.fire({
-                        title: "Are you sure?",
-                        text: `Delete Check ${stateModalPdcCheck.Check_No} `,
-                        icon: "warning",
-                        showCancelButton: true,
-                        confirmButtonColor: "#3085d6",
-                        cancelButtonColor: "#d33",
-                        confirmButtonText: "Yes, delete it!",
-                      }).then((result) => {
-                        if (result.isConfirmed) {
-                          setPdcDataRows((dt) => {
-                            dt = dt.filter(
-                              (items: any) =>
-                                items.CheckIdx !== stateModalPdcCheck.CheckIdx
-                            );
-                            return dt;
-                          });
-                        }
-                        focusOnTable()
-                      });
-                    }}
-                    sx={{
-                      height: "30px",
-                      fontSize: "11px",
-                    }}
-                  >
-                    Delete
-                  </Button>
-                )}
                 <Button
                   color="success"
                   variant="contained"
@@ -1834,8 +1646,9 @@ export default function PostDateChecks() {
                     fontSize: "11px",
                   }}
                   onClick={() => {
-                    focusOnTable()
                     setOpenPdcInputModal(false);
+                    tableRef.current.setSelectedRow(null)
+                    setHasSelectedRow(null)
                   }}
                 >
                   Cancel
@@ -1848,8 +1661,9 @@ export default function PostDateChecks() {
                   }}
                   aria-label="search-client"
                   onClick={() => {
+                    tableRef.current.setSelectedRow(null)
+                    setHasSelectedRow(null)
                     setOpenPdcInputModal(false);
-                    focusOnTable()
                   }}
                 >
                   <CloseIcon />
@@ -2011,19 +1825,301 @@ export default function PostDateChecks() {
     </>
   );
 }
+
+
+const PostDatedCheckTableSelected = forwardRef(({
+  columns,
+  rows,
+  height = "400px",
+  getSelectedItem,
+  onKeyDown,
+  disbaleTable = false,
+  isTableSelectable = true
+}: any, ref) => {
+  const parentElementRef = useRef<any>(null)
+  const [data, setData] = useState([])
+  const [column, setColumn] = useState([])
+  const [selectedRow, setSelectedRow] = useState<any>(0)
+  const [selectedRowIndex, setSelectedRowIndex] = useState<any>(null)
+  const totalRowWidth = column.reduce((a: any, b: any) => a + b.width, 0)
+
+  useEffect(() => {
+    if (columns.length > 0) {
+      setColumn(columns.filter((itm: any) => !itm.hide))
+    }
+  }, [columns])
+
+  useEffect(() => {
+    if (rows.length > 0) {
+      setData(rows.map((itm: any) => {
+        return columns.map((col: any) => itm[col.key])
+      }))
+    }
+  }, [rows, columns])
+
+  useImperativeHandle(ref, () => ({
+    selectedRow: () => selectedRow,
+    getData: () => {
+      const newData = [...data];
+      return newData
+    },
+    setData: (newData: any) => {
+      setData(newData)
+    },
+    getColumns: () => {
+      return columns
+    },
+    resetTable: () => {
+      setData([])
+      setSelectedRow(0)
+    },
+    getSelectedRow: () => {
+      return selectedRowIndex
+    },
+    setSelectedRow: (value: any) => {
+      return setSelectedRowIndex(value)
+    },
+    setDataFormated: (newData: any) => {
+      setData(newData.map((itm: any) => {
+        return columns.map((col: any) => itm[col.key])
+      }))
+    },
+    getDataFormatted: () => {
+      const newData = [...data];
+      const newDataFormatted = newData.map((itm: any) => {
+        let newItm = {
+          Check_No: itm[0],
+          Check_Date: itm[1],
+          Check_Amnt: itm[2],
+          BankName: itm[3],
+          Branch: itm[4],
+          Check_Remarks: itm[5],
+          Deposit_Slip: itm[6],
+          DateDeposit: itm[7],
+          OR_No: itm[8],
+          BankCode: itm[9]
+
+        }
+        return newItm
+      })
+
+      return newDataFormatted
+    }
+  }))
+
+  return (
+    <div
+      ref={parentElementRef}
+      style={{
+        width: "100%",
+        height,
+        overflow: "auto",
+        position: "relative",
+        pointerEvents: disbaleTable ? "none" : "auto",
+        border: disbaleTable ? "2px solid #8c8f8e" : '2px solid #c0c0c0',
+        boxShadow: `inset -2px -2px 0 #ffffff, 
+                      inset 2px 2px 0 #808080`
+
+      }}
+    >
+      <div style={{ position: "absolute", width: `${totalRowWidth}px`, height: "auto" }}>
+        <table style={{ borderCollapse: "collapse", width: "100%", position: "relative", background: "white" }}>
+          <thead >
+            <tr>
+              <th style={{
+                width: '30px',
+                border: "1px solid black",
+                position: "sticky",
+                top: 0,
+                zIndex: 1,
+                background: "#f0f0f0",
+
+              }}
+              ></th>
+              {
+                column.map((colItm: any, idx: number) => {
+                  return (
+                    <th
+                      key={idx}
+                      style={{
+                        width: colItm.width,
+                        border: "1px solid black",
+                        position: "sticky",
+                        top: 0,
+                        zIndex: 1,
+                        background: "#f0f0f0",
+                        fontSize: "12px",
+                        textAlign: "left",
+                        padding: "0px 5px",
+
+                      }}
+                    >{colItm.label}</th>
+                  )
+                })
+              }
+            </tr>
+          </thead>
+          <tbody>
+            {
+              data?.map((rowItm: any, rowIdx: number) => {
+                const selectedRowBg = selectedRow === rowIdx && selectedRowIndex === rowIdx ? "#dedfe0" : selectedRow === rowIdx ? "#b6e4fc" : selectedRowIndex === rowIdx ? "#cbcfd4" : ""
+                return (
+                  <tr key={rowIdx}>
+                    <td style={{
+                      position: "relative", borderBottom: "1px solid black",
+                      borderLeft: "1px solid black",
+                      borderTop: "none",
+                      borderRight: "1px solid black",
+                      cursor: "pointer",
+                      background: selectedRowBg,
+                    }}>
+                      <input
+                        style={{
+                          cursor: "pointer",
+                          height: "10px"
+                        }}
+                        readOnly={true}
+                        checked={selectedRowIndex === rowIdx}
+                        type="checkbox"
+                        onClick={() => {
+                          if (!isTableSelectable) {
+                            return
+                          }
+                          setSelectedRowIndex(rowIdx)
+
+                          if (getSelectedItem) {
+                            getSelectedItem(rowItm, null, rowIdx, null)
+                          }
+                          setSelectedRow(null)
+
+                        }}
+
+                      />
+                    </td>
+
+                    {
+                      column.map((colItm: any, colIdx: number) => {
+                        return (
+                          <td
+                            className={`td row-${rowIdx} col-${colIdx}`}
+                            tabIndex={0}
+                            onDoubleClick={() => {
+                              if (!isTableSelectable) {
+                                return
+                              }
+                              if (selectedRowIndex === rowIdx) {
+                                setSelectedRowIndex(null)
+
+                                if (getSelectedItem) {
+                                  getSelectedItem(null, null, rowIdx, null)
+                                }
+                              } else {
+
+                                setSelectedRowIndex(rowIdx)
+                                if (getSelectedItem) {
+                                  getSelectedItem(rowItm, null, rowIdx, null)
+                                }
+                              }
+                              setSelectedRow(null)
+                            }}
+                            onClick={() => {
+                              setSelectedRow(rowIdx)
+                            }}
+
+                            onMouseEnter={(e) => {
+                              e.preventDefault()
+                              setSelectedRow(rowIdx)
+                            }}
+                            onMouseLeave={(e) => {
+                              e.preventDefault()
+                              setSelectedRow(null)
+                            }}
+                            onKeyDown={(e) => {
+                              if (onKeyDown) {
+                                onKeyDown(rowItm, rowIdx, e)
+                              }
+                              if (e.key === "ArrowUp") {
+                                setSelectedRow((prev: any) => {
+                                  const index = Math.max(prev - 1, 0)
+                                  const td = document.querySelector(`.td.row-${index}`) as HTMLTableDataCellElement
+                                  if (td) {
+                                    td.focus()
+                                  }
+                                  return index
+                                });
+                              } else if (e.key === "ArrowDown") {
+                                setSelectedRow((prev: any) => {
+                                  const index = Math.min(prev + 1, data.length - 1)
+                                  const td = document.querySelector(`.td.row-${index}`) as HTMLTableDataCellElement
+                                  if (td) {
+                                    td.focus()
+                                  }
+                                  return index
+                                });
+                              }
+                              if (e.code === 'Enter' || e.code === 'NumpadEnter') {
+                                e.preventDefault()
+
+                                if (!isTableSelectable) {
+                                  return
+                                }
+
+                                setSelectedRowIndex(rowIdx)
+                                if (getSelectedItem) {
+                                  getSelectedItem(rowItm, null, rowIdx, null)
+                                }
+                                setSelectedRow(null)
+                              }
+                            }}
+                            key={colIdx}
+                            style={{
+                              border: "1px solid black",
+                              background: selectedRowBg,
+                              fontSize: "12px",
+                              padding: "0px 5px",
+                              cursor: "pointer",
+                            }}
+                          >{
+                              <input
+                                readOnly={true}
+                                value={rowItm[colIdx]}
+                                style={{
+                                  width: colItm.width,
+                                  pointerEvents: "none",
+                                  border: "none",
+                                  background: "transparent",
+                                  userSelect: "none"
+                                }} />
+                            }</td>
+                        )
+                      })
+                    }
+                  </tr>
+                )
+              })
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+})
+
+
+
 export function setNewStateValue(dispatch: any, obj: any) {
   Object.entries(obj).forEach(([field, value]) => {
     dispatch({ type: "UPDATE_FIELD", field, value });
   });
 }
 export function incrementCheckNo(Check_No: string) {
-  if (Check_No === undefined || Check_No === null || Check_No === "") {
-    return "001";
+  if (Check_No) {
+    let incrementedNumber = (parseInt(Check_No) + 1).toString();
+    while (incrementedNumber.length < Check_No.length) {
+      incrementedNumber = "0" + incrementedNumber;
+    }
+    return incrementedNumber;
   }
 
-  let incrementedNumber = (parseInt(Check_No) + 1).toString();
-  while (incrementedNumber.length < Check_No.length) {
-    incrementedNumber = "0" + incrementedNumber;
-  }
-  return incrementedNumber;
+  return "001";
 }

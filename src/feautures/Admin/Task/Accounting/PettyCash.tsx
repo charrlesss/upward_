@@ -1,4 +1,4 @@
-import { useReducer, useContext, useState, useRef, useEffect, useImperativeHandle, forwardRef } from "react";
+import { useContext, useState, useRef, useEffect, useImperativeHandle, forwardRef } from "react";
 import {
   Button,
 } from "@mui/material";
@@ -9,10 +9,9 @@ import CloseIcon from "@mui/icons-material/Close";
 import Swal from "sweetalert2";
 import { AuthContext } from "../../../../components/AuthContext";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import { useMutation, useQuery, QueryClient } from "react-query";
+import { useMutation, useQuery } from "react-query";
 import useQueryModalTable from "../../../../hooks/useQueryModalTable";
 import { wait } from "../../../../lib/wait";
-import { GridRowSelectionModel } from "@mui/x-data-grid";
 import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
@@ -23,24 +22,6 @@ import { NumericFormat } from "react-number-format";
 import { format } from "date-fns";
 import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
 
-const initialState = {
-  sub_refNo: "",
-  refNo: "",
-  datePetty: new Date(),
-  payee: "",
-  explanation: "",
-  transactionPurpose: "",
-  transactionCode: "",
-  transactionTitle: "",
-  transactionShort: "",
-  clientName: "",
-  clientID: "",
-  amount: "",
-  invoice: "",
-  option: "non-vat",
-  search: "",
-  pettyCashMode: "",
-};
 export const reducer = (state: any, action: any) => {
   switch (action.type) {
     case "UPDATE_FIELD":
@@ -336,7 +317,6 @@ export default function PettyCash() {
 
     const currentData = tableRef.current.getDataFormatted()
 
-
     if (currentData.length <= 0) {
       return Swal.fire({
         position: "center",
@@ -345,6 +325,8 @@ export default function PettyCash() {
         timer: 1500,
       });
     }
+
+
 
     if (pettyCashMode === "edit") {
       codeCondfirmationAlert({
@@ -970,7 +952,6 @@ export default function PettyCash() {
             transactionCodeRef.current = rowItm[7]
             transactionShortRef.current = rowItm[8]
           }}
-
         />
         {ModalClientIDs}
         {ModalSearchPettyCash}
@@ -993,7 +974,6 @@ const PettyCashTableSelected = forwardRef(({
   const [selectedRow, setSelectedRow] = useState<any>(0)
   const [selectedRowIndex, setSelectedRowIndex] = useState<any>(null)
   const totalRowWidth = column.reduce((a: any, b: any) => a + b.width, 0)
-
 
   useEffect(() => {
     if (columns.length > 0) {
@@ -1040,7 +1020,17 @@ const PettyCashTableSelected = forwardRef(({
       const newData = [...data];
       const newDataFormatted = newData.map((itm: any) => {
         let newItm = {
-            // tapusin moto
+          purpose: itm[0],
+          amount: itm[1],
+          usage: itm[2],
+          accountID: itm[3],
+          sub_account: itm[4],
+          clientID: itm[5],
+          clientName: itm[6],
+          accountCode: itm[7],
+          accountShort: itm[8],
+          vatType: itm[9],
+          invoice: itm[10],
         }
         return newItm
       })
@@ -1048,8 +1038,6 @@ const PettyCashTableSelected = forwardRef(({
       return newDataFormatted
     }
   }))
-
-
 
   return (
     <div
@@ -1065,11 +1053,9 @@ const PettyCashTableSelected = forwardRef(({
                       inset 2px 2px 0 #808080`
 
       }}
-
-
     >
       <div style={{ position: "absolute", width: `${totalRowWidth}px`, height: "auto" }}>
-        <table style={{ borderCollapse: "collapse", width: "100%", position: "relative" }}>
+        <table style={{ borderCollapse: "collapse", width: "100%", position: "relative", background: "white" }}>
           <thead >
             <tr>
               <th style={{

@@ -161,6 +161,7 @@ export default function CashDisbursement() {
   const isDisableField = cashDMode === "";
 
 
+
   const {
     isLoading: loadingGeneralJournalGenerator,
     refetch: refetchGeneralJournalGenerator,
@@ -593,103 +594,6 @@ export default function CashDisbursement() {
 
     },
   });
-  const handleOnSave = useCallback(() => {
-    if (state.refNo === "") {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Please provide reference number!",
-        timer: 1500,
-      });
-    }
-    if (state.explanation === "") {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Please provide explanation!",
-        timer: 1500,
-      }).then(() => {
-        wait(300).then(() => {
-          expRef.current?.focus();
-        });
-      });
-    }
-    if (
-      getTotalDebit <= 0 && getTotalCredit <= 0
-    ) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title:
-          "Total Debit and Credit amount must not be zero(0), please double check the entries",
-        timer: 1500,
-      })
-    }
-    if (getTotalDebit !== getTotalCredit) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title:
-          "Total Debit and Credit amount must be balance, please double check the entries",
-        timer: 1500,
-      })
-    }
-    const tableData = tableRef.current.getData()
-    const cashDisbursement = tableData.filter((itm: any) => itm[0] !== '').map((itm: any, idx: any) => {
-
-      return ({
-        code: itm[0],
-        acctName: itm[1],
-        subAcctName: itm[2],
-        ClientName: itm[3],
-        debit: itm[4],
-        credit: itm[5],
-        checkNo: itm[6],
-        checkDate: itm[7],
-        TC_Code: itm[8],
-        remarks: itm[9],
-        Payto: itm[10],
-        vatType: itm[11],
-        invoice: itm[12],
-        TempID: idx,
-        IDNo: itm[14],
-        BranchCode: itm[15],
-        addres: itm[16],
-        subAcct: itm[17],
-        TC_Desc: itm[18],
-      })
-    })
-    if (cashDMode === "update") {
-      codeCondfirmationAlert({
-        isUpdate: true,
-        cb: (userCodeConfirmation) => {
-          addCashDisbursementMutate({
-            hasSelected: cashDMode === 'update',
-            refNo: state.refNo,
-            dateEntry: state.dateEntry,
-            explanation: state.explanation,
-            particulars: state.particulars,
-            cashDisbursement,
-            userCodeConfirmation,
-          });
-        },
-      });
-    } else {
-      saveCondfirmationAlert({
-        isConfirm: () => {
-          addCashDisbursementMutate({
-            hasSelected: cashDMode === 'update',
-            refNo: state.refNo,
-            dateEntry: state.dateEntry,
-            explanation: state.explanation,
-            particulars: state.particulars,
-            cashDisbursement,
-          });
-        },
-      });
-    }
-  }, [state, addCashDisbursementMutate, cashDMode, getTotalCredit, getTotalDebit])
-
   function handleVoid() {
     codeCondfirmationAlert({
       isUpdate: false,
@@ -929,6 +833,10 @@ export default function CashDisbursement() {
     }).then((result) => {
       if (result.isConfirmed) {
         if (tableData.length === 1) {
+          tableData.splice(0, 1);
+          tableRef.current?.updateData(tableData)
+          tableRef.current?.AddRow()
+
           return
         }
         const indexToRemove = SelectedIndex;
@@ -946,7 +854,107 @@ export default function CashDisbursement() {
       }
     });
   }
+  function valueIsNaN(input: any) {
+    const num = parseFloat(input);
+    return isNaN(num) ? '0.00' : input
+  }
+  const handleOnSave = useCallback(() => {
+    if (state.refNo === "") {
+      return Swal.fire({
+        position: "center",
+        icon: "warning",
+        title: "Please provide reference number!",
+        timer: 1500,
+      });
+    }
+    if (state.explanation === "") {
+      return Swal.fire({
+        position: "center",
+        icon: "warning",
+        title: "Please provide explanation!",
+        timer: 1500,
+      }).then(() => {
+        wait(300).then(() => {
+          expRef.current?.focus();
+        });
+      });
+    }
+    if (
+      getTotalDebit <= 0 && getTotalCredit <= 0
+    ) {
+      return Swal.fire({
+        position: "center",
+        icon: "warning",
+        title:
+          "Total Debit and Credit amount must not be zero(0), please double check the entries",
+        timer: 1500,
+      })
+    }
+    if (getTotalDebit !== getTotalCredit) {
+      return Swal.fire({
+        position: "center",
+        icon: "warning",
+        title:
+          "Total Debit and Credit amount must be balance, please double check the entries",
+        timer: 1500,
+      })
+    }
+    const tableData = tableRef.current.getData()
+    const cashDisbursement = tableData.filter((itm: any) => itm[0] !== '').map((itm: any, idx: any) => {
 
+      return ({
+        code: itm[0],
+        acctName: itm[1],
+        subAcctName: itm[2],
+        ClientName: itm[3],
+        debit: itm[4],
+        credit: itm[5],
+        checkNo: itm[6],
+        checkDate: itm[7],
+        TC_Code: itm[8],
+        remarks: itm[9],
+        Payto: itm[10],
+        vatType: itm[11],
+        invoice: itm[12],
+        TempID: idx,
+        IDNo: itm[14],
+        BranchCode: itm[15],
+        addres: itm[16],
+        subAcct: itm[17],
+        TC_Desc: itm[18],
+      })
+    })
+    if (cashDMode === "update") {
+      codeCondfirmationAlert({
+        isUpdate: true,
+        cb: (userCodeConfirmation) => {
+          addCashDisbursementMutate({
+            hasSelected: cashDMode === 'update',
+            refNo: state.refNo,
+            dateEntry: state.dateEntry,
+            explanation: state.explanation,
+            particulars: state.particulars,
+            cashDisbursement,
+            userCodeConfirmation,
+          });
+        },
+      });
+    } else {
+      saveCondfirmationAlert({
+        isConfirm: () => {
+          addCashDisbursementMutate({
+            hasSelected: cashDMode === 'update',
+            refNo: state.refNo,
+            dateEntry: state.dateEntry,
+            explanation: state.explanation,
+            particulars: state.particulars,
+            cashDisbursement,
+          });
+        },
+      });
+    }
+  }, [state, addCashDisbursementMutate, cashDMode, getTotalCredit, getTotalDebit])
+  
   useEffect(() => {
     const handleKeyDown = (event: any) => {
       if ((event.ctrlKey || event.metaKey) && event.key === 's') {
@@ -960,12 +968,6 @@ export default function CashDisbursement() {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [handleOnSave]);
-
-
-  function valueIsNaN(input: any) {
-    const num = parseFloat(input);
-    return isNaN(num) ? '0.00' : input
-  }
 
   if (loadingGetSearchSelectedCashDisbursement || loadingGeneralJournalGenerator || isLoadingPolicyIdClientIdRefId || isLoadingChartAccountSearch || isLoadingPolicyIdPayTo || isLoadingTransactionAccount) {
     return <div>Loading...</div>
@@ -1504,7 +1506,8 @@ const DataGridTableReact = forwardRef(({
     AddRow,
     updateData: setData,
     getData: () => {
-      return data
+      const newData = [...data]
+      return newData
     },
     getSelectedIndex: () => {
       return selectedRow
