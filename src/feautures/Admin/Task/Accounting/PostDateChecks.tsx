@@ -946,7 +946,7 @@ export default function PostDateChecks() {
                     confirmButtonText: "Yes, cancel it!",
                   }).then((result) => {
                     if (result.isConfirmed) {
-
+                      resetPDC()
                     }
                   });
                 }}
