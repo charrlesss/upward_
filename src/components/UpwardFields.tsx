@@ -1,4 +1,4 @@
-import { HtmlHTMLAttributes, InputHTMLAttributes, useId, ReactNode, useState, LegacyRef, HTMLInputTypeAttribute, TextareaHTMLAttributes } from "react";
+import { HtmlHTMLAttributes, InputHTMLAttributes, useId, ReactNode, useState, LegacyRef, HTMLInputTypeAttribute, TextareaHTMLAttributes, CSSProperties } from "react";
 import "../style/design.css";
 
 
@@ -10,6 +10,7 @@ interface TextInputProps {
   iconPosition?: 'start' | 'end'; // New prop to choose icon position
   onIconClick?: React.MouseEventHandler<HTMLDivElement> | undefined,
   disableIcon?: boolean
+  containerStyle?: CSSProperties
 }
 
 interface TextAreaPrps {
@@ -33,7 +34,8 @@ export function TextFormatedInput({
   iconPosition = 'end', // Default position is 'end'
   disableIcon = false,
   onIconClick = (e) => { },
-  onChange = (e) => { }
+  onChange = (e) => { },
+  containerStyle
 }: TextFormatedInputProps) {
   // const [inputValue, setInputValue] = useState('');
   const id = useId();
@@ -118,7 +120,8 @@ export function TextFormatedInput({
       style={{
         display: 'flex',
         alignItems: 'center',
-        position: 'relative', // Enable absolute positioning for icon
+        position: 'relative',
+        ...containerStyle // Enable absolute positioning for icon
       }}
     >
       <label {...label} htmlFor={id}>
@@ -179,16 +182,19 @@ export function TextInput({
   icon,
   iconPosition = 'end', // Default position is 'end'
   disableIcon = false,
+  containerStyle,
   onIconClick = (e) => { }
 }: TextInputProps) {
   const id = useId();
+
 
   return (
     <div
       style={{
         display: 'flex',
         alignItems: 'center',
-        position: 'relative', // Enable absolute positioning for icon
+        position: 'relative',
+        ...containerStyle
       }}
     >
       <label {...label} htmlFor={id}>
@@ -221,7 +227,7 @@ export function TextInput({
             alignItems: "center",
             justifyContent: "center",
             background: "white",
-            pointerEvents: disableIcon ? "none" : "auto"
+            pointerEvents: disableIcon ? "none" : "auto",
           }}>
           {icon}
         </div>

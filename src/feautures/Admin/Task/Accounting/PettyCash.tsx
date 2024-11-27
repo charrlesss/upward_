@@ -1226,13 +1226,24 @@ const PettyCashTableSelected = forwardRef(({
     </div>
   )
 })
-const Autocomplete = ({
+export const Autocomplete = ({
   DisplayMember,
   DataSource,
   inputRef,
   disableInput = false,
   onKeydown,
-  onChange
+  onChange,
+  label = {
+    title: "Transaction : ",
+    style: {
+      fontSize: "12px",
+      fontWeight: "bold",
+      width: "100px",
+    },
+  },
+  input = {
+    width: '740px',
+  }
 }: any) => {
   const [inputValue, setInputValue] = useState("");
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
@@ -1307,20 +1318,13 @@ const Autocomplete = ({
   };
 
   return (
-    <div>
+    <div style={{flex:1}}>
       <TextInput
-        label={{
-          title: "Transaction : ",
-          style: {
-            fontSize: "12px",
-            fontWeight: "bold",
-            width: "80px",
-          },
-        }}
+        label={label}
         input={{
+          ...input,
           disabled: disableInput,
           type: "text",
-          style: { width: '740px' },
           value: inputValue,
           onKeyDown: handleKeyDown,
           onChange: handleChange

@@ -13,7 +13,6 @@ import {
   Select,
   MenuItem,
   Modal,
-  Autocomplete,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { GridRowSelectionModel } from "@mui/x-data-grid";
@@ -41,8 +40,13 @@ import {
 } from "../../../../lib/confirmationAlert";
 import { UpwardTable } from "../../../../components/UpwardTable";
 import PageHelmet from "../../../../components/Helmet";
-import { SelectInput, TextFormatedInput, TextInput } from "../../../../components/UpwardFields";
+import { SelectInput, TextAreaInput, TextFormatedInput, TextInput } from "../../../../components/UpwardFields";
 import ForwardIcon from '@mui/icons-material/Forward';
+import { Autocomplete } from "./PettyCash";
+import AccountBoxIcon from '@mui/icons-material/AccountBox';
+import { format } from 'date-fns'
+import SearchIcon from '@mui/icons-material/Search';
+
 
 const CollectionContext = createContext<{
   debit: Array<any>;
@@ -121,39 +125,39 @@ const addCollectionQueryKey = "add-collection";
 const queryMutationKeyCollectionDataSearch = "collection-data-search";
 
 export const debitColumn = [
-  { field: "Payment", headerName: "Payment", flex: 1, width: 170 },
+  { key: "Payment", label: "Payment", flex: 1, width: 170 },
   {
-    field: "Amount",
-    headerName: "Amount",
+    key: "Amount",
+    label: "Amount",
     flex: 1,
     width: 170,
     type: "number",
   },
-  { field: "Check_No", headerName: "Check No", width: 170 },
-  { field: "Check_Date", headerName: "Check Date", width: 170 },
-  { field: "Bank_Branch", headerName: "Bank/Branch", width: 300 },
-  { field: "Acct_Code", headerName: "DR Code", width: 170 },
-  { field: "Acct_Title", headerName: "DR Title", width: 300 },
-  { field: "Deposit_Slip", headerName: "Deposit Slip", width: 170 },
-  { field: "Cntr", headerName: "Cntr", width: 170 },
-  { field: "Remarks", headerName: "Remarks", width: 300 },
-  { field: "TC", headerName: "TC", width: 170 },
-  { field: "temp_id", headerName: "temp_id", hide: true },
-  { field: "Bank", headerName: "Bank", hide: true },
-  { field: "BankName", headerName: "BankName", hide: true },
+  { key: "Check_No", label: "Check No", width: 170 },
+  { key: "Check_Date", label: "Check Date", width: 170 },
+  { key: "Bank_Branch", label: "Bank/Branch", width: 300 },
+  { key: "Acct_Code", label: "DR Code", width: 170 },
+  { key: "Acct_Title", label: "DR Title", width: 300 },
+  { key: "Deposit_Slip", label: "Deposit Slip", width: 170 },
+  { key: "Cntr", label: "Cntr", width: 170 },
+  { key: "Remarks", label: "Remarks", width: 300 },
+  { key: "TC", label: "TC", width: 170 },
+  { key: "temp_id", label: "temp_id", hide: true },
+  { key: "Bank", label: "Bank", hide: true },
+  { key: "BankName", label: "BankName", hide: true },
 ];
 export const creditColumn = [
-  { field: "temp_id", headerName: "temp_id", hide: true },
-  { field: "transaction", headerName: "Transaction", width: 200 },
-  { field: "amount", headerName: "Amount", width: 150, type: "number" },
-  { field: "Remarks", headerName: "Remarks", width: 350 },
-  { field: "Code", headerName: "Code", width: 150 },
-  { field: "Title", headerName: "Title", width: 350 },
-  { field: "TC", headerName: "TC", width: 200 },
-  { field: "Account_No", headerName: "Accoount No.", width: 180 },
-  { field: "Name", headerName: "Name", width: 350 },
-  { field: "VATType", headerName: "VAT Type", width: 150 },
-  { field: "invoiceNo", headerName: "Invoice No", width: 250 },
+  { key: "temp_id", label: "temp_id", hide: true },
+  { key: "transaction", label: "Transaction", width: 200 },
+  { key: "amount", label: "Amount", width: 150, type: "number" },
+  { key: "Remarks", label: "Remarks", width: 350 },
+  { key: "Code", label: "Code", width: 150 },
+  { key: "Title", label: "Title", width: 350 },
+  { key: "TC", label: "TC", width: 200 },
+  { key: "Account_No", label: "Accoount No.", width: 180 },
+  { key: "Name", label: "Name", width: 350 },
+  { key: "VATType", label: "VAT Type", width: 150 },
+  { key: "invoiceNo", label: "Invoice No", width: 250 },
 ];
 
 const queryKeyPaymentType = "payment-type-code";
@@ -161,32 +165,290 @@ const queryKeyNewORNumber = "new-or-number";
 
 
 export default function Collection() {
+  const modalCheckRef = useRef<any>(null)
+  const [paymentType, setPaymentType] = useState('CSH')
+
+  // SEARCH COLLECTION
+  const searchRef = useRef<HTMLInputElement>(null)
 
   // first layer fields
+  const ornoSubRef = useRef('')
   const ornoRef = useRef<HTMLInputElement>(null)
   const dateRef = useRef<HTMLInputElement>(null)
   const pnClientRef = useRef<HTMLInputElement>(null)
   const clientNameRef = useRef<HTMLInputElement>(null)
+  const IDNo = useRef('')
 
   // second layer fields
   const paymentTypeRef = useRef<HTMLSelectElement>(null)
-  const amountCreditRef = useRef<HTMLInputElement>(null)
+  const amountDebitRef = useRef<HTMLInputElement>(null)
 
   // third layer fields
   const transactionRef = useRef<HTMLSelectElement>(null)
-  const amountDebitRef = useRef<HTMLInputElement>(null)
+  const amountCreditRef = useRef<HTMLInputElement>(null)
   const faoRef = useRef<HTMLInputElement>(null)
-  const remarksRef = useRef<HTMLInputElement>(null)
-  const vatTypeRef = useRef<HTMLInputElement>(null)
+  const remarksRef = useRef<HTMLTextAreaElement>(null)
+  const vatTypeRef = useRef<HTMLSelectElement>(null)
   const invoiceRef = useRef<HTMLInputElement>(null)
+  const foaIDNo = useRef('')
 
+  const searchModalInputRef = useRef<HTMLInputElement>(null)
+  const { myAxios, user } = useContext(AuthContext);
+
+
+  const {
+    isLoading: paymentTypeLoading,
+    data: transactionDesc
+  } = useQuery({
+    queryKey: queryKeyPaymentType,
+    queryFn: async () =>
+      await myAxios.get(`/task/accounting/get-transaction-code-title`, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      }),
+    refetchOnWindowFocus: false,
+  });
+
+  //CLIENT MODAL 
+  const {
+    ModalComponent: ModalClientIDs,
+    openModal: openCliendIDsModal,
+    isLoading: isLoadingClientIdsModal,
+    closeModal: closeCliendIDsModal,
+  } = useQueryModalTable({
+    link: {
+      url: "/task/accounting/search-pdc-policy-id",
+      queryUrlName: "searchPdcPolicyIds",
+    },
+    columns: [
+      { field: "Type", headerName: "Type", width: 130 },
+      { field: "IDNo", headerName: "ID No.", width: 200 },
+      {
+        field: "Name",
+        headerName: "Name",
+        flex: 1,
+      },
+      {
+        field: "ID",
+        headerName: "ID",
+        flex: 1,
+        hide: true,
+      },
+    ],
+    queryKey: "collection-polidy-ids",
+    uniqueId: "IDNo",
+    responseDataKey: "clientsId",
+    onSelected: (selectedRowData, data) => {
+      wait(100).then(() => {
+        IDNo.current = selectedRowData[0].client_id
+        if (pnClientRef.current) {
+          pnClientRef.current.value = selectedRowData[0].IDNo
+        }
+        if (clientNameRef.current) {
+          clientNameRef.current.value = selectedRowData[0].Name ?? ""
+        }
+        paymentTypeRef.current?.focus()
+      })
+      closeCliendIDsModal();
+    },
+    searchRef: searchModalInputRef,
+  });
+
+  //CLIENT MODAL CREDIT
+  const {
+    ModalComponent: ModalCreditClientIDs,
+    openModal: openCreditCliendIDsModal,
+    isLoading: isLoadingCreditClientIdsModal,
+    closeModal: closeCreditCliendIDsModal,
+  } = useQueryModalTable({
+    link: {
+      url: "/task/accounting/search-pdc-policy-id",
+      queryUrlName: "searchPdcPolicyIds",
+    },
+    columns: [
+      { field: "Type", headerName: "Type", width: 130 },
+      { field: "IDNo", headerName: "ID No.", width: 200 },
+      {
+        field: "Name",
+        headerName: "Name",
+        flex: 1,
+      },
+      {
+        field: "ID",
+        headerName: "ID",
+        flex: 1,
+        hide: true,
+      },
+    ],
+    queryKey: "collection-polidy-ids",
+    uniqueId: "IDNo",
+    responseDataKey: "clientsId",
+    onSelected: (selectedRowData, data) => {
+      wait(100).then(() => {
+        foaIDNo.current = selectedRowData[0].IDNo
+        if (faoRef.current) {
+          faoRef.current.value = selectedRowData[0].Name ?? ""
+        }
+        remarksRef.current?.focus()
+      })
+      closeCreditCliendIDsModal();
+    },
+    searchRef: searchModalInputRef,
+  });
+
+  const {
+    isLoading: loadingCollectionDataSearch,
+    mutate: mutateCollectionDataSearch,
+  } = useMutation({
+    mutationKey: queryMutationKeyCollectionDataSearch,
+    mutationFn: async (variables: any) =>
+      await myAxios.get(
+        `/task/accounting/get-collection-data-search?ORNo=${variables.ORNo}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }
+      ),
+    onSuccess: (res) => {
+      const response = res as any;
+      const dataCollection = response.data.collection;
+
+      const ORNo = dataCollection[0].ORNo;
+      const OR_Date = dataCollection[0].Date_OR;
+      const ClientID = dataCollection[0].ID_No;
+      const ClientName = dataCollection[0].Short;
+      const selectedSearchState = {
+        ORNo: ORNo,
+        PNo: ClientID,
+        IDNo: ClientID,
+        Date: OR_Date,
+        Name: ClientName,
+      };
+      const debit: Array<any> = [];
+      const credit: Array<any> = [];
+
+
+      function isValidDate(dateString: string): boolean {
+        const date = new Date(dateString);
+        return date instanceof Date && !isNaN(date.getTime());
+      }
+
+      for (let i = 0; i <= dataCollection.length - 1; i++) {
+        if (
+          dataCollection[i].Payment !== "" &&
+          dataCollection[i].Debit !== "0"
+        ) {
+          debit.push({
+            Payment: dataCollection[i].Payment,
+            Amount: dataCollection[i].Debit,
+            Check_No: dataCollection[i].Check_No,
+            Check_Date: isValidDate(dataCollection[i].Check_Date)
+              ? new Date(dataCollection[i].Check_Date).toLocaleDateString()
+              : "",
+            Bank_Branch: dataCollection[i].Bank,
+            Acct_Code: dataCollection[i].DRCode,
+            Acct_Title: dataCollection[i].DRTitle,
+            Deposit_Slip: dataCollection[i].SlipCode,
+            Cntr: "",
+            Remarks: dataCollection[i].DRRemarks,
+            TC: dataCollection[i].Check_No ? "CHK" : "CSH",
+            temp_id: `${i}`,
+            Bank: dataCollection[i].Bank_Code,
+            BankName: dataCollection[i].BankName,
+            Branch: dataCollection[i].Branch,
+            Check_Remarks: dataCollection[i].DRRemarks,
+          });
+        }
+
+        if (
+          dataCollection[i].Purpose !== "" &&
+          dataCollection[i].Credit !== "0" &&
+          dataCollection[i].CRCode !== "" &&
+          dataCollection[i].CRTitle !== "" &&
+          dataCollection[i].CRLoanID !== "" &&
+          dataCollection[i].CRLoanName !== "" &&
+          dataCollection[i].CRVatType !== "" &&
+          dataCollection[i].CRInvoiceNo !== ""
+        ) {
+          credit.push({
+            temp_id: `${i}`,
+            transaction: dataCollection[i].Purpose,
+            amount: dataCollection[i].Credit,
+            Remarks: dataCollection[i].CRRemarks,
+            Code: dataCollection[i].CRCode,
+            Title: dataCollection[i].CRTitle,
+            TC: dataCollection[i].CRTitle,
+            Account_No: dataCollection[i].CRLoanID,
+            Name: dataCollection[i].CRLoanName,
+            VATType: dataCollection[i].CRVATType,
+            invoiceNo: dataCollection[i].CRInvoiceNo,
+          });
+        }
+      }
+      // setNewStateValue(dispatch, selectedSearchState);
+      // setDebit(debit);
+      // setCredit(credit);
+      // setAddNew(true);
+      // setSave(true);
+      // setHasSelected(true);
+      closeModalSearchCollection();
+    },
+  });
+
+  const {
+    ModalComponent: ModalSearchCollection,
+    openModal: openModalSearchCollection,
+    closeModal: closeModalSearchCollection,
+    isLoading: isLoadingModalSearchCollection,
+  } = useQueryModalTable({
+    link: {
+      url: "/task/accounting/search-collection",
+      queryUrlName: "searchCollectionInput",
+    },
+    columns: [
+      { field: "Date", headerName: "OR Date", width: 170 },
+      { field: "ORNo", headerName: "OR No.", width: 200 },
+      { field: "Name", headerName: "Name", flex: 1 },
+    ],
+    queryKey: "collection-search",
+    uniqueId: "ORNo",
+    responseDataKey: "collection",
+    onSelected: (selectedRowData, data) => {
+      mutateCollectionDataSearch({ ORNo: selectedRowData[0].ORNo });
+    },
+    searchRef: searchModalInputRef,
+  });
+
+  const { isLoading: NewORNoLoading, refetch: refetchNewOR } = useQuery({
+    queryKey: queryKeyNewORNumber,
+    queryFn: async () =>
+      await myAxios.get(`/task/accounting/get-new-or-number`, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      }),
+    refetchOnWindowFocus: false,
+    onSuccess: (res) => {
+      const response = res as any;
+      wait(100).then(() => {
+        ornoSubRef.current = response.data?.ORNo[0].collectionID
+        if (ornoRef.current) {
+          ornoRef.current.value = response.data?.ORNo[0].collectionID
+        }
+      })
+    },
+  });
 
   return (
     <div
       style={{
-        border: "1px solid red",
         height: "100%",
         width: "100%",
+        background: "#F1F1F1",
+
       }}
     >
 
@@ -194,18 +456,200 @@ export default function Collection() {
         style={{
           width: "100%",
           height: "20%",
+          display: "flex",
+          flexDirection: "column",
+          padding: "5px"
         }}
       >
+        <div style={{
+          height: "30px",
+        }}>
+          {
+            isLoadingModalSearchCollection ?
+              <LoadingButton loading={isLoadingModalSearchCollection} />
+              :
+              <TextInput
+                containerStyle={{ width: "550px" }}
+                label={{
+                  title: "Search: ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "50px",
+                  },
+                }}
+                input={{
+                  className: "search-input-up-on-key-down",
+                  type: "search",
+                  onKeyDown: (e) => {
+                    if (e.key === "Enter" || e.key === "NumpadEnter") {
+                      e.preventDefault();
+                      openModalSearchCollection(e.currentTarget.value);
+                    }
+                  },
+                  style: { width: "500px" },
+                }}
 
+                icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+                onIconClick={(e) => {
+                  e.preventDefault()
+                  if (searchRef.current)
+                    openModalSearchCollection(searchRef.current.value);
+
+                }}
+                inputRef={searchRef}
+              />}
+          {ModalSearchCollection}
+        </div>
+        <div
+          style={{
+            flex: 1,
+            border: "1px solid #64748b",
+            display: "flex",
+            alignItems: "center",
+            columnGap: "50px",
+            padding: "5px",
+            width: "100%"
+          }}
+        >
+          <div style={{
+            display: "flex",
+            flexDirection: "column",
+            rowGap: "5px",
+            width: "50%"
+          }}>
+            {
+              NewORNoLoading ?
+                <LoadingButton loading={NewORNoLoading} />
+                :
+                <TextInput
+                  containerStyle={{
+                    width: "320px"
+                  }}
+                  label={{
+                    title: "OR No. : ",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "70px",
+                    },
+                  }}
+                  input={{
+                    readOnly: true,
+                    type: "text",
+                    style: { width: "250px" },
+                    onKeyDown: (e) => {
+                      if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                        refetchNewOR()
+                      }
+                    },
+                  }}
+                  inputRef={ornoRef}
+                  icon={<RestartAltIcon sx={{ fontSize: "18px" }} />}
+                  onIconClick={(e) => {
+                    e.preventDefault()
+                    if (faoRef.current) {
+                      refetchNewOR()
+                    }
+                  }}
+                />}
+            <TextInput
+              label={{
+                title: "Date : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "70px",
+                },
+              }}
+              input={{
+                type: "date",
+                style: { width: "250px" },
+                defaultValue: format(new Date(), "yyyy-MM-dd"),
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                    pnClientRef.current?.focus()
+                  }
+                },
+              }}
+
+              inputRef={dateRef}
+            />
+          </div>
+          <div style={{
+            display: "flex",
+            flexDirection: "column",
+            rowGap: "5px",
+            width: "50%"
+          }}>
+            {isLoadingClientIdsModal ? (
+              <LoadingButton loading={isLoadingClientIdsModal} />
+            ) : (
+              <TextInput
+                containerStyle={{
+                  width: "60%"
+                }}
+                label={{
+                  title: "PN/Client ID : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "100px",
+                  },
+                }}
+                input={{
+                  disabled: false,
+                  type: "text",
+                  style: { flex: 1 },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                      openCliendIDsModal(e.currentTarget.value)
+                    }
+                  }
+                }}
+                icon={<AccountBoxIcon sx={{ fontSize: "18px" }} />}
+                onIconClick={(e) => {
+                  e.preventDefault()
+                  if (faoRef.current) {
+                    openCliendIDsModal(faoRef.current.value)
+                  }
+                }}
+                inputRef={pnClientRef}
+              />
+            )}
+            {ModalClientIDs}
+            <TextInput
+              label={{
+                title: "Client Name : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
+              }}
+              input={{
+                type: "text",
+                style: { width: "80%" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                  }
+                },
+              }}
+              inputRef={clientNameRef}
+            />
+          </div>
+        </div>
       </div>
+      <div style={{ height: "5px" }}></div>
       <ContentContainer
         title={'Particulars (Debit)'}
         firstContent={
           <div
             style={{
               display: "flex",
-              rowGap: "10px",
-              flexDirection: "column"
+              flexDirection: "column",
+              rowGap: "5px",
+              width: "100%"
             }}
           >
             <div
@@ -213,9 +657,11 @@ export default function Collection() {
                 display: "flex",
                 alignItems: "center",
                 columnGap: "15px",
-                marginTop: "15px"
+                marginTop: "5px",
+                flex: 1,
               }}>
               <SelectInput
+                containerStyle={{ width: "100%" }}
                 label={{
                   title: "Payment Type : ",
                   style: {
@@ -226,33 +672,45 @@ export default function Collection() {
                 }}
                 selectRef={paymentTypeRef}
                 select={{
-                  style: { width: "250px", height: "22px" },
-                  defaultValue: "Non-VAT",
+                  style: { flex: 1, height: "22px" },
+                  value: paymentType,
                   onKeyDown: (e) => {
                     if (e.code === "NumpadEnter" || e.code === 'Enter') {
                       e.preventDefault()
-                      amountCreditRef.current?.focus()
+                      amountDebitRef.current?.focus()
                     }
+                  },
+                  onChange: (e) => {
+                    if (e.target.value === 'CHK' && amountDebitRef.current) {
+                      amountDebitRef.current.value = '0.00'
+                    }
+                    setPaymentType(e.target.value)
                   }
                 }}
                 datasource={[
-                  { key: "VAT" },
-                  { key: "Non-VAT" },
+                  { key: "Cash", value: "CSH" },
+                  { key: "Check", value: "CHK" },
                 ]}
-                values={"key"}
+                values={"value"}
                 display={"key"}
               />
 
               <button
-                className="custom-btn ripple-button"
+                disabled={paymentType === 'CSH'}
+                className={`custom-btn ripple-button ${paymentType === 'CSH' ? "disabled" : "not-disabled"}`}
                 style={{
-                  background: "#1b5e20",
                   padding: "0 5px",
                   borderRadius: "0px",
-                  color: "white"
+                  color: "white",
+                  height: "22px",
+                  background: paymentType === 'CSH' ? "#8fc993" : "#1b5e20"
+
+                }}
+                onClick={(e) => {
+                  modalCheckRef.current?.showModal()
                 }}
               >
-                <AddIcon />
+                <AddIcon sx={{ fontSize: "22px" }} />
               </button>
             </div>
             <div
@@ -262,6 +720,9 @@ export default function Collection() {
                 columnGap: "15px"
               }}>
               <TextFormatedInput
+                containerStyle={{
+                  flex: 1
+                }}
                 label={{
                   title: "Amount : ",
                   style: {
@@ -271,30 +732,37 @@ export default function Collection() {
                   },
                 }}
                 input={{
+                  disabled: paymentType === 'CHK',
                   type: "text",
-                  style: { width: "250px" },
+                  style: { flex: 1 },
                   onKeyDown: (e) => {
                     if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                      // refTC.current?.focus()
+
                     }
                   }
                 }}
-                inputRef={amountCreditRef}
+                inputRef={amountDebitRef}
               />
-
               <button
-                className="custom-btn ripple-button"
+                disabled={paymentType === 'CHK'}
+                className={`custom-btn ripple-button ${paymentType === 'CHK' ? "disabled" : "not-disabled"}`}
                 style={{
-                  background: "#1b5e20",
                   padding: "0 5px",
                   borderRadius: "0px",
-                  color: "white"
+                  color: "white",
+                  height: "22px",
+                  background: paymentType === 'CHK' ? "#8fc993" : "#1b5e20"
+
+                }}
+                onClick={(e) => {
+                  alert('save')
                 }}
               >
-                <ForwardIcon />
+                <ForwardIcon sx={{ fontSize: "22px" }} />
               </button>
             </div>
             <Button
+              disabled={paymentType === 'CSH'}
               startIcon={<AddIcon />}
               sx={{
                 height: "30px",
@@ -306,105 +774,143 @@ export default function Collection() {
             >
               Add Check from PDC Entry
             </Button>
-
-
           </div>
         }
         secondContent={
-          <div>
+          <div
+            style={{
+              position: "relative",
+              height: "100%",
+              width: "100%",
+              flex: 1,
+              display: "flex",
+              flexDirection: "column"
+            }}>
             <CollectionTableSelected
               columns={debitColumn}
               rows={[]}
+              containerStyle={{
+                height: 'auto',
+                flex: 1,
+              }}
             />
+            <div
+              style={{
+                fontSize: "13px",
+                textAlign: "right",
+                border: "1px solid #d1cdcd",
+                background: "#dcdcdc"
+              }}>123</div>
           </div>
         }
-
         contentStyle={`
-          .custom-btn:hover{
+          .custom-btn.not-disabled:hover{
             background:#154f19 !important;
           }
-
           `}
       />
-      <br />
+      <div style={{ height: "5px" }}></div>
       <ContentContainer
-        title={'Particulars (Credit)'}
+        title={'Particulars Breakdown (Credit)'}
         firstContent={
           <div
             style={{
               display: "flex",
-              rowGap: "10px",
+              rowGap: "5px",
               flexDirection: "column"
             }}
           >
+            <label
+              htmlFor="auto-solo-collection"
+              style={{
+                fontSize: "12px",
+                fontWeight: "bold",
+                marginTop: "5px"
+              }}
+
+            >Transaction :</label>
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
                 columnGap: "15px",
-                marginTop: "15px"
+                flex: 1,
               }}>
-              <SelectInput
-                label={{
-                  title: "Payment Type : ",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "100px",
-                  },
-                }}
-                selectRef={paymentTypeRef}
-                select={{
-                  style: { width: "250px", height: "22px" },
-                  defaultValue: "Non-VAT",
-                  onKeyDown: (e) => {
-                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                      e.preventDefault()
-                      amountCreditRef.current?.focus()
-                    }
-                  }
-                }}
-                datasource={[
-                  { key: "VAT" },
-                  { key: "Non-VAT" },
-                ]}
-                values={"key"}
-                display={"key"}
-              />
 
+              {paymentTypeLoading ?
+                <LoadingButton loading={paymentTypeLoading} />
+                : <div style={{ flex: 1 }}>
+                  <Autocomplete
+                    label={
+                      {
+                        title: " ",
+                        style: {
+                          width: "0px",
+                          display: "none"
+                        },
+                      }
+                    }
+                    input={{
+                      id: "auto-solo-collection",
+                      style: {
+                        width: "100%",
+                        flex: 1
+                      }
+                    }}
+                    width={"100%"}
+                    DisplayMember={'label'}
+                    DataSource={transactionDesc?.data.transactionDesc}
+                    disableInput={false}
+                    inputRef={transactionRef}
+                    onChange={(selected: any, e: any) => {
+                    }}
+                    onKeydown={(e: any) => {
+                      if (e.key === "Enter" || e.key === 'NumpadEnter') {
+                        e.preventDefault()
+                        amountCreditRef.current?.focus()
+                      }
+                    }}
+                  />
+                </div>}
               <button
                 className="custom-btn ripple-button"
                 style={{
                   background: "#1b5e20",
                   padding: "0 5px",
                   borderRadius: "0px",
-                  color: "white"
+                  color: "white",
+                  height: "22px"
                 }}
               >
-                <AddIcon />
+                <AddIcon sx={{ fontSize: "22px" }} />
               </button>
             </div>
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
-                columnGap: "15px"
+                columnGap: "15px",
+                width: "100%",
+                flex: 1
               }}>
               <TextFormatedInput
+                containerStyle={{
+                  flex: 1
+                }}
                 label={{
                   title: "Amount : ",
                   style: {
                     fontSize: "12px",
                     fontWeight: "bold",
-                    width: "100px",
+                    width: "70px",
                   },
                 }}
                 input={{
                   type: "text",
-                  style: { width: "250px" },
+                  style: { flex: 1, width: "100%" },
                   onKeyDown: (e) => {
                     if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                      // refTC.current?.focus()
+                      faoRef.current?.focus()
                     }
                   }
                 }}
@@ -417,45 +923,157 @@ export default function Collection() {
                   background: "#1b5e20",
                   padding: "0 5px",
                   borderRadius: "0px",
-                  color: "white"
+                  color: "white",
+                  height: "22px"
+
                 }}
               >
-                <ForwardIcon />
+                <ForwardIcon sx={{ fontSize: "22px" }} />
               </button>
             </div>
-            <Button
-              startIcon={<AddIcon />}
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-                marginTop: "20px"
+            {isLoadingCreditClientIdsModal ? (
+              <LoadingButton loading={isLoadingCreditClientIdsModal} />
+            ) : (
+              <TextInput
+                containerStyle={{
+                  width: "100%"
+                }}
+                label={{
+                  title: "Usage : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "70px",
+                  },
+                }}
+                input={{
+                  disabled: false,
+                  type: "text",
+                  style: { flex: 1 },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                      openCreditCliendIDsModal(e.currentTarget.value)
+                    }
+                  }
+                }}
+                icon={<AccountBoxIcon sx={{ fontSize: "18px" }} />}
+                onIconClick={(e) => {
+                  e.preventDefault()
+                  if (faoRef.current) {
+                    openCreditCliendIDsModal(faoRef.current.value)
+                  }
+                }}
+                inputRef={faoRef}
+              />
+            )}
+            {ModalCreditClientIDs}
+            <TextAreaInput
+              label={{
+                title: "Remarks : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "70px",
+                },
               }}
-              color="success"
-              variant="contained"
-            >
-              Add Check from PDC Entry
-            </Button>
-
-
-          </div>
-        }
-        secondContent={
-          <div>
-            <CollectionTableSelected
-              columns={creditColumn}
-              rows={[]}
+              textarea={{
+                rows: 3,
+                style: { flex: 1 },
+                onKeyDown: (e) => {
+                  e.stopPropagation()
+                  if ((e.code === "NumpadEnter" && !e.shiftKey) || (e.code === 'Enter' && !e.shiftKey)) {
+                    vatTypeRef.current?.focus()
+                  }
+                },
+              }}
+              _inputRef={remarksRef}
+            />
+            <SelectInput
+              label={{
+                title: "Vat Type : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "70px",
+                },
+              }}
+              selectRef={vatTypeRef}
+              select={{
+                style: { flex: 1, height: "22px" },
+                defaultValue: "Non-VAT",
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                    e.preventDefault()
+                    invoiceRef.current?.focus()
+                  }
+                }
+              }}
+              datasource={[
+                { key: "VAT", value: "VAT" },
+                { key: "Non-VAT", value: "Non-VAT" },
+              ]}
+              values={"value"}
+              display={"key"}
+            />
+            <TextInput
+              label={{
+                title: "Invoice : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "70px",
+                },
+              }}
+              input={{
+                type: "text",
+                style: { flex: 1 },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                  }
+                },
+              }}
+              inputRef={invoiceRef}
             />
           </div>
         }
+        secondContent={
+          <div style={{ position: "relative", height: "100%", width: "100%", flex: 1, display: "flex" }}>
+            <CollectionTableSelected
+              columns={creditColumn}
+              rows={[]}
+              containerStyle={{
+                height: 'auto',
+                flex: 1,
+              }}
 
+            />
+          </div>
+        }
         contentStyle={`
-          .custom-btn:hover{
+          .custom-btn.not-disabled:hover{
             background:#154f19 !important;
           }
-
-          `}
+        `}
       />
+      <ModalCheck
+        ref={modalCheckRef}
+        handleOnSave={() => {
+          wait(100).then(() => {
+            const refs = modalCheckRef.current.getRefs()
+            console.log({
+              checknoRef: refs.checknoRef.current?.value,
+              bankRef: refs.bankRef.current?.value,
+              branchRef: refs.branchRef.current?.value,
+              remarksRef: refs.remarksRef.current?.value,
+              checkdateRef: refs.checkdateRef.current?.value,
+              amountRef: refs.amountRef.current?.value,
+              bankRefName: refs.bankRefName.current
+            })
 
+            modalCheckRef.current.closeDelay()
+          })
+        }}
+      />
     </div>
   )
 }
@@ -481,7 +1099,7 @@ const ContentContainer = ({
         flex: 1,
         display: "flex",
         width: "100%",
-        border: "1px solid black",
+        border: "1px solid #64748b",
         position: "relative",
       }}>
         <span
@@ -489,15 +1107,18 @@ const ContentContainer = ({
             position: "absolute",
             top: "-15px",
             left: "20px",
-            background: "white",
-            padding: "0 5px"
+            background: "#F1F1F1",
+            padding: "0 5px",
+            fontSize: "14px",
+            fontWeight: "bold"
           }}
         >{title}</span>
         <div
           style={{
             width: "30%",
             height: "100%",
-            padding: "10px 5px"
+            padding: "10px 5px",
+            boxSizing: "border-box"
           }}
         >
           {firstContent}
@@ -506,20 +1127,366 @@ const ContentContainer = ({
           style={{
             width: "70%",
             height: "100%",
-            padding: "10px 5px"
-
+            padding: "10px 5px",
+            boxSizing: "border-box"
           }}
         >
           {secondContent}
         </div>
       </div>
-
     </div>
   )
 }
+const ModalCheck = forwardRef(({
+  handleOnSave,
+  handleOnCancel
+}: any, ref) => {
+  const [showModal, setShowModal] = useState(false)
+  const [handleDelayClose, setHandleDelayClose] = useState(false)
+
+  const checknoRef = useRef<HTMLInputElement>(null)
+  const bankRef = useRef<HTMLInputElement>(null)
+  const branchRef = useRef<HTMLInputElement>(null)
+  const remarksRef = useRef<HTMLTextAreaElement>(null)
+  const checkdateRef = useRef<HTMLInputElement>(null)
+  const amountRef = useRef<HTMLInputElement>(null)
+  const bankRefName = useRef('')
+  const searchModalInputRef = useRef<HTMLInputElement>(null)
+
+
+  const closeDelay = () => {
+    setHandleDelayClose(true)
+    setTimeout(() => {
+      setShowModal(false)
+      setHandleDelayClose(false)
+    }, 100)
+  }
+
+  useImperativeHandle(ref, () => ({
+    showModal: () => {
+      setShowModal(true)
+    },
+    clsoeModal: () => {
+      setShowModal(false)
+    },
+    getRefs: () => {
+      const refs = {
+        checknoRef,
+        bankRef,
+        branchRef,
+        remarksRef,
+        checkdateRef,
+        amountRef,
+        bankRefName
+      }
+      return refs
+    },
+    closeDelay
+
+  }))
 
 
 
+  const {
+    ModalComponent: ModalSearchBanks,
+    openModal: openModalSearchBanks,
+    closeModal: closeModalSearchBanks,
+    isLoading: isLoadingModalSearchbanks,
+  } = useQueryModalTable({
+    link: {
+      url: "/task/accounting/search-pdc-banks",
+      queryUrlName: "searchPdcBanks",
+    },
+    columns: [
+      { field: "Bank_Code", headerName: "Code", width: 130 },
+      { field: "Bank", headerName: "Bank Name", flex: 1 },
+    ],
+    queryKey: "collection-banks",
+    uniqueId: "Bank_Code",
+    responseDataKey: "pdcBanks",
+    onSelected: (selectedRowData, data) => {
+      wait(100).then(() => {
+        bankRefName.current = selectedRowData[0].Bank_Code
+        if (bankRef.current) {
+          bankRef.current.value = selectedRowData[0].Bank
+        }
+        branchRef.current?.focus()
+      })
+      closeModalSearchBanks();
+    },
+
+    searchRef: searchModalInputRef,
+  });
+
+
+  return (
+    showModal ?
+      <div
+        style={{
+          height: "200px",
+          width: "60%",
+          border: "1px solid #64748b",
+          position: "absolute",
+          left: "50%",
+          top: "50%",
+          transform: "translate(-50%, -75%)",
+          display: "flex",
+          flexDirection: "column",
+          zIndex: handleDelayClose ? -100 : 100,
+          opacity: handleDelayClose ? 0 : 1,
+          transition: "all 150ms"
+        }}>
+        <div
+          style={{
+            height: "22px",
+            background: "white",
+            display: "flex",
+            justifyContent: "space-between",
+            padding: "5px",
+            position: "relative",
+            alignItems: "center"
+
+          }}
+        >
+          <span style={{ fontSize: "13px", fontWeight: "bold" }}>Check Details</span>
+          <button
+            className="btn-check-exit-modal"
+            style={{
+              padding: "0 5px",
+              borderRadius: "0px",
+              background: "white",
+              color: "black",
+              height: "22px",
+              position: "absolute",
+              top: 0,
+              right: 0
+            }}
+            onClick={() => {
+              closeDelay()
+            }}
+          >
+            <CloseIcon sx={{ fontSize: "22px" }} />
+          </button>
+        </div>
+        <div
+          style={{
+            flex: 1,
+            background: "#F1F1F1",
+            padding: "5px",
+            display: "flex",
+          }}
+        >
+          <div style={{
+            width: "55%",
+            display: "flex",
+            flexDirection: "column",
+            rowGap: "5px",
+            padding: "10px"
+
+          }}>
+            <TextInput
+              label={{
+                title: "Check No. : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "70px",
+                },
+              }}
+              input={{
+                type: "text",
+                style: { width: "160px" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                    bankRef.current?.focus()
+                  }
+                },
+              }}
+              inputRef={checknoRef}
+            />
+            {isLoadingModalSearchbanks ? (
+              <LoadingButton loading={isLoadingModalSearchbanks} />
+            ) : (
+              <TextInput
+                containerStyle={{
+                  width: "370px"
+                }}
+                label={{
+                  title: "Bank : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "70px",
+                  },
+                }}
+                input={{
+                  disabled: false,
+                  type: "text",
+                  style: { width: "300px" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                      openModalSearchBanks(e.currentTarget.value)
+                    }
+                  }
+                }}
+                icon={<AccountBoxIcon sx={{ fontSize: "18px" }} />}
+                onIconClick={(e) => {
+                  e.preventDefault()
+                  if (bankRef.current) {
+                    openModalSearchBanks(bankRef.current.value)
+                  }
+                }}
+                inputRef={bankRef}
+              />
+            )}
+            <TextInput
+              label={{
+                title: "Branch : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "70px",
+                },
+              }}
+              input={{
+                type: "text",
+                style: { width: "300px" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                    remarksRef.current?.focus()
+                  }
+                },
+              }}
+              inputRef={branchRef}
+            />
+            <TextAreaInput
+              label={{
+                title: "Remarks : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "70px",
+                },
+              }}
+              textarea={{
+                rows: 4,
+                style: { width: "300px" },
+                onKeyDown: (e) => {
+                  e.stopPropagation()
+                  if ((e.code === "NumpadEnter" && !e.shiftKey) || (e.code === 'Enter' && !e.shiftKey)) {
+                    checkdateRef.current?.focus()
+                  }
+                },
+              }}
+              _inputRef={remarksRef}
+            />
+
+          </div>
+          <div style={{
+            width: "45%",
+            display: "flex",
+            flexDirection: "column",
+            rowGap: "5px",
+            position: "relative",
+            padding: "10px",
+            alignItems: "flex-end"
+          }}>
+            <TextInput
+              label={{
+                title: "Date : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "70px",
+                },
+              }}
+              input={{
+                type: "date",
+                style: { width: "200px" },
+                defaultValue: format(new Date(), "yyyy-MM-dd"),
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                    amountRef.current?.focus()
+                  }
+                },
+              }}
+
+              inputRef={checkdateRef}
+            />
+            <TextFormatedInput
+              label={{
+                title: "Amount : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "70px",
+                },
+              }}
+              input={{
+                type: "text",
+                style: { width: "200px" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                    if (handleOnSave) {
+                      handleOnSave()
+                    }
+                  }
+                }
+              }}
+              inputRef={amountRef}
+            />
+            <div style={{
+              display: "flex",
+              columnGap: "10px",
+              flex: 1,
+              justifyContent: "flex-end",
+              alignItems: "flex-end"
+            }}>
+              <Button
+                variant="contained"
+                color="success"
+                style={{
+                  height: "22px",
+                  fontSize: "12px",
+                }}
+                onClick={(e) => {
+                  if (handleOnSave) {
+                    handleOnSave()
+                  }
+
+                }}
+              >
+                OK
+              </Button>
+              <Button
+                variant="contained"
+                color="success"
+                style={{
+                  height: "22px",
+                  fontSize: "12px",
+                }}
+                onClick={(e) => {
+                  closeDelay()
+                }}
+              >
+                Cancel
+              </Button>
+
+            </div>
+          </div>
+        </div>
+        {ModalSearchBanks}
+        <style>
+          {`
+              .btn-check-exit-modal:hover{
+                background:red !important;
+                color:white !important;
+              }
+            `}
+        </style>
+      </div> : null
+  )
+})
 const CollectionTableSelected = forwardRef(({
   columns,
   rows,
@@ -527,7 +1494,8 @@ const CollectionTableSelected = forwardRef(({
   getSelectedItem,
   onKeyDown,
   disbaleTable = false,
-  isTableSelectable = true
+  isTableSelectable = true,
+  containerStyle
 }: any, ref) => {
   const parentElementRef = useRef<any>(null)
   const [data, setData] = useState([])
@@ -611,12 +1579,18 @@ const CollectionTableSelected = forwardRef(({
         pointerEvents: disbaleTable ? "none" : "auto",
         border: disbaleTable ? "2px solid #8c8f8e" : '2px solid #c0c0c0',
         boxShadow: `inset -2px -2px 0 #ffffff, 
-                      inset 2px 2px 0 #808080`
-
+                      inset 2px 2px 0 #808080`,
+        ...containerStyle,
+        background: "#dcdcdc"
       }}
     >
       <div style={{ position: "absolute", width: `${totalRowWidth}px`, height: "auto" }}>
-        <table style={{ borderCollapse: "collapse", width: "100%", position: "relative", background: "white" }}>
+        <table style={{
+          borderCollapse: "collapse",
+          width: "100%",
+          position: "relative",
+          background: "#dcdcdc"
+        }}>
           <thead >
             <tr>
               <th style={{
@@ -628,7 +1602,9 @@ const CollectionTableSelected = forwardRef(({
                 background: "#f0f0f0",
 
               }}
-              ></th>
+              >
+
+              </th>
               {
                 column.map((colItm: any, idx: number) => {
                   return (
@@ -798,20 +1774,6 @@ const CollectionTableSelected = forwardRef(({
   )
 })
 
-
-
-{/* <div
-style={{
-  height: "80%",
-  width: "100%",
-  border: "1px solid blue",
-  overflow: "auto",
-  position: "relative"
-}}
->
-<div style={{ height: "600px", width: "100%", background: "red", position: "absolute" }}></div>
-
-</div> */}
 function Collectionss() {
   const [credit, setCredit] = useState<GridRowSelectionModel>([]);
   const [debit, setDebit] = useState<GridRowSelectionModel>([]);
@@ -2461,7 +3423,7 @@ function Collectionss() {
                     marginBottom: "10px"
                   }}
                 >
-                  <div style={{ display: "flex", gap: "10px" }}>
+                  {/* <div style={{ display: "flex", gap: "10px" }}>
                     {paymentTypeLoading ? (
                       <LoadingButton loading={paymentTypeLoading} />
                     ) : (
@@ -2677,7 +3639,7 @@ function Collectionss() {
                         ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
                       }}
                     />
-                  </div>
+                  </div> */}
                   <div
                     style={{
                       display: "flex",
