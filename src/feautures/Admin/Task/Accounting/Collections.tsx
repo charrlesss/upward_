@@ -46,6 +46,7 @@ import { Autocomplete } from "./PettyCash";
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import { format } from 'date-fns'
 import SearchIcon from '@mui/icons-material/Search';
+import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
 
 
 const CollectionContext = createContext<{
@@ -142,22 +143,20 @@ export const debitColumn = [
   { key: "Cntr", label: "Cntr", width: 170 },
   { key: "Remarks", label: "Remarks", width: 300 },
   { key: "TC", label: "TC", width: 170 },
-  { key: "temp_id", label: "temp_id", hide: true },
   { key: "Bank", label: "Bank", hide: true },
   { key: "BankName", label: "BankName", hide: true },
 ];
 export const creditColumn = [
-  { key: "temp_id", label: "temp_id", hide: true },
   { key: "transaction", label: "Transaction", width: 200 },
   { key: "amount", label: "Amount", width: 150, type: "number" },
+  { key: "Name", label: "Name", width: 350 },
   { key: "Remarks", label: "Remarks", width: 350 },
+  { key: "VATType", label: "VAT Type", width: 150 },
+  { key: "invoiceNo", label: "Invoice No", width: 250 },
   { key: "Code", label: "Code", width: 150 },
   { key: "Title", label: "Title", width: 350 },
   { key: "TC", label: "TC", width: 200 },
   { key: "Account_No", label: "Accoount No.", width: 180 },
-  { key: "Name", label: "Name", width: 350 },
-  { key: "VATType", label: "VAT Type", width: 150 },
-  { key: "invoiceNo", label: "Invoice No", width: 250 },
 ];
 
 const queryKeyPaymentType = "payment-type-code";
@@ -165,8 +164,14 @@ const queryKeyNewORNumber = "new-or-number";
 
 
 export default function Collection() {
+  const debitTable = useRef<any>(null)
+  const creditTable = useRef<any>(null)
   const modalCheckRef = useRef<any>(null)
+
   const [paymentType, setPaymentType] = useState('CSH')
+  const [totalDebit, setTotalDebit] = useState(0)
+  const [totalCredit, setTotalCredit] = useState(0)
+
 
   // SEARCH COLLECTION
   const searchRef = useRef<HTMLInputElement>(null)
@@ -182,6 +187,8 @@ export default function Collection() {
   // second layer fields
   const paymentTypeRef = useRef<HTMLSelectElement>(null)
   const amountDebitRef = useRef<HTMLInputElement>(null)
+  const buttonCshSave = useRef<HTMLButtonElement>(null)
+  const buttonCheckSave = useRef<HTMLButtonElement>(null)
 
   // third layer fields
   const transactionRef = useRef<HTMLSelectElement>(null)
@@ -190,10 +197,15 @@ export default function Collection() {
   const remarksRef = useRef<HTMLTextAreaElement>(null)
   const vatTypeRef = useRef<HTMLSelectElement>(null)
   const invoiceRef = useRef<HTMLInputElement>(null)
-  const foaIDNo = useRef('')
+  const foaIDNoRef = useRef('')
+  const accCodeRef = useRef('')
+  const accTitleRef = useRef('')
+  const accTCRef = useRef('')
+
 
   const searchModalInputRef = useRef<HTMLInputElement>(null)
   const { myAxios, user } = useContext(AuthContext);
+  const { executeQueryToClient } = useExecuteQueryFromClient()
 
 
   const {
@@ -286,7 +298,7 @@ export default function Collection() {
     responseDataKey: "clientsId",
     onSelected: (selectedRowData, data) => {
       wait(100).then(() => {
-        foaIDNo.current = selectedRowData[0].IDNo
+        foaIDNoRef.current = selectedRowData[0].IDNo
         if (faoRef.current) {
           faoRef.current.value = selectedRowData[0].Name ?? ""
         }
@@ -442,16 +454,282 @@ export default function Collection() {
     },
   });
 
+  function saveCashDebit(value: string, paymentType: string) {
+    const amount = parseFloat(value.replace(/,/g, ''))
+    if (isNaN(amount) || amount <= 0) {
+      amountDebitRef.current?.focus()
+      return alert('Please provide amount!')
+    }
+    const getSelectedRow = debitTable.current.getSelectedRow()
+    const debitTableData = debitTable.current.getData()
+
+
+    if (getSelectedRow !== null) {
+      debitTableData[getSelectedRow][1] = amount.toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+      debitTable.current.setData(debitTableData)
+      debitTable.current.setSelectedRow(null)
+      setTotalDebit(
+        debitTableData.reduce((sum: any, subArray: any) => sum + parseFloat(subArray[1].replace(/,/g, '')), 0)
+      )
+    } else {
+      const data = {
+        Payment: "Cash",
+        Amount: amount.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }),
+        Check_No: "",
+        Check_Date: "",
+        Bank_Branch: "",
+        Acct_Code: "",
+        Acct_Title: "",
+        Deposit_Slip: "",
+        Cntr: "",
+        Remarks: "",
+        TC: paymentType,
+        Bank: "",
+        BankName: "",
+      };
+      const newDataFormatted = debitTableData.map((itm: any) => {
+        let newItm = {
+          Payment: itm[0],
+          Amount: itm[1],
+          Check_No: itm[2],
+          Check_Date: itm[3],
+          Bank_Branch: itm[4],
+          Acct_Code: itm[5],
+          Acct_Title: itm[6],
+          Deposit_Slip: itm[7],
+          Cntr: itm[8],
+          Remarks: itm[9],
+          TC: itm[10],
+          Bank: itm[11],
+          BankName: itm[12],
+        }
+        return newItm
+      })
+      const newDataTable = [...newDataFormatted, data]
+      debitTable.current.setDataFormated(newDataTable)
+      setTotalDebit(
+        newDataTable.reduce((sum: any, subArray: any) => sum + parseFloat(subArray.Amount.replace(/,/g, '')), 0)
+      )
+    }
+
+
+
+    if (amountDebitRef.current) {
+      amountDebitRef.current.value = ''
+      amountDebitRef.current?.focus()
+    }
+
+  }
+
+  function saveCheckDebit() {
+    wait(100).then(() => {
+      const refs = modalCheckRef.current.getRefs()
+      const amount = parseFloat(refs.amountRef.current?.value.replace(/,/g, ''))
+      const checkno = refs.checknoRef.current?.value
+      const checkdate = refs.checkdateRef.current?.value
+      const branch = refs.branchRef.current?.value
+      const remarks = refs.remarksRef.current?.value
+      const bank = refs.bankRef.current?.value
+      const bankRefName = refs.bankRefName.current
+      const getSelectedRow = debitTable.current.getSelectedRow()
+
+
+
+      if (debitTable.current.checkNoIsExist(checkno) && getSelectedRow === null) {
+        return alert(`check no is already exist`)
+      }
+
+
+      if (getSelectedRow !== null) {
+        const debitTableData = debitTable.current.getData()
+        debitTableData[getSelectedRow][1] = amount.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+        debitTableData[getSelectedRow][2] = checkno
+        debitTableData[getSelectedRow][3] = checkdate
+        debitTableData[getSelectedRow][4] = branch
+        debitTableData[getSelectedRow][9] = remarks
+        debitTableData[getSelectedRow][11] = bank
+        debitTableData[getSelectedRow][12] = bankRefName
+        debitTable.current.setData(debitTableData)
+        debitTable.current.setSelectedRow(null)
+        setTotalDebit(
+          debitTableData.reduce((sum: any, subArray: any) => sum + parseFloat(subArray[1].replace(/,/g, '')), 0)
+        )
+      } else {
+        const data = {
+          Payment: "Check",
+          Amount: amount.toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }),
+          Check_No: checkno,
+          Check_Date: checkdate,
+          Bank_Branch: branch,
+          Acct_Code: "",
+          Acct_Title: "",
+          Deposit_Slip: "",
+          Cntr: "",
+          Remarks: remarks,
+          TC: paymentType,
+          Bank: bank,
+          BankName: bankRefName,
+        };
+        const debitTableData = debitTable.current.getData()
+        const newDataFormatted = debitTableData.map((itm: any) => {
+          let newItm = {
+            Payment: itm[0],
+            Amount: itm[1],
+            Check_No: itm[2],
+            Check_Date: itm[3],
+            Bank_Branch: itm[4],
+            Acct_Code: itm[5],
+            Acct_Title: itm[6],
+            Deposit_Slip: itm[7],
+            Cntr: itm[8],
+            Remarks: itm[9],
+            TC: itm[10],
+            Bank: itm[11],
+            BankName: itm[12],
+          }
+          return newItm
+        })
+        const newDataTable = [...newDataFormatted, data]
+        debitTable.current.setDataFormated(newDataTable)
+        setTotalDebit(
+          newDataTable.reduce((sum: any, subArray: any) => sum + parseFloat(subArray.Amount.replace(/,/g, '')), 0)
+        )
+
+      }
+      modalCheckRef.current.closeDelay()
+    })
+  }
+
+  async function saveCredit() {
+    if (transactionRef.current && transactionRef.current.value === '' || transactionRef.current && transactionRef.current.value === null || transactionRef.current && transactionRef.current.value === undefined) {
+      transactionRef.current.focus()
+      return alert(`Please select a transaction!`)
+    }
+    if (transactionRef.current) {
+      const dd = await executeQueryToClient(`SELECT * FROM transaction_code where Description = "${transactionRef.current.value}"`)
+      if (dd.data.data?.length <= 0) {
+        return alert('Transaction not yet defined!')
+      }
+    }
+    if (amountCreditRef.current) {
+      if (isNaN(parseFloat(amountCreditRef.current.value.replace(/,/g, ''))) || parseFloat(amountCreditRef.current.value.replace(/,/g, '')) <= 0) {
+        amountCreditRef.current.focus()
+        return alert('Please provide amount!')
+      }
+    }
+    if (invoiceRef.current && invoiceRef.current.value === '') {
+      invoiceRef.current.focus()
+      return alert('Please provide invoice!')
+    }
+    if (foaIDNoRef.current === '') {
+      faoRef.current?.focus()
+      return alert('Please provide usage!')
+    }
+
+    const getSelectedRow = creditTable.current.getSelectedRow()
+
+    if (getSelectedRow !== null) {
+      const creditTableData = creditTable.current.getData()
+      creditTableData[getSelectedRow][0] = transactionRef.current?.value
+      creditTableData[getSelectedRow][1] = amountCreditRef.current?.value
+      creditTableData[getSelectedRow][2] = faoRef.current?.value
+      creditTableData[getSelectedRow][3] = remarksRef.current?.value
+      creditTableData[getSelectedRow][4] = vatTypeRef.current?.value
+      creditTableData[getSelectedRow][5] = invoiceRef.current?.value
+      creditTableData[getSelectedRow][6] = accCodeRef.current
+      creditTableData[getSelectedRow][7] = accTitleRef.current
+      creditTableData[getSelectedRow][8] = accTCRef.current
+      creditTableData[getSelectedRow][9] = foaIDNoRef.current
+
+      creditTable.current.setData(creditTableData)
+      creditTable.current.setSelectedRow(null)
+      setTotalCredit(
+        creditTableData.reduce((sum: any, subArray: any) => sum + parseFloat(subArray[1].replace(/,/g, '')), 0)
+      )
+    } else {
+      const data = {
+        transaction: transactionRef.current?.value,
+        amount: amountCreditRef.current?.value,
+        Name: faoRef.current?.value,
+        Remarks: remarksRef.current?.value,
+        VATType: vatTypeRef.current?.value,
+        invoiceNo: invoiceRef.current?.value,
+        Code: accCodeRef.current,
+        Title: accTitleRef.current,
+        TC: accTCRef.current,
+        Account_No: foaIDNoRef.current,
+      }
+
+      const creditTableData = creditTable.current.getData()
+      const newDataFormatted = creditTableData.map((itm: any) => {
+        let newItm = {
+          transaction: itm[0],
+          amount: itm[1],
+          Name: itm[2],
+          Remarks: itm[3],
+          VATType: itm[4],
+          invoiceNo: itm[5],
+          Code: itm[6],
+          Title: itm[7],
+          TC: itm[8],
+          Account_No: itm[9],
+        }
+        return newItm
+      })
+      const newCreditTableData = [...newDataFormatted, data]
+      creditTable.current.setDataFormated(newCreditTableData)
+      setTotalCredit(
+        newCreditTableData.reduce((sum: any, subArray: any) => sum + parseFloat(subArray.amount.replace(/,/g, '')), 0)
+      )
+    }
+    wait(100).then(() => {
+      if (transactionRef.current) {
+        transactionRef.current.value = ''
+      }
+      if (amountCreditRef.current) {
+        amountCreditRef.current.value = '0.00'
+      }
+      if (faoRef.current) {
+        faoRef.current.value = ''
+      }
+      if (remarksRef.current) {
+        remarksRef.current.value = ''
+      }
+      if (vatTypeRef.current) {
+        vatTypeRef.current.value = 'Non-VAT'
+      }
+      if (invoiceRef.current) {
+        invoiceRef.current.value = ''
+      }
+      accCodeRef.current = ''
+      accTitleRef.current = ''
+      accTCRef.current = ''
+      foaIDNoRef.current = ''
+
+      transactionRef.current?.focus()
+    })
+  }
+
   return (
     <div
       style={{
         height: "100%",
         width: "100%",
         background: "#F1F1F1",
-
       }}
     >
-
       <div
         style={{
           width: "100%",
@@ -683,6 +961,9 @@ export default function Collection() {
                   onChange: (e) => {
                     if (e.target.value === 'CHK' && amountDebitRef.current) {
                       amountDebitRef.current.value = '0.00'
+                      wait(100).then(() => {
+                        buttonCheckSave.current?.focus()
+                      })
                     }
                     setPaymentType(e.target.value)
                   }
@@ -694,8 +975,8 @@ export default function Collection() {
                 values={"value"}
                 display={"key"}
               />
-
               <button
+                ref={buttonCheckSave}
                 disabled={paymentType === 'CSH'}
                 className={`custom-btn ripple-button ${paymentType === 'CSH' ? "disabled" : "not-disabled"}`}
                 style={{
@@ -708,6 +989,9 @@ export default function Collection() {
                 }}
                 onClick={(e) => {
                   modalCheckRef.current?.showModal()
+                  wait(100).then(() => {
+                    modalCheckRef.current?.checknoRef.current?.focus()
+                  })
                 }}
               >
                 <AddIcon sx={{ fontSize: "22px" }} />
@@ -737,13 +1021,14 @@ export default function Collection() {
                   style: { flex: 1 },
                   onKeyDown: (e) => {
                     if (e.code === "NumpadEnter" || e.code === 'Enter') {
-
+                      buttonCshSave.current?.click()
                     }
                   }
                 }}
                 inputRef={amountDebitRef}
               />
               <button
+                ref={buttonCshSave}
                 disabled={paymentType === 'CHK'}
                 className={`custom-btn ripple-button ${paymentType === 'CHK' ? "disabled" : "not-disabled"}`}
                 style={{
@@ -755,7 +1040,9 @@ export default function Collection() {
 
                 }}
                 onClick={(e) => {
-                  alert('save')
+                  if (amountDebitRef.current && paymentTypeRef.current) {
+                    saveCashDebit(amountDebitRef.current.value, paymentTypeRef.current.value)
+                  }
                 }}
               >
                 <ForwardIcon sx={{ fontSize: "22px" }} />
@@ -787,11 +1074,70 @@ export default function Collection() {
               flexDirection: "column"
             }}>
             <CollectionTableSelected
+              ref={debitTable}
               columns={debitColumn}
               rows={[]}
               containerStyle={{
                 height: 'auto',
                 flex: 1,
+              }}
+              getSelectedItem={(rowItm: any) => {
+                if (rowItm) {
+                  if (rowItm[0] === 'Cash') {
+                    wait(100).then(() => {
+                      if (amountDebitRef.current)
+                        amountDebitRef.current.value = rowItm[1]
+                    })
+                  } else {
+                    modalCheckRef.current?.showModal()
+
+                    wait(100).then(() => {
+                      if (modalCheckRef.current) {
+                        if (modalCheckRef.current.checknoRef.current) {
+                          modalCheckRef.current.checknoRef.current.value = rowItm[2]
+                        }
+                        if (modalCheckRef.current.bankRef.current) {
+                          modalCheckRef.current.bankRef.current.value = rowItm[11]
+                        }
+                        if (modalCheckRef.current.branchRef.current) {
+                          modalCheckRef.current.branchRef.current.value = rowItm[4]
+                        }
+                        if (modalCheckRef.current.remarksRef.current) {
+                          modalCheckRef.current.remarksRef.current.value = rowItm[9]
+                        }
+                        if (modalCheckRef.current.checkdateRef.current) {
+                          modalCheckRef.current.checkdateRef.current.value = rowItm[3]
+                        }
+                        if (modalCheckRef.current.amountRef.current) {
+                          modalCheckRef.current.amountRef.current.value = rowItm[1]
+                        }
+                        if (modalCheckRef.current.bankRefName.current) {
+                          modalCheckRef.current.bankRefName.current = rowItm[12]
+                        }
+                      }
+                    })
+                  }
+
+                } else {
+                  wait(100).then(() => {
+                    if (amountDebitRef.current)
+                      amountDebitRef.current.value = '0.00'
+                  })
+                }
+              }}
+              onKeyDown={(rowItm: any, rowIdx: any, e: any) => {
+                if (e.code === 'Delete' || e.code === 'Backspace') {
+                  const isConfim = window.confirm(`Are you sure you want to delete?`)
+                  if (isConfim) {
+                    const debitTableData = debitTable.current.getData()
+                    debitTableData.splice(rowIdx, 1);
+                    debitTable.current.setData(debitTableData)
+                    setTotalDebit(
+                      debitTableData.reduce((sum: any, subArray: any) => sum + parseFloat(subArray[1].replace(/,/g, '')), 0)
+                    )
+                    return
+                  }
+                }
               }}
             />
             <div
@@ -799,8 +1145,12 @@ export default function Collection() {
                 fontSize: "13px",
                 textAlign: "right",
                 border: "1px solid #d1cdcd",
-                background: "#dcdcdc"
-              }}>123</div>
+                background: "#dcdcdc",
+                fontWeight: "bold"
+              }}>{totalDebit.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}</div>
           </div>
         }
         contentStyle={`
@@ -863,6 +1213,9 @@ export default function Collection() {
                     disableInput={false}
                     inputRef={transactionRef}
                     onChange={(selected: any, e: any) => {
+                      accCodeRef.current = selected.Acct_Code
+                      accTitleRef.current = selected.Acct_Title
+                      accTCRef.current = selected.Code
                     }}
                     onKeydown={(e: any) => {
                       if (e.key === "Enter" || e.key === 'NumpadEnter') {
@@ -880,6 +1233,35 @@ export default function Collection() {
                   borderRadius: "0px",
                   color: "white",
                   height: "22px"
+                }}
+                onClick={() => {
+                  wait(100).then(() => {
+                    if (transactionRef.current) {
+                      transactionRef.current.value = ''
+                    }
+                    if (amountCreditRef.current) {
+                      amountCreditRef.current.value = '0.00'
+                    }
+                    if (faoRef.current) {
+                      faoRef.current.value = ''
+                    }
+                    if (remarksRef.current) {
+                      remarksRef.current.value = ''
+                    }
+                    if (vatTypeRef.current) {
+                      vatTypeRef.current.value = 'Non-VAT'
+                    }
+                    if (invoiceRef.current) {
+                      invoiceRef.current.value = ''
+                    }
+                    accCodeRef.current = ''
+                    accTitleRef.current = ''
+                    accTCRef.current = ''
+                    foaIDNoRef.current = ''
+                    transactionRef.current?.focus()
+                    creditTable.current.setSelectedRow(null)
+
+                  })
                 }}
               >
                 <AddIcon sx={{ fontSize: "22px" }} />
@@ -925,7 +1307,9 @@ export default function Collection() {
                   borderRadius: "0px",
                   color: "white",
                   height: "22px"
-
+                }}
+                onClick={() => {
+                  saveCredit()
                 }}
               >
                 <ForwardIcon sx={{ fontSize: "22px" }} />
@@ -1029,6 +1413,7 @@ export default function Collection() {
                 style: { flex: 1 },
                 onKeyDown: (e) => {
                   if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                    saveCredit()
                   }
                 },
               }}
@@ -1037,41 +1422,122 @@ export default function Collection() {
           </div>
         }
         secondContent={
-          <div style={{ position: "relative", height: "100%", width: "100%", flex: 1, display: "flex" }}>
+          <div style={{
+            position: "relative",
+            height: "100%",
+            width: "100%",
+            flex: 1,
+            display: "flex",
+            flexDirection: "column"
+          }}>
             <CollectionTableSelected
+              ref={creditTable}
               columns={creditColumn}
               rows={[]}
               containerStyle={{
                 height: 'auto',
                 flex: 1,
               }}
+              getSelectedItem={(rowItm: any) => {
+                if (rowItm) {
+                  wait(100).then(() => {
+                    if (transactionRef.current) {
+                      transactionRef.current.value = rowItm[0]
+                    }
+                    if (amountCreditRef.current) {
+                      amountCreditRef.current.value = rowItm[1]
+                    }
+                    if (faoRef.current) {
+                      faoRef.current.value = rowItm[2]
+                    }
+                    if (remarksRef.current) {
+                      remarksRef.current.value = rowItm[3]
+                    }
+                    if (vatTypeRef.current) {
+                      vatTypeRef.current.value = rowItm[4]
+                    }
+                    if (invoiceRef.current) {
+                      invoiceRef.current.value = rowItm[5]
+                    }
+                    accCodeRef.current = rowItm[6]
+                    accTitleRef.current = rowItm[7]
+                    accTCRef.current = rowItm[8]
+                    foaIDNoRef.current = rowItm[9]
+                  })
+                } else {
+                  wait(100).then(() => {
+                    if (transactionRef.current) {
+                      transactionRef.current.value = ''
+                    }
+                    if (amountCreditRef.current) {
+                      amountCreditRef.current.value = '0.00'
+                    }
+                    if (faoRef.current) {
+                      faoRef.current.value = ''
+                    }
+                    if (remarksRef.current) {
+                      remarksRef.current.value = ''
+                    }
+                    if (vatTypeRef.current) {
+                      vatTypeRef.current.value = 'Non-VAT'
+                    }
+                    if (invoiceRef.current) {
+                      invoiceRef.current.value = ''
+                    }
+                    accCodeRef.current = ''
+                    accTitleRef.current = ''
+                    accTCRef.current = ''
+                    foaIDNoRef.current = ''
 
+                  })
+                }
+
+              }}
+              onKeyDown={(rowItm: any, rowIdx: any, e: any) => {
+                if (e.code === 'Delete' || e.code === 'Backspace') {
+                  const isConfim = window.confirm(`Are you sure you want to delete?`)
+                  if (isConfim) {
+                    const creditTableData = creditTable.current.getData()
+                    creditTableData.splice(rowIdx, 1);
+                    creditTable.current.setData(creditTableData)
+                    setTotalCredit(
+                      creditTableData.reduce((sum: any, subArray: any) => sum + parseFloat(subArray[1].replace(/,/g, '')), 0)
+                    )
+                    return
+                  }
+                }
+              }}
             />
+            <div
+              style={{
+                fontSize: "13px",
+                textAlign: "right",
+                border: "1px solid #d1cdcd",
+                background: "#dcdcdc",
+                fontWeight: "bold"
+              }}>{totalCredit.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}</div>
           </div>
         }
         contentStyle={`
           .custom-btn.not-disabled:hover{
             background:#154f19 !important;
           }
+            .custom-btn:focus{
+              outline:3px solid #2563eb;
+            }
         `}
       />
       <ModalCheck
         ref={modalCheckRef}
         handleOnSave={() => {
-          wait(100).then(() => {
-            const refs = modalCheckRef.current.getRefs()
-            console.log({
-              checknoRef: refs.checknoRef.current?.value,
-              bankRef: refs.bankRef.current?.value,
-              branchRef: refs.branchRef.current?.value,
-              remarksRef: refs.remarksRef.current?.value,
-              checkdateRef: refs.checkdateRef.current?.value,
-              amountRef: refs.amountRef.current?.value,
-              bankRefName: refs.bankRefName.current
-            })
-
-            modalCheckRef.current.closeDelay()
-          })
+          saveCheckDebit()
+        }}
+        handleOnClose={() => {
+          debitTable.current.setSelectedRow(null)
+          buttonCheckSave.current?.focus()
         }}
       />
     </div>
@@ -1139,10 +1605,11 @@ const ContentContainer = ({
 }
 const ModalCheck = forwardRef(({
   handleOnSave,
-  handleOnCancel
+  handleOnClose
 }: any, ref) => {
   const [showModal, setShowModal] = useState(false)
   const [handleDelayClose, setHandleDelayClose] = useState(false)
+  const [blick, setBlick] = useState(false)
 
   const checknoRef = useRef<HTMLInputElement>(null)
   const bankRef = useRef<HTMLInputElement>(null)
@@ -1153,16 +1620,17 @@ const ModalCheck = forwardRef(({
   const bankRefName = useRef('')
   const searchModalInputRef = useRef<HTMLInputElement>(null)
 
-
   const closeDelay = () => {
     setHandleDelayClose(true)
     setTimeout(() => {
       setShowModal(false)
       setHandleDelayClose(false)
+      handleOnClose()
     }, 100)
   }
 
   useImperativeHandle(ref, () => ({
+
     showModal: () => {
       setShowModal(true)
     },
@@ -1181,11 +1649,17 @@ const ModalCheck = forwardRef(({
       }
       return refs
     },
+    checknoRef,
+    bankRef,
+    branchRef,
+    remarksRef,
+    checkdateRef,
+    amountRef,
+    bankRefName,
+    searchModalInputRef,
     closeDelay
 
   }))
-
-
 
   const {
     ModalComponent: ModalSearchBanks,
@@ -1219,100 +1693,103 @@ const ModalCheck = forwardRef(({
   });
 
 
+  useEffect(() => {
+    window.addEventListener('keydown', (e: any) => {
+      if (e.key === "Escape") {
+        closeDelay()
+      }
+    })
+  }, [])
+
+
   return (
     showModal ?
-      <div
-        style={{
-          height: "200px",
-          width: "60%",
-          border: "1px solid #64748b",
-          position: "absolute",
-          left: "50%",
-          top: "50%",
-          transform: "translate(-50%, -75%)",
-          display: "flex",
-          flexDirection: "column",
-          zIndex: handleDelayClose ? -100 : 100,
-          opacity: handleDelayClose ? 0 : 1,
-          transition: "all 150ms"
-        }}>
-        <div
-          style={{
-            height: "22px",
-            background: "white",
-            display: "flex",
-            justifyContent: "space-between",
-            padding: "5px",
-            position: "relative",
-            alignItems: "center"
+      <>
+        <div style={{
+          position: "fixed",
+          top: 0,
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: "transparent",
+          zIndex: "88"
+        }}
+          onClick={() => {
+            setBlick(true)
+            setTimeout(() => {
+              setBlick(false)
+            }, 250)
+          }}
 
-          }}
-        >
-          <span style={{ fontSize: "13px", fontWeight: "bold" }}>Check Details</span>
-          <button
-            className="btn-check-exit-modal"
-            style={{
-              padding: "0 5px",
-              borderRadius: "0px",
-              background: "white",
-              color: "black",
-              height: "22px",
-              position: "absolute",
-              top: 0,
-              right: 0
-            }}
-            onClick={() => {
-              closeDelay()
-            }}
-          >
-            <CloseIcon sx={{ fontSize: "22px" }} />
-          </button>
-        </div>
+        ></div>
         <div
+
           style={{
-            flex: 1,
-            background: "#F1F1F1",
-            padding: "5px",
-            display: "flex",
-          }}
-        >
-          <div style={{
-            width: "55%",
+            height: blick ? "202px" : "200px",
+            width: blick ? "60.3%" : "60%",
+            border: "1px solid #64748b",
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%, -75%)",
             display: "flex",
             flexDirection: "column",
-            rowGap: "5px",
-            padding: "10px"
-
+            zIndex: handleDelayClose ? -100 : 100,
+            opacity: handleDelayClose ? 0 : 1,
+            transition: "all 150ms",
+            boxShadow: '3px 6px 32px -7px rgba(0,0,0,0.75)'
           }}>
-            <TextInput
-              label={{
-                title: "Check No. : ",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "70px",
-                },
+          <div
+            style={{
+              height: "22px",
+              background: "white",
+              display: "flex",
+              justifyContent: "space-between",
+              padding: "5px",
+              position: "relative",
+              alignItems: "center"
+
+            }}
+          >
+            <span style={{ fontSize: "13px", fontWeight: "bold" }}>Check Details</span>
+            <button
+              className="btn-check-exit-modal"
+              style={{
+                padding: "0 5px",
+                borderRadius: "0px",
+                background: "white",
+                color: "black",
+                height: "22px",
+                position: "absolute",
+                top: 0,
+                right: 0
               }}
-              input={{
-                type: "text",
-                style: { width: "160px" },
-                onKeyDown: (e) => {
-                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                    bankRef.current?.focus()
-                  }
-                },
+              onClick={() => {
+                closeDelay()
               }}
-              inputRef={checknoRef}
-            />
-            {isLoadingModalSearchbanks ? (
-              <LoadingButton loading={isLoadingModalSearchbanks} />
-            ) : (
+            >
+              <CloseIcon sx={{ fontSize: "22px" }} />
+            </button>
+          </div>
+          <div
+            style={{
+              flex: 1,
+              background: "#F1F1F1",
+              padding: "5px",
+              display: "flex",
+            }}
+          >
+            <div style={{
+              width: "55%",
+              display: "flex",
+              flexDirection: "column",
+              rowGap: "5px",
+              padding: "10px"
+
+            }}>
               <TextInput
-                containerStyle={{
-                  width: "370px"
-                }}
                 label={{
-                  title: "Bank : ",
+                  title: "Check No. : ",
                   style: {
                     fontSize: "12px",
                     fontWeight: "bold",
@@ -1320,171 +1797,199 @@ const ModalCheck = forwardRef(({
                   },
                 }}
                 input={{
-                  disabled: false,
+                  type: "text",
+                  style: { width: "160px" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                      bankRef.current?.focus()
+                    }
+                  },
+                }}
+                inputRef={checknoRef}
+              />
+              {isLoadingModalSearchbanks ? (
+                <LoadingButton loading={isLoadingModalSearchbanks} />
+              ) : (
+                <TextInput
+                  containerStyle={{
+                    width: "370px"
+                  }}
+                  label={{
+                    title: "Bank : ",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "70px",
+                    },
+                  }}
+                  input={{
+                    disabled: false,
+                    type: "text",
+                    style: { width: "300px" },
+                    onKeyDown: (e) => {
+                      if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                        openModalSearchBanks(e.currentTarget.value)
+                      }
+                    }
+                  }}
+                  icon={<AccountBoxIcon sx={{ fontSize: "18px" }} />}
+                  onIconClick={(e) => {
+                    e.preventDefault()
+                    if (bankRef.current) {
+                      openModalSearchBanks(bankRef.current.value)
+                    }
+                  }}
+                  inputRef={bankRef}
+                />
+              )}
+              <TextInput
+                label={{
+                  title: "Branch : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "70px",
+                  },
+                }}
+                input={{
                   type: "text",
                   style: { width: "300px" },
                   onKeyDown: (e) => {
                     if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                      openModalSearchBanks(e.currentTarget.value)
+                      remarksRef.current?.focus()
+                    }
+                  },
+                }}
+                inputRef={branchRef}
+              />
+              <TextAreaInput
+                label={{
+                  title: "Remarks : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "70px",
+                  },
+                }}
+                textarea={{
+                  rows: 4,
+                  style: { width: "300px" },
+                  onKeyDown: (e) => {
+                    e.stopPropagation()
+                    if ((e.code === "NumpadEnter" && !e.shiftKey) || (e.code === 'Enter' && !e.shiftKey)) {
+                      checkdateRef.current?.focus()
+                    }
+                  },
+                }}
+                _inputRef={remarksRef}
+              />
+
+            </div>
+            <div style={{
+              width: "45%",
+              display: "flex",
+              flexDirection: "column",
+              rowGap: "5px",
+              position: "relative",
+              padding: "10px",
+              alignItems: "flex-end"
+            }}>
+              <TextInput
+                label={{
+                  title: "Date : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "70px",
+                  },
+                }}
+                input={{
+                  type: "date",
+                  style: { width: "200px" },
+                  defaultValue: format(new Date(), "yyyy-MM-dd"),
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                      amountRef.current?.focus()
+                    }
+                  },
+                }}
+
+                inputRef={checkdateRef}
+              />
+              <TextFormatedInput
+                label={{
+                  title: "Amount : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "70px",
+                  },
+                }}
+                input={{
+                  type: "text",
+                  style: { width: "200px" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                      if (handleOnSave) {
+                        handleOnSave()
+                      }
                     }
                   }
                 }}
-                icon={<AccountBoxIcon sx={{ fontSize: "18px" }} />}
-                onIconClick={(e) => {
-                  e.preventDefault()
-                  if (bankRef.current) {
-                    openModalSearchBanks(bankRef.current.value)
-                  }
-                }}
-                inputRef={bankRef}
+                inputRef={amountRef}
               />
-            )}
-            <TextInput
-              label={{
-                title: "Branch : ",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "70px",
-                },
-              }}
-              input={{
-                type: "text",
-                style: { width: "300px" },
-                onKeyDown: (e) => {
-                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                    remarksRef.current?.focus()
-                  }
-                },
-              }}
-              inputRef={branchRef}
-            />
-            <TextAreaInput
-              label={{
-                title: "Remarks : ",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "70px",
-                },
-              }}
-              textarea={{
-                rows: 4,
-                style: { width: "300px" },
-                onKeyDown: (e) => {
-                  e.stopPropagation()
-                  if ((e.code === "NumpadEnter" && !e.shiftKey) || (e.code === 'Enter' && !e.shiftKey)) {
-                    checkdateRef.current?.focus()
-                  }
-                },
-              }}
-              _inputRef={remarksRef}
-            />
-
-          </div>
-          <div style={{
-            width: "45%",
-            display: "flex",
-            flexDirection: "column",
-            rowGap: "5px",
-            position: "relative",
-            padding: "10px",
-            alignItems: "flex-end"
-          }}>
-            <TextInput
-              label={{
-                title: "Date : ",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "70px",
-                },
-              }}
-              input={{
-                type: "date",
-                style: { width: "200px" },
-                defaultValue: format(new Date(), "yyyy-MM-dd"),
-                onKeyDown: (e) => {
-                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                    amountRef.current?.focus()
-                  }
-                },
-              }}
-
-              inputRef={checkdateRef}
-            />
-            <TextFormatedInput
-              label={{
-                title: "Amount : ",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "70px",
-                },
-              }}
-              input={{
-                type: "text",
-                style: { width: "200px" },
-                onKeyDown: (e) => {
-                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
+              <div style={{
+                display: "flex",
+                columnGap: "10px",
+                flex: 1,
+                justifyContent: "flex-end",
+                alignItems: "flex-end"
+              }}>
+                <Button
+                  variant="contained"
+                  color="success"
+                  style={{
+                    height: "22px",
+                    fontSize: "12px",
+                  }}
+                  onClick={(e) => {
                     if (handleOnSave) {
                       handleOnSave()
                     }
-                  }
-                }
-              }}
-              inputRef={amountRef}
-            />
-            <div style={{
-              display: "flex",
-              columnGap: "10px",
-              flex: 1,
-              justifyContent: "flex-end",
-              alignItems: "flex-end"
-            }}>
-              <Button
-                variant="contained"
-                color="success"
-                style={{
-                  height: "22px",
-                  fontSize: "12px",
-                }}
-                onClick={(e) => {
-                  if (handleOnSave) {
-                    handleOnSave()
-                  }
 
-                }}
-              >
-                OK
-              </Button>
-              <Button
-                variant="contained"
-                color="success"
-                style={{
-                  height: "22px",
-                  fontSize: "12px",
-                }}
-                onClick={(e) => {
-                  closeDelay()
-                }}
-              >
-                Cancel
-              </Button>
+                  }}
+                >
+                  OK
+                </Button>
+                <Button
+                  variant="contained"
+                  color="success"
+                  style={{
+                    height: "22px",
+                    fontSize: "12px",
+                  }}
+                  onClick={(e) => {
+                    closeDelay()
+                  }}
+                >
+                  Cancel
+                </Button>
 
+              </div>
             </div>
           </div>
-        </div>
-        {ModalSearchBanks}
-        <style>
-          {`
+          {ModalSearchBanks}
+          <style>
+            {`
               .btn-check-exit-modal:hover{
                 background:red !important;
                 color:white !important;
               }
             `}
-        </style>
-      </div> : null
+          </style>
+        </div>
+      </>
+      : null
   )
 })
 const CollectionTableSelected = forwardRef(({
@@ -1519,6 +2024,9 @@ const CollectionTableSelected = forwardRef(({
   }, [rows, columns])
 
   useImperativeHandle(ref, () => ({
+    checkNoIsExist: (checkNo: string) => {
+      return data.some((subArray: any) => subArray[2] === checkNo);
+    },
     selectedRow: () => selectedRow,
     getData: () => {
       const newData = [...data];
@@ -1631,39 +2139,57 @@ const CollectionTableSelected = forwardRef(({
           <tbody>
             {
               data?.map((rowItm: any, rowIdx: number) => {
-                const selectedRowBg = selectedRow === rowIdx && selectedRowIndex === rowIdx ? "#dedfe0" : selectedRow === rowIdx ? "#b6e4fc" : selectedRowIndex === rowIdx ? "#cbcfd4" : ""
+                const selectedRowBg = selectedRow === rowIdx && selectedRowIndex === rowIdx ? "#e5e5e5" :
+                  selectedRow === rowIdx ? "#b6e4fc" : selectedRowIndex === rowIdx ? "#e4e4e7" : "white"
                 return (
                   <tr key={rowIdx}>
                     <td style={{
-                      position: "relative", borderBottom: "1px solid black",
+                      position: "relative",
+                      borderBottom: "1px solid black",
                       borderLeft: "1px solid black",
                       borderTop: "none",
                       borderRight: "1px solid black",
                       cursor: "pointer",
                       background: selectedRowBg,
+                      padding: 0,
+                      margin: 0,
+                      boxShadow: `inset -2px -2px 0 #ffffff, 
+                      inset 1px 1px 0 #a8a29e`,
+
                     }}>
-                      <input
-                        style={{
-                          cursor: "pointer",
-                          height: "10px"
-                        }}
-                        readOnly={true}
-                        checked={selectedRowIndex === rowIdx}
-                        type="checkbox"
-                        onClick={() => {
-                          if (!isTableSelectable) {
-                            return
-                          }
-                          setSelectedRowIndex(rowIdx)
+                      <div style={{
+                        width: "18px",
+                        height: "18px",
+                        position: "relative",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
+                      }}>
+                        <input
+                          style={{
+                            cursor: "pointer",
+                            margin: "0px !important",
+                            position: "absolute",
+                          }}
+                          readOnly={true}
+                          checked={selectedRowIndex === rowIdx}
+                          type="checkbox"
+                          onClick={() => {
+                            if (!isTableSelectable) {
+                              return
+                            }
+                            setSelectedRowIndex(rowIdx)
 
-                          if (getSelectedItem) {
-                            getSelectedItem(rowItm, null, rowIdx, null)
-                          }
-                          setSelectedRow(null)
+                            if (getSelectedItem) {
+                              getSelectedItem(rowItm, null, rowIdx, null)
+                            }
+                            setSelectedRow(null)
 
-                        }}
+                          }}
+                        />
 
-                      />
+                      </div>
+
                     </td>
 
                     {
@@ -1747,6 +2273,10 @@ const CollectionTableSelected = forwardRef(({
                               fontSize: "12px",
                               padding: "0px 5px",
                               cursor: "pointer",
+                              height: "20px",
+                              boxShadow: `inset -2px -2px 0 #ffffff, 
+                              inset 1px 1px 0 #a8a29e`,
+                              userSelect: "none",
                             }}
                           >{
                               <input
@@ -1757,7 +2287,10 @@ const CollectionTableSelected = forwardRef(({
                                   pointerEvents: "none",
                                   border: "none",
                                   background: "transparent",
-                                  userSelect: "none"
+                                  userSelect: "none",
+                                  height: "100%",
+                                  textAlign: colItm.type === 'number' ? "right" : "left"
+
                                 }} />
                             }</td>
                         )
@@ -2069,7 +2602,6 @@ function Collectionss() {
           }
         )
         .then((res) => {
-          console.log(res)
           const { Acct_Code, Acct_Title } = res?.data?.data[0];
           setDebit((d: any) => {
             let lastID = 0;
@@ -3243,6 +3775,7 @@ function Collectionss() {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
                             });
+
                             myAxios
                               .post(
                                 `/task/accounting/get-drcode-drtitle-from-collection`,
@@ -4003,6 +4536,7 @@ function Collectionss() {
                       );
                     }
                   }}
+
                   onKeyDown={(row, key) => {
                     if (key === "Delete" || key === "Backspace") {
                       const rowSelected = row[0];
