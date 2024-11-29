@@ -47,7 +47,7 @@ import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import { format } from 'date-fns'
 import SearchIcon from '@mui/icons-material/Search';
 import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
-
+import LocalPrintshopIcon from '@mui/icons-material/LocalPrintshop';
 
 const CollectionContext = createContext<{
   debit: Array<any>;
@@ -171,6 +171,7 @@ export default function Collection() {
   const [paymentType, setPaymentType] = useState('CSH')
   const [totalDebit, setTotalDebit] = useState(0)
   const [totalCredit, setTotalCredit] = useState(0)
+  const [collectionMode, setCollectionMode] = useState('')
 
 
   // SEARCH COLLECTION
@@ -328,17 +329,18 @@ export default function Collection() {
       const response = res as any;
       const dataCollection = response.data.collection;
 
-      const ORNo = dataCollection[0].ORNo;
-      const OR_Date = dataCollection[0].Date_OR;
-      const ClientID = dataCollection[0].ID_No;
-      const ClientName = dataCollection[0].Short;
-      const selectedSearchState = {
-        ORNo: ORNo,
-        PNo: ClientID,
-        IDNo: ClientID,
-        Date: OR_Date,
-        Name: ClientName,
-      };
+      if (
+        ornoRef.current &&
+        dateRef.current &&
+        pnClientRef.current &&
+        clientNameRef.current
+      ) {
+        ornoRef.current.value = dataCollection[0].ORNo
+        dateRef.current.value = dataCollection[0].Date_OR
+        pnClientRef.current.value = dataCollection[0].ID_No
+        clientNameRef.current.value = dataCollection[0].Short
+      }
+
       const debit: Array<any> = [];
       const credit: Array<any> = [];
 
@@ -400,12 +402,9 @@ export default function Collection() {
           });
         }
       }
-      // setNewStateValue(dispatch, selectedSearchState);
-      // setDebit(debit);
-      // setCredit(credit);
-      // setAddNew(true);
-      // setSave(true);
-      // setHasSelected(true);
+      debitTable.current.setDataFormated(debit)
+      creditTable.current.setDataFormated(credit)
+      setCollectionMode('update')
       closeModalSearchCollection();
     },
   });
@@ -454,7 +453,63 @@ export default function Collection() {
     },
   });
 
-  function saveCashDebit(value: string, paymentType: string) {
+  const {
+    mutate,
+    isLoading: loadingAddNew,
+  } = useMutation({
+    mutationKey: addCollectionQueryKey,
+    mutationFn: async (variables: any) => {
+      if (collectionMode === 'update') {
+        delete variables.mode;
+        return await myAxios.post(
+          "/task/accounting/update-collection",
+          variables,
+          {
+            headers: {
+              Authorization: `Bearer ${user?.accessToken}`,
+            },
+          }
+        );
+      }
+      delete variables.mode;
+      return await myAxios.post("/task/accounting/add-collection", variables, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      });
+    },
+    onSuccess: (res) => {
+      if (res.data.success) {
+        resetCollection()
+        return Swal.fire({
+          position: "center",
+          icon: "success",
+          title: res.data.message,
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      }
+      Swal.fire({
+        position: "center",
+        icon: "error",
+        title: res.data.message,
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    },
+  });
+  function resetCollection() {
+    wait(100).then(() => {
+      refetchNewOR();
+      resetFields()
+      resetCredit(false)
+      resetDebit(false)
+      debitTable.current.setData([])
+      creditTable.current.setData([])
+      pnClientRef.current?.focus()
+    })
+  }
+  async function saveCashDebit(value: string, paymentType: string) {
     const amount = parseFloat(value.replace(/,/g, ''))
     if (isNaN(amount) || amount <= 0) {
       amountDebitRef.current?.focus()
@@ -475,6 +530,8 @@ export default function Collection() {
         debitTableData.reduce((sum: any, subArray: any) => sum + parseFloat(subArray[1].replace(/,/g, '')), 0)
       )
     } else {
+      const dd = await executeQueryToClient(`select * from Transaction_Code LEFT JOIN Chart_Account ON Transaction_Code.Acct_Code = Chart_Account.Acct_Code WHERE Code = 'CSH'`)
+
       const data = {
         Payment: "Cash",
         Amount: amount.toLocaleString("en-US", {
@@ -484,8 +541,8 @@ export default function Collection() {
         Check_No: "",
         Check_Date: "",
         Bank_Branch: "",
-        Acct_Code: "",
-        Acct_Title: "",
+        Acct_Code: dd.data?.data[0].Acct_Code,
+        Acct_Title: dd.data?.data[0].Acct_Title,
         Deposit_Slip: "",
         Cntr: "",
         Remarks: "",
@@ -526,9 +583,8 @@ export default function Collection() {
     }
 
   }
-
   function saveCheckDebit() {
-    wait(100).then(() => {
+    wait(100).then(async () => {
       const refs = modalCheckRef.current.getRefs()
       const amount = parseFloat(refs.amountRef.current?.value.replace(/,/g, ''))
       const checkno = refs.checknoRef.current?.value
@@ -564,6 +620,8 @@ export default function Collection() {
           debitTableData.reduce((sum: any, subArray: any) => sum + parseFloat(subArray[1].replace(/,/g, '')), 0)
         )
       } else {
+
+        const dd = await executeQueryToClient(`select * from Transaction_Code LEFT JOIN Chart_Account ON Transaction_Code.Acct_Code = Chart_Account.Acct_Code WHERE Code = 'CHK'`)
         const data = {
           Payment: "Check",
           Amount: amount.toLocaleString("en-US", {
@@ -573,8 +631,8 @@ export default function Collection() {
           Check_No: checkno,
           Check_Date: checkdate,
           Bank_Branch: branch,
-          Acct_Code: "",
-          Acct_Title: "",
+          Acct_Code: dd.data?.data[0].Acct_Code,
+          Acct_Title: dd.data?.data[0].Acct_Title,
           Deposit_Slip: "",
           Cntr: "",
           Remarks: remarks,
@@ -582,6 +640,8 @@ export default function Collection() {
           Bank: bank,
           BankName: bankRefName,
         };
+
+
         const debitTableData = debitTable.current.getData()
         const newDataFormatted = debitTableData.map((itm: any) => {
           let newItm = {
@@ -611,7 +671,6 @@ export default function Collection() {
       modalCheckRef.current.closeDelay()
     })
   }
-
   async function saveCredit() {
     if (transactionRef.current && transactionRef.current.value === '' || transactionRef.current && transactionRef.current.value === null || transactionRef.current && transactionRef.current.value === undefined) {
       transactionRef.current.focus()
@@ -694,6 +753,31 @@ export default function Collection() {
         newCreditTableData.reduce((sum: any, subArray: any) => sum + parseFloat(subArray.amount.replace(/,/g, '')), 0)
       )
     }
+    resetCredit()
+  }
+  function resetFields() {
+    wait(100).then(() => {
+      if (dateRef.current) {
+        dateRef.current.value = format(new Date(), "yyyy-MM-dd")
+      }
+      if (pnClientRef.current) {
+        pnClientRef.current.value = ''
+      }
+      if (clientNameRef.current) {
+        clientNameRef.current.value = ''
+      }
+      IDNo.current = ''
+    })
+  }
+  function resetDebit(setFocus = true) {
+    modalCheckRef.current.closeDelay()
+    if (amountDebitRef.current) {
+      amountDebitRef.current.value = ''
+      if (setFocus)
+        amountDebitRef.current?.focus()
+    }
+  }
+  function resetCredit(setFocus = true) {
     wait(100).then(() => {
       if (transactionRef.current) {
         transactionRef.current.value = ''
@@ -717,9 +801,75 @@ export default function Collection() {
       accTitleRef.current = ''
       accTCRef.current = ''
       foaIDNoRef.current = ''
-
-      transactionRef.current?.focus()
+      if (setFocus)
+        transactionRef.current?.focus()
     })
+  }
+  function handleOnAdd() {
+    setCollectionMode('add')
+    resetCollection()
+  }
+  function handleOnSave() {
+    const debitTableData = debitTable.current.getData()
+    const creditTableData = creditTable.current.getData()
+
+    const creditTableDataFormatted = creditTableData.map((itm: any) => {
+      let newItm = {
+        transaction: itm[0],
+        amount: itm[1],
+        Name: itm[2],
+        Remarks: itm[3],
+        VATType: itm[4],
+        invoiceNo: itm[5],
+        Code: itm[6],
+        Title: itm[7],
+        TC: itm[8],
+        Account_No: itm[9],
+      }
+      return newItm
+    })
+
+    const debitTableDataFormatted = debitTableData.map((itm: any) => {
+      let newItm = {
+        Payment: itm[0],
+        Amount: itm[1],
+        Check_No: itm[2],
+        Check_Date: itm[3],
+        Bank_Branch: itm[4],
+        Acct_Code: itm[5],
+        Acct_Title: itm[6],
+        Deposit_Slip: itm[7],
+        Cntr: itm[8],
+        Remarks: itm[9],
+        TC: itm[10],
+        Bank: itm[11],
+        BankName: itm[12],
+      }
+      return newItm
+    })
+
+    const state = {
+      ORNo: ornoRef.current?.value,
+      Date: dateRef.current?.value,
+      PNo: pnClientRef.current?.value,
+      Name: clientNameRef.current?.value,
+      debit: JSON.stringify(debitTableDataFormatted),
+      credit: JSON.stringify(creditTableDataFormatted)
+    }
+    mutate(state)
+    console.log(state)
+  }
+
+  function handleOnPrint() {
+
+  }
+  function handleOnClose() {
+    setCollectionMode('')
+    resetCollection()
+  }
+
+  if (loadingAddNew) {
+    return <div>qweqwe</div>
   }
 
   return (
@@ -741,6 +891,8 @@ export default function Collection() {
       >
         <div style={{
           height: "30px",
+          display: "flex",
+          columnGap: "10px"
         }}>
           {
             isLoadingModalSearchCollection ?
@@ -765,7 +917,7 @@ export default function Collection() {
                       openModalSearchCollection(e.currentTarget.value);
                     }
                   },
-                  style: { width: "500px" },
+                  style: { width: "500px", height: "22px" },
                 }}
 
                 icon={<SearchIcon sx={{ fontSize: "18px" }} />}
@@ -778,6 +930,30 @@ export default function Collection() {
                 inputRef={searchRef}
               />}
           {ModalSearchCollection}
+          <IconButton
+            aria-label="add" size="small" color="info"
+            onClick={handleOnAdd}
+          >
+            <AddIcon />
+          </IconButton>
+          <IconButton
+            aria-label="save" size="small" color="success"
+            onClick={handleOnSave}
+          >
+            <SaveIcon />
+          </IconButton>
+          <IconButton
+            aria-label="print" size="small" color="secondary"
+            onClick={handleOnPrint}
+          >
+            <LocalPrintshopIcon />
+          </IconButton>
+          <IconButton
+            aria-label="print" size="small" color="error"
+            onClick={handleOnClose}
+          >
+            <CloseIcon />
+          </IconButton>
         </div>
         <div
           style={{
