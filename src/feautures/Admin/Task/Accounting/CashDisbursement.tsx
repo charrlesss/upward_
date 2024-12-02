@@ -1327,6 +1327,14 @@ export default function CashDisbursement() {
               openTransactionAccount(value)
             } else if (colIdx === 10 && tableData[rowIdx][0] === '1.01.10') {
               openPolicyIdPayTo(value)
+
+              const RowIndex = tableRef.current.getSelectedIndex()
+              tableRef.current.updateData((newTableData: any) => {
+                newTableData[RowIndex][10] = value
+                return newTableData
+              })
+           
+
             } else if (colIdx === 5) {
 
               tableRef.current.updateData((newTableData: any) => {

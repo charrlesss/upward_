@@ -1966,35 +1966,49 @@ const PostDatedCheckTableSelected = forwardRef(({
                 return (
                   <tr key={rowIdx}>
                     <td style={{
-                      position: "relative", borderBottom: "1px solid black",
+                      position: "relative",
+                      borderBottom: "1px solid black",
                       borderLeft: "1px solid black",
                       borderTop: "none",
                       borderRight: "1px solid black",
                       cursor: "pointer",
                       background: selectedRowBg,
+                      padding: 0,
+                      margin: 0,
+                      boxShadow: `inset -2px -2px 0 #ffffff, 
+                       inset 1px 1px 0 #a8a29e`,
                     }}>
-                      <input
-                        style={{
-                          cursor: "pointer",
-                          height: "10px"
-                        }}
-                        readOnly={true}
-                        checked={selectedRowIndex === rowIdx}
-                        type="checkbox"
-                        onClick={() => {
-                          if (!isTableSelectable) {
-                            return
-                          }
-                          setSelectedRowIndex(rowIdx)
+                      <div style={{
+                        width: "18px",
+                        height: "18px",
+                        position: "relative",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
+                      }}>
+                        <input
+                          style={{
+                            cursor: "pointer",
+                            margin: "0px !important",
+                            position: "absolute",
+                          }}
+                          readOnly={true}
+                          checked={selectedRowIndex === rowIdx}
+                          type="checkbox"
+                          onClick={() => {
+                            if (!isTableSelectable) {
+                              return
+                            }
+                            setSelectedRowIndex(rowIdx)
 
-                          if (getSelectedItem) {
-                            getSelectedItem(rowItm, null, rowIdx, null)
-                          }
-                          setSelectedRow(null)
+                            if (getSelectedItem) {
+                              getSelectedItem(rowItm, null, rowIdx, null)
+                            }
+                            setSelectedRow(null)
 
-                        }}
-
-                      />
+                          }}
+                        />
+                      </div>
                     </td>
 
                     {
@@ -2078,6 +2092,10 @@ const PostDatedCheckTableSelected = forwardRef(({
                               fontSize: "12px",
                               padding: "0px 5px",
                               cursor: "pointer",
+                              height: "20px",
+                              boxShadow: `inset -2px -2px 0 #ffffff, 
+                              inset 1px 1px 0 #a8a29e`,
+                              userSelect: "none",
                             }}
                           >{
                               <input
@@ -2088,7 +2106,9 @@ const PostDatedCheckTableSelected = forwardRef(({
                                   pointerEvents: "none",
                                   border: "none",
                                   background: "transparent",
-                                  userSelect: "none"
+                                  userSelect: "none",
+                                  textAlign: colItm.type === 'number' ? "right" : "left"
+
                                 }} />
                             }</td>
                         )
@@ -2104,8 +2124,6 @@ const PostDatedCheckTableSelected = forwardRef(({
     </div>
   )
 })
-
-
 
 export function setNewStateValue(dispatch: any, obj: any) {
   Object.entries(obj).forEach(([field, value]) => {

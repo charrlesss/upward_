@@ -208,6 +208,7 @@ export default function Collection() {
   const { myAxios, user } = useContext(AuthContext);
   const { executeQueryToClient } = useExecuteQueryFromClient()
 
+  const disableFields = collectionMode === ''
 
   const {
     isLoading: paymentTypeLoading,
@@ -345,35 +346,44 @@ export default function Collection() {
       const credit: Array<any> = [];
 
 
-      function isValidDate(dateString: string): boolean {
-        const date = new Date(dateString);
-        return date instanceof Date && !isNaN(date.getTime());
-      }
 
       for (let i = 0; i <= dataCollection.length - 1; i++) {
         if (
-          dataCollection[i].Payment !== "" &&
-          dataCollection[i].Debit !== "0"
+          dataCollection[i].Payment === 'Check'
         ) {
           debit.push({
             Payment: dataCollection[i].Payment,
             Amount: dataCollection[i].Debit,
             Check_No: dataCollection[i].Check_No,
-            Check_Date: isValidDate(dataCollection[i].Check_Date)
-              ? new Date(dataCollection[i].Check_Date).toLocaleDateString()
-              : "",
+            Check_Date: format(new Date(dataCollection[i].Check_Date), 'yyyy-MM-dd'),
             Bank_Branch: dataCollection[i].Bank,
             Acct_Code: dataCollection[i].DRCode,
             Acct_Title: dataCollection[i].DRTitle,
             Deposit_Slip: dataCollection[i].SlipCode,
             Cntr: "",
             Remarks: dataCollection[i].DRRemarks,
-            TC: dataCollection[i].Check_No ? "CHK" : "CSH",
-            temp_id: `${i}`,
+            TC: "CHK",
             Bank: dataCollection[i].Bank_Code,
             BankName: dataCollection[i].BankName,
-            Branch: dataCollection[i].Branch,
-            Check_Remarks: dataCollection[i].DRRemarks,
+          });
+
+        }
+
+        if (dataCollection[i].Payment === 'Cash') {
+          debit.push({
+            Payment: dataCollection[i].Payment,
+            Amount: dataCollection[i].Debit,
+            Check_No: "",
+            Check_Date: "",
+            Bank_Branch: "",
+            Acct_Code: dataCollection[i].DRCode,
+            Acct_Title: dataCollection[i].DRTitle,
+            Deposit_Slip: dataCollection[i].SlipCode,
+            Cntr: "",
+            Remarks: "",
+            TC: "CSH",
+            Bank: "",
+            BankName: "",
           });
         }
 
@@ -402,8 +412,13 @@ export default function Collection() {
           });
         }
       }
+
       debitTable.current.setDataFormated(debit)
       creditTable.current.setDataFormated(credit)
+      setTotalDebit(debit.reduce((sum: any, subArray: any) => sum + parseFloat(subArray.Amount.replace(/,/g, '')), 0)
+      )
+      setTotalCredit(credit.reduce((sum: any, subArray: any) => sum + parseFloat(subArray.amount.replace(/,/g, '')), 0)
+      )
       setCollectionMode('update')
       closeModalSearchCollection();
     },
@@ -428,6 +443,8 @@ export default function Collection() {
     uniqueId: "ORNo",
     responseDataKey: "collection",
     onSelected: (selectedRowData, data) => {
+      resetCredit(false)
+      resetDebit(false)
       mutateCollectionDataSearch({ ORNo: selectedRowData[0].ORNo });
     },
     searchRef: searchModalInputRef,
@@ -498,15 +515,33 @@ export default function Collection() {
       });
     },
   });
+
+  const { mutate: mutataPrint, isLoading: isLoadingPrint } = useMutation({
+    mutationKey: "on-print",
+    mutationFn: async (variables: any) => {
+      return await myAxios.post("/task/accounting/on-print", variables, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      });
+    },
+    onSuccess: (res) => {
+      if (res.data.success) {
+        printOR(res.data);
+      }
+    },
+  });
   function resetCollection() {
     wait(100).then(() => {
       refetchNewOR();
       resetFields()
       resetCredit(false)
       resetDebit(false)
-      debitTable.current.setData([])
-      creditTable.current.setData([])
+      debitTable.current?.setData([])
+      creditTable.current?.setData([])
       pnClientRef.current?.focus()
+      setTotalCredit(0)
+      setTotalDebit(0)
     })
   }
   async function saveCashDebit(value: string, paymentType: string) {
@@ -753,6 +788,77 @@ export default function Collection() {
         newCreditTableData.reduce((sum: any, subArray: any) => sum + parseFloat(subArray.amount.replace(/,/g, '')), 0)
       )
     }
+
+    if (vatTypeRef.current && vatTypeRef.current.value === 'VAT') {
+
+      const dd = await executeQueryToClient(`select chart_account.Acct_Code,chart_account.Acct_Title from transaction_code LEFT JOIN chart_account ON transaction_code.Acct_Code = chart_account.Acct_Code WHERE Description = 'Output Tax'`)
+      const TC = await executeQueryToClient(`select Code from transaction_code WHERE Description = 'Output Tax' `)
+
+
+      let taxableamt = 0
+      let inputtax = 0
+
+      if (amountCreditRef.current) {
+        taxableamt = parseFloat(amountCreditRef.current.value.replace(/,/g, '')) / 1.12
+        inputtax = taxableamt * 0.12
+      }
+
+
+      const debitTableData = creditTable.current.getData()
+
+
+      if (getSelectedRow !== null) {
+        const newData: any = []
+        newData[0] = "Output Tax"
+        newData[1] = inputtax.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+        newData[2] = faoRef.current?.value
+        newData[3] = remarksRef.current?.value
+        newData[4] = "VAT"
+        newData[5] = invoiceRef.current?.value
+        newData[6] = dd.data?.data[0].Acct_Code
+        newData[7] = dd.data?.data[0].Acct_Title
+        newData[8] = TC.data?.data[0].Code
+        newData[9] = foaIDNoRef.current
+
+        debitTableData[getSelectedRow][1] = taxableamt.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+
+        debitTableData.splice(getSelectedRow + 1, 0, newData);
+        creditTable.current.setData(debitTableData)
+
+      } else {
+        const newData: any = []
+        newData[0] = "Output Tax"
+        newData[1] = inputtax.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+        newData[2] = faoRef.current?.value
+        newData[3] = remarksRef.current?.value
+        newData[4] = "VAT"
+        newData[5] = invoiceRef.current?.value
+        newData[6] = dd.data?.data[0].Acct_Code
+        newData[7] = dd.data?.data[0].Acct_Title
+        newData[8] = TC.data?.data[0].Code
+        newData[9] = foaIDNoRef.current
+
+        debitTableData[debitTableData.length] = newData
+        debitTableData[debitTableData.length - 2][1] = taxableamt.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+        creditTable.current.setData(debitTableData)
+      }
+
+
+
+
+    }
     resetCredit()
   }
   function resetFields() {
@@ -770,12 +876,19 @@ export default function Collection() {
     })
   }
   function resetDebit(setFocus = true) {
-    modalCheckRef.current.closeDelay()
-    if (amountDebitRef.current) {
-      amountDebitRef.current.value = ''
-      if (setFocus)
-        amountDebitRef.current?.focus()
+    modalCheckRef.current?.closeDelay()
+    setPaymentType('CSH')
+    if (paymentTypeRef.current) {
+      paymentTypeRef.current.value = 'CSH'
     }
+    wait(100).then(() => {
+      if (amountDebitRef.current) {
+        amountDebitRef.current.value = ''
+        if (setFocus)
+          amountDebitRef.current?.focus()
+      }
+    })
+
   }
   function resetCredit(setFocus = true) {
     wait(100).then(() => {
@@ -810,8 +923,73 @@ export default function Collection() {
     resetCollection()
   }
   function handleOnSave() {
+
     const debitTableData = debitTable.current.getData()
     const creditTableData = creditTable.current.getData()
+
+
+    if (ornoRef.current && ornoRef.current.value === "") {
+      return Swal.fire({
+        position: "center",
+        icon: "warning",
+        title: "Please provide OR number",
+        timer: 1500,
+      });
+    } else if (pnClientRef.current && pnClientRef.current.value === "") {
+      return Swal.fire({
+        position: "center",
+        icon: "warning",
+        title: "Please provide PN/Client ID",
+        timer: 1500,
+      }).then(() => {
+        wait(350).then(() => {
+          openCliendIDsModal();
+        });
+      });
+    } else if (debitTableData.length <= 0) {
+      return Swal.fire({
+        position: "center",
+        icon: "warning",
+        title: "Please provide debit entry",
+        timer: 1500,
+      }).then(() => {
+        wait(300).then(() => {
+          paymentTypeRef.current?.focus();
+        });
+      });
+    } else if (creditTableData.length <= 0) {
+      return Swal.fire({
+        position: "center",
+        icon: "warning",
+        title: "Please provide credit entry",
+        timer: 1500,
+      }).then(() => {
+        wait(300).then(() => {
+          transactionRef.current?.focus();
+        });
+      });
+    } else if (
+      debitTableData.reduce(
+        (sum: any, obj: any) =>
+          sum + parseFloat(obj[1].toString().replace(/,/g, "")),
+        0
+      ) !==
+      creditTableData.reduce(
+        (sum: any, obj: any) =>
+          sum + parseFloat(obj[1].toString().replace(/,/g, "")),
+        0
+      )
+    ) {
+      return Swal.fire({
+        position: "center",
+        icon: "warning",
+        title:
+          "Transaction is not balanced. Check if the amount you entered are correct!",
+        timer: 1500,
+      });
+    }
+
+
 
     const creditTableDataFormatted = creditTableData.map((itm: any) => {
       let newItm = {
@@ -856,21 +1034,54 @@ export default function Collection() {
       debit: JSON.stringify(debitTableDataFormatted),
       credit: JSON.stringify(creditTableDataFormatted)
     }
-    mutate(state)
-    console.log(state)
-  }
 
+    if (collectionMode === 'update') {
+      codeCondfirmationAlert({
+        isUpdate: true,
+        cb: (userCodeConfirmation) => {
+          mutate({ ...state, userCodeConfirmation, mode: "" });
+        },
+      });
+    } else {
+      saveCondfirmationAlert({
+        isConfirm: () => {
+          mutate({ ...state, mode: "" });
+        },
+      });
+    }
+
+
+  }
   function handleOnPrint() {
+    if (ornoRef.current)
+      mutataPrint({ ORNo: ornoRef.current.value });
 
   }
   function handleOnClose() {
     setCollectionMode('')
     resetCollection()
   }
-
-  if (loadingAddNew) {
-    return <div>qweqwe</div>
+  function printOR(res: any) {
+    const data = res.data.concat(res.data1);
+    console.log(res)
+    flushSync(() => {
+      localStorage.removeItem("printString");
+      localStorage.setItem("dataString", JSON.stringify(data));
+      localStorage.setItem("paper-width", "8.5in");
+      localStorage.setItem("paper-height", "11in");
+      localStorage.setItem("module", "collection");
+      if (user?.department === "UMIS") {
+        localStorage.setItem("title", user?.department === 'UMIS' ? "UPWARD MANAGEMENT INSURANCE SERVICES" : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.");
+      } else {
+        localStorage.setItem(
+          "title",
+          "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC."
+        );
+      }
+    });
+    window.open("/dashboard/print", "_blank");
   }
+
 
   return (
     <div
@@ -937,18 +1148,21 @@ export default function Collection() {
             <AddIcon />
           </IconButton>
           <IconButton
+            disabled={disableFields}
             aria-label="save" size="small" color="success"
             onClick={handleOnSave}
           >
             <SaveIcon />
           </IconButton>
           <IconButton
+            disabled={collectionMode !== 'update'}
             aria-label="print" size="small" color="secondary"
             onClick={handleOnPrint}
           >
             <LocalPrintshopIcon />
           </IconButton>
           <IconButton
+            disabled={disableFields}
             aria-label="print" size="small" color="error"
             onClick={handleOnClose}
           >
@@ -989,6 +1203,7 @@ export default function Collection() {
                     },
                   }}
                   input={{
+                    disabled: disableFields,
                     readOnly: true,
                     type: "text",
                     style: { width: "250px" },
@@ -1017,6 +1232,7 @@ export default function Collection() {
                 },
               }}
               input={{
+                disabled: disableFields,
                 type: "date",
                 style: { width: "250px" },
                 defaultValue: format(new Date(), "yyyy-MM-dd"),
@@ -1052,7 +1268,7 @@ export default function Collection() {
                   },
                 }}
                 input={{
-                  disabled: false,
+                  disabled: disableFields,
                   type: "text",
                   style: { flex: 1 },
                   onKeyDown: (e) => {
@@ -1082,6 +1298,7 @@ export default function Collection() {
                 },
               }}
               input={{
+                disabled: disableFields,
                 type: "text",
                 style: { width: "80%" },
                 onKeyDown: (e) => {
@@ -1126,6 +1343,7 @@ export default function Collection() {
                 }}
                 selectRef={paymentTypeRef}
                 select={{
+                  disabled: disableFields,
                   style: { flex: 1, height: "22px" },
                   value: paymentType,
                   onKeyDown: (e) => {
@@ -1192,7 +1410,7 @@ export default function Collection() {
                   },
                 }}
                 input={{
-                  disabled: paymentType === 'CHK',
+                  disabled: paymentType === 'CHK' || disableFields,
                   type: "text",
                   style: { flex: 1 },
                   onKeyDown: (e) => {
@@ -1259,12 +1477,27 @@ export default function Collection() {
               }}
               getSelectedItem={(rowItm: any) => {
                 if (rowItm) {
+
                   if (rowItm[0] === 'Cash') {
                     wait(100).then(() => {
                       if (amountDebitRef.current)
                         amountDebitRef.current.value = rowItm[1]
                     })
                   } else {
+                    if (rowItm[7] && rowItm[7] !== '') {
+                      debitTable.current.setSelectedRow(null)
+                      buttonCheckSave.current?.focus()
+                      return alert(` Unable to edit. Check No [${rowItm[2]}] already deposited!`)
+                    }
+                    if (rowItm[8] && rowItm[8] !== '') {
+                      debitTable.current.setSelectedRow(null)
+                      buttonCheckSave.current?.focus()
+                      return alert(` Unable to edit. Check No [${rowItm[2]}] is a PDC reference!`)
+                    }
+                    const strBank = rowItm[4].split('/')
+                    const BankName = executeQueryToClient(`select * from bank where Bank_Code = '${strBank[0]}'`)
+
+
                     modalCheckRef.current?.showModal()
 
                     wait(100).then(() => {
@@ -1273,7 +1506,7 @@ export default function Collection() {
                           modalCheckRef.current.checknoRef.current.value = rowItm[2]
                         }
                         if (modalCheckRef.current.bankRef.current) {
-                          modalCheckRef.current.bankRef.current.value = rowItm[11]
+                          modalCheckRef.current.bankRef.current.value = strBank[0]
                         }
                         if (modalCheckRef.current.branchRef.current) {
                           modalCheckRef.current.branchRef.current.value = rowItm[4]
@@ -1288,8 +1521,9 @@ export default function Collection() {
                           modalCheckRef.current.amountRef.current.value = rowItm[1]
                         }
                         if (modalCheckRef.current.bankRefName.current) {
-                          modalCheckRef.current.bankRefName.current = rowItm[12]
+                          modalCheckRef.current.bankRefName.current = BankName
                         }
+
                       }
                     })
                   }
@@ -1386,7 +1620,7 @@ export default function Collection() {
                     width={"100%"}
                     DisplayMember={'label'}
                     DataSource={transactionDesc?.data.transactionDesc}
-                    disableInput={false}
+                    disableInput={disableFields}
                     inputRef={transactionRef}
                     onChange={(selected: any, e: any) => {
                       accCodeRef.current = selected.Acct_Code
@@ -1464,6 +1698,7 @@ export default function Collection() {
                   },
                 }}
                 input={{
+                  disabled: disableFields,
                   type: "text",
                   style: { flex: 1, width: "100%" },
                   onKeyDown: (e) => {
@@ -1507,7 +1742,7 @@ export default function Collection() {
                   },
                 }}
                 input={{
-                  disabled: false,
+                  disabled: disableFields,
                   type: "text",
                   style: { flex: 1 },
                   onKeyDown: (e) => {
@@ -1537,6 +1772,7 @@ export default function Collection() {
                 },
               }}
               textarea={{
+                disabled: disableFields,
                 rows: 3,
                 style: { flex: 1 },
                 onKeyDown: (e) => {
@@ -1559,6 +1795,7 @@ export default function Collection() {
               }}
               selectRef={vatTypeRef}
               select={{
+                disabled: disableFields,
                 style: { flex: 1, height: "22px" },
                 defaultValue: "Non-VAT",
                 onKeyDown: (e) => {
@@ -1585,6 +1822,7 @@ export default function Collection() {
                 },
               }}
               input={{
+                disabled: disableFields,
                 type: "text",
                 style: { flex: 1 },
                 onKeyDown: (e) => {
@@ -1716,7 +1954,205 @@ export default function Collection() {
           buttonCheckSave.current?.focus()
         }}
       />
+      <UpwardTableModalSearch
+        column={[
+          { key: "Check_No", label: "Check No", width: 100 },
+          { key: "Check_Date", label: "Check Date", width: 100 },
+          {
+            key: "Amount",
+            label: "Amount",
+            width: 90,
+            type: "number",
+          },
+          {
+            key: "Bank_Branch",
+            label: "Bank Branch",
+            width: 200,
+          },
+          {
+            key: "Remarks",
+            label: "Remarks",
+            width: 200,
+            hide: true,
+          },
+        ]}
+        query={(search: string) => {
+          if (pnClientRef.current) {
+            return `
+                SELECT 
+                   Check_No AS Check_No, 
+                   date_FORMAT(Check_Date,'%b. %d, %Y') AS Check_Date,
+                   FORMAT(Check_Amnt, 2) AS Amount, 
+                  CONCAT(Bank, '/', Branch) AS Bank_Branch
+                FROM PDC 
+                WHERE (
+                  Check_No LIKE '%${search}%' 
+                  OR Bank  LIKE '%${search}%' 
+                  OR Branch LIKE '%${search}%') 
+                  AND (PNo = '${pnClientRef.current.value}' ) 
+               --   AND (ORNum IS NULL OR ORNum = '')
+                ORDER BY Check_Date
+            `
+          }
+          return ``
+        }}
+      />
+      {(loadingAddNew || isLoadingPrint || loadingCollectionDataSearch) && <UpwardLoader />}
     </div>
+  )
+}
+const UpwardTableModalSearch = ({
+  column,
+  query
+}: any) => {
+  const { executeQueryToClient } = useExecuteQueryFromClient()
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const tableRef = useRef<any>(null)
+
+
+
+
+  return (
+    <div
+      style={{
+        background: "#F1F1F1",
+        width: "450px",
+        height: "500px",
+        position: "absolute",
+        zIndex: 111111,
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%,-50%)",
+        boxShadow: '3px 6px 32px -7px rgba(0,0,0,0.75)',
+        boxSizing: "border-box",
+        display: "flex",
+        flexDirection: "column"
+      }}
+    >
+      <div
+        style={{
+          height: "22px",
+          background: "white",
+          display: "flex",
+          justifyContent: "space-between",
+          padding: "5px",
+          position: "relative",
+          alignItems: "center"
+
+        }}
+      >
+        <span style={{ fontSize: "13px", fontWeight: "bold" }}>Search</span>
+        <button
+          className="btn-check-exit-modal"
+          style={{
+            padding: "0 5px",
+            borderRadius: "0px",
+            background: "white",
+            color: "black",
+            height: "22px",
+            position: "absolute",
+            top: 0,
+            right: 0
+          }}
+          onClick={() => {
+            // closeDelay()
+          }}
+        >
+          <CloseIcon sx={{ fontSize: "22px" }} />
+        </button>
+      </div>
+      <div style={{
+        padding: "5px"
+      }}>
+        <TextInput
+          containerStyle={{
+            width: "100%"
+          }}
+          label={{
+            title: "Search : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "70px",
+              display: "none"
+            },
+          }}
+          input={{
+            type: "text",
+            style: { width: "100%" },
+            onKeyDown: async (e) => {
+              if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                const searchQuery = query(e.currentTarget.value)
+                const dd = await executeQueryToClient(searchQuery)
+
+                tableRef.current?.setDataFormated(dd.data.data)
+              }
+            },
+          }}
+          inputRef={searchInputRef}
+          icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+          onIconClick={(e) => {
+            e.preventDefault()
+            const searchQuery = query(searchInputRef.current?.value)
+          }}
+        />
+      </div>
+      <div style={{
+        flex: 1,
+      }}>
+        <CollectionTableSelected
+          columns={column}
+          height={"100%"}
+          ref={tableRef}
+        />
+      </div>
+      <style>
+        {`
+              .btn-check-exit-modal:hover{
+                background:red !important;
+                color:white !important;
+              }
+            `}
+      </style>
+    </div>
+  )
+}
+const UpwardLoader = () => {
+
+  return (
+
+    <>
+      <div style={{
+        position: "fixed",
+        top: 0,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: "red",
+        zIndex: "88",
+        backgroundColor: 'rgba(0, 0, 0, 0.4)'
+      }}
+      ></div>
+      <div style={{
+        position: "absolute",
+        zIndex: "1",
+        background: "white",
+        width: "auto",
+        height: "auto",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%,-50%)",
+        boxShadow: '3px 6px 32px -7px rgba(0,0,0,0.75)',
+        display: "flex",
+        columnGap: "20px",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "10px 15px",
+      }}>
+        <CircularProgress color="primary" />
+        <span>Loading...</span>
+      </div>
+    </>
   )
 }
 
@@ -2170,7 +2606,7 @@ const ModalCheck = forwardRef(({
 })
 const CollectionTableSelected = forwardRef(({
   columns,
-  rows,
+  rows = [],
   height = "400px",
   getSelectedItem,
   onKeyDown,
@@ -2269,17 +2705,19 @@ const CollectionTableSelected = forwardRef(({
       }}
     >
       <div style={{ position: "absolute", width: `${totalRowWidth}px`, height: "auto" }}>
-        <table style={{
-          borderCollapse: "collapse",
-          width: "100%",
-          position: "relative",
-          background: "#dcdcdc"
-        }}>
+        <table
+          id="upward-cutom-table"
+          style={{
+            borderCollapse: "collapse",
+            width: "100%",
+            position: "relative",
+            background: "#dcdcdc"
+          }}>
           <thead >
             <tr>
               <th style={{
                 width: '30px',
-                border: "1px solid black",
+                border: "none",
                 position: "sticky",
                 top: 0,
                 zIndex: 1,
@@ -2296,7 +2734,7 @@ const CollectionTableSelected = forwardRef(({
                       key={idx}
                       style={{
                         width: colItm.width,
-                        border: "1px solid black",
+                        borderRight: "1px solid #e2e8f0",
                         position: "sticky",
                         top: 0,
                         zIndex: 1,
@@ -2315,24 +2753,19 @@ const CollectionTableSelected = forwardRef(({
           <tbody>
             {
               data?.map((rowItm: any, rowIdx: number) => {
-                const selectedRowBg = selectedRow === rowIdx && selectedRowIndex === rowIdx ? "#e5e5e5" :
-                  selectedRow === rowIdx ? "#b6e4fc" : selectedRowIndex === rowIdx ? "#e4e4e7" : "white"
-                return (
-                  <tr key={rowIdx}>
-                    <td style={{
-                      position: "relative",
-                      borderBottom: "1px solid black",
-                      borderLeft: "1px solid black",
-                      borderTop: "none",
-                      borderRight: "1px solid black",
-                      cursor: "pointer",
-                      background: selectedRowBg,
-                      padding: 0,
-                      margin: 0,
-                      boxShadow: `inset -2px -2px 0 #ffffff, 
-                      inset 1px 1px 0 #a8a29e`,
 
-                    }}>
+                return (
+                  <tr key={rowIdx} className={`${(selectedRow === rowIdx ) || (selectedRowIndex === rowIdx)? "selected" : ""}`}>
+                    <td
+                      style={{
+                        position: "relative",
+                        border: "none",
+                        cursor: "pointer",
+                        background: selectedRow === rowIdx ? "#0076d" : "",
+                        padding: 0,
+                        margin: 0,
+
+                      }}>
                       <div style={{
                         width: "18px",
                         height: "18px",
@@ -2372,7 +2805,7 @@ const CollectionTableSelected = forwardRef(({
                       column.map((colItm: any, colIdx: number) => {
                         return (
                           <td
-                            className={`td row-${rowIdx} col-${colIdx}`}
+                            className={`td row-${rowIdx} col-${colIdx} `}
                             tabIndex={0}
                             onDoubleClick={() => {
                               if (!isTableSelectable) {
@@ -2395,15 +2828,6 @@ const CollectionTableSelected = forwardRef(({
                             }}
                             onClick={() => {
                               setSelectedRow(rowIdx)
-                            }}
-
-                            onMouseEnter={(e) => {
-                              e.preventDefault()
-                              setSelectedRow(rowIdx)
-                            }}
-                            onMouseLeave={(e) => {
-                              e.preventDefault()
-                              setSelectedRow(null)
                             }}
                             onKeyDown={(e) => {
                               if (onKeyDown) {
@@ -2443,16 +2867,15 @@ const CollectionTableSelected = forwardRef(({
                               }
                             }}
                             key={colIdx}
+
                             style={{
-                              border: "1px solid black",
-                              background: selectedRowBg,
+                              border: "none",
                               fontSize: "12px",
                               padding: "0px 5px",
                               cursor: "pointer",
                               height: "20px",
-                              boxShadow: `inset -2px -2px 0 #ffffff, 
-                              inset 1px 1px 0 #a8a29e`,
                               userSelect: "none",
+
                             }}
                           >{
                               <input
@@ -2478,10 +2901,40 @@ const CollectionTableSelected = forwardRef(({
             }
           </tbody>
         </table>
+        <style>
+
+          {`
+           #upward-cutom-table tr td{
+             border-right:1px solid #f1f5f9 !important;
+           }
+        
+            #upward-cutom-table tr:nth-child(odd) td {
+                background-color: #ffffff !important;
+            }
+            #upward-cutom-table tr:nth-child(even) td {
+                background-color: #f5f5f5 !important;
+            }
+            #upward-cutom-table tr.selected td {
+                background-color: #0076d7 !important;
+                color: #ffffff !important;
+                border-right:1px solid white !important;
+            }
+            
+             #upward-cutom-table tr.selected td input {
+                color: #ffffff !important;
+            }
+
+            `}
+        </style>
       </div>
     </div>
   )
 })
+
+
+
+
+
 
 function Collectionss() {
   const [credit, setCredit] = useState<GridRowSelectionModel>([]);
