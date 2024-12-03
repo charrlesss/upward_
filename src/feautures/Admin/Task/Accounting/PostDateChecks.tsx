@@ -35,6 +35,7 @@ import { format } from "date-fns";
 import PageHelmet from "../../../../components/Helmet";
 import { wait } from "@testing-library/user-event/dist/utils";
 import SearchIcon from '@mui/icons-material/Search';
+import { DataGridViewReact } from "../../../../components/DataGridViewReact";
 
 
 
@@ -330,10 +331,10 @@ export default function PostDateChecks() {
       if (selectedRow.length > 0) {
 
         wait(100).then(() => {
-          PNoRef.current = selectedRow[0].IDNo
+          PNoRef.current = selectedRow[0].client_id
           subAccountRef.current = selectedRow[0].sub_account
           if (pnRef.current) {
-            pnRef.current.value = selectedRow[0].client_id
+            pnRef.current.value = selectedRow[0].IDNo
           }
           if (clientnameRef.current) {
             clientnameRef.current.value = selectedRow[0].Name
@@ -341,9 +342,12 @@ export default function PostDateChecks() {
           if (branchRef.current) {
             branchRef.current.value = selectedRow[0].Acronym
           }
-          if (remakrsRef.current) {
-            remakrsRef.current.value = selectedRow[0].Remarks || ""
+          if (selectedRow[0].Remarks && selectedRow[0].Remarks !== '') {
+            if (remakrsRef.current) {
+              remakrsRef.current.value = selectedRow[0].Remarks
+            }
           }
+
         })
 
         closeModalSearchPdcIDs();
@@ -1276,7 +1280,7 @@ export default function PostDateChecks() {
             </Box>
           </Box>
         </form>
-        <PostDatedCheckTableSelected
+        <DataGridViewReact
           disbaleTable={isDisableField}
           ref={tableRef}
           rows={[]}
@@ -1825,305 +1829,6 @@ export default function PostDateChecks() {
     </>
   );
 }
-
-
-const PostDatedCheckTableSelected = forwardRef(({
-  columns,
-  rows,
-  height = "400px",
-  getSelectedItem,
-  onKeyDown,
-  disbaleTable = false,
-  isTableSelectable = true
-}: any, ref) => {
-  const parentElementRef = useRef<any>(null)
-  const [data, setData] = useState([])
-  const [column, setColumn] = useState([])
-  const [selectedRow, setSelectedRow] = useState<any>(0)
-  const [selectedRowIndex, setSelectedRowIndex] = useState<any>(null)
-  const totalRowWidth = column.reduce((a: any, b: any) => a + b.width, 0)
-
-  useEffect(() => {
-    if (columns.length > 0) {
-      setColumn(columns.filter((itm: any) => !itm.hide))
-    }
-  }, [columns])
-
-  useEffect(() => {
-    if (rows.length > 0) {
-      setData(rows.map((itm: any) => {
-        return columns.map((col: any) => itm[col.key])
-      }))
-    }
-  }, [rows, columns])
-
-  useImperativeHandle(ref, () => ({
-    selectedRow: () => selectedRow,
-    getData: () => {
-      const newData = [...data];
-      return newData
-    },
-    setData: (newData: any) => {
-      setData(newData)
-    },
-    getColumns: () => {
-      return columns
-    },
-    resetTable: () => {
-      setData([])
-      setSelectedRow(0)
-    },
-    getSelectedRow: () => {
-      return selectedRowIndex
-    },
-    setSelectedRow: (value: any) => {
-      return setSelectedRowIndex(value)
-    },
-    setDataFormated: (newData: any) => {
-      setData(newData.map((itm: any) => {
-        return columns.map((col: any) => itm[col.key])
-      }))
-    },
-    getDataFormatted: () => {
-      const newData = [...data];
-      const newDataFormatted = newData.map((itm: any) => {
-        let newItm = {
-          Check_No: itm[0],
-          Check_Date: itm[1],
-          Check_Amnt: itm[2],
-          BankName: itm[3],
-          Branch: itm[4],
-          Check_Remarks: itm[5],
-          Deposit_Slip: itm[6],
-          DateDeposit: itm[7],
-          OR_No: itm[8],
-          BankCode: itm[9]
-
-        }
-        return newItm
-      })
-
-      return newDataFormatted
-    }
-  }))
-
-  return (
-    <div
-      ref={parentElementRef}
-      style={{
-        width: "100%",
-        height,
-        overflow: "auto",
-        position: "relative",
-        pointerEvents: disbaleTable ? "none" : "auto",
-        border: disbaleTable ? "2px solid #8c8f8e" : '2px solid #c0c0c0',
-        boxShadow: `inset -2px -2px 0 #ffffff, 
-                      inset 2px 2px 0 #808080`
-
-      }}
-    >
-      <div style={{ position: "absolute", width: `${totalRowWidth}px`, height: "auto" }}>
-        <table style={{ borderCollapse: "collapse", width: "100%", position: "relative", background: "white" }}>
-          <thead >
-            <tr>
-              <th style={{
-                width: '30px',
-                border: "1px solid black",
-                position: "sticky",
-                top: 0,
-                zIndex: 1,
-                background: "#f0f0f0",
-
-              }}
-              ></th>
-              {
-                column.map((colItm: any, idx: number) => {
-                  return (
-                    <th
-                      key={idx}
-                      style={{
-                        width: colItm.width,
-                        border: "1px solid black",
-                        position: "sticky",
-                        top: 0,
-                        zIndex: 1,
-                        background: "#f0f0f0",
-                        fontSize: "12px",
-                        textAlign: "left",
-                        padding: "0px 5px",
-
-                      }}
-                    >{colItm.label}</th>
-                  )
-                })
-              }
-            </tr>
-          </thead>
-          <tbody>
-            {
-              data?.map((rowItm: any, rowIdx: number) => {
-                const selectedRowBg = selectedRow === rowIdx && selectedRowIndex === rowIdx ? "#dedfe0" : selectedRow === rowIdx ? "#b6e4fc" : selectedRowIndex === rowIdx ? "#cbcfd4" : ""
-                return (
-                  <tr key={rowIdx}>
-                    <td style={{
-                      position: "relative",
-                      borderBottom: "1px solid black",
-                      borderLeft: "1px solid black",
-                      borderTop: "none",
-                      borderRight: "1px solid black",
-                      cursor: "pointer",
-                      background: selectedRowBg,
-                      padding: 0,
-                      margin: 0,
-                      boxShadow: `inset -2px -2px 0 #ffffff, 
-                       inset 1px 1px 0 #a8a29e`,
-                    }}>
-                      <div style={{
-                        width: "18px",
-                        height: "18px",
-                        position: "relative",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center"
-                      }}>
-                        <input
-                          style={{
-                            cursor: "pointer",
-                            margin: "0px !important",
-                            position: "absolute",
-                          }}
-                          readOnly={true}
-                          checked={selectedRowIndex === rowIdx}
-                          type="checkbox"
-                          onClick={() => {
-                            if (!isTableSelectable) {
-                              return
-                            }
-                            setSelectedRowIndex(rowIdx)
-
-                            if (getSelectedItem) {
-                              getSelectedItem(rowItm, null, rowIdx, null)
-                            }
-                            setSelectedRow(null)
-
-                          }}
-                        />
-                      </div>
-                    </td>
-
-                    {
-                      column.map((colItm: any, colIdx: number) => {
-                        return (
-                          <td
-                            className={`td row-${rowIdx} col-${colIdx}`}
-                            tabIndex={0}
-                            onDoubleClick={() => {
-                              if (!isTableSelectable) {
-                                return
-                              }
-                              if (selectedRowIndex === rowIdx) {
-                                setSelectedRowIndex(null)
-
-                                if (getSelectedItem) {
-                                  getSelectedItem(null, null, rowIdx, null)
-                                }
-                              } else {
-
-                                setSelectedRowIndex(rowIdx)
-                                if (getSelectedItem) {
-                                  getSelectedItem(rowItm, null, rowIdx, null)
-                                }
-                              }
-                              setSelectedRow(null)
-                            }}
-                            onClick={() => {
-                              setSelectedRow(rowIdx)
-                            }}
-
-                            onMouseEnter={(e) => {
-                              e.preventDefault()
-                              setSelectedRow(rowIdx)
-                            }}
-                            onMouseLeave={(e) => {
-                              e.preventDefault()
-                              setSelectedRow(null)
-                            }}
-                            onKeyDown={(e) => {
-                              if (onKeyDown) {
-                                onKeyDown(rowItm, rowIdx, e)
-                              }
-                              if (e.key === "ArrowUp") {
-                                setSelectedRow((prev: any) => {
-                                  const index = Math.max(prev - 1, 0)
-                                  const td = document.querySelector(`.td.row-${index}`) as HTMLTableDataCellElement
-                                  if (td) {
-                                    td.focus()
-                                  }
-                                  return index
-                                });
-                              } else if (e.key === "ArrowDown") {
-                                setSelectedRow((prev: any) => {
-                                  const index = Math.min(prev + 1, data.length - 1)
-                                  const td = document.querySelector(`.td.row-${index}`) as HTMLTableDataCellElement
-                                  if (td) {
-                                    td.focus()
-                                  }
-                                  return index
-                                });
-                              }
-                              if (e.code === 'Enter' || e.code === 'NumpadEnter') {
-                                e.preventDefault()
-
-                                if (!isTableSelectable) {
-                                  return
-                                }
-
-                                setSelectedRowIndex(rowIdx)
-                                if (getSelectedItem) {
-                                  getSelectedItem(rowItm, null, rowIdx, null)
-                                }
-                                setSelectedRow(null)
-                              }
-                            }}
-                            key={colIdx}
-                            style={{
-                              border: "1px solid black",
-                              background: selectedRowBg,
-                              fontSize: "12px",
-                              padding: "0px 5px",
-                              cursor: "pointer",
-                              height: "20px",
-                              boxShadow: `inset -2px -2px 0 #ffffff, 
-                              inset 1px 1px 0 #a8a29e`,
-                              userSelect: "none",
-                            }}
-                          >{
-                              <input
-                                readOnly={true}
-                                value={rowItm[colIdx]}
-                                style={{
-                                  width: colItm.width,
-                                  pointerEvents: "none",
-                                  border: "none",
-                                  background: "transparent",
-                                  userSelect: "none",
-                                  textAlign: colItm.type === 'number' ? "right" : "left"
-
-                                }} />
-                            }</td>
-                        )
-                      })
-                    }
-                  </tr>
-                )
-              })
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
-})
 
 export function setNewStateValue(dispatch: any, obj: any) {
   Object.entries(obj).forEach(([field, value]) => {
