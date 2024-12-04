@@ -4,11 +4,12 @@ import Routers from "./components/Routers";
 import useAxios from "./hooks/useAxios";
 import { useQuery } from "react-query";
 import LoaderCircular from "./components/LoaderCircular";
+import { useUpwardTableModalSearch } from "./components/DataGridViewReact";
 
 function App() {
   const [user, setUser] = useState(null);
   const { myAxios } = useAxios(setUser);
-  const { isLoading  } = useQuery({
+  const { isLoading } = useQuery({
     queryKey: "user",
     queryFn: async () => await myAxios.get("/token", { withCredentials: true }),
     onSuccess: (res) => {
@@ -26,7 +27,7 @@ function App() {
 
   return (
     <AuthContext.Provider value={{ user, setUser, myAxios }}>
-      <Routers />
+        <Routers />
     </AuthContext.Provider>
   );
 }

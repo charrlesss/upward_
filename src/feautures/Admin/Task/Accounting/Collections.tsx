@@ -32,7 +32,7 @@ import { format } from 'date-fns'
 import SearchIcon from '@mui/icons-material/Search';
 import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
 import LocalPrintshopIcon from '@mui/icons-material/LocalPrintshop';
-import { DataGridViewReact } from "../../../../components/DataGridViewReact";
+import { DataGridViewReact, useUpwardTableModalSearch } from "../../../../components/DataGridViewReact";
 
 
 export const debitColumn = [
@@ -83,7 +83,6 @@ export default function Collection() {
   const [totalCredit, setTotalCredit] = useState(0)
   const [collectionMode, setCollectionMode] = useState('')
 
-
   // SEARCH COLLECTION
   const searchRef = useRef<HTMLInputElement>(null)
 
@@ -114,13 +113,11 @@ export default function Collection() {
   const accTitleRef = useRef('')
   const accTCRef = useRef('')
 
-
   const searchModalInputRef = useRef<HTMLInputElement>(null)
   const { myAxios, user } = useContext(AuthContext);
   const { executeQueryToClient } = useExecuteQueryFromClient()
 
   const disableFields = collectionMode === ''
-
 
   const {
     UpwardTableModalSearch,
@@ -154,7 +151,7 @@ export default function Collection() {
             SELECT 
                Check_No AS Check_No, 
                date_FORMAT(Check_Date,'%b. %d, %Y') AS Check_Date,
-               FORMAT(Check_Amnt, 2) AS Amount, 
+              FORMAT(CAST(REPLACE(Check_Amnt, ',', '') AS DECIMAL(10,2)), 2) AS Amount,
               CONCAT(Bank, '/', Branch) AS Bank_Branch
             FROM PDC 
             WHERE (
@@ -230,7 +227,6 @@ export default function Collection() {
       }
     }
   })
-
   const {
     isLoading: paymentTypeLoading,
     data: transactionDesc
@@ -244,7 +240,6 @@ export default function Collection() {
       }),
     refetchOnWindowFocus: false,
   });
-
   //CLIENT MODAL 
   const {
     ModalComponent: ModalClientIDs,
@@ -289,7 +284,6 @@ export default function Collection() {
     },
     searchRef: searchModalInputRef,
   });
-
   //CLIENT MODAL CREDIT
   const {
     ModalComponent: ModalCreditClientIDs,
@@ -331,7 +325,6 @@ export default function Collection() {
     },
     searchRef: searchModalInputRef,
   });
-
   const {
     isLoading: loadingCollectionDataSearch,
     mutate: mutateCollectionDataSearch,
@@ -444,7 +437,6 @@ export default function Collection() {
       closeModalSearchCollection();
     },
   });
-
   const {
     ModalComponent: ModalSearchCollection,
     openModal: openModalSearchCollection,
@@ -456,7 +448,7 @@ export default function Collection() {
       queryUrlName: "searchCollectionInput",
     },
     columns: [
-      { field: "Date", headerName: "OR Date", width: 170 },
+      { field: "Date_OR", headerName: "OR Date", width: 170 },
       { field: "ORNo", headerName: "OR No.", width: 200 },
       { field: "Name", headerName: "Name", flex: 1 },
     ],
@@ -470,7 +462,6 @@ export default function Collection() {
     },
     searchRef: searchModalInputRef,
   });
-
   const { isLoading: NewORNoLoading, refetch: refetchNewOR } = useQuery({
     queryKey: queryKeyNewORNumber,
     queryFn: async () =>
@@ -490,7 +481,6 @@ export default function Collection() {
       })
     },
   });
-
   const {
     mutate,
     isLoading: loadingAddNew,
@@ -536,7 +526,6 @@ export default function Collection() {
       });
     },
   });
-
   const { mutate: mutataPrint, isLoading: isLoadingPrint } = useMutation({
     mutationKey: "on-print",
     mutationFn: async (variables: any) => {
@@ -993,16 +982,8 @@ export default function Collection() {
         });
       });
     } else if (
-      debitTableData.reduce(
-        (sum: any, obj: any) =>
-          sum + parseFloat(obj[1].toString().replace(/,/g, "")),
-        0
-      ) !==
-      creditTableData.reduce(
-        (sum: any, obj: any) =>
-          sum + parseFloat(obj[1].toString().replace(/,/g, "")),
-        0
-      )
+      parseFloat(debitTableData.reduce((sum: any, obj: any) => sum + parseFloat(obj[1].toString().replace(/,/g, "")), 0)).toFixed(2) !==
+      parseFloat(creditTableData.reduce((sum: any, obj: any) => sum + parseFloat(obj[1].toString().replace(/,/g, "")), 0)).toFixed(2)
     ) {
       return Swal.fire({
         position: "center",
@@ -1119,7 +1100,6 @@ export default function Collection() {
     });
     window.open("/dashboard/print", "_blank");
   }
-
 
   return (
     <div
@@ -2004,159 +1984,7 @@ export default function Collection() {
   )
 }
 
-const useUpwardTableModalSearch = ({
-  column,
-  query,
-  getSelectedItem,
-  onKeyDown
-}: any) => {
-  const [show, setShow] = useState(false)
-  const searchInputRef = useRef<HTMLInputElement>(null)
 
-  function openModal() {
-    setShow(true)
-    setTimeout(() => {
-      if (searchInputRef.current) {
-        const event = new KeyboardEvent("keydown", { code: "Enter", bubbles: true });
-        searchInputRef.current.focus(); // Ensure the element has focus
-        searchInputRef.current.dispatchEvent(event); // Dispatch the native event
-      }
-    }, 100)
-  }
-  function closeModal() {
-    setShow(false)
-  }
-  const UpwardTableModalSearch = () => {
-    const { executeQueryToClient } = useExecuteQueryFromClient()
-    const tableRef = useRef<any>(null)
-
-    return (
-      show ? <div
-        style={{
-          background: "#F1F1F1",
-          width: "450px",
-          height: "500px",
-          position: "absolute",
-          zIndex: 111111,
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%,-50%)",
-          boxShadow: '3px 6px 32px -7px rgba(0,0,0,0.75)',
-          boxSizing: "border-box",
-          display: "flex",
-          flexDirection: "column"
-        }}
-      >
-        <div
-          style={{
-            height: "22px",
-            background: "white",
-            display: "flex",
-            justifyContent: "space-between",
-            padding: "5px",
-            position: "relative",
-            alignItems: "center"
-
-          }}
-        >
-          <span style={{ fontSize: "13px", fontWeight: "bold" }}>Search</span>
-          <button
-            className="btn-check-exit-modal"
-            style={{
-              padding: "0 5px",
-              borderRadius: "0px",
-              background: "white",
-              color: "black",
-              height: "22px",
-              position: "absolute",
-              top: 0,
-              right: 0
-            }}
-            onClick={() => {
-              closeModal()
-            }}
-          >
-            <CloseIcon sx={{ fontSize: "22px" }} />
-          </button>
-        </div>
-        <div style={{
-          padding: "5px"
-        }}>
-          <TextInput
-            containerStyle={{
-              width: "100%"
-            }}
-            label={{
-              title: "Search : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "70px",
-                display: "none"
-              },
-            }}
-            input={{
-              type: "text",
-              style: { width: "100%" },
-              onKeyDown: async (e) => {
-                if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                  const searchQuery = query(e.currentTarget.value)
-                  const dd = await executeQueryToClient(searchQuery)
-                  tableRef.current?.setDataFormated(dd.data.data)
-                }
-
-                if (e.code === "ArrowDown") {
-                  const selectedRow = tableRef.current?.selectedRow()
-                  const index = Math.max(selectedRow - 1, 0)
-                  const td = document.querySelector(`.td.row-${index}`) as HTMLTableDataCellElement
-                  if (td) {
-                    td.focus()
-                  }
-                  tableRef.current?._setSelectedRow(index)
-                }
-
-              },
-            }}
-            inputRef={searchInputRef}
-            icon={<SearchIcon sx={{ fontSize: "18px" }} />}
-            onIconClick={async (e) => {
-              e.preventDefault()
-              const searchQuery = query(searchInputRef.current?.value)
-              const dd = await executeQueryToClient(searchQuery)
-              tableRef.current?.setDataFormated(dd.data.data)
-            }}
-          />
-        </div>
-        <div style={{
-          flex: 1,
-        }}>
-          <DataGridViewReact
-            columns={column}
-            height={"100%"}
-            ref={tableRef}
-            getSelectedItem={getSelectedItem}
-            onKeyDown={onKeyDown}
-          />
-        </div>
-        <style>
-          {`
-          .btn-check-exit-modal:hover{
-            background:red !important;
-            color:white !important;
-          }
-        `}
-        </style>
-      </div > : <></>
-    )
-
-  }
-
-  return {
-    UpwardTableModalSearch,
-    openModal,
-    closeModal
-  }
-}
 const UpwardLoader = () => {
 
   return (
@@ -2642,10 +2470,3 @@ const ModalCheck = forwardRef(({
       : null
   )
 })
-
-
-export function setNewStateValue(dispatch: any, obj: any) {
-  Object.entries(obj).forEach(([field, value]) => {
-    dispatch({ type: "UPDATE_FIELD", field, value });
-  });
-}

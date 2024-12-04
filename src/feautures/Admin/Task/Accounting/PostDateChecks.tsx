@@ -35,7 +35,7 @@ import { format } from "date-fns";
 import PageHelmet from "../../../../components/Helmet";
 import { wait } from "@testing-library/user-event/dist/utils";
 import SearchIcon from '@mui/icons-material/Search';
-import { DataGridViewReact } from "../../../../components/DataGridViewReact";
+import { DataGridViewReact, useUpwardTableModalSearch } from "../../../../components/DataGridViewReact";
 
 
 
@@ -79,7 +79,6 @@ export const pdcBanksColumn = [
   { field: "Bank_Code", headerName: "Code", width: 130 },
   { field: "Bank", headerName: "Bank Name", flex: 1 },
 ];
-const queryKey = "pdc";
 
 export default function PostDateChecks() {
   const tableRef = useRef<any>(null);
@@ -170,7 +169,7 @@ export default function PostDateChecks() {
     });
 
   const { mutate, isLoading: loadingAddNew } = useMutation({
-    mutationKey: queryKey,
+    mutationKey: 'update-pdc',
     mutationFn: async (variables: any) => {
       if (pdcMode === "update") {
         delete variables.mode;
@@ -212,7 +211,7 @@ export default function PostDateChecks() {
 
   const { mutate: mutateSelectedSearch, isLoading: isLoadingSelectedSearch } =
     useMutation({
-      mutationKey: queryKey,
+      mutationKey: 'get-search-pdc-check',
       mutationFn: async (variables: any) =>
         await myAxios.post("/task/accounting/get-search-pdc-check", variables, {
           headers: {
@@ -802,8 +801,6 @@ export default function PostDateChecks() {
     }
 
   }
-
-
   useEffect(() => {
     const handleKeyDown = (event: any) => {
       if ((event.ctrlKey || event.metaKey) && event.key === 's') {

@@ -2,7 +2,15 @@ import {
     useState, useRef,
     forwardRef, useEffect,
     useImperativeHandle,
+
 } from "react";
+import useExecuteQueryFromClient from "../lib/executeQueryFromClient";
+import SearchIcon from '@mui/icons-material/Search';
+import { TextInput } from "./UpwardFields";
+import { wait } from "../lib/wait";
+import CloseIcon from "@mui/icons-material/Close";
+import ReactDOMServer from "react-dom/server";
+import ReactDOM from "react-dom";
 
 export const DataGridViewReact = forwardRef(({
     columns,
@@ -12,9 +20,11 @@ export const DataGridViewReact = forwardRef(({
     onKeyDown,
     disbaleTable = false,
     isTableSelectable = true,
-    containerStyle
+    containerStyle,
+    focusElementOnMaxTop
 }: any, ref) => {
     const parentElementRef = useRef<any>(null)
+    const tbodyRef = useRef<HTMLTableSectionElement>(null)
     const [data, setData] = useState([])
     const [column, setColumn] = useState([])
     const [selectedRow, setSelectedRow] = useState<any>(0)
@@ -26,14 +36,6 @@ export const DataGridViewReact = forwardRef(({
             setColumn(columns.filter((itm: any) => !itm.hide))
         }
     }, [columns])
-
-    useEffect(() => {
-        if (rows.length > 0) {
-            setData(rows.map((itm: any) => {
-                return columns.map((col: any) => itm[col.key])
-            }))
-        }
-    }, [rows, columns])
 
     useImperativeHandle(ref, () => ({
         checkNoIsExist: (checkNo: string) => {
@@ -88,8 +90,12 @@ export const DataGridViewReact = forwardRef(({
             })
 
             return newDataFormatted
-        }
+        },
+        getElementBody: () => tbodyRef.current,
+        getParentElement: () => parentElementRef.current
     }))
+
+
 
     return (
         <div
@@ -106,6 +112,7 @@ export const DataGridViewReact = forwardRef(({
                 ...containerStyle,
                 background: "#dcdcdc"
             }}
+
         >
             <div style={{ position: "absolute", width: `${totalRowWidth}px`, height: "auto" }}>
                 <table
@@ -153,12 +160,15 @@ export const DataGridViewReact = forwardRef(({
                             }
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody ref={tbodyRef} >
                         {
                             data?.map((rowItm: any, rowIdx: number) => {
 
                                 return (
-                                    <tr key={rowIdx} className={`${(selectedRow === rowIdx) || (selectedRowIndex === rowIdx) ? "selected" : ""}`}>
+                                    <tr
+                                        data-index={rowIdx}
+                                        key={rowIdx}
+                                        className={`row ${(selectedRow === rowIdx) || (selectedRowIndex === rowIdx) ? "selected" : ""}`}>
                                         <td
                                             style={{
                                                 position: "relative",
@@ -238,19 +248,33 @@ export const DataGridViewReact = forwardRef(({
                                                             }
                                                             if (e.key === "ArrowUp") {
                                                                 setSelectedRow((prev: any) => {
-                                                                    const index = Math.max(prev - 1, 0)
+                                                                    const index = Math.max(prev - 1, -1)
                                                                     const td = document.querySelector(`.td.row-${index}`) as HTMLTableDataCellElement
+                                                                    if (index < 0) {
+                                                                        if (focusElementOnMaxTop) {
+                                                                            focusElementOnMaxTop()
+                                                                        }
+                                                                        return
+                                                                    }
                                                                     if (td) {
-                                                                        td.focus()
+                                                                        td.focus();
                                                                     }
                                                                     return index
                                                                 });
                                                             } else if (e.key === "ArrowDown") {
+
                                                                 setSelectedRow((prev: any) => {
                                                                     const index = Math.min(prev + 1, data.length - 1)
                                                                     const td = document.querySelector(`.td.row-${index}`) as HTMLTableDataCellElement
                                                                     if (td) {
-                                                                        // td.focus()
+                                                                        td.focus();
+                                                                        if (index <= 15) {
+                                                                            parentElementRef.current.style.overflow = "hidden";
+                                                                            setTimeout(() => {
+                                                                                parentElementRef.current.style.overflow = "auto";
+                                                                            }, 100)
+                                                                            return index
+                                                                        }
                                                                     }
                                                                     return index
                                                                 });
@@ -330,6 +354,235 @@ export const DataGridViewReact = forwardRef(({
               `}
                 </style>
             </div>
+
         </div>
+
     )
 })
+
+
+
+let dataCache: any = []
+let searchInputValueCache = ''
+export const useUpwardTableModalSearch = ({
+    column,
+    query,
+    getSelectedItem,
+    onKeyDown
+}: any) => {
+    const [show, setShow] = useState(false)
+    const searchInputRef = useRef<HTMLInputElement>(null)
+
+    function openModal() {
+        const body = document.body
+        const div = document.createElement('div')
+        div.id = 'modal-portal'
+
+        if (document.getElementById('modal-portal'))
+            body.removeChild(document.getElementById('modal-portal') as HTMLElement)
+
+        body.insertBefore(div, document.getElementById('root'))
+        wait(100).then(() => {
+            div.innerHTML = ReactDOMServer.renderToString(<UpwardTableModalSearch />)
+        })
+
+        setShow(true)
+        setTimeout(() => {
+            if (searchInputRef.current) {
+                const event = new KeyboardEvent("keydown", { code: "Enter", bubbles: true });
+                searchInputRef.current.focus(); // Ensure the element has focus
+                searchInputRef.current.dispatchEvent(event); // Dispatch the native event
+                setTimeout(() => {
+                    searchInputRef.current?.focus();
+                }, 100)
+            }
+        }, 100)
+    }
+    function closeModal() {
+        setShow(false)
+        dataCache = []
+    }
+    const UpwardTableModalSearch = () => {
+        const [blick, setBlick] = useState(false)
+        const [data, setData] = useState([])
+
+        const { executeQueryToClient } = useExecuteQueryFromClient()
+        const tableRef = useRef<any>(null)
+
+        useEffect(() => {
+            if (dataCache.length > 0) {
+                if (searchInputRef.current) {
+                    searchInputRef.current.value = searchInputValueCache
+                }
+                setData(dataCache)
+            }
+        }, [setData])
+
+        useEffect(() => {
+            if (data.length > 0) {
+                dataCache = data
+                tableRef.current?.setDataFormated(data)
+            }
+        }, [data])
+
+        return (
+            show ?
+                <div id="modal-inject">
+                    <div style={{
+                        position: "fixed",
+                        top: 0,
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        background: "transparent",
+                        zIndex: "88"
+                    }}
+                        onClick={() => {
+                            setBlick(true)
+                            setTimeout(() => {
+                                setBlick(false)
+                            }, 250)
+                        }}
+
+                    ></div>
+
+                    <div
+                        style={{
+                            background: "#F1F1F1",
+                            width: blick ? "451px" : "450px",
+                            height: blick ? "501px" : "500px",
+                            position: "absolute",
+                            zIndex: 111111,
+                            top: "50%",
+                            left: "50%",
+                            transform: "translate(-50%,-50%)",
+                            boxShadow: '3px 6px 32px -7px rgba(0,0,0,0.75)',
+                            boxSizing: "border-box",
+                            display: "flex",
+                            flexDirection: "column"
+                        }}
+                    >
+                        <div
+                            style={{
+                                height: "22px",
+                                background: "white",
+                                display: "flex",
+                                justifyContent: "space-between",
+                                padding: "5px",
+                                position: "relative",
+                                alignItems: "center"
+
+                            }}
+                        >
+                            <span style={{ fontSize: "13px", fontWeight: "bold" }}>Search</span>
+                            <button
+                                className="btn-check-exit-modal"
+                                style={{
+                                    padding: "0 5px",
+                                    borderRadius: "0px",
+                                    background: "white",
+                                    color: "black",
+                                    height: "22px",
+                                    position: "absolute",
+                                    top: 0,
+                                    right: 0
+                                }}
+                                onClick={() => {
+                                    closeModal()
+                                }}
+                            >
+                                <CloseIcon sx={{ fontSize: "22px" }} />
+                            </button>
+                        </div>
+                        <div style={{
+                            padding: "5px",
+                        }}>
+                            <TextInput
+                                containerStyle={{
+                                    width: "100%"
+                                }}
+                                label={{
+                                    title: "Search : ",
+                                    style: {
+                                        fontSize: "12px",
+                                        fontWeight: "bold",
+                                        width: "70px",
+                                        display: "none"
+                                    },
+                                }}
+                                input={{
+                                    type: "text",
+                                    style: { width: "100%" },
+                                    onKeyDown: async (e) => {
+                                        if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                                            searchInputValueCache = e.currentTarget.value
+                                            const searchQuery = query(e.currentTarget.value)
+                                            const dd = await executeQueryToClient(searchQuery)
+                                            setData(dd.data.data)
+                                        }
+
+                                        if (e.code === "ArrowDown") {
+                                            const td = document.querySelector(`.td.row-0`) as HTMLTableDataCellElement
+                                            if (td) {
+                                                const parentElement = tableRef.current.getParentElement()
+
+                                                td.focus({
+                                                    preventScroll: true
+                                                });
+                                                parentElement.style.overflow = "hidden";
+                                                wait(100).then(() => {
+                                                    parentElement.style.overflow = "auto";
+                                                })
+                                            }
+                                            tableRef.current?._setSelectedRow(0)
+                                        }
+
+                                    },
+                                }}
+                                inputRef={searchInputRef}
+                                icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+                                onIconClick={async (e) => {
+                                    e.preventDefault()
+                                    if (searchInputRef.current)
+                                        searchInputValueCache = searchInputRef.current.value
+                                    const searchQuery = query(searchInputRef.current?.value)
+                                    const dd = await executeQueryToClient(searchQuery)
+                                    setData(dd.data.data)
+                                }}
+                            />
+                        </div>
+                        <div style={{
+                            flex: 1,
+                        }}>
+                            <DataGridViewReact
+                                columns={column}
+                                height={"100%"}
+                                ref={tableRef}
+                                getSelectedItem={getSelectedItem}
+                                onKeyDown={onKeyDown}
+                                focusElementOnMaxTop={() => {
+                                    searchInputRef.current?.focus()
+                                }}
+                            />
+                        </div>
+                        <style>
+                            {`
+          .btn-check-exit-modal:hover{
+            background:red !important;
+            color:white !important;
+          }
+        `}
+                        </style>
+                    </div >
+                </div>
+                : <></>
+        )
+
+    }
+
+    return {
+        openModal,
+        closeModal,
+        UpwardTableModalSearch
+    }
+}
