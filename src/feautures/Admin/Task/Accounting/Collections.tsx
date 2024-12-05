@@ -33,6 +33,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
 import LocalPrintshopIcon from '@mui/icons-material/LocalPrintshop';
 import { DataGridViewReact, useUpwardTableModalSearch } from "../../../../components/DataGridViewReact";
+import { Loading } from "../../../../components/Loading";
 
 
 export const debitColumn = [
@@ -1109,8 +1110,22 @@ export default function Collection() {
         background: "#F1F1F1",
       }}
     >
-      <UpwardTableModalSearch />
       <PageHelmet title="Collection" />
+      <UpwardTableModalSearch />
+      <ModalCheck
+        ref={modalCheckRef}
+        handleOnSave={() => {
+          const refs = modalCheckRef.current.getRefs()
+          saveCheckDebit(refs)
+        }}
+        handleOnClose={() => {
+          debitTable.current.setSelectedRow(null)
+          buttonCheckSave.current?.focus()
+        }}
+      />
+
+      {(loadingAddNew || isLoadingPrint || loadingCollectionDataSearch) && <Loading />}
+
       <div
         style={{
           width: "100%",
@@ -1156,7 +1171,6 @@ export default function Collection() {
                   e.preventDefault()
                   if (searchRef.current)
                     openModalSearchCollection(searchRef.current.value);
-
                 }}
                 inputRef={searchRef}
               />}
@@ -1966,63 +1980,13 @@ export default function Collection() {
             }
         `}
       />
-      <ModalCheck
-        ref={modalCheckRef}
-        handleOnSave={() => {
-          const refs = modalCheckRef.current.getRefs()
-          saveCheckDebit(refs)
-        }}
-        handleOnClose={() => {
-          debitTable.current.setSelectedRow(null)
-          buttonCheckSave.current?.focus()
-        }}
-      />
-
-      {(loadingAddNew || isLoadingPrint || loadingCollectionDataSearch) && <UpwardLoader />}
 
     </div>
   )
 }
 
 
-const UpwardLoader = () => {
 
-  return (
-
-    <>
-      <div style={{
-        position: "fixed",
-        top: 0,
-        bottom: 0,
-        left: 0,
-        right: 0,
-        background: "red",
-        zIndex: "88",
-        backgroundColor: 'rgba(0, 0, 0, 0.4)'
-      }}
-      ></div>
-      <div style={{
-        position: "absolute",
-        zIndex: "1",
-        background: "white",
-        width: "auto",
-        height: "auto",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%,-50%)",
-        boxShadow: '3px 6px 32px -7px rgba(0,0,0,0.75)',
-        display: "flex",
-        columnGap: "20px",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "10px 15px",
-      }}>
-        <CircularProgress color="primary" />
-        <span>Loading...</span>
-      </div>
-    </>
-  )
-}
 const ContentContainer = ({
   firstContent,
   secondContent,

@@ -1,6 +1,5 @@
 import { useReducer, useContext, useState, useRef, useEffect, useCallback } from "react";
 import {
-  TextField,
   Button,
   FormControl,
   IconButton,
@@ -19,10 +18,9 @@ import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import Swal from "sweetalert2";
 import { AuthContext } from "../../../../components/AuthContext";
-import { useMutation, useQuery, useQueryClient } from "react-query";
+import { useMutation, useQuery } from "react-query";
 import useQueryModalTable from "../../../../hooks/useQueryModalTable";
 import { wait } from "../../../../lib/wait";
-import { GridRowSelectionModel } from "@mui/x-data-grid";
 import NotInterestedIcon from "@mui/icons-material/NotInterested";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -32,18 +30,17 @@ import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../../lib/confirmationAlert";
-import {
-  generateRandomClass,
-} from "../../../../components/ModalWithTable";
+
 import { flushSync } from "react-dom";
 import SaveIcon from "@mui/icons-material/Save";
-import { UpwardTable } from "../../../../components/UpwardTable";
 import { SelectInput, TextFormatedInput, TextInput } from "../../../../components/UpwardFields";
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import { format } from "date-fns";
 import PageHelmet from "../../../../components/Helmet";
+import { DataGridViewReact } from "../../../../components/DataGridViewReact";
+import { Loading } from "../../../../components/Loading";
 
 const initialState = {
 
@@ -70,39 +67,44 @@ export const reducer = (state: any, action: any) => {
 };
 
 const selectedCollectionColumns = [
-  { field: "code", headerName: "Code", width: 150 },
-  { field: "acctName", headerName: "Account Name", width: 300 },
+  { key: "code", label: "Code", width: 150 },
+  { key: "acctName", label: "Account Name", width: 300 },
   {
-    field: "subAcctName",
-    headerName: "Sub Account",
+    key: "subAcctName",
+    label: "Sub Account",
     width: 170,
   },
-  { field: "ClientName", headerName: "Name", width: 300 },
-  { field: "debit", headerName: "Debit", width: 120, type: "number" },
-  { field: "credit", headerName: "Credit", width: 120, type: "number" },
+  { key: "ClientName", label: "Name", width: 300 },
+  { key: "debit", label: "Debit", width: 120, type: "number" },
+  { key: "credit", label: "Credit", width: 120, type: "number" },
   // hide
-  { field: "TC_Code", headerName: "TC", width: 120 },
+  { key: "TC_Code", label: "TC", width: 120 },
   {
-    field: "remarks",
-    headerName: "Remarks",
+    key: "remarks",
+    label: "Remarks",
     flex: 1,
     width: 300,
   },
-  { field: "vatType", headerName: "Vat Type", width: 120 },
-  { field: "invoice", headerName: "Invoice", width: 200 },
-  { field: "TempID", headerName: "TempId", hide: true },
-  { field: "IDNo", headerName: "I.D.", width: 300, hide: true },
+  { key: "vatType", label: "Vat Type", width: 120 },
+  { key: "invoice", label: "Invoice", width: 200 },
+  { key: "TempID", label: "TempId", hide: true },
+  { key: "IDNo", label: "I.D.", width: 300, hide: true },
   {
-    field: "BranchCode",
-    headerName: "BranchCode",
+    key: "BranchCode",
+    label: "BranchCode",
     width: 300,
     hide: true,
   },
 ];
 
 export default function GeneralJournal() {
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const [mode, setMode] = useState<"update" | "add" | "">("")
+  const [monitoring, setMonitoring] = useState({
+    totalRow: "0",
+    totalDebit: "0.00",
+    totalCredit: "0.00",
+    balance: "0.00"
+  })
 
   const inputSearchRef = useRef<HTMLInputElement>(null)
 
@@ -130,20 +132,16 @@ export default function GeneralJournal() {
   //TC details
   const refTCDesc = useRef<string>('')
 
-  const mainId = generateRandomClass();
   const { myAxios, user } = useContext(AuthContext);
   const [state, dispatch] = useReducer(reducer, initialState);
   const [openJobs, setOpenJobs] = useState(false);
-  const [generalJournal, setGeneralJournal] = useState<GridRowSelectionModel>(
-    []
-  );
-
-  const queryClient = useQueryClient();
 
   const chartAccountSearchInput = useRef<HTMLInputElement>(null);
   const IdsSearchInput = useRef<HTMLInputElement>(null);
   const table = useRef<any>(null);
-  const refParent = useRef<HTMLDivElement>(null);
+
+
+
 
   const modeAdd = mode === 'add'
   const modeUpdate = mode === 'update'
@@ -229,10 +227,8 @@ export default function GeneralJournal() {
               handleClickPrint()
             }
             wait(100).then(() => {
-              queryClient.invalidateQueries("search-general-journal");
               setNewStateValue(dispatch, initialState);
               refetchGeneralJournalGenerator();
-              setGeneralJournal([]);
               setMode('')
             })
           });
@@ -256,11 +252,10 @@ export default function GeneralJournal() {
       }),
     onSuccess: (res) => {
       const response = res as any;
-      setGeneralJournal([]);
-      setGeneralJournal(response.data.jobs);
+      table.current.setDataFormated(response.data.jobs)
       setOpenJobs(false);
       setMode('')
-
+      monitor()
     },
   });
   const {
@@ -281,9 +276,7 @@ export default function GeneralJournal() {
     onSuccess: (res) => {
       const response = res as any;
       if (response.data.success) {
-        queryClient.invalidateQueries("search-general-journal");
         refetchGeneralJournalGenerator();
-        setGeneralJournal([]);
         setMode('')
 
         return Swal.fire({
@@ -330,7 +323,9 @@ export default function GeneralJournal() {
       if (refExplanation.current) {
         refExplanation.current.value = explanation
       }
-      setGeneralJournal(selected);
+
+      table.current.setDataFormated(selected)
+      monitor()
     },
   });
 
@@ -361,8 +356,7 @@ export default function GeneralJournal() {
         Source_No: selectedRowData[0].Source_No,
       });
       setMode("update")
-      setGeneralJournal([]);
-      table.current.resetTableSelected()
+      table.current.resetTable()
       closeSearchGeneralJounal();
       resetRow()
     },
@@ -487,8 +481,6 @@ export default function GeneralJournal() {
     },
     searchRef: IdsSearchInput,
   });
-
-
   const handleInputChange = (e: any) => {
     const { name, value } = e.target;
     dispatch({ type: "UPDATE_FIELD", field: name, value });
@@ -514,9 +506,10 @@ export default function GeneralJournal() {
         });
       });
     }
+    console.log(monitoring)
     if (
-      (state.totalDebit === "" && state.totalCredit === "") ||
-      (state.totalDebit === "0.00" && state.totalCredit === "0.00")
+      parseFloat(monitoring.totalDebit.replace(/,/g, '')) <= 0 ||
+      parseFloat(monitoring.totalCredit.replace(/,/g, '')) <= 0
     ) {
       return Swal.fire({
         position: "center",
@@ -528,7 +521,7 @@ export default function GeneralJournal() {
         wait(300).then(() => { });
       });
     }
-    if (state.totalDebit !== state.totalCredit) {
+    if (monitoring.totalDebit !== monitoring.totalCredit) {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -539,6 +532,8 @@ export default function GeneralJournal() {
         wait(300).then(() => { });
       });
     }
+
+    const generalJournalData: any = []
     if (modeUpdate) {
       codeCondfirmationAlert({
         isUpdate: true,
@@ -548,7 +543,7 @@ export default function GeneralJournal() {
             refNo: refRefNo.current?.value,
             dateEntry: refDate.current?.value,
             explanation: refExplanation.current?.value,
-            generalJournal,
+            generalJournal: generalJournalData,
             userCodeConfirmation,
           });
         },
@@ -561,12 +556,12 @@ export default function GeneralJournal() {
             refNo: refRefNo.current?.value,
             dateEntry: refDate.current?.value,
             explanation: refExplanation.current?.value,
-            generalJournal,
+            generalJournal: generalJournalData,
           });
         },
       });
     }
-  }, [state, generalJournal, addGeneralJournalMutate, modeUpdate])
+  }, [monitoring, addGeneralJournalMutate, modeUpdate])
   function handleVoid() {
     codeCondfirmationAlert({
       isUpdate: false,
@@ -615,7 +610,6 @@ export default function GeneralJournal() {
     refTCDesc.current = ""
     refIDNo.current = ""
     refSubAcct.current = ""
-    setSelectedIndex(null)
   }
   function handleRowSave() {
     if (refCode.current && refCode.current.value === "") {
@@ -745,57 +739,8 @@ export default function GeneralJournal() {
         })
       })
     }
-
-    function generateID(array: Array<any>) {
-      const lastItem = array.length ? array[array.length - 1].TempID : "000";
-      const numericPart = (parseInt(lastItem.toString().match(/\d+/)[0]) + 1)
-        .toString()
-        .padStart(3, "0");
-      return numericPart;
-    }
-
-    const isUpdate = selectedIndex !== null && selectedIndex >= 0
-    function addEntryVat(Entry1: any, Entry2: any, debitNum: number, creditNum: number) {
-
-      let storage = []
-
-      let taxableamt = 0;
-      let inputTax = 0
-      if (creditNum !== 0) {
-        taxableamt = creditNum / 1.12
-        Entry1.credit = taxableamt.toLocaleString("en-US", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })
-      } else {
-        taxableamt = debitNum / 1.12
-        Entry1.debit = taxableamt.toLocaleString("en-US", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })
-      }
-      storage.push(Entry1)
-      inputTax = taxableamt * 0.12
-      Entry2.code = "1.06.02"
-      Entry2.acctName = "Input Tax"
-      if (parseFloat(Entry1.credit.replace(/,/g, '')) !== 0) {
-        Entry2.credit = inputTax.toLocaleString("en-US", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })
-      } else {
-        Entry2.debit = inputTax.toLocaleString("en-US", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })
-      }
-      storage.push(Entry2)
-
-      return storage
-
-
-
-    }
+    const getSelectedRow = table.current.getSelectedRow()
+    const isUpdate = getSelectedRow !== null
 
     Swal.fire({
       title: isUpdate
@@ -823,80 +768,89 @@ export default function GeneralJournal() {
           refVat.current &&
           refInvoice.current
         ) {
+          const newData: any = table.current.getData()
+          const newInput = [
+            refCode.current.value,
+            refAccountName.current.value,
+            refSubAccount.current.value,
+            refName.current.value,
+            refDebit.current.value,
+            refCredit.current.value,
+            refTC.current.value,
+            refRemarks.current.value,
+            refVat.current.value,
+            refInvoice.current.value,
+            refIDNo.current,
+            refSubAcct.current,
+          ]
 
-          const Entry1: any = {
-            code: refCode.current.value,
-            acctName: refAccountName.current.value,
-            subAcctName: refSubAccount.current.value,
-            ClientName: refName.current.value,
-            debit: refDebit.current.value,
-            credit: refCredit.current.value,
-            TC_Code: refTC.current.value,
-            remarks: refRemarks.current.value,
-            vatType: refVat.current.value,
-            invoice: refInvoice.current.value,
-            TempID: generateID(generalJournal),
-            IDNo: refIDNo.current,
-            BranchCode: refSubAcct.current,
-          }
+          let taxtInput: any = []
+          let taxableamt = 0
 
-          if (isUpdate) {
-            if (refVat.current?.value === "VAT" && refCode.current?.value !== "1.06.02") {
-              setGeneralJournal((d: any) => {
-                d = d.filter(
-                  (_: any, index: number) => index !== selectedIndex
-                );
-                return d
-              });
+          if (newInput[8] === 'VAT' && newInput[0] !== '1.06.02') {
+            const debit = parseFloat(newInput[4].replace(/,/g, ''))
+            const credit = parseFloat(newInput[5].replace(/,/g, ''))
+            if (debit > 0) {
+              taxableamt = debit / 1.12
+              newInput[4] = formatNumber(taxableamt)
             } else {
-              setGeneralJournal((d: any) => {
-                d = d.map(
-                  (item: any, index: number) => {
-                    if (index === selectedIndex) {
-                      item = Entry1
-                    }
-                    return item
-                  }
-                );
-                return d
-              });
-
+              taxableamt = credit / 1.12
+              newInput[5] = formatNumber(taxableamt)
             }
+
+            let inputtax = taxableamt * 0.12
+            let taxtDebit = ''
+            let taxtCredit = ''
+            if (debit > 0) {
+              taxtDebit = formatNumber(inputtax)
+              taxtCredit = newInput[5]
+            } else {
+              taxtCredit = formatNumber(inputtax)
+              taxtDebit = newInput[4]
+            }
+
+            taxtInput = [
+              "1.06.02",
+              "Input Tax",
+              refSubAccount.current.value,
+              refName.current.value,
+              taxtDebit,
+              taxtCredit,
+              refTC.current.value,
+              refRemarks.current.value,
+              refVat.current.value,
+              refInvoice.current.value,
+              refIDNo.current,
+              refSubAcct.current,
+            ]
+
+          }
+          if (isUpdate) {
+            newData[getSelectedRow] = newInput
+            table.current.setSelectedRow(null)
           } else {
-            if (refVat.current?.value !== "VAT" && refCode.current?.value !== "1.06.02") {
-              setGeneralJournal((_generalJournal: any) => [..._generalJournal, Entry1])
+            newData[newData.length] = newInput
+          }
+          table.current.setData(newData)
+          setTimeout(() => {
+            if (newInput[8] === 'VAT' && newInput[0] !== '1.06.02') {
+              const getNewData = table.current.getData()
+              if (isUpdate) {
+                getNewData.splice(getSelectedRow + 1, 0, taxtInput);
+              } else {
+                getNewData[getNewData.length] = taxtInput
+              }
+              table.current.setData(getNewData)
             }
-          }
+            resetRow()
+          }, 100)
 
-          const debitNum = parseFloat(refDebit.current.value.replace(/,/g, ''))
-          const creditNum = parseFloat(refCredit.current.value.replace(/,/g, ''))
-          const Entry2: any = {
-            code: refCode.current.value,
-            acctName: refAccountName.current.value,
-            subAcctName: refSubAccount.current.value,
-            ClientName: refName.current.value,
-            debit: refDebit.current.value,
-            credit: refCredit.current.value,
-            TC_Code: refTC.current.value,
-            remarks: refRemarks.current.value,
-            vatType: refVat.current.value,
-            invoice: refInvoice.current.value,
-            TempID: generateID(generalJournal),
-            IDNo: refIDNo.current,
-            BranchCode: refSubAcct.current
-          }
-
-          if (refVat.current?.value === "VAT" && refCode.current?.value !== "1.06.02") {
-            const storage = addEntryVat(Entry1, Entry2, debitNum, creditNum)
-            setGeneralJournal((_generalJournal: any) => [..._generalJournal, ...storage])
-          }
-          resetRow()
-          table.current.resetTableSelected()
           setTimeout(() => {
             if (refCode.current) {
               refCode.current.focus()
             }
           }, 350)
+          monitor()
         }
 
       }
@@ -907,6 +861,7 @@ export default function GeneralJournal() {
   }
   function handleClickPrint() {
     flushSync(() => {
+      const generalJournal: any = []
       localStorage.removeItem("printString");
       localStorage.setItem("dataString", JSON.stringify(generalJournal));
       localStorage.setItem("paper-width", "8.5in");
@@ -941,8 +896,20 @@ export default function GeneralJournal() {
   function onCancel() {
     setMode("")
     refetchGeneralJournalGenerator();
-    setGeneralJournal([]);
 
+  }
+  function monitor() {
+    setTimeout(() => {
+      const getData = table.current.getData()
+      const totalCredit = getData.reduce((a: any, b: any) => a + parseFloat(b[4].replace(/,/g, '')), 0)
+      const totalDebit = getData.reduce((a: any, b: any) => a + parseFloat(b[5].replace(/,/g, '')), 0)
+      setMonitoring({
+        totalRow: `${getData.length}`,
+        totalCredit: formatNumber(totalCredit),
+        totalDebit: formatNumber(totalDebit),
+        balance: formatNumber(totalCredit - totalDebit),
+      })
+    }, 200)
   }
 
   useEffect(() => {
@@ -959,8 +926,6 @@ export default function GeneralJournal() {
     };
   }, [handleOnSave]);
 
-  const width = window.innerWidth - 50;
-  const height = window.innerHeight - 200;
 
   function formatNumber(Amount: number) {
     return Amount.toLocaleString("en-US", {
@@ -970,53 +935,14 @@ export default function GeneralJournal() {
   }
 
 
-  useEffect(() => {
-    if (generalJournal.length > 0) {
-      const debit = generalJournal.reduce((a: number, item: any) => {
-        return a + parseFloat(item.debit.replace(/,/g, ""));
-      }, 0);
-      const credit = generalJournal.reduce((a: number, item: any) => {
-        return a + parseFloat(item.credit.replace(/,/g, ""));
-      }, 0);
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "totalDebit",
-        value: formatNumber(debit),
-      });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "totalCredit",
-        value: formatNumber(credit),
-      });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "totalBalance",
-        value: formatNumber(debit - credit),
-      });
-    } else {
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "totalDebit",
-        value: '0.00',
-      });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "totalCredit",
-        value: '0.00',
-      });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "totalBalance",
-        value: '0.00',
-      });
-    }
-
-  }, [generalJournal]);
-
-
   return (
     <>
       <PageHelmet title="General Journal" />
+      {(loadingGetSearchSelectedGeneralJournal ||
+        isLoadingJob ||
+        loadingGeneralJournalMutate ||
+        loadingVoidGeneralJournalMutate
+      ) && <Loading />}
       <div
         style={{
           display: "flex",
@@ -1199,25 +1125,25 @@ export default function GeneralJournal() {
             }}
           >
             <p style={{ margin: 0, padding: 0, color: "black" }}>
-              <span style={{ fontSize: "12px" }}>Total Rows:</span> <strong>{generalJournal.length}</strong>
+              <span style={{ fontSize: "12px" }}>Total Rows:</span> <strong>{monitoring.totalRow}</strong>
             </p>
             <p style={{ margin: 0, padding: 0, color: "black" }}>
-              <span style={{ fontSize: "12px" }}>Total Debit:</span> <strong>{state.totalDebit}</strong>
+              <span style={{ fontSize: "12px" }}>Total Debit:</span> <strong>{monitoring.totalDebit}</strong>
             </p>
             <p style={{ margin: 0, padding: 0, color: "black" }}>
-              <span style={{ fontSize: "12px" }}>Total Credit:</span> <strong>{state.totalCredit}</strong>
+              <span style={{ fontSize: "12px" }}>Total Credit:</span> <strong>{monitoring.totalCredit}</strong>
             </p>
             <p style={{ margin: 0, padding: 0, color: "black" }}>
               <span style={{ fontSize: "12px" }}>Balance:</span>{" "}
               <strong
                 style={{
                   color:
-                    parseFloat(state.totalBalance.replace(/,/g, "")) > 0
+                    parseInt(monitoring.balance.replace(/,/g, "")) !== 0
                       ? "red"
                       : "black",
                 }}
               >
-                {state.totalBalance}
+                {monitoring.balance}
               </strong>
             </p>
           </div>
@@ -1614,99 +1540,74 @@ export default function GeneralJournal() {
               onClick={() => {
                 handleRowSave()
               }}
-              color="primary"
+              color="success"
             >
               Save Row
             </Button>
           </div>
         </fieldset>
-        <div
-          ref={refParent}
-          className={mainId}
-          style={{
-            marginTop: "10px",
-            width: "100%",
-            position: "relative",
-            flex: 1,
-          }}
-        >
-          <UpwardTable
-            isLoading={loadingGeneralJournalMutate ||
-              loadingGetSearchSelectedGeneralJournal ||
-              isLoadingJob}
-            ref={table}
-            rows={generalJournal}
-            column={selectedCollectionColumns}
-            width={width}
-            height={height}
-            dataReadOnly={true}
-            onSelectionChange={(selected, rowIndex) => {
-              const rowSelected = selected[0]
-              if (selected.length > 0) {
-                refIDNo.current = rowSelected.IDNo
-                refSubAcct.current = rowSelected.BranchCode
+        <DataGridViewReact
+          ref={table}
+          columns={selectedCollectionColumns}
+          height='380px'
+          getSelectedItem={(rowItm: any) => {
+            if (rowItm) {
+              refIDNo.current = rowItm[11]
+              refSubAcct.current = rowItm[12]
 
-                if (refName.current) {
-                  refName.current.value = rowSelected.ClientName
-                }
-                if (refTC.current) {
-                  refTC.current.value = rowSelected.TC_Code
-                }
-                if (refAccountName.current) {
-                  refAccountName.current.value = rowSelected.acctName
-                }
-                if (refCode.current) {
-                  refCode.current.value = rowSelected.code
-                }
-                if (refCredit.current) {
-                  refCredit.current.value = rowSelected.credit
-                }
-                if (refDebit.current) {
-                  refDebit.current.value = rowSelected.debit
-                }
-                if (refInvoice.current) {
-                  refInvoice.current.value = rowSelected.invoice
-                }
-                if (refRemarks.current) {
-                  refRemarks.current.value = rowSelected.remarks
-                }
-                if (refSubAccount.current) {
-                  refSubAccount.current.value = rowSelected.subAcctName
-                }
-                if (refVat.current) {
-                  refVat.current.value = rowSelected.vatType
-                }
-                setSelectedIndex(rowIndex)
-              } else {
-                setSelectedIndex(null)
-                resetRow()
+              if (refCode.current) {
+                refCode.current.value = rowItm[0]
               }
-            }}
-            onKeyDown={(row, key, rowIndex) => {
-              if (key === "Delete" || key === "Backspace") {
-                Swal.fire({
-                  title: `Are you sure you want to delete?`,
-                  text: "You won't be able to revert this!",
-                  icon: "warning",
-                  showCancelButton: true,
-                  confirmButtonColor: "#3085d6",
-                  cancelButtonColor: "#d33",
-                  confirmButtonText: "Yes, delete it!",
-                }).then((result) => {
-                  if (result.isConfirmed) {
-                    return setGeneralJournal((d: any) => {
-                      return d.filter(
-                        (items: any, index: number) => index !== rowIndex
-                      );
-                    });
-                  }
-                });
-                return;
+              if (refAccountName.current) {
+                refAccountName.current.value = rowItm[1]
               }
-            }}
-            inputsearchselector=".manok"
-          />
-        </div>
+              if (refSubAccount.current) {
+                refSubAccount.current.value = rowItm[2]
+              }
+              if (refName.current) {
+                refName.current.value = rowItm[3]
+              }
+              if (refDebit.current) {
+                refDebit.current.value = rowItm[4]
+              }
+              if (refCredit.current) {
+                refCredit.current.value = rowItm[5]
+              }
+              if (refTC.current) {
+                refTC.current.value = rowItm[6]
+              }
+              if (refRemarks.current) {
+                refRemarks.current.value = rowItm[7]
+              }
+              if (refVat.current) {
+                refVat.current.value = rowItm[8]
+              }
+              if (refInvoice.current) {
+                refInvoice.current.value = rowItm[9]
+              }
+            } else {
+              resetRow()
+            }
+          }}
+          onKeyDown={(rowItm: any, rowIdx: any, e: any) => {
+            if (e.code === 'Delete' || e.code === 'Backspace') {
+              const isConfim = window.confirm(`Are you sure you want to delete?`)
+              if (isConfim) {
+                const debitTableData = table.current.getData()
+                debitTableData.splice(rowIdx, 1);
+                table.current.setData(debitTableData)
+
+                setTimeout(() => {
+                  const getData = table.current.getData()
+               
+                  monitor()
+                }, 200)
+
+                return
+              }
+            }
+          }}
+        />
         <Modal open={openJobs} onClose={() => setOpenJobs(false)}>
           <Box
             sx={{

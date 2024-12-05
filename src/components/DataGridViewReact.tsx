@@ -10,7 +10,6 @@ import { TextInput } from "./UpwardFields";
 import { wait } from "../lib/wait";
 import CloseIcon from "@mui/icons-material/Close";
 import ReactDOMServer from "react-dom/server";
-import ReactDOM from "react-dom";
 
 export const DataGridViewReact = forwardRef(({
     columns,
@@ -150,8 +149,8 @@ export const DataGridViewReact = forwardRef(({
                                                 zIndex: 1,
                                                 background: "#f0f0f0",
                                                 fontSize: "12px",
-                                                textAlign: "left",
                                                 padding: "0px 5px",
+                                                textAlign: colItm.type === 'number' ? "center" : "left"
 
                                             }}
                                         >{colItm.label}</th>
@@ -345,6 +344,8 @@ export const DataGridViewReact = forwardRef(({
                   background-color: #0076d7 !important;
                   color: #ffffff !important;
                   border-right:1px solid white !important;
+                border-bottom:1px solid white !important;
+
               }
               
                #upward-cutom-table tr.selected td input {
@@ -403,11 +404,10 @@ export const useUpwardTableModalSearch = ({
         dataCache = []
     }
     const UpwardTableModalSearch = () => {
+        const tableRef = useRef<any>(null)
         const [blick, setBlick] = useState(false)
         const [data, setData] = useState([])
-
         const { executeQueryToClient } = useExecuteQueryFromClient()
-        const tableRef = useRef<any>(null)
 
         useEffect(() => {
             if (dataCache.length > 0) {
@@ -424,6 +424,7 @@ export const useUpwardTableModalSearch = ({
                 tableRef.current?.setDataFormated(data)
             }
         }, [data])
+
 
         return (
             show ?
@@ -566,12 +567,14 @@ export const useUpwardTableModalSearch = ({
                             />
                         </div>
                         <style>
-                            {`
-          .btn-check-exit-modal:hover{
-            background:red !important;
-            color:white !important;
-          }
-        `}
+                            {
+                                `
+                                    .btn-check-exit-modal:hover{
+                                        background:red !important;
+                                        color:white !important;
+                                    }
+                                `
+                            }
                         </style>
                     </div >
                 </div>

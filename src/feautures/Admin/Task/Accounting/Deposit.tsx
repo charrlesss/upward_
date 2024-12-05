@@ -31,6 +31,8 @@ import AutorenewIcon from '@mui/icons-material/Autorenew';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import '../../../../style/laoding.css'
 import PageHelmet from "../../../../components/Helmet";
+import SearchIcon from '@mui/icons-material/Search';
+
 
 const defaultCashBreakDown = [
   { value1: "1,000.00", value2: "", value3: "0.00" },
@@ -67,7 +69,6 @@ const buttons = [
     index: 3,
   },
 ];
-
 const cashColumns = [
   {
     key: "OR_No",
@@ -180,7 +181,6 @@ export default function Deposit() {
       defaultCashBreakDown
     );
 
-
   const [selectedRowsCashIndex, setSelectedRowsCashIndex] = useState<any>([])
   const [selectedRowsCheckedIndex, setSelectedRowsCheckedIndex] = useState<any>([])
 
@@ -201,7 +201,6 @@ export default function Deposit() {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
-
   const updateTableRowsInput = (
     fields: { value1: string; value2: string; value3: string },
     idx: number
@@ -215,7 +214,6 @@ export default function Deposit() {
       });
     });
   };
-
   const { isLoading: LoadingDepositSlipCode, refetch: RefetchDepositSlipCode } =
     useQuery({
       queryKey: "deposit-slipcode",
@@ -237,7 +235,6 @@ export default function Deposit() {
         })
       },
     });
-
   const {
     ModalComponent: ModalDepostitBanks,
     openModal: openDepositBanks,
@@ -280,7 +277,6 @@ export default function Deposit() {
     },
     searchRef: bankDepositSearch,
   });
-
   const { mutate: addDepositMutation, isLoading: addDepositMutationLoading } =
     useMutation({
       mutationKey: "add-deposit",
@@ -327,7 +323,6 @@ export default function Deposit() {
         });
       },
     });
-
   const {
     mutate: updateDepositMutation,
     isLoading: updateDepositMutationLoading,
@@ -375,7 +370,6 @@ export default function Deposit() {
       });
     },
   });
-
   const { mutate: searchByDepositSlip, isLoading: loadingSearchByDepositSlip } =
     useMutation({
       mutationKey: "search-deposit-cash-check",
@@ -460,7 +454,6 @@ export default function Deposit() {
 
       },
     });
-
   const {
     ModalComponent: ModalDeposit,
     openModal: openDeposit,
@@ -507,7 +500,6 @@ export default function Deposit() {
     },
     searchRef: depositSearch,
   });
-
   const { isLoading: loadingCashCollection, refetch: refetchCashCollection } =
     useQuery({
       queryKey: "get-cash-collection",
@@ -534,7 +526,6 @@ export default function Deposit() {
         }
       },
     });
-
   const { isLoading: loadingCheckCollection, refetch: refetchCheckCollection } =
     useQuery({
       queryKey: "get-check-collection",
@@ -562,7 +553,6 @@ export default function Deposit() {
 
       },
     });
-
   const handleOnSave = (e: any) => {
     e.preventDefault();
     if (refBankAcctCode.current && refBankAcctCode.current?.value.length >= 200) {
@@ -639,7 +629,6 @@ export default function Deposit() {
       });
     }
   };
-
   function resetRefs() {
 
     if (refBankAcctCode.current) {
@@ -658,13 +647,13 @@ export default function Deposit() {
     refSubAccount.current = ''
     refShortName.current = ''
   }
-
   function resetTables() {
     cashTable.current.resetTable()
     checkTable.current.resetTable()
     selectedTable.current.resetTable()
     collectionCheckTable.current.resetTable()
   }
+
   return (
     <>
       <PageHelmet title="Deposit" />
@@ -684,6 +673,7 @@ export default function Deposit() {
             display: "flex",
             alignItems: "center",
             columnGap: "5px",
+            marginBottom: "10px"
           }}
         >
           {isLoadingDeposit ? (
@@ -716,13 +706,19 @@ export default function Deposit() {
                 },
                 style: { width: "500px" },
               }}
+              icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+              onIconClick={(e) => {
+                e.preventDefault()
+                if (inputSearchRef.current)
+                  openDeposit(inputSearchRef.current.value);
+              }}
               inputRef={inputSearchRef}
             />
           )}
           {disabledFields && (
             <Button
               sx={{
-                height: "30px",
+                height: "22px",
                 fontSize: "11px",
               }}
               variant="contained"
@@ -738,7 +734,7 @@ export default function Deposit() {
           )}
           <LoadingButton
             sx={{
-              height: "30px",
+              height: "22px",
               fontSize: "11px",
             }}
             id="save-entry-header"
@@ -755,7 +751,7 @@ export default function Deposit() {
           {!disabledFields && (
             <Button
               sx={{
-                height: "30px",
+                height: "22px",
                 fontSize: "11px",
               }}
               variant="contained"
@@ -795,7 +791,6 @@ export default function Deposit() {
             </Button>
           )}
         </div>
-        <br />
         <form
           onKeyDown={(e) => {
             if (e.code === "Enter" || e.code === "NumpadEnter") {
@@ -806,6 +801,7 @@ export default function Deposit() {
           style={{
             display: "flex",
             gap: "10px",
+
           }}
         >
           {LoadingDepositSlipCode ? "Loading..." : <TextInput
@@ -900,6 +896,8 @@ export default function Deposit() {
               disabled: disabledFields
 
             }}
+
+
             inputRef={refBankAcctName}
           />
           <button
@@ -1023,6 +1021,32 @@ export default function Deposit() {
         {ModalDepostitBanks}
         {ModalDeposit}
         {(loadingSearchByDepositSlip || updateDepositMutationLoading || addDepositMutationLoading) && <div className="loading-component"><div className="loader"></div></div>}
+        <style>
+
+          {`
+            #upward-cutom-table tr td{
+            border-right:1px solid #f1f5f9 !important;
+            }
+
+            #upward-cutom-table tr:nth-child(odd) td {
+            background-color: #ffffff !important;
+            }
+            #upward-cutom-table tr:nth-child(even) td {
+            background-color: #f5f5f5 !important;
+            }
+            #upward-cutom-table tr.selected td {
+            background-color: #0076d7 !important;
+            color: #ffffff !important;
+            border-right:1px solid white !important;
+              border-bottom:1px solid white !important;
+            }
+
+            #upward-cutom-table tr.selected td input {
+            color: #ffffff !important;
+            }
+
+            `}
+        </style>
       </div>
     </>
 
@@ -1122,6 +1146,7 @@ function CheckCollection() {
       label: "Amount",
       width: 160,
       align: "right",
+      type: "number"
     },
     {
       key: "Bank_Branch",
@@ -1236,7 +1261,9 @@ function SelectedCollection() {
       width: 170,
     },
     { key: "Bank", label: "Bank/Branch", width: 200 },
-    { key: "Amount", label: "Amount", width: 170 },
+    {
+      key: "Amount", label: "Amount", width: 170, type: "number"
+    },
     { key: "Name", label: "Client Name", width: 400 },
     // hide
     { key: "DRCode", label: "DRCode", hide: true },
@@ -1390,6 +1417,8 @@ function CollectionForDeposit() {
               key: "Amount",
               label: "Amount",
               width: 300,
+              type: "number"
+
             },
           ]}
           rows={collectionForDeposit}
@@ -1470,7 +1499,7 @@ function CollectionForDeposit() {
             <tr
               style={{
                 borderTop: "2px solid black",
-                height: "50px",
+                height: "auto",
               }}
             >
               <td colSpan={3}>
@@ -1478,19 +1507,19 @@ function CollectionForDeposit() {
                   style={{
                     display: "flex",
                     justifyContent: "flex-end",
-                    padding: "0 10px  ",
-
                   }}
                 >
                   <div
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      width: "250px",
-                      textAlign: "right"
+                      width: "100%",
+                      textAlign: "right",
+                      justifyContent: "flex-end",
+                      columnGap: "5px"
                     }}
                   >
-                    <span style={{ fontSize: "12px", marginRight: "5px", fontWeight: "bold" }}>
+                    <span style={{ fontSize: "12px", fontWeight: "bold" }}>
                       Total Cash Deposit:
                     </span>
                     <input
@@ -1499,7 +1528,7 @@ function CollectionForDeposit() {
                         border: "1px solid black",
                         textAlign: "right",
                         fontSize: "13px",
-                        width: "117px",
+                        width: "180px",
                       }}
                       value={total}
                       onChange={(e) => {
@@ -1535,7 +1564,7 @@ function TrComponent({ value1, value2, value3, idx }: any) {
     borderBottom: "1px solid #cbd5e1",
     padding: "0 8px",
     width: "100%",
-    fontSize: "11px",
+    fontSize: "13px",
     margin: "0 !important",
 
   };
@@ -1552,13 +1581,13 @@ function TrComponent({ value1, value2, value3, idx }: any) {
         }}
       >
         <input
+          disabled={true}
           className={`row-${idx} col-0`}
           type="text"
           style={InputStyle}
           value={input1}
           onChange={(e) => setInput1(e.target.value)}
           readOnly={true}
-
         />
       </td>
       <td
@@ -1619,12 +1648,14 @@ function TrComponent({ value1, value2, value3, idx }: any) {
         }}
       >
         <input
+          disabled={true}
           className={`row-${idx} col-2`}
           type="text"
           style={InputStyle}
           value={input3}
           onChange={(e) => setInput3(e.target.value)}
           readOnly={true}
+
         />
       </td>
     </tr>
@@ -1643,6 +1674,8 @@ const DepositTable = forwardRef(({
   const [data, setData] = useState([])
   const [column, setColumn] = useState([])
   const [selectedRow, setSelectedRow] = useState<Array<any>>([])
+  const [selectedRowIndex, setSelectedRowIndex] = useState<any>(0)
+
   const totalRowWidth = column.reduce((a: any, b: any) => a + b.width, 0)
 
 
@@ -1705,10 +1738,10 @@ const DepositTable = forwardRef(({
                         inset 2px 2px 0 #808080`
         }}>
         <div style={{ position: "absolute", width: `${totalRowWidth}px`, height: "auto" }}>
-          <table style={{ borderCollapse: "collapse", width: "100%", position: "relative" }}>
+          <table id="upward-cutom-table" style={{ borderCollapse: "collapse", width: "100%", position: "relative" }}>
             <thead >
               <tr>
-                <th style={{ width: '30px', border: "1px solid black", position: "sticky", top: 0, zIndex: 1, background: "#f0f0f0" }}
+                <th style={{ width: '30px', border: "none", position: "sticky", top: 0, zIndex: 1, background: "#f0f0f0" }}
                 ></th>
                 {
                   column.map((colItm: any, idx: number) => {
@@ -1717,14 +1750,14 @@ const DepositTable = forwardRef(({
                         key={idx}
                         style={{
                           width: colItm.width,
-                          border: "1px solid black",
+                          borderRight: "1px solid #e2e8f0",
                           position: "sticky",
                           top: 0,
                           zIndex: 1,
                           background: "#f0f0f0",
                           fontSize: "12px",
-                          textAlign: "left",
-                          padding: "0px 5px"
+                          padding: "0px 5px",
+                          textAlign: colItm.type === 'number' ? "center" : "left"
                         }}
                       >{colItm.label}</th>
                     )
@@ -1736,41 +1769,54 @@ const DepositTable = forwardRef(({
               {
                 data?.map((rowItm: any, rowIdx: number) => {
                   return (
-                    <tr key={rowIdx} className={`tr-row-${rowIdx} `}>
+                    <tr
+                      key={rowIdx}
+                      className={`tr-row-${rowIdx} row ${selectedRow.includes(rowIdx) || (selectedRowIndex === rowIdx) ? "selected" : ""}`}
+
+                    >
                       <td style={{
-                        position: "relative", borderBottom: "1px solid black",
-                        borderLeft: "1px solid black",
-                        borderTop: "none",
-                        borderRight: "1px solid black",
+                        position: "relative",
+                        border: "none",
                         cursor: "pointer",
+                        padding: 0,
+                        margin: 0,
                         background: selectedRow.includes(rowIdx) ? "#bae6fd" : "",
                       }}
                       >
-                        <input
-                          className="check-input"
-                          style={{
-                            cursor: "pointer",
-                            height: "10px",
-                            background: "transparent"
-                          }}
-                          readOnly={true}
-                          type="checkbox"
-                          checked={selectedRow.includes(rowIdx)}
-                          onClick={() => {
-                            if (selectedRow.includes(rowIdx)) {
-                              return
-                            }
+                        <div style={{
+                          width: "18px",
+                          height: "18px",
+                          position: "relative",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center"
+                        }}>
+                          <input
+                            className="check-input"
+                            style={{
+                              cursor: "pointer",
+                              background: "transparent"
+                            }}
+                            readOnly={true}
+                            type="checkbox"
+                            checked={selectedRow.includes(rowIdx)}
+                            onClick={() => {
+                              if (selectedRow.includes(rowIdx)) {
+                                return
+                              }
 
-                            setSelectedRow((d: any) => {
-                              return [...d, rowIdx]
-                            })
+                              setSelectedRow((d: any) => {
+                                return [...d, rowIdx]
+                              })
 
-                            if (getSelectedItem) {
-                              getSelectedItem(rowItm, null, rowIdx, null)
-                            }
-                          }}
+                              if (getSelectedItem) {
+                                getSelectedItem(rowItm, null, rowIdx, null)
+                              }
+                            }}
+                          />
 
-                        />
+                        </div>
+
                       </td>
 
                       {
@@ -1789,24 +1835,32 @@ const DepositTable = forwardRef(({
                                   getSelectedItem(rowItm, colItm, rowIdx, colIdx)
                                 }
                               }}
+                              onClick={() => {
+                                setSelectedRowIndex(rowIdx)
+                              }}
                               key={colIdx}
                               style={{
-                                border: "1px solid black",
-                                background: selectedRow.includes(rowIdx) ? "#cbd5e1" : "transparent",
+                                border: "none",
                                 fontSize: "12px",
                                 padding: "0px 5px",
                                 cursor: "pointer",
+                                height: "20px",
+                                userSelect: "none",
                               }}
                             >{
                                 <input
                                   readOnly={true}
                                   value={rowItm[colIdx]}
                                   style={{
+
                                     width: colItm.width,
                                     pointerEvents: "none",
                                     border: "none",
                                     background: "transparent",
-                                    userSelect: "none"
+                                    userSelect: "none",
+                                    height: "100%",
+                                    textAlign: colItm.type === 'number' ? "right" : "left"
+
                                   }} />
                               }</td>
                           )
@@ -1889,15 +1943,20 @@ const DepositTableSelected = forwardRef(({
           pointerEvents: disbaleTable ? "none" : "auto",
           border: disbaleTable ? "2px solid #8c8f8e" : '2px solid #c0c0c0',
           boxShadow: `inset -2px -2px 0 #ffffff, 
-                      inset 2px 2px 0 #808080`
+                      inset 2px 2px 0 #808080`,
+          background: "#dcdcdc"
+
 
         }}>
         <div style={{ position: "absolute", width: `${totalRowWidth}px`, height: "auto" }}>
-          <table style={{ borderCollapse: "collapse", width: "100%", position: "relative" }}>
+          <table id="upward-cutom-table" style={{ borderCollapse: "collapse", width: "100%", position: "relative" }}>
             <thead >
-              <tr>
+              <tr style={{
+                background: "#f0f0f0",
+              }}>
                 <th style={{
-                  width: '30px', border: "1px solid black",
+                  width: '30px',
+                  border: "none",
                   position: "sticky",
                   top: 0,
                   zIndex: 1,
@@ -1911,14 +1970,15 @@ const DepositTableSelected = forwardRef(({
                         key={idx}
                         style={{
                           width: colItm.width,
-                          border: "1px solid black",
+                          borderRight: "1px solid #e2e8f0",
                           position: "sticky",
                           top: 0,
                           zIndex: 1,
-                          background: "#f0f0f0",
                           fontSize: "12px",
-                          textAlign: "left",
-                          padding: "0px 5px"
+                          padding: "0px 5px",
+                          background: "#f0f0f0",
+                          textAlign: colItm.type === 'number' ? "center" : "left"
+
                         }}
                       >{colItm.label}</th>
                     )
@@ -1930,36 +1990,50 @@ const DepositTableSelected = forwardRef(({
               {
                 data?.map((rowItm: any, rowIdx: number) => {
                   return (
-                    <tr key={rowIdx}>
+                    <tr
+                      key={rowIdx}
+                      className={`tr-row-${rowIdx} row ${(selectedRow === rowIdx) ? "selected" : ""}`}
+                    >
                       <td style={{
-                        position: "relative", borderBottom: "1px solid black",
-                        borderLeft: "1px solid black",
-                        borderTop: "none",
-                        borderRight: "1px solid black",
+                        position: "relative",
+                        border: "none",
                         cursor: "pointer",
-                        background: selectedRow === rowIdx ? "#bae6fd" : "#f0f0f0",
+                        background: selectedRow === rowIdx ? "#0076d" : "",
+                        padding: 0,
+                        margin: 0,
+
                       }}>
-                        <input
-                          style={{
-                            cursor: "pointer",
-                            height: "10px"
-                          }}
-                          readOnly={true}
-                          checked={false}
-                          type="checkbox"
-                          onClick={() => {
-                            if (!isTableSelectable) {
-                              return
-                            }
+                        <div style={{
+                          width: "18px",
+                          height: "18px",
+                          position: "relative",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center"
+                        }}>
+                          <input
+                            style={{
+                              cursor: "pointer",
+                              margin: "0px !important",
+                              position: "absolute",
+                            }}
+                            readOnly={true}
+                            checked={false}
+                            type="checkbox"
+                            onClick={() => {
+                              if (!isTableSelectable) {
+                                return
+                              }
 
-                            if (getSelectedItem) {
-                              getSelectedItem(rowItm, null, rowIdx, null)
-                            }
-                            setSelectedRow(null)
+                              if (getSelectedItem) {
+                                getSelectedItem(rowItm, null, rowIdx, null)
+                              }
+                              setSelectedRow(null)
 
-                          }}
+                            }}
+                          />
+                        </div>
 
-                        />
                       </td>
 
                       {
@@ -1981,11 +2055,12 @@ const DepositTableSelected = forwardRef(({
                               }}
                               key={colIdx}
                               style={{
-                                border: "1px solid black",
-                                background: selectedRow === rowIdx ? "#cbd5e1" : "transparent",
+                                border: "none",
                                 fontSize: "12px",
                                 padding: "0px 5px",
                                 cursor: "pointer",
+                                height: "20px",
+                                userSelect: "none",
                               }}
                             >{
                                 <input
@@ -1996,7 +2071,10 @@ const DepositTableSelected = forwardRef(({
                                     pointerEvents: "none",
                                     border: "none",
                                     background: "transparent",
-                                    userSelect: "none"
+                                    userSelect: "none",
+                                    height: "100%",
+                                    textAlign: colItm.type === 'number' ? "right" : "left"
+
                                   }} />
                               }</td>
                           )

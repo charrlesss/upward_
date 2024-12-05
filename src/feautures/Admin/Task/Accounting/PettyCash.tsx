@@ -1,4 +1,4 @@
-import { useContext, useState, useRef, useEffect, useImperativeHandle, forwardRef } from "react";
+import { useContext, useState, useRef, useEffect } from "react";
 import {
   Button,
 } from "@mui/material";
@@ -21,6 +21,10 @@ import { SelectInput, TextInput } from "../../../../components/UpwardFields";
 import { NumericFormat } from "react-number-format";
 import { format } from "date-fns";
 import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
+import { DataGridViewReact } from "../../../../components/DataGridViewReact";
+import SearchIcon from '@mui/icons-material/Search';
+import { Loading } from "../../../../components/Loading";
+
 
 export const reducer = (state: any, action: any) => {
   switch (action.type) {
@@ -42,7 +46,7 @@ const columns = [
     width: 450,
   },
   { key: "accountID", label: "Account ID", width: 400 },
-  { key: "sub_account", label: "Sub Account", width: 80 },
+  { key: "sub_account", label: "Sub Account", width: 120 },
   { key: "clientID", label: "ID No", width: 140 },
   // hide
   { key: "clientName", label: "Name", width: 350 },
@@ -89,9 +93,6 @@ export default function PettyCash() {
   const transactionShortRef = useRef('')
   const clientIdRef = useRef('')
   const subAcctRef = useRef('')
-
-
-
 
 
   const isDisableField = pettyCashMode === "";
@@ -172,7 +173,7 @@ export default function PettyCash() {
         refNoRef.current.value = loadPettyCash[0].PC_No
       }
       if (dateRef.current) {
-        dateRef.current.value = loadPettyCash[0].PC_Date
+        dateRef.current.value = format(new Date(loadPettyCash[0].PC_Date), "yyyy-MM-dd")
       }
       if (payeeRef.current) {
         payeeRef.current.value = loadPettyCash[0].Payee
@@ -315,9 +316,25 @@ export default function PettyCash() {
       });
     }
 
-    const currentData = tableRef.current.getDataFormatted()
+    const newData = tableRef.current.getData()
+    const newDataFormatted = newData.map((itm: any) => {
+      let newItm = {
+        purpose: itm[0],
+        amount: itm[1],
+        usage: itm[2],
+        accountID: itm[3],
+        sub_account: itm[4],
+        clientID: itm[5],
+        clientName: itm[6],
+        accountCode: itm[7],
+        accountShort: itm[8],
+        vatType: itm[9],
+        invoice: itm[10],
+      }
+      return newItm
+    })
 
-    if (currentData.length <= 0) {
+    if (newDataFormatted.length <= 0) {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -338,7 +355,7 @@ export default function PettyCash() {
             payee: payeeRef.current?.value,
             explanation: explanationRef.current?.value,
             hasSelected: pettyCashMode === "edit",
-            pettyCash: currentData,
+            pettyCash: newDataFormatted,
             userCodeConfirmation,
           });
         },
@@ -352,7 +369,7 @@ export default function PettyCash() {
             payee: payeeRef.current?.value,
             explanation: explanationRef.current?.value,
             hasSelected: pettyCashMode === "edit",
-            pettyCash: currentData,
+            pettyCash: newDataFormatted,
           });
         },
       });
@@ -504,6 +521,9 @@ export default function PettyCash() {
 
   return (
     <>
+      {(isLoadingLoadSelectedPettyCash ||
+        loadingAddUpdatePettyCash
+      ) && <Loading />}
       <PageHelmet title="Petty Cash" />
       <div
         style={{
@@ -553,6 +573,13 @@ export default function PettyCash() {
                   }
                 },
                 style: { width: "500px" },
+              }}
+              icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+              onIconClick={(e) => {
+                e.preventDefault()
+                if (inputSearchRef.current)
+                  openModalSearchPettyCash(inputSearchRef.current.value);
+
               }}
               inputRef={inputSearchRef}
             />
@@ -755,16 +782,34 @@ export default function PettyCash() {
           <div style={{
             display: "flex",
             flexDirection: "column",
-            rowGap: "10px"
+            rowGap: "10px",
+
           }}>
             {
               laodPettyCashTransaction ?
                 <LoadingButton loading={laodPettyCashTransaction} /> :
                 <Autocomplete
+                  containerStyle={{
+                    width: "100%",
+                  }}
+                  label={{
+                    title: "Transaction : ",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "80px",
+                    }
+                  }}
                   DisplayMember={'Purpose'}
                   DataSource={dataCashTransaction?.data.laodTranscation}
                   disableInput={isDisableField}
                   inputRef={accountRef}
+                  input={{
+                    style: {
+                      width: "100%",
+                      flex: 1,
+                    }
+                  }}
                   onChange={(selected: any, e: any) => {
                     transactionCodeRef.current = selected.Acct_Code
                     transactionShortRef.current = selected.Short
@@ -925,7 +970,39 @@ export default function PettyCash() {
           </div>
         </div>
         <br />
-        <PettyCashTableSelected
+        <DataGridViewReact
+          ref={tableRef}
+          width="100%"
+          height="350px"
+          columns={columns}
+          getSelectedItem={(rowItm: any, colItm: any, rowIdx: any, colIdx: any) => {
+            if (rowItm) {
+              if (accountRef.current) {
+                accountRef.current.value = rowItm[0]
+              }
+              if (amountRef.current) {
+                amountRef.current.value = rowItm[1]
+              }
+              if (usageRef.current) {
+                usageRef.current.value = rowItm[6]
+              }
+              if (vatRef.current) {
+                vatRef.current.value = rowItm[9]
+              }
+              if (invoiceRef.current) {
+                invoiceRef.current.value = rowItm[10]
+              }
+              subAcctRef.current = rowItm[4]
+              clientIdRef.current = rowItm[5]
+              transactionCodeRef.current = rowItm[7]
+              transactionShortRef.current = rowItm[8]
+            } else {
+              resetRefs()
+            }
+
+          }}
+        />
+        {/* <PettyCashTableSelected
           ref={tableRef}
           width="100%"
           height="350px"
@@ -952,7 +1029,7 @@ export default function PettyCash() {
             transactionCodeRef.current = rowItm[7]
             transactionShortRef.current = rowItm[8]
           }}
-        />
+        /> */}
         {ModalClientIDs}
         {ModalSearchPettyCash}
       </div>
@@ -960,272 +1037,7 @@ export default function PettyCash() {
 
   );
 }
-const PettyCashTableSelected = forwardRef(({
-  columns,
-  rows,
-  height = "400px",
-  getSelectedItem,
-  disbaleTable = false,
-  isTableSelectable = true
-}: any, ref) => {
-  const parentElementRef = useRef<any>(null)
-  const [data, setData] = useState([])
-  const [column, setColumn] = useState([])
-  const [selectedRow, setSelectedRow] = useState<any>(0)
-  const [selectedRowIndex, setSelectedRowIndex] = useState<any>(null)
-  const totalRowWidth = column.reduce((a: any, b: any) => a + b.width, 0)
 
-  useEffect(() => {
-    if (columns.length > 0) {
-      setColumn(columns.filter((itm: any) => !itm.hide))
-    }
-  }, [columns])
-
-  useEffect(() => {
-    if (rows.length > 0) {
-      setData(rows.map((itm: any) => {
-        return columns.map((col: any) => itm[col.key])
-      }))
-    }
-  }, [rows, columns])
-
-  useImperativeHandle(ref, () => ({
-    selectedRow: () => selectedRow,
-    getData: () => {
-      const newData = [...data];
-      return newData
-    },
-    setData: (newData: any) => {
-      setData(newData)
-    },
-    getColumns: () => {
-      return columns
-    },
-    resetTable: () => {
-      setData([])
-      setSelectedRow(0)
-    },
-    getSelectedRow: () => {
-      return selectedRowIndex
-    },
-    setSelectedRow: (value: any) => {
-      return setSelectedRowIndex(value)
-    },
-    setDataFormated: (newData: any) => {
-      setData(newData.map((itm: any) => {
-        return columns.map((col: any) => itm[col.key])
-      }))
-    },
-    getDataFormatted: () => {
-      const newData = [...data];
-      const newDataFormatted = newData.map((itm: any) => {
-        let newItm = {
-          purpose: itm[0],
-          amount: itm[1],
-          usage: itm[2],
-          accountID: itm[3],
-          sub_account: itm[4],
-          clientID: itm[5],
-          clientName: itm[6],
-          accountCode: itm[7],
-          accountShort: itm[8],
-          vatType: itm[9],
-          invoice: itm[10],
-        }
-        return newItm
-      })
-
-      return newDataFormatted
-    }
-  }))
-
-  return (
-    <div
-      ref={parentElementRef}
-      style={{
-        width: "100%",
-        height,
-        overflow: "auto",
-        position: "relative",
-        pointerEvents: disbaleTable ? "none" : "auto",
-        border: disbaleTable ? "2px solid #8c8f8e" : '2px solid #c0c0c0',
-        boxShadow: `inset -2px -2px 0 #ffffff, 
-                      inset 2px 2px 0 #808080`
-
-      }}
-    >
-      <div style={{ position: "absolute", width: `${totalRowWidth}px`, height: "auto" }}>
-        <table style={{ borderCollapse: "collapse", width: "100%", position: "relative", background: "white" }}>
-          <thead >
-            <tr>
-              <th style={{
-                width: '30px',
-                border: "1px solid black",
-                position: "sticky",
-                top: 0,
-                zIndex: 1,
-                background: "#f0f0f0",
-
-              }}
-              ></th>
-              {
-                column.map((colItm: any, idx: number) => {
-                  return (
-                    <th
-                      key={idx}
-                      style={{
-                        width: colItm.width,
-                        border: "1px solid black",
-                        position: "sticky",
-                        top: 0,
-                        zIndex: 1,
-                        background: "#f0f0f0",
-                        fontSize: "12px",
-                        textAlign: "left",
-                        padding: "0px 5px",
-
-                      }}
-                    >{colItm.label}</th>
-                  )
-                })
-              }
-            </tr>
-          </thead>
-          <tbody>
-            {
-              data?.map((rowItm: any, rowIdx: number) => {
-                const selectedRowBg = selectedRow === rowIdx && selectedRowIndex === rowIdx ? "#dedfe0" : selectedRow === rowIdx ? "#b6e4fc" : selectedRowIndex === rowIdx ? "#cbcfd4" : ""
-                return (
-                  <tr key={rowIdx}>
-                    <td style={{
-                      position: "relative", borderBottom: "1px solid black",
-                      borderLeft: "1px solid black",
-                      borderTop: "none",
-                      borderRight: "1px solid black",
-                      cursor: "pointer",
-                      background: selectedRowBg,
-                    }}>
-                      <input
-                        style={{
-                          cursor: "pointer",
-                          height: "10px"
-                        }}
-                        readOnly={true}
-                        checked={selectedRowIndex === rowIdx}
-                        type="checkbox"
-                        onClick={() => {
-                          if (!isTableSelectable) {
-                            return
-                          }
-                          setSelectedRowIndex(rowIdx)
-
-                          if (getSelectedItem) {
-                            getSelectedItem(rowItm, null, rowIdx, null)
-                          }
-                          setSelectedRow(null)
-
-                        }}
-
-                      />
-                    </td>
-
-                    {
-                      column.map((colItm: any, colIdx: number) => {
-                        return (
-                          <td
-                            className={`td row-${rowIdx} col-${colIdx}`}
-                            tabIndex={0}
-                            onDoubleClick={() => {
-                              if (!isTableSelectable) {
-                                return
-                              }
-
-                              setSelectedRowIndex(rowIdx)
-                              if (getSelectedItem) {
-                                getSelectedItem(rowItm, null, rowIdx, null)
-                              }
-                              setSelectedRow(null)
-                            }}
-                            onClick={() => {
-                              setSelectedRow(rowIdx)
-                            }}
-                            onMouseEnter={(e) => {
-                              e.preventDefault()
-                              setSelectedRow(rowIdx)
-                            }}
-                            onMouseLeave={(e) => {
-                              e.preventDefault()
-                              setSelectedRow(null)
-                            }}
-                            onKeyDown={(e) => {
-
-                              if (e.key === "ArrowUp") {
-                                setSelectedRow((prev: any) => {
-                                  const index = Math.max(prev - 1, 0)
-                                  const td = document.querySelector(`.td.row-${index}`) as HTMLTableDataCellElement
-                                  if (td) {
-                                    td.focus()
-                                  }
-                                  return index
-                                });
-                              } else if (e.key === "ArrowDown") {
-                                setSelectedRow((prev: any) => {
-                                  const index = Math.min(prev + 1, data.length - 1)
-                                  const td = document.querySelector(`.td.row-${index}`) as HTMLTableDataCellElement
-                                  if (td) {
-                                    td.focus()
-                                  }
-                                  return index
-                                });
-                              }
-
-                              if (e.code === 'Enter' || e.code === 'NumpadEnter') {
-                                e.preventDefault()
-
-                                if (!isTableSelectable) {
-                                  return
-                                }
-
-                                setSelectedRowIndex(rowIdx)
-                                if (getSelectedItem) {
-                                  getSelectedItem(rowItm, null, rowIdx, null)
-                                }
-                                setSelectedRow(null)
-                              }
-                            }}
-                            key={colIdx}
-                            style={{
-                              border: "1px solid black",
-                              background: selectedRowBg,
-                              fontSize: "12px",
-                              padding: "0px 5px",
-                              cursor: "pointer",
-                            }}
-                          >{
-                              <input
-                                readOnly={true}
-                                value={rowItm[colIdx]}
-                                style={{
-                                  width: colItm.width,
-                                  pointerEvents: "none",
-                                  border: "none",
-                                  background: "transparent",
-                                  userSelect: "none"
-                                }} />
-                            }</td>
-                        )
-                      })
-                    }
-                  </tr>
-                )
-              })
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
-})
 export const Autocomplete = ({
   DisplayMember,
   DataSource,
@@ -1243,7 +1055,8 @@ export const Autocomplete = ({
   },
   input = {
     width: '740px',
-  }
+  },
+  containerStyle
 }: any) => {
   const [inputValue, setInputValue] = useState("");
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
@@ -1318,8 +1131,9 @@ export const Autocomplete = ({
   };
 
   return (
-    <div style={{flex:1}}>
+    <div style={{ flex: 1 }}>
       <TextInput
+        containerStyle={containerStyle}
         label={label}
         input={{
           ...input,
@@ -1380,9 +1194,3 @@ export const Autocomplete = ({
     </div>
   );
 };
-function setNewStateValue(dispatch: any, obj: any) {
-  Object.entries(obj).forEach(([field, value]) => {
-    dispatch({ type: "UPDATE_FIELD", field, value });
-  });
-}
-

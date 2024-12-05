@@ -1,4 +1,4 @@
-import React, { useContext, useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
+import React, { useContext, useState, useRef, useEffect, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -35,7 +35,8 @@ import { format } from "date-fns";
 import PageHelmet from "../../../../components/Helmet";
 import { wait } from "@testing-library/user-event/dist/utils";
 import SearchIcon from '@mui/icons-material/Search';
-import { DataGridViewReact, useUpwardTableModalSearch } from "../../../../components/DataGridViewReact";
+import { DataGridViewReact } from "../../../../components/DataGridViewReact";
+import { Loading } from "../../../../components/Loading";
 
 
 
@@ -823,6 +824,8 @@ export default function PostDateChecks() {
   return (
     <>
       <PageHelmet title="PDC" />
+      {(loadingAddNew ||
+        isLoadingSelectedSearch) && <Loading />}
       <div
         style={{
           width: "100%",
@@ -1819,9 +1822,6 @@ export default function PostDateChecks() {
             </div>
           </div>
         </div>
-        {(loadingAddNew ||
-          isLoadingSelectedSearch) && <div className="loading-component"><div className="loader"></div></div>}
-
       </div>
     </>
   );
