@@ -954,7 +954,7 @@ export default function CashDisbursement() {
       });
     }
   }, [state, addCashDisbursementMutate, cashDMode, getTotalCredit, getTotalDebit])
-  
+
   useEffect(() => {
     const handleKeyDown = (event: any) => {
       if ((event.ctrlKey || event.metaKey) && event.key === 's') {
@@ -1333,7 +1333,7 @@ export default function CashDisbursement() {
                 newTableData[RowIndex][10] = value
                 return newTableData
               })
-           
+
 
             } else if (colIdx === 5) {
 
@@ -1483,6 +1483,7 @@ const DataGridTableReact = forwardRef(({
   const [data, setData] = useState<any>([])
   const [column, setColumn] = useState<any>([])
   const [selectedRow, setSelectedRow] = useState<any>(0)
+  const [selectedRowIndex, setSelectedRowIndex] = useState<any>(0)
   const totalRowWidth = column.reduce((a: any, b: any) => a + b.width, 0)
 
   function AddRow() {
@@ -1589,35 +1590,34 @@ const DataGridTableReact = forwardRef(({
   };
   const DrawHeaderColumn = () => {
     return (
-      <tr style={{ border: "1px solid red" }}>
-        <th className="header"
-          style={{
-            width: '30px',
-            border: "1px solid black",
-            position: "sticky",
-            top: -1,
-            zIndex: 2,
-            background: "#f0f0f0",
+      <tr >
+        <th style={{
+          width: '30px',
+          border: "none",
+          position: "sticky",
+          top: 0,
+          zIndex: 1,
+          background: "#f0f0f0",
 
-          }}
+        }}
         >
         </th>
         {
           column.map((colItm: any, colIdx: any) => {
             return (
               <th
-                className={`header col-${colIdx} ${colItm.key}`} key={colIdx}
+                className={`header col-${colIdx} ${colItm.key}`}
+                key={colIdx}
                 style={{
                   width: colItm.width,
-                  border: "1px solid black",
+                  borderRight: "1px solid #e2e8f0",
                   position: "sticky",
-                  top: -1,
-                  zIndex: 2,
+                  top: 0,
+                  zIndex: 1,
                   background: "#f0f0f0",
                   fontSize: "12px",
-                  textAlign: "left",
                   padding: "0px 5px",
-                  boxShadow: '0px -1px 0px black'
+                  textAlign: colItm.type === 'number' ? "center" : "left"
 
                 }}
               >
@@ -1665,7 +1665,7 @@ const DataGridTableReact = forwardRef(({
               width: "100% !important",
               flex: 1,
               height: "100% !important",
-              background: selectedRow === rowIdx ? "transparent" : "#cbd5e1",
+              background: "transparent",
               padding: 0,
               margin: 0,
               border: "none",
@@ -1677,6 +1677,9 @@ const DataGridTableReact = forwardRef(({
                 onInputKeyDown(rowIdx, colIdx, e.currentTarget.value)
               }
               onKeySelectionChange(rowIdx, colIdx, e)
+            },
+            onClick: () => {
+              setSelectedRowIndex(rowIdx)
             },
             onBlur: (e) => {
               e.currentTarget.value = miror.current[rowIdx][colIdx]
@@ -1696,7 +1699,7 @@ const DataGridTableReact = forwardRef(({
           style={{
             width: '100%',
             height: "100%",
-            background: selectedRow === rowIdx ? "transparent" : "#cbd5e1",
+            background: "transparent",
             margin: 0,
             border: "none",
             cursor: "pointer",
@@ -1709,6 +1712,9 @@ const DataGridTableReact = forwardRef(({
             }
             onKeySelectionChange(rowIdx, colIdx, e)
 
+          }}
+          onClick={() => {
+            setSelectedRowIndex(rowIdx)
           }}
           onBlur={(e) => {
             e.currentTarget.value = miror.current[rowIdx][colIdx]
@@ -1726,7 +1732,7 @@ const DataGridTableReact = forwardRef(({
           style={{
             width: '100%',
             height: "100%",
-            background: selectedRow === rowIdx ? "transparent" : "#cbd5e1",
+            background: "transparent",
             margin: 0,
             border: "none",
             cursor: "pointer",
@@ -1742,6 +1748,9 @@ const DataGridTableReact = forwardRef(({
           }}
           onBlur={(e) => {
             e.currentTarget.value = miror.current[rowIdx][colIdx]
+          }}
+          onClick={() => {
+            setSelectedRowIndex(rowIdx)
           }}
         />
       } else {
@@ -1751,7 +1760,7 @@ const DataGridTableReact = forwardRef(({
           style={{
             width: '100%',
             height: "100%",
-            background: selectedRow === rowIdx ? "transparent" : "#cbd5e1",
+            background: "transparent",
             margin: 0,
             border: "none",
             cursor: "pointer",
@@ -1767,8 +1776,9 @@ const DataGridTableReact = forwardRef(({
               onInputKeyDown(rowIdx, colIdx, e.currentTarget.value)
             }
             onKeySelectionChange(rowIdx, colIdx, e)
-
-
+          }}
+          onClick={() => {
+            setSelectedRowIndex(rowIdx)
           }}
         />
       }
@@ -1793,6 +1803,9 @@ const DataGridTableReact = forwardRef(({
               input.focus()
             }
           })
+        }}
+        onClick={() => {
+          setSelectedRowIndex(rowIdx)
         }}
         onKeyDown={(e) => {
           onKeySelectionChange(rowIdx, colIdx, e)
@@ -1938,7 +1951,14 @@ const DataGridTableReact = forwardRef(({
         {
           data?.map((rowItm: any, rowIdx: any) => {
             return (
-              <tr key={rowIdx} className={`tr row-${rowIdx}`}>
+              <tr
+                key={rowIdx}
+                className={`tr row-${rowIdx}  
+                ${(selectedRowIndex === rowIdx) && (selectedRow === rowIdx) ? "selected" : 
+                  (selectedRowIndex === rowIdx) ? "selected-row-index" : 
+                  (selectedRow === rowIdx) ? "selected-row" : 
+                  ""}`}
+              >
                 <ColumnData parentRef={parentRef} rowItm={rowItm} rowIdx={rowIdx} />
               </tr>
             )
@@ -1952,18 +1972,26 @@ const DataGridTableReact = forwardRef(({
     <Fragment>
       <div ref={parentElementRef}
         style={{
+          width: "100%",
           height,
           overflow: "auto",
           position: "relative",
-          width: "100%",
           pointerEvents: disbaleTable ? "none" : "auto",
           border: disbaleTable ? "2px solid #8c8f8e" : '2px solid #c0c0c0',
           boxShadow: `inset -2px -2px 0 #ffffff, 
-                    inset 2px 2px 0 #808080`,
-          background: "white"
+                  inset 2px 2px 0 #808080`,
+          background: "#dcdcdc"
         }}>
         <div style={{ position: "absolute", width: `${totalRowWidth}px`, height: "auto" }}>
-          <table style={{ borderCollapse: "collapse", width: "100%", position: "relative" }}>
+          <table
+            id="upward-cutom-table"
+            style={{
+              borderCollapse: "collapse",
+              width: "100%",
+              position: "relative",
+              background: "#dcdcdc"
+            }}
+          >
             <thead >
               {
                 <DrawHeaderColumn />
@@ -1976,6 +2004,53 @@ const DataGridTableReact = forwardRef(({
       <div style={{ width: "calc(100vw - 40px)", display: "flex", height: "40px" }}>
         <div style={{ width: "50%", display: "flex", alignItems: "center" }}><span style={{ fontSize: "14px" }}>Records : {data.length}</span></div>
       </div>
+      <style>
+
+        {`
+          #upward-cutom-table tr td{
+          border-right:1px solid #f1f5f9 !important;
+          }
+
+          #upward-cutom-table tr:nth-child(odd) td {
+          background-color: #ffffff !important;
+          }
+          #upward-cutom-table tr:nth-child(even) td {
+          background-color: #f5f5f5 !important;
+          }
+
+          #upward-cutom-table tr.selected td {
+          background-color: #0076d7 !important;
+          border-right:1px solid white !important;
+          border-bottom:1px solid white !important;
+
+          }
+         #upward-cutom-table tr.selected td input{
+          color: black !important;
+          background-color: white !important;
+          }
+
+          #upward-cutom-table tr.selected-row-index td{
+           background-color: #0076d7 !important;
+            border-right:1px solid white !important;
+            border-bottom:1px solid white !important;
+          }
+          #upward-cutom-table tr.selected-row-index td input{
+            color: #ffffff !important;
+               background-color: #0076d7 !important;
+            }
+
+
+          #upward-cutom-table tr.selected-row td{
+           background-color: #dbeafe !important;
+            border-right:1px solid white !important;
+            border-bottom:1px solid white !important;
+          }
+          #upward-cutom-table tr.selected-row td input{
+            color: black !important;
+             background-color: #dbeafe !important;
+            }
+          `}
+      </style>
     </Fragment>
   )
 })

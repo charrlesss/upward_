@@ -141,8 +141,6 @@ export default function GeneralJournal() {
   const table = useRef<any>(null);
 
 
-
-
   const modeAdd = mode === 'add'
   const modeUpdate = mode === 'update'
   const modeDefault = mode === ''
@@ -180,9 +178,7 @@ export default function GeneralJournal() {
         if (_refSubRefNo.current) {
           _refSubRefNo.current.value = response.data.generateGeneralJournalID[0].general_journal_id
         }
-        if (refDate.current) {
-          refDate.current.value = format(new Date(), "yyyy-MM-dd")
-        }
+
         if (refVat.current) {
           refVat.current.value = 'Non-VAT'
         }
@@ -190,7 +186,6 @@ export default function GeneralJournal() {
     },
 
   });
-
   const {
     mutate: addGeneralJournalMutate,
     isLoading: loadingGeneralJournalMutate,
@@ -227,8 +222,10 @@ export default function GeneralJournal() {
               handleClickPrint()
             }
             wait(100).then(() => {
-              setNewStateValue(dispatch, initialState);
-              refetchGeneralJournalGenerator();
+              resetFieldRef()
+              resetRowFieldRef()
+              resetTable()
+              resetMonitoring()
               setMode('')
             })
           });
@@ -276,7 +273,10 @@ export default function GeneralJournal() {
     onSuccess: (res) => {
       const response = res as any;
       if (response.data.success) {
-        refetchGeneralJournalGenerator();
+        resetFieldRef()
+        resetRowFieldRef()
+        resetTable()
+        resetMonitoring()
         setMode('')
 
         return Swal.fire({
@@ -328,7 +328,6 @@ export default function GeneralJournal() {
       monitor()
     },
   });
-
   const {
     ModalComponent: ModalSearchGeneralJounal,
     openModal: openSearchGeneralJounal,
@@ -506,7 +505,6 @@ export default function GeneralJournal() {
         });
       });
     }
-    console.log(monitoring)
     if (
       parseFloat(monitoring.totalDebit.replace(/,/g, '')) <= 0 ||
       parseFloat(monitoring.totalCredit.replace(/,/g, '')) <= 0
@@ -533,7 +531,24 @@ export default function GeneralJournal() {
       });
     }
 
-    const generalJournalData: any = []
+    const generalJournalData: any = table.current.getData()
+    const generalJournalDataFormatted = generalJournalData.map((itm: any) => {
+      return {
+        code: itm[0],
+        acctName: itm[1],
+        subAcctName: itm[2],
+        ClientName: itm[3],
+        debit: itm[4],
+        credit: itm[5],
+        TC_Code: itm[6],
+        remarks: itm[7],
+        vatType: itm[8],
+        invoice: itm[9],
+        TempID: itm[10],
+        IDNo: itm[11],
+        BranchCode: itm[12],
+      }
+    })
     if (modeUpdate) {
       codeCondfirmationAlert({
         isUpdate: true,
@@ -543,7 +558,7 @@ export default function GeneralJournal() {
             refNo: refRefNo.current?.value,
             dateEntry: refDate.current?.value,
             explanation: refExplanation.current?.value,
-            generalJournal: generalJournalData,
+            generalJournal: generalJournalDataFormatted,
             userCodeConfirmation,
           });
         },
@@ -556,7 +571,7 @@ export default function GeneralJournal() {
             refNo: refRefNo.current?.value,
             dateEntry: refDate.current?.value,
             explanation: refExplanation.current?.value,
-            generalJournal: generalJournalData,
+            generalJournal: generalJournalDataFormatted,
           });
         },
       });
@@ -782,6 +797,7 @@ export default function GeneralJournal() {
             refInvoice.current.value,
             refIDNo.current,
             refSubAcct.current,
+            "HO"
           ]
 
           let taxtInput: any = []
@@ -894,8 +910,11 @@ export default function GeneralJournal() {
     window.open("/dashboard/print", "_blank");
   }
   function onCancel() {
+    resetFieldRef()
+    resetRowFieldRef()
+    resetTable()
+    resetMonitoring()
     setMode("")
-    refetchGeneralJournalGenerator();
 
   }
   function monitor() {
@@ -910,6 +929,60 @@ export default function GeneralJournal() {
         balance: formatNumber(totalCredit - totalDebit),
       })
     }, 200)
+  }
+  function resetFieldRef() {
+    refetchGeneralJournalGenerator()
+    if (refDate.current) {
+      refDate.current.value = format(new Date(), "yyyy-MM-dd")
+    }
+    if (refExplanation.current) {
+      refExplanation.current.value = ""
+    }
+  }
+  function resetRowFieldRef() {
+    if (refCode.current) {
+      refCode.current.value = ''
+    }
+    if (refAccountName.current) {
+      refAccountName.current.value = ''
+    }
+    if (refSubAccount.current) {
+      refSubAccount.current.value = ''
+    }
+    if (refName.current) {
+      refName.current.value = ''
+    }
+
+
+    if (refDebit.current) {
+      refDebit.current.value = ''
+    }
+    if (refCredit.current) {
+      refCredit.current.value = ''
+    }
+    if (refTC.current) {
+      refTC.current.value = ''
+    }
+    if (refRemarks.current) {
+      refRemarks.current.value = ''
+    }
+    if (refVat.current) {
+      refVat.current.value = 'Non-VAT'
+    }
+    if (refInvoice.current) {
+      refInvoice.current.value = ''
+    }
+  }
+  function resetTable() {
+    table.current.resetTable()
+  }
+  function resetMonitoring() {
+    setMonitoring({
+      totalRow: "0",
+      totalDebit: "0.00",
+      totalCredit: "0.00",
+      balance: "0.00"
+    })
   }
 
   useEffect(() => {
@@ -1194,6 +1267,7 @@ export default function GeneralJournal() {
               },
             }}
             input={{
+              defaultValue: format(new Date(), "yyyy-MM-dd"),
               disabled: modeDefault,
               type: "date",
               style: { width: "190px" },
@@ -1599,7 +1673,7 @@ export default function GeneralJournal() {
 
                 setTimeout(() => {
                   const getData = table.current.getData()
-               
+
                   monitor()
                 }, 200)
 

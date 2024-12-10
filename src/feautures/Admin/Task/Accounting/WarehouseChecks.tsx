@@ -18,18 +18,343 @@ import LoadingButton from "@mui/lab/LoadingButton";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import Swal from "sweetalert2";
-import { brown } from "@mui/material/colors";
+import { blueGrey, brown, grey } from "@mui/material/colors";
 import { AuthContext } from "../../../../components/AuthContext";
 import SearchIcon from "@mui/icons-material/Search";
 import { useMutation, useQuery } from "react-query";
-import Table from "../../../../components/Table";
 import { setNewStateValue } from "./PostDateChecks";
-import { AnyPtrRecord } from "dns";
 import CustomDatePicker from "../../../../components/DatePicker";
 import { format } from "date-fns";
 import { flushSync } from "react-dom";
 import { UpwardTable } from "../../../../components/UpwardTable";
 import PageHelmet from "../../../../components/Helmet";
+import { SelectInput, TextInput } from "../../../../components/UpwardFields";
+import ManageSearchIcon from '@mui/icons-material/ManageSearch';
+import CheckIcon from '@mui/icons-material/Check';
+import HighlightOffIcon from '@mui/icons-material/HighlightOff';
+import SaveAsIcon from '@mui/icons-material/SaveAs';
+import AssessmentIcon from '@mui/icons-material/Assessment';
+import { DataGridViewMultiSelectionReact } from "../../../../components/DataGridViewReact";
+import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
+
+const warehouseColumn = [
+  { key: "PNo", label: "PN No.", width: 150 },
+  { key: "IDNo", label: "I.D. No.", width: 300 },
+  {
+    key: "Date",
+    label: "Date Received",
+    width: 170,
+  },
+  { key: "Name", label: "Name", width: 300 },
+  { key: "CheckDate", label: "Check Date", width: 120 },
+  { key: "Check_No", label: "Check No", width: 120, },
+  { key: "Check_Amnt", label: "Check Amount", width: 120 },
+  { key: "Bank", label: "Bank", width: 300 },
+  { key: "PDC_Status", label: "PDC Status", width: 120 },
+]
+
+
+export default function WarehouseChecks() {
+  const table = useRef<any>(null)
+  const refPDCStatus = useRef<HTMLSelectElement>(null)
+  const refRemarks = useRef<HTMLSelectElement>(null)
+  const refSearch = useRef<HTMLSelectElement>(null)
+  const refIDS = useRef<HTMLInputElement>(null)
+  const [monitoring, setMonitoring] = useState({
+    check: "0",
+    unCheck: "0",
+    found: "0"
+  })
+  const { executeQueryToClient } = useExecuteQueryFromClient()
+
+
+  async function LoadPDC(fldSearch: string, valSearch: string, StrWhere: string) {
+    const qry = `
+      SELECT 
+        PNo, 
+        IDNo, 
+        FORMAT(Date,'MM/dd/yyyy') AS Date, 
+        Name, 
+        date_format(Check_Date,'%m/%d/%Y') AS CheckDate, 
+        Check_No, 
+        Check_Amnt, 
+        Bank, 
+        PDC_Status
+      FROM PDC 
+      WHERE ${fldSearch} = '${valSearch}'  AND ${StrWhere} ORDER BY Check_Date`
+    const dt = await executeQueryToClient(qry)
+    if (dt.data) {
+      if (dt.data.data.length > 0) {
+        table.current.setDataFormated(dt.data.data)
+        setMonitoring({
+          check: "0",
+          unCheck: `${dt.data.data.length}`,
+          found: `${dt.data.data.length}`
+        })
+      }
+    }
+  }
+
+  function tsbSearch_Click() {
+    if (refIDS.current && refIDS.current.value === '') {
+      alert('Type field you want to search!')
+      refIDS.current?.focus();
+      return
+    }
+
+    if ((refSearch.current && refSearch.current.selectedIndex === 2 || refSearch.current?.selectedIndex === 4) && !isValidDate(refIDS.current?.value as string)) {
+      alert("Search is not a valid date");
+      refIDS.current?.focus();
+      return;
+    }
+    if (refPDCStatus.current && refIDS.current && refSearch.current) {
+
+      let strWhere = "";
+      const statusOptions = ["Received", "Stored", "Stored"];
+      const selectedIndex = refPDCStatus.current.selectedIndex;
+
+      if (selectedIndex >= 0) {
+        const status = statusOptions[selectedIndex];
+        if (selectedIndex !== 2) {
+          strWhere = `(PDC_Status = '${status}')`;
+        } else {
+          strWhere = `(PDC_Status = '${status}' OR (PDC_Status = 'Pulled Out' AND (PDC_Remarks = 'Fully Paid' OR PDC_Remarks = 'Replaced')))`;
+        }
+      }
+
+      const searchField = refSearch.current.value;
+      const searchValue = refIDS.current.value.trim()
+      LoadPDC(searchField, searchValue, strWhere);
+    }
+
+  }
+
+
+
+  return (
+    <div style={{
+      padding: "10px",
+      flex: 1,
+    }}>
+      <div style={{
+        display: "flex",
+        flexDirection: "column",
+        rowGap: "10px",
+        flex: 1,
+        width: "100%",
+        height: "100%"
+      }}>
+        <div style={{ display: "flex", columnGap: "10px", alignItems: "center" }}>
+          <SelectInput
+            label={{
+              title: "PDC Status: ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "80px",
+              },
+            }}
+            selectRef={refPDCStatus}
+            select={{
+              disabled: false,
+              style: { width: "220px", height: "22px" },
+              defaultValue: "Store in Warehouse",
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                  e.preventDefault()
+                  refRemarks.current?.focus()
+                }
+              }
+            }}
+            datasource={[
+              { key: "Store in Warehouse" },
+              { key: "Endorse for Deposit" },
+              { key: "Pull Out" },
+            ]}
+            values={"key"}
+            display={"key"}
+          />
+          <SelectInput
+            label={{
+              title: "Remarks: ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "80px",
+                marginLeft: "10px"
+              },
+            }}
+            selectRef={refRemarks}
+            select={{
+              disabled: false,
+              style: { width: "190px", height: "22px" },
+              defaultValue: "Non-VAT",
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                  e.preventDefault()
+                  //  refInvoice.current?.focus()
+                }
+              }
+            }}
+            datasource={[
+              { key: "" },
+              { key: "Fully Paid" },
+              { key: "Cash Replacement" },
+              { key: "Check Replacement" },
+              { key: "Account Closed" },
+              { key: "Hold" },
+              { key: "Not Renewed by Camfin" },
+            ]}
+            values={"key"}
+            display={"key"}
+          />
+          <Button
+            sx={{
+              height: "23px",
+              fontSize: "11px",
+              marginLeft: "10px"
+            }}
+            variant="contained"
+            color="info"
+          >New</Button>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", columnGap: "10px" }}>
+            <div style={{
+              display: "flex",
+              columnGap: "3px",
+              alignItems: "center"
+            }}>
+              <SelectInput
+                label={{
+                  title: "Search: ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "80px",
+                  },
+                }}
+                selectRef={refSearch}
+                select={{
+                  disabled: false,
+                  style: { width: "190px", height: "22px" },
+                  defaultValue: "PNo",
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                      e.preventDefault()
+                      //  refInvoice.current?.focus()
+                    }
+                  }
+                }}
+                datasource={[
+                  { key: "Policy", value: "PNo" },
+                  { key: "ID No.", value: "IDNo" },
+                  { key: "Account Name", value: "Name" },
+                  { key: "Bank", value: "Bank" },
+                ]}
+                values={"value"}
+                display={"key"}
+              />
+              <IconButton size="small">
+                <ManageSearchIcon />
+              </IconButton>
+            </div>
+            <div style={{ display: "flex", columnGap: "10px" }}>
+              <TextInput
+                label={{
+                  title: "",
+                  style: {
+                    display: "none"
+                  },
+                }}
+                input={{
+                  disabled: false,
+                  type: "text",
+                  style: { width: "235px", height: "22px" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                      // refCode.current?.focus()
+                    }
+                  }
+                }}
+                inputRef={refIDS}
+              />
+              <IconButton size="small" onClick={tsbSearch_Click}>
+                <ManageSearchIcon />
+              </IconButton>
+            </div>
+            <div style={{ display: "flex", columnGap: "8px", borderLeft: "1px solid #64748b", paddingLeft: "10px" }}>
+              <IconButton size="small">
+                <CheckIcon color="success" />
+              </IconButton>
+              <IconButton size="small">
+                <CloseIcon color="error" />
+              </IconButton>
+              <IconButton size="small">
+                <SaveAsIcon color="primary" />
+              </IconButton>
+              <IconButton size="small" color="secondary">
+                <AssessmentIcon />
+              </IconButton>
+              <IconButton size="small">
+                <HighlightOffIcon color="error" />
+              </IconButton>
+            </div>
+          </div>
+          <div>
+            <Button
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+                marginLeft: "10px",
+                bgcolor: grey[600],
+                "&:hover": {
+                  bgcolor: grey[700],
+                }
+              }}
+              variant="contained"
+            >Check for pull-out</Button>
+          </div>
+        </div>
+        <div style={{ flex: 1 }}>
+          <DataGridViewMultiSelectionReact
+            ref={table}
+            columns={warehouseColumn}
+            containerStyle={{
+              flex: 1,
+              height: "calc(100% - 30px)"
+            }}
+          />
+          <div style={{
+            height: "30px",
+            display: "flex",
+            justifyContent: "space-between",
+            padding: "0 50px",
+            alignItems: "center"
+          }}>
+            <div style={{ display: "flex", columnGap: "10px", fontSize: "13px", fontWeight: "bold" }}>
+              <span>Check:</span>
+              <span>{monitoring.check}</span>
+            </div>
+            <div style={{ display: "flex", columnGap: "10px", fontSize: "13px", fontWeight: "bold" }}>
+              <span>Uncheck:</span>
+              <span>{monitoring.unCheck}</span>
+            </div>
+            <div style={{ display: "flex", columnGap: "10px", fontSize: "13px", fontWeight: "bold" }}>
+              <span>Record Found:</span>
+              <span>{monitoring.found}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
+}
+function isValidDate(dateString: string) {
+  const date = new Date(dateString);
+  return !isNaN(date.getTime());
+}
 
 const warehouseColumns = [
   { field: "PNo", headerName: "PN No.", width: 130 },
@@ -79,7 +404,7 @@ export const reducer = (state: any, action: any) => {
   }
 };
 
-export default function WarehouseChecks() {
+function WarehouseCheckss() {
   const refParent = useRef<HTMLDivElement>(null);
   const [showModalPullout, setShowModalPullout] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
