@@ -369,7 +369,9 @@ export const DataGridViewMultiSelectionReact = forwardRef(({
     disbaleTable = false,
     isTableSelectable = true,
     containerStyle,
-    focusElementOnMaxTop
+    focusElementOnMaxTop,
+    onCheckAll,
+    onUnCheckAll
 }: any, ref) => {
     const parentElementRef = useRef<any>(null)
     const tbodyRef = useRef<HTMLTableSectionElement>(null)
@@ -393,6 +395,10 @@ export const DataGridViewMultiSelectionReact = forwardRef(({
         getData: () => {
             const newData = [...data];
             return newData
+        },
+        getSelectedRowsData: () => {
+            const newData = [...data];
+            return selectedRowIndex.map(index => newData[index]).filter(item => item !== undefined);
         },
         setData: (newData: any) => {
             setData(newData)
@@ -483,6 +489,39 @@ export const DataGridViewMultiSelectionReact = forwardRef(({
 
                             }}
                             >
+                                <div style={{
+                                    width: "18px",
+                                    height: "18px",
+                                    position: "relative",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center"
+                                }}>
+                                    <input
+                                        style={{
+                                            cursor: "pointer",
+                                            margin: "0px !important",
+                                            position: "absolute",
+                                        }}
+                                        readOnly={true}
+                                        type="checkbox"
+                                        onClick={(e) => {
+                                            if (e.currentTarget.checked) {
+                                                if (onCheckAll) {
+                                                    onCheckAll()
+                                                }
+                                                setSelectedRowIndex(data.map((itm: any, idx: any) => idx))
+                                            } else {
+                                                if (onUnCheckAll) {
+                                                    onUnCheckAll()
+                                                }
+                                                setSelectedRowIndex([])
+                                            }
+
+                                        }}
+                                    />
+
+                                </div>
 
                             </th>
                             {
@@ -729,7 +768,9 @@ export const useUpwardTableModalSearch = ({
     column,
     query,
     getSelectedItem,
-    onKeyDown
+    onKeyDown,
+    customWidth,
+    onClose
 }: any) => {
     const [show, setShow] = useState(false)
     const searchInputRef = useRef<HTMLInputElement>(null)
@@ -759,7 +800,10 @@ export const useUpwardTableModalSearch = ({
             }
         }, 100)
     }
-    function closeModal() {
+    function closeModal(muteOnClose = true) {
+        if (onClose && muteOnClose) {
+            onClose()
+        }
         setShow(false)
         dataCache = []
     }
@@ -810,7 +854,7 @@ export const useUpwardTableModalSearch = ({
                     <div
                         style={{
                             background: "#F1F1F1",
-                            width: blick ? "451px" : "450px",
+                            width: customWidth ? customWidth(blick, column) : blick ? "451px" : "450px",
                             height: blick ? "501px" : "500px",
                             position: "absolute",
                             zIndex: 111111,
@@ -878,6 +922,7 @@ export const useUpwardTableModalSearch = ({
                                         if (e.code === "NumpadEnter" || e.code === 'Enter') {
                                             searchInputValueCache = e.currentTarget.value
                                             const searchQuery = query(e.currentTarget.value)
+                                            console.log(searchQuery)
                                             const dd = await executeQueryToClient(searchQuery)
                                             setData(dd.data.data)
                                         }
@@ -925,6 +970,9 @@ export const useUpwardTableModalSearch = ({
                                     searchInputRef.current?.focus()
                                 }}
                             />
+                        </div>
+                        <div style={{ padding: "0 10px" }}>
+                            <span style={{ fontSize: "13px", fontWeight: "bold" }}>Records: Top {data.length}</span>
                         </div>
                         <style>
                             {
