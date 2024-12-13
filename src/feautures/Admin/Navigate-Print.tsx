@@ -59,7 +59,7 @@ export default function NavigatePrint() {
         setRows(rows);
       }
       if (module.current === "general-journal") {
-        const rows = chunkArray(data.current, 32);
+        const rows = chunkArray(data.current, 30);
         setRows(rows);
       }
       if (module.current === "warehouse") {

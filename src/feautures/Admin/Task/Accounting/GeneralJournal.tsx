@@ -879,7 +879,27 @@ export default function GeneralJournal() {
   }
   function handleClickPrint() {
     flushSync(() => {
-      const generalJournal: any = []
+      const data = table.current.getData()
+      const generalJournal: any = data.map((itm: any) => {
+
+        return {
+          code: itm[0],
+          acctName: itm[1],
+          subAcctName: itm[2],
+          ClientName: itm[3],
+          debit: itm[4],
+          credit: itm[5],
+          TC_Code: itm[6],
+          remarks: itm[7],
+          vatType: itm[8],
+          invoice: itm[9],
+          TempID: itm[10],
+          IDNo: itm[11],
+          BranchCode: itm[12]
+        }
+      })
+      console.log(data)
+
       localStorage.removeItem("printString");
       localStorage.setItem("dataString", JSON.stringify(generalJournal));
       localStorage.setItem("paper-width", "8.5in");
@@ -894,7 +914,7 @@ export default function GeneralJournal() {
       localStorage.setItem(
         "column",
         JSON.stringify([
-          { datakey: "code", header: "ACCT #", width: "40px" },
+          { datakey: "code", header: "ACCT #", width: "70px" },
           { datakey: "acctName", header: "ACCOUNT TITLE", width: "130px" },
           { datakey: "IDNo", header: "ID NO.", width: "120px" },
           { datakey: "ClientName", header: "IDENTITY", width: "200px" },
@@ -1065,10 +1085,11 @@ export default function GeneralJournal() {
           formatNumber(itm.Amount), //5
           "RPT", // 6
           "", // 7
+          "Non-VAT", //8
+          "",
+          itm.PolicyNo,
+          itm.PolicyNo,
           tmpNameRes.data[0]?.Sub_Acct, // 8
-          itm.PolicyNo, // 9
-          "", // 10
-          "NA" //11
         ]
 
         totalAmount = totalAmount + parseFloat(itm.Amount.toString().replace(/,/g, ''))
@@ -1079,20 +1100,23 @@ export default function GeneralJournal() {
       const { data: tmpNameRes } = await executeQueryToClient(`SELECT Shortname ,Sub_ShortName, Sub_Acct FROM (${ID_Entry}) id_entry WHERE IDNo = 'O-1024-00011'`)
 
       dgvJournal[iRow + 1] = [
-        "1.05.00",
-        "Related Party Transactions",
+        "1.03.01",
+        "Premium Receivables",
         tmpNameRes.data[0]?.Sub_ShortName, // 2
         tmpNameRes.data[0]?.Shortname, // 3
         formatNumber(totalAmount), //4
         "0.00", // 5,
         "RPT", // 7
-        "", // 8
-        tmpNameRes.data[0]?.Sub_Acct, // 9
+        "", // 9
+        "Non-VAT", //8
+        "",
+        "1.05.02", // 9
         "1.05.02", // 10
-        "", // 11
-        "NA" // 12
+        tmpNameRes.data[0]?.Sub_Acct, // 12
       ]
       table.current.setData(dgvJournal)
+
+
       setMode('update')
       setOpenJobs(false)
     }
