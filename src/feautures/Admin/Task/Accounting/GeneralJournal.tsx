@@ -37,10 +37,11 @@ import { SelectInput, TextFormatedInput, TextInput } from "../../../../component
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
-import { format } from "date-fns";
+import { format, lastDayOfMonth } from "date-fns";
 import PageHelmet from "../../../../components/Helmet";
 import { DataGridViewReact } from "../../../../components/DataGridViewReact";
 import { Loading } from "../../../../components/Loading";
+import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
 
 const initialState = {
 
@@ -98,6 +99,7 @@ const selectedCollectionColumns = [
 ];
 
 export default function GeneralJournal() {
+  const { executeQueryToClient } = useExecuteQueryFromClient()
   const [mode, setMode] = useState<"update" | "add" | "">("")
   const [monitoring, setMonitoring] = useState({
     totalRow: "0",
@@ -1007,6 +1009,95 @@ export default function GeneralJournal() {
     })
   }
 
+  async function DoRPTTransactionNILHN() {
+    let JobDate = new Date(state.jobTransactionDate)
+    let dtFrom = format(JobDate, "yyyy-MM-01-")
+    let dtTo = format(lastDayOfMonth(JobDate), "yyyy-MM-dd")
+    let iRow = 0
+
+    const qry = `
+    select 
+      a.PolicyNo,
+      a.IDNo,
+      (TotalDue - ifnull(b.TotalPaid,0)) as 'Amount',
+      c.Mortgagee 
+    from Policy a 
+      left join (
+        select 
+          IDNo,
+          sum(Debit) as 'TotalPaid' 
+        from collection 
+        group by IDNo
+      ) b on b.IDNo = a.PolicyNo 
+      inner join VPolicy c on c.PolicyNo = a.PolicyNo 
+      where
+      (TotalDue - ifnull(b.TotalPaid,0)) <> 0 and 
+      a.PolicyType = 'TPL' and 
+      c.Mortgagee = 'N I L - HN' and 
+      (
+        a.DateIssued >= '${dtFrom}' and 
+        a.DateIssued <= '${dtTo}'
+      ) 
+      order by a.DateIssued
+      `
+    let dgvJournal: any = []
+    const { data } = await executeQueryToClient(qry)
+    const dataArray = data.data
+    if (dataArray.length > 0) {
+      let totalAmount = 0
+      let i = 0
+      for (const itm of dataArray) {
+        let tmpID = "";
+        if (i == 0) {
+          iRow = 0
+        } else {
+          iRow = iRow + 1
+        }
+
+        tmpID = itm.IDNo
+        const { data: tmpNameRes } = await executeQueryToClient(`SELECT Shortname ,Sub_ShortName, Sub_Acct FROM (${ID_Entry}) id_entry WHERE IDNo = '${tmpID}'`)
+        dgvJournal[iRow] = [
+          "1.03.01", // 0
+          "Premium Receivables", // 1
+          tmpNameRes.data[0]?.Sub_ShortName, // 2
+          tmpNameRes.data[0]?.Shortname, // 3
+          "0.00", // 4
+          formatNumber(itm.Amount), //5
+          "RPT", // 6
+          "", // 7
+          tmpNameRes.data[0]?.Sub_Acct, // 8
+          itm.PolicyNo, // 9
+          "", // 10
+          "NA" //11
+        ]
+
+        totalAmount = totalAmount + parseFloat(itm.Amount.toString().replace(/,/g, ''))
+        i += 1
+      }
+
+
+      const { data: tmpNameRes } = await executeQueryToClient(`SELECT Shortname ,Sub_ShortName, Sub_Acct FROM (${ID_Entry}) id_entry WHERE IDNo = 'O-1024-00011'`)
+
+      dgvJournal[iRow + 1] = [
+        "1.05.00",
+        "Related Party Transactions",
+        tmpNameRes.data[0]?.Sub_ShortName, // 2
+        tmpNameRes.data[0]?.Shortname, // 3
+        formatNumber(totalAmount), //4
+        "0.00", // 5,
+        "RPT", // 7
+        "", // 8
+        tmpNameRes.data[0]?.Sub_Acct, // 9
+        "1.05.02", // 10
+        "", // 11
+        "NA" // 12
+      ]
+      table.current.setData(dgvJournal)
+      setMode('update')
+      setOpenJobs(false)
+    }
+
+  }
 
   return (
     <>
@@ -1844,7 +1935,12 @@ export default function GeneralJournal() {
                 loading={isLoadingJob}
                 color="success"
                 variant="contained"
-                onClick={() => mutateJob(state)}
+                onClick={() => {
+                  if (state.jobType === '4') {
+                    DoRPTTransactionNILHN()
+                  }
+
+                }}
               >
                 Create Job
               </LoadingButton>
@@ -1874,3 +1970,54 @@ function setNewStateValue(dispatch: any, obj: any) {
     dispatch({ type: "UPDATE_FIELD", field, value });
   });
 }
+const ID_Entry = `
+SELECT 
+       id_entry.IDNo,
+       id_entry.ShortName as Shortname,
+       IDType,
+       b.Acronym as Sub_Acct,
+       b.ShortName as Sub_ShortName
+   FROM
+       (SELECT 
+           IF(aa.option = 'individual', CONCAT(IF(aa.lastname IS NOT NULL
+                   AND TRIM(aa.lastname) <> '', CONCAT(aa.lastname, ', '), ''), aa.firstname), aa.company) AS ShortName,
+               aa.entry_client_id AS IDNo,
+               aa.sub_account,
+               'Client' as IDType
+       FROM
+           entry_client aa UNION ALL SELECT 
+           CONCAT(IF(aa.lastname IS NOT NULL
+                   AND TRIM(aa.lastname) <> '', CONCAT(aa.lastname, ', '), ''), aa.firstname) AS ShortName,
+               aa.entry_agent_id AS IDNo,
+               aa.sub_account,
+               'Agent' as IDType
+       FROM
+           entry_agent aa UNION ALL SELECT 
+           CONCAT(IF(aa.lastname IS NOT NULL
+                   AND TRIM(aa.lastname) <> '', CONCAT(aa.lastname, ', '), ''), aa.firstname) AS ShortName,
+               aa.entry_employee_id AS IDNo,
+               aa.sub_account,
+               'Employee' as IDType
+       FROM
+           entry_employee aa UNION ALL SELECT 
+           aa.fullname AS ShortName,
+               aa.entry_fixed_assets_id AS IDNo,
+               sub_account,
+                'Fixed Assets' as IDType
+       FROM
+           entry_fixed_assets aa UNION ALL SELECT 
+           aa.description AS ShortName,
+               aa.entry_others_id AS IDNo,
+               aa.sub_account,
+               'Others' as IDType
+       FROM
+           entry_others aa UNION ALL SELECT 
+           IF(aa.option = 'individual', CONCAT(IF(aa.lastname IS NOT NULL
+                   AND TRIM(aa.lastname) <> '', CONCAT(aa.lastname, ', '), ''), aa.firstname), aa.company) AS ShortName,
+               aa.entry_supplier_id AS IDNo,
+               aa.sub_account,
+                'Supplier' as IDType
+       FROM
+           entry_supplier aa) id_entry
+      left join sub_account b ON id_entry.sub_account = b.Sub_Acct
+ `

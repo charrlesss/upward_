@@ -1279,6 +1279,35 @@ const PRODUCTION_ACCOUNTING = [
       // },
     ],
   },
+  {
+    showDropDown: false,
+    text: "Production Report",
+    icon: (
+      <AlignVerticalCenterIcon
+        sx={{ width: "20px !important", heigth: "20px !important" }}
+      />
+    ),
+    children: [
+      {
+        text: "Production Report",
+        icon: (
+          <BookmarkAddedIcon
+            sx={{ width: "20px !important", heigth: "20px !important" }}
+          />
+        ),
+        link: "/dashboard/reports/production/production-report",
+      },
+      {
+        text: "Renewal Notice",
+        icon: (
+          <BookmarkAddedIcon
+            sx={{ width: "20px !important", heigth: "20px !important" }}
+          />
+        ),
+        link: "/dashboard/templates/renewal-template",
+      },
+    ]
+  }
   // {
   //   text: "Reports",
   //   link: "/dashboard/reports/accounting/schedule-account",
@@ -1376,27 +1405,27 @@ export function sidebarOptions(userAccess: any) {
   };
   return sidebarOption[userAccess.trim()] as Array<
     | {
+      text: string;
+      icon: JSX.Element;
+      children: {
         text: string;
+        link: string;
         icon: JSX.Element;
-        children: {
-          text: string;
-          link: string;
-          icon: JSX.Element;
-        }[];
-      }
+      }[];
+    }
     | {
+      text: string;
+      icon: JSX.Element;
+      children: {
         text: string;
         icon: JSX.Element;
         children: {
           text: string;
           icon: JSX.Element;
-          children: {
-            text: string;
-            icon: JSX.Element;
-            link: string;
-          }[];
+          link: string;
         }[];
-      }
+      }[];
+    }
   >;
 }
 export function RenderSidebarItems({
@@ -1480,8 +1509,8 @@ export function RenderSidebarItems({
                         selected={
                           child1.text === "Policy"
                             ? policyLinkList.some(
-                                (d) => d === location.pathname
-                              )
+                              (d) => d === location.pathname
+                            )
                             : location.pathname === child1.link
                         }
                         component={Link}

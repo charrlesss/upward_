@@ -251,8 +251,35 @@ export default function Layout() {
 
 export function RenderPage() {
   return (
-    <Suspense fallback={<LoaderLinear open={true} />}>
-      <Outlet />
-    </Suspense>
+    <Box sx={{
+      display: "flex",
+      flexDirection: "column",
+      height: "100vh",
+    }}>
+      <CssBaseline />
+
+      <Header />
+      <Main >
+        <Box
+          id="page-content"
+          sx={(theme) => ({
+            width: "100%",
+            height: "100%",
+            position: "relative",
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            [theme.breakpoints.down("md")]: {
+              paddingLeft: "300px",
+            },
+          })}
+        >
+          <Suspense fallback={<LoaderLinear open={true} />}>
+            <Outlet />
+          </Suspense>
+        </Box>
+      </Main>
+
+    </Box>
   );
 }

@@ -1,985 +1,466 @@
-import React, { useContext, useRef, useState } from "react";
-import PrintPreview, {
-  columnSelection,
-  copiedByHeaderOnDoubleClick,
-  formatNumberWithCommas,
-} from "../../../../components/PrintPreview/PrintPreview";
-import { columnRender } from "../Production/productionreport.column";
-import { AuthContext } from "../../../../components/AuthContext";
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import {
-  FormControl,
-  MenuItem,
-  Select,
-  TextField,
-  InputLabel,
-  Box,
-} from "@mui/material";
-import CustomDatePicker from "../../../../components/DatePicker";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { useQuery } from "react-query";
-import { LoadingButton } from "@mui/lab";
-import { flushSync } from "react-dom";
-import { arrangeData } from "../../../../components/PrintPreview/dataCore";
+import { useContext, useRef, useState } from "react"
+import { AuthContext } from "../../../../components/AuthContext"
+import { SelectInput, TextAreaInput, TextInput } from "../../../../components/UpwardFields"
+import { format, lastDayOfMonth, subYears, setDate } from "date-fns"
+import { Button } from "@mui/material"
+import { useQuery } from "react-query"
 
-const center = ["DateIssued", "PolicyNo", "AssuredName", "EffictiveDate"];
-function ShowDateSelection({ user, state, dispatch, handleInputChange }: any) {
-  const dateFromRef = useRef<HTMLElement>(null);
-  const dateToRef = useRef<HTMLElement>(null);
+export default function ProductionReport() {
+  const { user, myAxios } = useContext(AuthContext)
+  const [title, setTitle] = useState(generateTitle({
+    format2: "All",
+    type: "COM",
+    account: "All",
+    dateFormat: "Monthly",
+    date: new Date()
+  }))
+
+  const {
+    isLoading: loadingAccount,
+    refetch: refetchAccount,
+    data: dataAccount
+  } = useQuery({
+    queryKey: "policy-account",
+    queryFn: async () =>
+      await myAxios.get(`/reports/reports/policy-account`, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      }),
+    refetchOnWindowFocus: false,
+    onSuccess: (data) => {
+      const response = data as any;
+      console.log(response)
+    },
+  });
+
+
+  const titleRef = useRef<HTMLTextAreaElement>(null)
+  const format1Ref = useRef<HTMLSelectElement>(null)
+  const format2Ref = useRef<HTMLSelectElement>(null)
+  const dateFormatRef = useRef<HTMLSelectElement>(null)
+  const numberRef = useRef<HTMLInputElement>(null)
+  const TypeRef = useRef<HTMLSelectElement>(null)
+  const dateRef = useRef<HTMLInputElement>(null)
+  const policyTypeRef = useRef<HTMLSelectElement>(null)
+  const sortRef = useRef<HTMLSelectElement>(null)
+  const accountRef = useRef<HTMLSelectElement>(null)
+
+  function generateTitle(props: any) {
+    const newTitle: string = `UPWARD MANAGEMENT INSURANCE SERVICES ${props.format2 === 'All' ? "" : props.format2}\n${props.dateFormat} Production Report (${props.type} - ${props.account})\nCut off Date: ${dateFormat(props.dateFormat, props.date)}`
+    return newTitle
+  }
+  function dateFormat(dateFormat: string, date: Date) {
+    if (dateFormat === 'Daily') {
+      return format(date, 'MMMM d, yyyy')
+    } else if (dateFormat === 'Monthly') {
+      return format(date, 'MMMM yyyy')
+    } else if (dateFormat === 'Yearly') {
+      return format(date, 'yyyy')
+    }
+  }
+
+  async function generateReport() {
+    let FDate = ''
+    let TDate = ''
+    const date = new Date(dateRef.current?.value as any)
+    const numYear = parseInt(numberRef.current?.value as any)
+    if (dateFormatRef.current?.value === 'Daily') {
+      FDate = format(date, "MM/dd/yyyy")
+      TDate = format(date, "MM/dd/yyyy")
+    } else if (dateFormatRef.current?.value === 'Monthly') {
+      FDate = format(date, "MM/01/yyyy")
+      TDate = format(lastDayOfMonth(date), "MM/dd/yyyy")
+    } else if (dateFormatRef.current?.value === 'Yearly') {
+      const adjustedDate = subYears(date, numYear);
+      const firstDayOfMonth = setDate(adjustedDate, 1);
+      FDate = format(firstDayOfMonth, 'MM/dd/yyyy');
+      TDate = format(lastDayOfMonth(date), "MM/dd/yyyy")
+    }
+    const reportDetails: any = {
+      FDate,
+      TDate,
+      cmbOrder: accountRef.current?.value,
+      cmbSubAcct: TypeRef.current?.value,
+      cmbType: `${format2Ref.current?.selectedIndex}`,
+      cmbpolicy: policyTypeRef.current?.value,
+      cmbSort: sortRef.current?.value,
+      title
+    }
+
+    try {
+      const response = await myAxios.post('/reports/reports/test-new-report', reportDetails, {
+        responseType: 'arraybuffer',
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`
+        }
+      })
+      const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      window.open(pdfUrl);
+    } catch (error) {
+      console.error('SERVER ERROR :', error);
+    }
+
+  }
+
   return (
-    <React.Fragment>
-      {state.report === "Custom" && (
-        <React.Fragment>
-          <CustomDatePicker
-            minWidth="150px"
-            fullWidth={true}
-            label="Date From"
-            onChange={(value: any) => {
-              dispatch({
-                type: "UPDATE_FIELD",
-                field: "dateFrom",
-                value: value,
-              });
-              state.dateFrom = value;
-              dispatch({
-                type: "UPDATE_FIELD",
-                field: "title",
-                value: setupTitle(state, user?.department as string),
-              });
-            }}
-            value={new Date(state.dateFrom)}
-            onKeyDown={(e: any) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                const timeout = setTimeout(() => {
-                  dateFromRef.current?.querySelector("button")?.click();
-                  clearTimeout(timeout);
-                }, 150);
-              }
-            }}
-            datePickerRef={dateFromRef}
-            textField={{
-              InputLabelProps: {
-                style: {
-                  fontSize: "14px",
-                },
-              },
-              InputProps: {
-                style: { height: "27px", fontSize: "14px" },
-              },
-            }}
-          />
-          <CustomDatePicker
-            minWidth="150px"
-            fullWidth={true}
-            label="Date To"
-            onChange={(value: any) => {
-              dispatch({
-                type: "UPDATE_FIELD",
-                field: "dateTo",
-                value: value,
-              });
+    <div style={{
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      flex: 1,
+      height: "100vh",
+      backgroundColor: "#F1F1F1",
 
-              state.dateTo = value;
-              dispatch({
-                type: "UPDATE_FIELD",
-                field: "title",
-                value: setupTitle(state, user?.department as string),
-              });
-            }}
-            value={new Date(state.dateTo)}
-            onKeyDown={(e: any) => {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                const timeout = setTimeout(() => {
-                  dateToRef.current?.querySelector("button")?.click();
-                  clearTimeout(timeout);
-                }, 150);
-              }
-            }}
-            datePickerRef={dateToRef}
-            textField={{
-              InputLabelProps: {
-                style: {
-                  fontSize: "14px",
-                },
-              },
-              InputProps: {
-                style: { height: "27px", fontSize: "14px" },
-              },
-            }}
-          />
-        </React.Fragment>
-      )}
-
-      {state.report === "Daily" && (
-        <CustomDatePicker
-          minWidth="150px"
-          fullWidth={true}
-          label="Date"
-          onChange={(value: any) => {
-            dispatch({
-              type: "UPDATE_FIELD",
-              field: "dateFrom",
-              value: value,
-            });
-            state.dateFrom = value;
-            dispatch({
-              type: "UPDATE_FIELD",
-              field: "title",
-              value: setupTitle(state, user?.department as string),
-            });
+    }}>
+      <div style={{
+        border: "1px solid #94a3b8",
+        width: "500px",
+        height: "450px",
+        display: "flex",
+        flexDirection: "column",
+        rowGap: "10px",
+        padding: "20px",
+        boxShadow: "0px 0px 5px -1px rgba(0,0,0,0.75)"
+      }}>
+        <TextAreaInput
+          label={{
+            title: " ",
+            style: {
+              display: "none"
+            },
           }}
-          value={new Date(state.dateFrom)}
-          onKeyDown={(e: any) => {
-            if (e.code === "Enter" || e.code === "NumpadEnter") {
-              const timeout = setTimeout(() => {
-                dateFromRef.current?.querySelector("button")?.click();
-                clearTimeout(timeout);
-              }, 150);
+          textarea={{
+            rows: 6,
+            style: { flex: 1, fontSize: "14px", },
+            value: title,
+            onKeyDown: (e) => {
+              if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                //  refDate.current?.focus()
+              }
+            },
+            onChange: (e) => {
+              setTitle(e.target.value)
+            },
+          }}
+          _inputRef={titleRef}
+        />
+        <div style={{ display: "flex", columnGap: "2px", width: "100%" }}>
+          <SelectInput
+            containerStyle={{
+              flex: 1
+            }}
+            label={{
+              title: "Format : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "90px",
+              },
+            }}
+            selectRef={format1Ref}
+            select={{
+              disabled: false,
+              style: { width: "100%", height: "22px" },
+              defaultValue: "Full",
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                  e.preventDefault()
+                  // refInvoice.current?.focus()
+                }
+              }
+            }}
+            datasource={[
+              { key: "Full" },
+              { key: "Summary" },
+            ]}
+            values={"key"}
+            display={"key"}
+          />
+          <SelectInput
+            label={{
+              title: "Format : ",
+              style: {
+                display: "none"
+              },
+            }}
+            selectRef={format2Ref}
+            select={{
+              disabled: false,
+              style: { width: "80px", height: "22px" },
+              defaultValue: "All",
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                  e.preventDefault()
+                  // refInvoice.current?.focus()
+                }
+              },
+              onChange: (e) => {
+                setTitle(generateTitle({
+                  format2: e.target.value,
+                  type: TypeRef.current?.value,
+                  account: accountRef.current?.value,
+                  dateFormat: dateFormatRef.current?.value,
+                  date: new Date(dateRef.current?.value as any)
+                }))
+              }
+            }}
+            datasource={[
+              { key: "All" },
+              { key: "Financed" },
+            ]}
+            values={"key"}
+            display={"key"}
+          />
+        </div>
+        <div style={{ display: "flex", columnGap: "2px", width: "100%" }}>
+          <SelectInput
+            containerStyle={{
+              flex: 1
+            }}
+            label={{
+              title: "Report : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "90px",
+              },
+            }}
+            selectRef={dateFormatRef}
+            select={{
+              disabled: false,
+              style: { width: "100%", height: "22px" },
+              defaultValue: "Monthly",
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                  e.preventDefault()
+                  // refInvoice.current?.focus()
+                }
+              },
+              onChange: (e) => {
+                setTitle(generateTitle({
+                  format2: format2Ref.current?.value,
+                  type: TypeRef.current?.value,
+                  account: accountRef.current?.value,
+                  dateFormat: e.target.value,
+                  date: new Date(dateRef.current?.value as any)
+                }))
+              }
+            }}
+            datasource={[
+              { key: "Daily" },
+              { key: "Monthly" },
+              { key: "Yearly" },
+            ]}
+            values={"key"}
+            display={"key"}
+          />
+          <TextInput
+            label={{
+              title: " ",
+              style: {
+                display: "none"
+              },
+            }}
+            input={{
+              type: "number",
+              defaultValue: 0,
+              style: { width: "80px" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                }
+              }
+            }}
+            inputRef={numberRef}
+          />
+        </div>
+        <SelectInput
+          label={{
+            title: "Type : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "90px",
+            },
+          }}
+          containerStyle={{
+            flex: 1,
+            height: "22px",
+          }}
+          selectRef={TypeRef}
+          select={{
+            disabled: false,
+            style: { width: "100%", height: "22px" },
+            defaultValue: "COM",
+            onKeyDown: (e) => {
+              if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                e.preventDefault()
+                // refInvoice.current?.focus()
+              }
+            },
+            onChange: (e) => {
+              setTitle(generateTitle({
+                format2: format2Ref.current?.value,
+                type: e.target.value,
+                account: accountRef.current?.value,
+                dateFormat: dateFormatRef.current?.value,
+                date: new Date(dateRef.current?.value as any)
+              }))
             }
           }}
-          datePickerRef={dateFromRef}
-          textField={{
-            InputLabelProps: {
+          datasource={[
+            { key: "Bonds" },
+            { key: "CGL" },
+            { key: "COM" },
+            { key: "FIRE" },
+            { key: "MAR" },
+            { key: "MSPR" },
+            { key: "PA" },
+            { key: "TPL" },
+          ]}
+          values={"key"}
+          display={"key"}
+        />
+        <TextInput
+          containerStyle={{
+            flex: 1,
+          }}
+          label={{
+            title: "Date : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "90px",
+            },
+          }}
+          input={{
+            type: "date",
+            defaultValue: format(new Date(), "yyyy-MM-dd"),
+            style: { width: "100%", height: "22px" },
+            onKeyDown: (e) => {
+              if (e.code === "NumpadEnter" || e.code === 'Enter') {
+              }
+            },
+            onChange: (e) => {
+              setTitle(generateTitle({
+                format2: format2Ref.current?.value,
+                type: TypeRef.current?.value,
+                account: accountRef.current?.value,
+                dateFormat: dateFormatRef.current?.value,
+                date: new Date(e.target.value as any)
+              }))
+            }
+          }}
+          inputRef={dateRef}
+        />
+        <SelectInput
+          label={{
+            title: "Policy Type : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "90px",
+            },
+          }}
+          containerStyle={{
+            flex: 1,
+            height: "22px",
+          }}
+          selectRef={policyTypeRef}
+          select={{
+            disabled: false,
+            style: { width: "100%", height: "22px" },
+            defaultValue: "Regular",
+            onKeyDown: (e) => {
+              if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                e.preventDefault()
+                // refInvoice.current?.focus()
+              }
+            }
+          }}
+          datasource={[
+            { key: "Regular" },
+            { key: "Temporary" },
+          ]}
+          values={"key"}
+          display={"key"}
+        />
+        <div style={{ flex: 1, border: "1px solid #94a3b8", padding: "10px", display: "flex", flexDirection: "column", rowGap: "10px" }}>
+          <SelectInput
+            label={{
+              title: "Sort : ",
               style: {
-                fontSize: "14px",
-              },
-            },
-            InputProps: {
-              style: { height: "27px", fontSize: "14px" },
-            },
-          }}
-        />
-      )}
-      <LocalizationProvider dateAdapter={AdapterDateFns}>
-        {state.report === "Monthly" && (
-          <DatePicker
-            sx={{
-              width: "100%",
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-            slotProps={{
-              textField: {
-                size: "small",
-                name: "",
-                InputLabelProps: {
-                  style: {
-                    fontSize: "14px",
-                  },
-                },
-                InputProps: {
-                  style: { height: "27px", fontSize: "14px" },
-                },
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "90px",
               },
             }}
-            label={"Date"}
-            views={["month", "year"]}
-            value={state.dateFrom}
-            onChange={(value) => {
-              dispatch({
-                type: "UPDATE_FIELD",
-                field: "dateFrom",
-                value: value,
-              });
-
-              state.dateFrom = value;
-              dispatch({
-                type: "UPDATE_FIELD",
-                field: "title",
-                value: setupTitle(state, user?.department as string),
-              });
+            containerStyle={{
+              flex: 1,
+              height: "22px",
             }}
+            selectRef={sortRef}
+            select={{
+              disabled: false,
+              style: { width: "100%", height: "22px" },
+              defaultValue: "Date Issued",
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                  e.preventDefault()
+                  // refInvoice.current?.focus()
+                }
+              }
+            }}
+            datasource={[
+              { key: "Date Issued" },
+              { key: "Policy No#" },
+              { key: "Date From" },
+            ]}
+            values={"key"}
+            display={"key"}
           />
-        )}
-        {state.report === "Yearly" && (
-          <React.Fragment>
-            <DatePicker
-              sx={{
-                width: "100%",
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-              slotProps={{
-                textField: {
-                  size: "small",
-                  name: "",
-                  inputRef: dateFromRef,
-                  InputLabelProps: {
-                    style: {
-                      fontSize: "14px",
-                    },
-                  },
-                  InputProps: {
-                    style: { height: "27px", fontSize: "14px" },
-                  },
-                },
-              }}
-              label={"Date"}
-              views={["year"]}
-              value={state.dateFrom}
-              onChange={(value) => {
-                dispatch({
-                  type: "UPDATE_FIELD",
-                  field: "dateFrom",
-                  value: value,
-                });
-                state.dateFrom = value;
-                dispatch({
-                  type: "UPDATE_FIELD",
-                  field: "title",
-                  value: setupTitle(state, user?.department as string),
-                });
-              }}
-            />
-            <TextField
-              type="number"
-              label="Year Count"
-              name="yearCount"
-              value={state.yearCount}
-              onChange={(e) => {
-                handleInputChange(e);
-                state.yearCount = e.target.value;
-                dispatch({
-                  type: "UPDATE_FIELD",
-                  field: "title",
-                  value: setupTitle(state, user?.department as string),
-                });
-              }}
-              InputProps={{
-                style: { height: "27px", fontSize: "12px" },
-              }}
-              sx={{
-                flex: 1,
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            />
-          </React.Fragment>
-        )}
-      </LocalizationProvider>
-    </React.Fragment>
-  );
-}
-function Setting({ state, dispatch }: { state: any; dispatch: any }) {
-  const { myAxios, user } = useContext(AuthContext);
-  const { data: dataAccount, isLoading: isLoadingAccount } = useQuery({
-    queryKey: "account",
-    queryFn: async () =>
-      await myAxios.get("/reports/reports/report-fields/accounts", {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      }),
-  });
-  const { data: dataPolicy, isLoading: isLoadingPolicy } = useQuery({
-    queryKey: "policy",
-    queryFn: async () =>
-      await myAxios.get("/reports/reports/report-fields/policy", {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      }),
-  });
-  const handleInputChange = (e: any) => {
-    const { name, value } = e.target;
-    if (name === "policy" && value !== "TPL") {
-      dispatch({ type: "UPDATE_FIELD", field: "mortgagee", value: "" });
-    }
-    if (name === "mortgagee" && value !== "") {
-      dispatch({ type: "UPDATE_FIELD", field: "account", value: "" });
-    }
-    dispatch({ type: "UPDATE_FIELD", field: name, value });
-  };
-
-  return (
-    <div
-      style={{
-        padding: "10px",
-      }}
-    >
-      <TextField
-        label="Title"
-        fullWidth
-        name="title"
-        value={state.title}
-        onChange={handleInputChange}
-        rows={6}
-        multiline
-        InputProps={{
-          style: { height: "140px", fontSize: "12px" },
-        }}
-        sx={{
-          flex: 1,
-          ".MuiFormLabel-root": { fontSize: "14px" },
-          ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-        }}
-      />
-      <Box
-        sx={(theme) => ({
-          height: "100%",
-          display: "flex",
-          gap: "10px",
-          margin: "10px 0",
-          flexDirection: "column",
-        })}
-      >
-        <FormControl
-          fullWidth
-          variant="outlined"
-          size="small"
-          sx={{
-            ".MuiFormLabel-root": {
-              fontSize: "14px",
-              background: "white",
-              zIndex: 99,
-              padding: "0 3px",
-            },
-            ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-          }}
-        >
-          <InputLabel id="paper-format-1">Format</InputLabel>
-          <Select
-            labelId="paper-format-1"
-            value={state.format1}
-            label="Format"
-            name="format1"
-            onChange={(e) => {
-              handleInputChange(e);
-              state.format1 = e.target.value;
-              dispatch({
-                type: "UPDATE_FIELD",
-                field: "title",
-                value: setupTitle(state, user?.department as string),
-              });
-            }}
-            sx={{
-              height: "27px",
-              fontSize: "14px",
-            }}
-          >
-            <MenuItem value={"Full"}>Full</MenuItem>
-            <MenuItem value={"Summary"}>Summary</MenuItem>
-          </Select>
-        </FormControl>
-        {state.mortgagee === "" && (
-          <FormControl
-            fullWidth
-            variant="outlined"
-            size="small"
-            sx={{
-              ".MuiFormLabel-root": {
-                fontSize: "14px",
-                background: "white",
-                zIndex: 99,
-                padding: "0 3px",
+          <SelectInput
+            label={{
+              title: "Account : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "90px",
               },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
             }}
-          >
-            <InputLabel id="paper-format-2">Format</InputLabel>
-
-            <Select
-              id="paper-format-2"
-              label="Format"
-              value={state.format2}
-              name="format2"
-              onChange={(e) => {
-                handleInputChange(e);
-                state.format2 = e.target.value;
-                dispatch({
-                  type: "UPDATE_FIELD",
-                  field: "title",
-                  value: setupTitle(state, user?.department as string),
-                });
-              }}
-              sx={{
-                height: "27px",
-                fontSize: "14px",
-              }}
-            >
-              <MenuItem value={"All"}>All</MenuItem>
-              <MenuItem value={"Financed"}>Financed</MenuItem>
-            </Select>
-          </FormControl>
-        )}
-        <FormControl
-          fullWidth
-          variant="outlined"
-          size="small"
-          sx={{
-            ".MuiFormLabel-root": {
-              fontSize: "14px",
-              background: "white",
-              zIndex: 99,
-              padding: "0 3px",
-            },
-            ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-          }}
-        >
-          <InputLabel id="report">Report</InputLabel>
-          <Select
-            id="report"
-            label="Report"
-            value={state.report}
-            name="report"
-            onChange={(e) => {
-              handleInputChange(e);
-              state.report = e.target.value;
-              dispatch({
-                type: "UPDATE_FIELD",
-                field: "title",
-                value: setupTitle(state, user?.department as string),
-              });
+            containerStyle={{
+              flex: 1,
+              height: "22px",
             }}
-            sx={{
-              height: "27px",
-              fontSize: "14px",
-            }}
-          >
-            <MenuItem value={"Daily"}>Daily</MenuItem>
-            <MenuItem value={"Monthly"}>Monthly</MenuItem>
-            {state.mortgagee === "" && (
-              <MenuItem value={"Yearly"}>Yearly</MenuItem>
-            )}
-            <MenuItem value={"Custom"}>Custom</MenuItem>
-          </Select>
-        </FormControl>
-        {isLoadingPolicy ? (
-          <LoadingButton loading={isLoadingPolicy} />
-        ) : (
-          <FormControl
-            fullWidth
-            variant="outlined"
-            size="small"
-            sx={{
-              ".MuiFormLabel-root": {
-                fontSize: "14px",
-                background: "white",
-                zIndex: 99,
-                padding: "0 3px",
+            selectRef={accountRef}
+            select={{
+              disabled: false,
+              style: { width: "100%", height: "22px" },
+              defaultValue: "All",
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                  e.preventDefault()
+                  // refInvoice.current?.focus()
+                }
               },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              onChange: (e) => {
+                setTitle(generateTitle({
+                  format2: format2Ref.current?.value,
+                  type: TypeRef.current?.value,
+                  account: e.target.value,
+                  dateFormat: dateFormatRef.current?.value,
+                  date: new Date(dateRef.current?.value as any)
+                }))
+              }
             }}
-          >
-            <InputLabel id="policy">Type</InputLabel>
-            <Select
-              id="policy"
-              label="Type"
-              value={state.policy}
-              name="policy"
-              onChange={(e) => {
-                handleInputChange(e);
-                state.policy = e.target.value;
-                dispatch({
-                  type: "UPDATE_FIELD",
-                  field: "title",
-                  value: setupTitle(state, user?.department as string),
-                });
-              }}
-              sx={{
-                height: "27px",
-                fontSize: "14px",
-              }}
-            >
-              {dataPolicy?.data.policy.map((item: any, idx: number) => {
-                return (
-                  <MenuItem key={idx} value={item.Bonds}>
-                    {item.Bonds}
-                  </MenuItem>
-                );
-              })}
-            </Select>
-          </FormControl>
-        )}
-        <ShowDateSelection
-          dispatch={dispatch}
-          state={state}
-          handleInputChange={handleInputChange}
-          user={user}
-        />
-        {state.mortgagee === "" && (
-          <FormControl
-            fullWidth
-            variant="outlined"
-            size="small"
-            sx={{
-              ".MuiFormLabel-root": {
-                fontSize: "14px",
-                background: "white",
-                zIndex: 99,
-                padding: "0 3px",
-              },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-          >
-            <InputLabel id="policyType">Policy Type</InputLabel>
-            <Select
-              id="policyType"
-              label="Policy Type"
-              value={state.policyType}
-              name="policyType"
-              onChange={handleInputChange}
-              sx={{
-                height: "27px",
-                fontSize: "14px",
-              }}
-            >
-              <MenuItem value={"Regular"}>Regular</MenuItem>
-              <MenuItem value={"Temporary"}>Temporary</MenuItem>
-            </Select>
-          </FormControl>
-        )}
-        {state.policy === "TPL" && (
-          <FormControl
-            fullWidth
-            variant="outlined"
-            size="small"
-            sx={{
-              ".MuiFormLabel-root": {
-                fontSize: "14px",
-                background: "white",
-                zIndex: 99,
-                padding: "0 3px",
-              },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-          >
-            <InputLabel id="Mortgagee">Mortgagee</InputLabel>
-            <Select
-              id="Mortgagee"
-              label="Mortgagee"
-              value={state.mortgagee}
-              name="mortgagee"
-              onChange={handleInputChange}
-              sx={{
-                height: "27px",
-                fontSize: "14px",
-              }}
-            >
-              <MenuItem value={""}></MenuItem>
-              <MenuItem value={"AMIFIN"}>AMIFIN</MenuItem>
-              <MenuItem value={"N I L - HN"}>N I L - HN</MenuItem>
-              <MenuItem value={"N I L - ASTRA"}>N I L - ASTRA</MenuItem>
-            </Select>
-          </FormControl>
-        )}
-      </Box>
-      <Box
-        sx={{
-          height: "100%",
-          flex: 1,
-          alignItems: "center",
-          padding: "20px 10px",
-          border: "1px solid #94a3b8",
-        }}
-      >
-        <Box
-          sx={(theme) => ({
-            width: "100%",
-            display: "flex",
-            flexDirection: "row",
-            columnGap: "10px",
-            alignItems: "center",
-            [theme.breakpoints.down("sm")]: {
-              flexDirection: "column",
-              rowGap: "10px",
-            },
-          })}
-        >
-          <FormControl
-            fullWidth
-            variant="outlined"
-            size="small"
-            sx={{
-              ".MuiFormLabel-root": {
-                fontSize: "14px",
-                background: "white",
-                zIndex: 99,
-                padding: "0 3px",
-              },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-          >
-            <InputLabel id="sort">Sort</InputLabel>
-            <Select
-              labelId="sort"
-              value={state.sort}
-              label="Sort"
-              name="sort"
-              onChange={handleInputChange}
-              sx={{
-                height: "27px",
-                fontSize: "14px",
-              }}
-            >
-              <MenuItem value={"Date Issued"}>Date Issued</MenuItem>
-              <MenuItem value={"Policy No#"}>Policy No#</MenuItem>
-              <MenuItem value={"Date From"}>Date From</MenuItem>
-            </Select>
-          </FormControl>
-          {isLoadingAccount ? (
-            <LoadingButton loading={isLoadingAccount} />
-          ) : (
-            <FormControl
-              fullWidth
-              variant="outlined"
-              size="small"
-              sx={{
-                ".MuiFormLabel-root": {
-                  fontSize: "14px",
-                  background: "white",
-                  zIndex: 99,
-                  padding: "0 3px",
-                },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            >
-              <InputLabel id="account">Account</InputLabel>
-              <Select
-                id="account"
-                label="Account"
-                value={state.account}
-                name="account"
-                onChange={(e) => {
-                  handleInputChange(e);
-                  state.account = e.target.value;
-                  dispatch({
-                    type: "UPDATE_FIELD",
-                    field: "title",
-                    value: setupTitle(state, user?.department as string),
-                  });
-                }}
-                sx={{
-                  height: "27px",
-                  fontSize: "14px",
-                }}
-              >
-                {[
-                  { Account: state.mortgagee === "" ? "All" : "" },
-                  ...dataAccount?.data.accounts,
-                ].map((item: any, idx: number) => {
-                  return (
-                    <MenuItem key={idx} value={item.Account}>
-                      {item.Account}
-                    </MenuItem>
-                  );
-                })}
-              </Select>
-            </FormControl>
-          )}
-        </Box>
-      </Box>
+            datasource={dataAccount?.data.data}
+            values={"Account"}
+            display={"Account"}
+          />
+        </div>
+        <Button onClick={generateReport} color="success" variant="contained" sx={{ height: "22px", fontSize: "12px" }}>Generate Report</Button>
+      </div>
     </div>
-  );
-}
-const initialState = {
-  format1: "Summary",
-  format2: "All",
-  dateFrom: new Date(),
-  dateTo: new Date(),
-  policyType: "Regular",
-  policy: "COM",
-  sort: "Policy No#",
-  account: "All",
-  report: "Monthly",
-  yearCount: "1",
-  mortgagee: "",
-  title: "",
-};
-// full
-// DateIssued
-// PolicyNo
-// AssuredName
-// EffictiveDate
-// InsuredValue
-// TotalPremium
-// Misc
-// Notarial
-// DocStamp
-// Vat
-// LGovTax
-// TotalDue
-export default function ProductionReport() {
-  const { myAxios, user } = useContext(AuthContext);
-  initialState.title = setupTitle(initialState, user?.department as string);
-  const [column, setColumn] = useState(
-    columnRender(initialState.policy, initialState.format1)
-  );
-  async function fetchTable(setData: any, setLoading: any, state: any) {
-    const updateColumn = columnRender(state.policy, state.format1);
-    console.log(updateColumn)
-    flushSync(() => {
-      setColumn(updateColumn);
-    });
-    const response = await myAxios.post(
-      "/reports/reports/get-production-report",
-      state,
-      {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      }
-    );
-    const jsonData = await response.data; 
-    arrangeData({
-      data: jsonData.report,
-      column: updateColumn,
-      beforeArrangeData: (itm) => {
-        const columnNumber = updateColumn
-          .filter((itm) => itm.type === "number")
-          .map((d) => d.datakey);
-        columnNumber.forEach((datakey) => {
-          if (itm.hasOwnProperty(datakey)) {
-            itm[datakey] = formatNumberWithCommas(
-              parseFloat(itm[datakey]?.toString().replace(/,/g, ""))
-            );
-          }
-        });
-        return itm;
-      },
-      adjustMaxHeight: 320,
-    }).then((newData) => {
-      setData(newData);
-      setLoading(false);
-    });
-  }
-
-  return (
-    <PrintPreview
-      column={column}
-      initialState={initialState}
-      Setting={(state, dispatch) => (
-        <Setting state={state} dispatch={dispatch} />
-      )}
-      onReportSubmit={fetchTable}
-      drawTable={(data, state) => {
-        return data.map((pages: any, pageNumber: number) => {
-          return (
-            <div className="page out-page" key={pageNumber}>
-              <div className="header" style={{ height: "50px" }}></div>
-              <div className="content">
-                <table>
-                  <thead>
-                    {state.title.split("\n").map((d: any, i: number) => {
-                      return (
-                        <tr key={i}>
-                          <td
-                            style={{
-                              fontSize: "14px",
-                              fontWeight: "bold",
-                              textAlign: "left",
-                            }}
-                            colSpan={column.length}
-                          >
-                            {d}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                    <tr style={{ height: "40px" }}></tr>
-                    <tr style={{ borderBottom: "1px solid black" }}>
-                      {column.map((itm, idx) => {
-                        return (
-                          <th
-                            onDoubleClick={(e) =>
-                              copiedByHeaderOnDoubleClick(e, itm.datakey, data)
-                            }
-                            key={idx}
-                            style={{
-                              width: itm.width,
-                              fontSize: "12px",
-                              fontWeight: "bold",
-                              textAlign: !center.includes(itm.datakey)
-                                ? "center"
-                                : "left",
-                            }}
-                          >
-                            {itm.header}
-                          </th>
-                        );
-                      })}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pages.map((r: any, idx: number) => {
-                      return (
-                        <tr key={idx}>
-                          {column.map((c, i) => {
-                            return (
-                              <td
-                                onClick={columnSelection}
-                                className={`page-${pageNumber} row-${idx}_col-${i}`}
-                                style={{
-                                  width: c.width,
-                                  fontSize:
-                                    c.datakey === "AssuredName"
-                                      ? "10px"
-                                      : "11px",
-                                  fontWeight: "500",
-                                  textAlign:
-                                    c.type === "number" ? "right" : "left",
-                                }}
-                                key={i}
-                              >
-                                {r[c.datakey]}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                  <tfoot>
-                    {pageNumber === data.length - 1 && (
-                      <tr>
-                        <td
-                          style={{ fontWeight: "bold", fontSize: "11px" }}
-                          colSpan={3}
-                        >
-                          No. of Records:{" "}
-                          {(data.flat().length - 1).toLocaleString("en-US")}
-                        </td>
-                        {column.map((itm: any, idx: number) => {
-                          if (!itm.total) {
-                            if (idx < 3) {
-                              return (
-                                <React.Fragment key={idx}></React.Fragment>
-                              );
-                            }
-                            return <td key={idx}></td>;
-                          }
-                          let flattenedArray = data.flat();
-                          const total = flattenedArray.reduce(
-                            (d: any, itms: any) => {
-                              return (
-                                d +
-                                parseFloat(itms[itm.datakey]?.replace(/,/g, ""))
-                              );
-                            },
-                            0
-                          );
-
-                          return (
-                            <td
-                              key={idx}
-                              style={{
-                                borderTop: "1px solid black",
-                                fontWeight: "bold",
-                                textAlign: "right",
-                                fontSize: "11px",
-                              }}
-                            >
-                              {isNaN(total)
-                                ? "0"
-                                : formatNumberWithCommas(total)}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    )}
-                    <tr style={{ height: "50px" }}></tr>
-                    <tr>
-                      <td
-                        colSpan={column.length}
-                        style={{
-                          fontSize: "11px",
-                          fontWeight: "bolder",
-                          textAlign: "center",
-                        }}
-                      >
-                        Prepared: ________________________________
-                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                        Checked: ________________________________
-                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Approved:
-                        ________________________________
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-              <div
-                className="footer"
-                style={{
-                  height: "50px",
-                  display: "flex",
-                  justifyContent: "space-between",
-                }}
-              >
-                <p style={{ fontSize: "10px", fontWeight: "bold" }}>
-                  01/01/2024
-                </p>
-                <p style={{ fontSize: "10px", fontWeight: "bold" }}>
-                  Page {pageNumber + 1} of {data.length}
-                </p>
-              </div>
-            </div>
-          );
-        });
-      }}
-    />
-  );
-}
-function setupTitle(state: any, department: string) {
-  return `${
-    department === "UMIS"
-      ? "UPWARD MANAGEMENT INSURANCE SERVICES"
-      : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC."
-  } ${state.format2 !== "All" ? "(Financed)" : ""}\n${
-    state.report === "Custom" ? "" : `${state.report} `
-  }Production Report(${state.policy} - ${state.account}) ${
-    state.format1 === "Summary" ? "Summary" : ""
-  }\nCut off Date: ${DateToStringFormat(state)}`;
-}
-function DateToStringFormat(state: any) {
-  let dateString = "";
-  if (state.report === "Daily") {
-    dateString = state.dateFrom.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  } else if (state.report === "Monthly") {
-    dateString = state.dateFrom.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-    });
-  } else if (state.report === "Yearly") {
-    const year = new Date(state.dateFrom).getFullYear();
-    const { startYearFormatted, endYearFormatted } = formatYearRange(
-      year,
-      parseInt(state.yearCount)
-    );
-    dateString = `${startYearFormatted}-${endYearFormatted}`;
-  } else {
-    const dateFrom = state.dateFrom.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-    const dateTo = state.dateTo.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-    dateString = `${dateFrom} to ${dateTo}`;
-  }
-
-  return dateString;
-}
-function formatYearRange(startYear: number, yearCount: number) {
-  const startDate = new Date(startYear, 0, 1); // Month is 0-based, so 0 is January
-  const endDate = new Date(startYear + yearCount, 11, 31); // Last day of the last year
-
-  const startYearFormatted = startDate.getFullYear();
-  const endYearFormatted = endDate.getFullYear();
-
-  if (endYearFormatted < startYearFormatted) {
-    return {
-      startYearFormatted: endYearFormatted,
-      endYearFormatted: startYearFormatted,
-    };
-  } else {
-    return {
-      startYearFormatted,
-      endYearFormatted,
-    };
-  }
+  )
 }
