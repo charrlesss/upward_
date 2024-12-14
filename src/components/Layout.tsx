@@ -249,7 +249,7 @@ export default function Layout() {
   );
 }
 
-export function RenderPage() {
+export function RenderPage({ withHeader = true }: any) {
   return (
     <Box sx={{
       display: "flex",
@@ -257,8 +257,7 @@ export function RenderPage() {
       height: "100vh",
     }}>
       <CssBaseline />
-
-      <Header />
+      {withHeader && <Header />}
       <Main >
         <Box
           id="page-content"
@@ -283,3 +282,4 @@ export function RenderPage() {
     </Box>
   );
 }
+

@@ -468,23 +468,24 @@ export default function Routers() {
 
   const reference =
     REF_ROUTE[
-      `${user?.userAccess as string}_REFERENCE` as
-        | "PRODUCTION_REFERENCE"
-        | "ACCOUNTING_REFERENCE"
-        | "CLAIMS_REFERENCE"
-        | "ADMIN_REFERENCE"
-        | "PRODUCTION_ACCOUNTING_REFERENCE"
+    `${user?.userAccess as string}_REFERENCE` as
+    | "PRODUCTION_REFERENCE"
+    | "ACCOUNTING_REFERENCE"
+    | "CLAIMS_REFERENCE"
+    | "ADMIN_REFERENCE"
+    | "PRODUCTION_ACCOUNTING_REFERENCE"
     ];
 
   const task =
     TASK_ROUTE[
-      `${user?.userAccess as string}_TASK` as
-        | "PRODUCTION_TASK"
-        | "ACCOUNTING_TASK"
-        | "CLAIMS_TASK"
-        | "ADMIN_TASK"
-        | "PRODUCTION_ACCOUNTING_TASK"
+    `${user?.userAccess as string}_TASK` as
+    | "PRODUCTION_TASK"
+    | "ACCOUNTING_TASK"
+    | "CLAIMS_TASK"
+    | "ADMIN_TASK"
+    | "PRODUCTION_ACCOUNTING_TASK"
     ];
+
   if (user && (user?.is_master_admin as boolean)) {
     return (
       <Routes>
@@ -624,7 +625,7 @@ export default function Routers() {
 
   return (
     <Routes>
-      <Route path="/" element={<RenderPage />}>
+      <Route path="/" element={<RenderPage withHeader={false} />}>
         <Route index element={<LandingPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />

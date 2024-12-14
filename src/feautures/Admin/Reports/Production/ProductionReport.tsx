@@ -15,6 +15,8 @@ export default function ProductionReport() {
     date: new Date()
   }))
 
+  const [dateFormatState, setDateFormatState] = useState('Monthly')
+
   const {
     isLoading: loadingAccount,
     refetch: refetchAccount,
@@ -47,6 +49,7 @@ export default function ProductionReport() {
   const accountRef = useRef<HTMLSelectElement>(null)
 
   function generateTitle(props: any) {
+
     const newTitle: string = `UPWARD MANAGEMENT INSURANCE SERVICES ${props.format2 === 'All' ? "" : props.format2}\n${props.dateFormat} Production Report (${props.type} - ${props.account})\nCut off Date: ${dateFormat(props.dateFormat, props.date)}`
     return newTitle
   }
@@ -63,8 +66,10 @@ export default function ProductionReport() {
   async function generateReport() {
     let FDate = ''
     let TDate = ''
-    const date = new Date(dateRef.current?.value as any)
+    let date = new Date(dateRef.current?.value as any)
     const numYear = parseInt(numberRef.current?.value as any)
+
+
     if (dateFormatRef.current?.value === 'Daily') {
       FDate = format(date, "MM/dd/yyyy")
       TDate = format(date, "MM/dd/yyyy")
@@ -85,9 +90,9 @@ export default function ProductionReport() {
       cmbType: `${format2Ref.current?.selectedIndex}`,
       cmbpolicy: policyTypeRef.current?.value,
       cmbSort: sortRef.current?.value,
-      title
+      title,
+      format: format1Ref.current?.selectedIndex
     }
-
     try {
       const response = await myAxios.post('/reports/reports/test-new-report', reportDetails, {
         responseType: 'arraybuffer',
@@ -231,7 +236,7 @@ export default function ProductionReport() {
             select={{
               disabled: false,
               style: { width: "100%", height: "22px" },
-              defaultValue: "Monthly",
+              defaultValue: dateFormatState,
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === 'Enter') {
                   e.preventDefault()
@@ -239,11 +244,21 @@ export default function ProductionReport() {
                 }
               },
               onChange: (e) => {
+                setDateFormatState(e.currentTarget.value)
+                if (e.target.value === 'Yearly') {
+                  if (numberRef.current)
+                    numberRef.current.disabled = false
+                } else {
+                  if (numberRef.current)
+                    numberRef.current.disabled = true
+                }
+                console.log(dateRef.current?.value)
+
                 setTitle(generateTitle({
                   format2: format2Ref.current?.value,
-                  type: TypeRef.current?.value,
+                  type: e.target.value,
                   account: accountRef.current?.value,
-                  dateFormat: e.target.value,
+                  dateFormat: dateFormatRef.current?.value,
                   date: new Date(dateRef.current?.value as any)
                 }))
               }
@@ -264,6 +279,7 @@ export default function ProductionReport() {
               },
             }}
             input={{
+              disabled: true,
               type: "number",
               defaultValue: 0,
               style: { width: "80px" },

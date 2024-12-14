@@ -108,6 +108,7 @@ export default function GeneralJournal() {
     balance: "0.00"
   })
 
+  const [loadingJob, setLoadingJob] = useState(false)
   const inputSearchRef = useRef<HTMLInputElement>(null)
 
   const refRefNo = useRef<HTMLInputElement>(null)
@@ -241,22 +242,7 @@ export default function GeneralJournal() {
       });
     },
   });
-  const { mutate: mutateJob, isLoading: isLoadingJob } = useMutation({
-    mutationKey: "jobs",
-    mutationFn: async (variable: any) =>
-      await myAxios.post("/task/accounting/general-journal/jobs", variable, {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      }),
-    onSuccess: (res) => {
-      const response = res as any;
-      table.current.setDataFormated(response.data.jobs)
-      setOpenJobs(false);
-      setMode('')
-      monitor()
-    },
-  });
+
   const {
     mutate: mutateVoidGeneralJournal,
     isLoading: loadingVoidGeneralJournalMutate,
@@ -798,8 +784,8 @@ export default function GeneralJournal() {
             refVat.current.value,
             refInvoice.current.value,
             refIDNo.current,
+            refIDNo.current,
             refSubAcct.current,
-            "HO"
           ]
 
           let taxtInput: any = []
@@ -838,6 +824,7 @@ export default function GeneralJournal() {
               refRemarks.current.value,
               refVat.current.value,
               refInvoice.current.value,
+              refIDNo.current,
               refIDNo.current,
               refSubAcct.current,
             ]
@@ -898,7 +885,7 @@ export default function GeneralJournal() {
           BranchCode: itm[12]
         }
       })
-      console.log(data)
+      console.log(generalJournal)
 
       localStorage.removeItem("printString");
       localStorage.setItem("dataString", JSON.stringify(generalJournal));
@@ -916,10 +903,10 @@ export default function GeneralJournal() {
         JSON.stringify([
           { datakey: "code", header: "ACCT #", width: "70px" },
           { datakey: "acctName", header: "ACCOUNT TITLE", width: "130px" },
-          { datakey: "IDNo", header: "ID NO.", width: "120px" },
+          { datakey: "IDNo", header: "ID NO.", width: "110px" },
           { datakey: "ClientName", header: "IDENTITY", width: "200px" },
-          { datakey: "debit", header: "DEBIT", width: "65px" },
-          { datakey: "credit", header: "CREDIT", width: "65px" },
+          { datakey: "debit", header: "DEBIT", width: "75px" },
+          { datakey: "credit", header: "CREDIT", width: "75px" },
         ])
       );
       localStorage.setItem(
@@ -1030,12 +1017,15 @@ export default function GeneralJournal() {
   }
 
   async function DoRPTTransactionNILHN() {
-    let JobDate = new Date(state.jobTransactionDate)
-    let dtFrom = format(JobDate, "yyyy-MM-01-")
-    let dtTo = format(lastDayOfMonth(JobDate), "yyyy-MM-dd")
-    let iRow = 0
+    setLoadingJob(true)
+    setOpenJobs(false)
+    setTimeout(async () => {
+      let JobDate = new Date(state.jobTransactionDate)
+      let dtFrom = format(JobDate, "yyyy-MM-01-")
+      let dtTo = format(lastDayOfMonth(JobDate), "yyyy-MM-dd")
+      let iRow = 0
 
-    const qry = `
+      const qry = `
     select 
       a.PolicyNo,
       a.IDNo,
@@ -1060,66 +1050,67 @@ export default function GeneralJournal() {
       ) 
       order by a.DateIssued
       `
-    let dgvJournal: any = []
-    const { data } = await executeQueryToClient(qry)
-    const dataArray = data.data
-    if (dataArray.length > 0) {
-      let totalAmount = 0
-      let i = 0
-      for (const itm of dataArray) {
-        let tmpID = "";
-        if (i == 0) {
-          iRow = 0
-        } else {
-          iRow = iRow + 1
+      let dgvJournal: any = []
+      const { data } = await executeQueryToClient(qry)
+      const dataArray = data.data
+      if (dataArray.length > 0) {
+        let totalAmount = 0
+        let i = 0
+        for (const itm of dataArray) {
+          let tmpID = "";
+          if (i == 0) {
+            iRow = 0
+          } else {
+            iRow = iRow + 1
+          }
+
+          tmpID = itm.IDNo
+          const { data: tmpNameRes } = await executeQueryToClient(`SELECT Shortname ,Sub_ShortName, Sub_Acct FROM (${ID_Entry}) id_entry WHERE IDNo = '${tmpID}'`)
+          dgvJournal[iRow] = [
+            "1.03.01", // 0
+            "Premium Receivables", // 1
+            tmpNameRes.data[0]?.Sub_ShortName, // 2
+            tmpNameRes.data[0]?.Shortname, // 3
+            "0.00", // 4
+            formatNumber(itm.Amount), //5
+            "RPT", // 6
+            "", // 7
+            "Non-VAT", //8
+            "",
+            itm.PolicyNo,
+            itm.PolicyNo,
+            tmpNameRes.data[0]?.Sub_Acct, // 8
+          ]
+
+          totalAmount = totalAmount + parseFloat(itm.Amount.toString().replace(/,/g, ''))
+          i += 1
         }
 
-        tmpID = itm.IDNo
-        const { data: tmpNameRes } = await executeQueryToClient(`SELECT Shortname ,Sub_ShortName, Sub_Acct FROM (${ID_Entry}) id_entry WHERE IDNo = '${tmpID}'`)
-        dgvJournal[iRow] = [
-          "1.03.01", // 0
-          "Premium Receivables", // 1
+
+        const { data: tmpNameRes } = await executeQueryToClient(`SELECT Shortname ,Sub_ShortName, Sub_Acct FROM (${ID_Entry}) id_entry WHERE IDNo = 'O-1024-00011'`)
+
+        dgvJournal[iRow + 1] = [
+          "1.03.01",
+          "Premium Receivables",
           tmpNameRes.data[0]?.Sub_ShortName, // 2
           tmpNameRes.data[0]?.Shortname, // 3
-          "0.00", // 4
-          formatNumber(itm.Amount), //5
-          "RPT", // 6
-          "", // 7
+          formatNumber(totalAmount), //4
+          "0.00", // 5,
+          "RPT", // 7
+          "", // 9
           "Non-VAT", //8
           "",
-          itm.PolicyNo,
-          itm.PolicyNo,
-          tmpNameRes.data[0]?.Sub_Acct, // 8
+          "1.05.02", // 9
+          "1.05.02", // 10
+          tmpNameRes.data[0]?.Sub_Acct, // 12
         ]
-
-        totalAmount = totalAmount + parseFloat(itm.Amount.toString().replace(/,/g, ''))
-        i += 1
+        table.current.setData(dgvJournal)
+        setMode('update')
+        setOpenJobs(false)
       }
+      setLoadingJob(false)
+    }, 300)
 
-
-      const { data: tmpNameRes } = await executeQueryToClient(`SELECT Shortname ,Sub_ShortName, Sub_Acct FROM (${ID_Entry}) id_entry WHERE IDNo = 'O-1024-00011'`)
-
-      dgvJournal[iRow + 1] = [
-        "1.03.01",
-        "Premium Receivables",
-        tmpNameRes.data[0]?.Sub_ShortName, // 2
-        tmpNameRes.data[0]?.Shortname, // 3
-        formatNumber(totalAmount), //4
-        "0.00", // 5,
-        "RPT", // 7
-        "", // 9
-        "Non-VAT", //8
-        "",
-        "1.05.02", // 9
-        "1.05.02", // 10
-        tmpNameRes.data[0]?.Sub_Acct, // 12
-      ]
-      table.current.setData(dgvJournal)
-
-
-      setMode('update')
-      setOpenJobs(false)
-    }
 
   }
 
@@ -1127,7 +1118,7 @@ export default function GeneralJournal() {
     <>
       <PageHelmet title="General Journal" />
       {(loadingGetSearchSelectedGeneralJournal ||
-        isLoadingJob ||
+        loadingJob ||
         loadingGeneralJournalMutate ||
         loadingVoidGeneralJournalMutate
       ) && <Loading />}
@@ -1276,7 +1267,6 @@ export default function GeneralJournal() {
                 },
               }}
               onClick={handleJobs}
-              loading={isLoadingJob}
               variant="contained"
               startIcon={<CardTravelIcon sx={{ width: 20, height: 20 }} />}
             >
@@ -1956,7 +1946,6 @@ export default function GeneralJournal() {
               }}
             >
               <LoadingButton
-                loading={isLoadingJob}
                 color="success"
                 variant="contained"
                 onClick={() => {
