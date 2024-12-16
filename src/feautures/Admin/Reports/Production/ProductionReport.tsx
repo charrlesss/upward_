@@ -19,7 +19,6 @@ export default function ProductionReport() {
 
   const {
     isLoading: loadingAccount,
-    refetch: refetchAccount,
     data: dataAccount
   } = useQuery({
     queryKey: "policy-account",

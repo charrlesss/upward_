@@ -366,7 +366,7 @@ export default function WarehouseChecks() {
 
     }
     if (refRemarks.current) {
-      refRemarks.current.disabled = false
+      refRemarks.current.disabled = true
       refRemarks.current.selectedIndex = 0
     }
 

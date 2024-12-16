@@ -54,7 +54,11 @@ export default function Header() {
         { name: "Cash Disbursement", path: "/dashboard/task/accounting/cash-disbursement" },
         { name: "Treasury", path: "/dashboard/task/accounting/warehouse-checks" },
         { name: "Check Pullout", path: "/dashboard/task/accounting/check-pullout" },
+        { name: "Check Pullout Request", path: "/dashboard/task/accounting/check-pullout-request" },
+        { name: "Check Pullout Approved", path: "/dashboard/task/accounting/check-pullout-approved" },
         { name: "Check Postponement", path: "/dashboard/task/accounting/check-postponement" },
+        { name: "Check Postponement Request", path: "/dashboard/task/accounting/check-postponement-request" },
+        { name: "Check Postponement Approved", path: "/dashboard/task/accounting/check-postponement-approved" },
       ],
     },
     {
@@ -181,8 +185,10 @@ export default function Header() {
           { name: "General Journal", path: "/dashboard/task/accounting/general-journal" },
           { name: "Cash Disbursement", path: "/dashboard/task/accounting/cash-disbursement" },
           { name: "Treasury", path: "/dashboard/task/accounting/warehouse-checks" },
-          { name: "Check Pullout", path: "/dashboard/task/accounting/check-pullout" },
-          { name: "Check Postponement", path: "/dashboard/task/accounting/check-postponement" },
+          { name: "Check Pullout Request", path: "/dashboard/task/accounting/check-pullout-request" },
+          { name: "Check Pullout Approved", path: "/dashboard/task/accounting/check-pullout-approved" },
+          { name: "Check Postponement Request", path: "/dashboard/task/accounting/check-postponement-request" },
+          { name: "Check Postponement Approved", path: "/dashboard/task/accounting/check-postponement-approved" },
         ],
       },
       {
@@ -228,8 +234,10 @@ export default function Header() {
           { name: "General Journal", path: "/dashboard/task/accounting/general-journal" },
           { name: "Cash Disbursement", path: "/dashboard/task/accounting/cash-disbursement" },
           { name: "Treasury", path: "/dashboard/task/accounting/warehouse-checks" },
-          { name: "Check Pullout", path: "/dashboard/task/accounting/check-pullout" },
-          { name: "Check Postponement", path: "/dashboard/task/accounting/check-postponement" },
+          { name: "Check Pullout Request", path: "/dashboard/task/accounting/check-pullout-request" },
+          { name: "Check Pullout Approved", path: "/dashboard/task/accounting/check-pullout-approved" },
+          { name: "Check Postponement Request", path: "/dashboard/task/accounting/check-postponement-request" },
+          { name: "Check Postponement Approved", path: "/dashboard/task/accounting/check-postponement-approved" },
         ],
       },
       {
@@ -246,7 +254,7 @@ export default function Header() {
           { name: "Renewal Notice", path: "/dashboard/reports/production/renewal-notice" },
         ],
       },
-    ])
+      ])
     } else if (user?.userAccess === 'ACCOUNTING') {
       setMenuData([
         {
@@ -282,8 +290,10 @@ export default function Header() {
             { name: "General Journal", path: "/dashboard/task/accounting/general-journal" },
             { name: "Cash Disbursement", path: "/dashboard/task/accounting/cash-disbursement" },
             { name: "Treasury", path: "/dashboard/task/accounting/warehouse-checks" },
-            { name: "Check Pullout", path: "/dashboard/task/accounting/check-pullout" },
-            { name: "Check Postponement", path: "/dashboard/task/accounting/check-postponement" },
+            { name: "Check Pullout Request", path: "/dashboard/task/accounting/check-pullout-request" },
+            { name: "Check Pullout Approved", path: "/dashboard/task/accounting/check-pullout-approved" },
+            { name: "Check Postponement Request", path: "/dashboard/task/accounting/check-postponement-request" },
+            { name: "Check Postponement Approved", path: "/dashboard/task/accounting/check-postponement-approved" },
           ],
         },
       ])

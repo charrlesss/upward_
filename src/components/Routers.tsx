@@ -90,6 +90,14 @@ const CashDisbursement = lazy(
 const CheckPullout = lazy(
   () => import("../feautures/Admin/Task/Accounting/CheckPullout")
 );
+
+const CheckPulloutRequest = lazy(
+  () => import("../feautures/Admin/Task/Accounting/CheckPulloutRequest")
+);
+
+const CheckPulloutApproved = lazy(
+  () => import("../feautures/Admin/Task/Accounting/CheckPulloutApproved")
+);
 const Collections = lazy(
   () => import("../feautures/Admin/Task/Accounting/Collections")
 );
@@ -110,6 +118,12 @@ const MonthlyAccrual = lazy(
 );
 const ChekPostponement = lazy(
   () => import("../feautures/Admin/Task/Accounting/ChekPostponement")
+);
+const ChekPostponementRequest = lazy(
+  () => import("../feautures/Admin/Task/Accounting/ChekPostponementRequest")
+);
+const ChekPostponementApproved = lazy(
+  () => import("../feautures/Admin/Task/Accounting/ChekPostponementApproved")
 );
 const ClosingTransaction = lazy(
   () => import("../feautures/Admin/Task/Accounting/ClosingTransaction")
@@ -402,9 +416,29 @@ const ACCOUNTING_TASK = [
     element={<CheckPullout />}
   />,
   <Route
+    key="/dashboard/task/accounting/check-pullout-request"
+    path="/dashboard/task/accounting/check-pullout-request"
+    element={<CheckPulloutRequest />}
+  />,
+  <Route
+    key="/dashboard/task/accounting/check-pullout-approved"
+    path="/dashboard/task/accounting/check-pullout-approved"
+    element={<CheckPulloutApproved />}
+  />,
+  <Route
     key="/dashboard/task/accounting/check-postponement"
     path="/dashboard/task/accounting/check-postponement"
     element={<ChekPostponement />}
+  />,
+  <Route
+    key="/dashboard/task/accounting/check-postponement-request"
+    path="/dashboard/task/accounting/check-postponement-request"
+    element={<ChekPostponementRequest />}
+  />,
+  <Route
+    key="/dashboard/task/accounting/check-postponement-approved"
+    path="/dashboard/task/accounting/check-postponement-approved"
+    element={<ChekPostponementApproved />}
   />,
   <Route
     key="/dashboard/task/accounting/closing-transaction"
