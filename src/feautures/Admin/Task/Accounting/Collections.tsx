@@ -1659,6 +1659,8 @@ export default function Collection() {
                     disableInput={disableFields}
                     inputRef={transactionRef}
                     onChange={(selected: any, e: any) => {
+                      if (transactionRef.current)
+                        transactionRef.current.value = selected.Acct_Title
                       accCodeRef.current = selected.Acct_Code
                       accTitleRef.current = selected.Acct_Title
                       accTCRef.current = selected.Code

@@ -59,7 +59,7 @@ export default function NavigatePrint() {
         setRows(rows);
       }
       if (module.current === "general-journal") {
-        const rows = chunkArray(data.current, 30);
+        const rows = chunkArray(data.current, 27);
         setRows(rows);
       }
       if (module.current === "warehouse") {
@@ -1871,7 +1871,7 @@ export default function NavigatePrint() {
                           padding: "0",
                         }}
                       >
-                        {data.current[1].Payment}
+                        {data.current[1].Payment  === 'CASH' ?data.current[1].Payment :` ${data.current[1].Payment} - ${format(new Date(data.current[1].Check_Date),'MM/dd/yyy')} - ${data.current[1].Check_No} - ${data.current[1].Bank} `}
                       </p>
                     </div>
                   </div>
@@ -2435,7 +2435,7 @@ export default function NavigatePrint() {
                           padding: "0",
                         }}
                       >
-                        {data.current[1].Payment}
+                        {data.current[1].Payment  === 'CASH' ?data.current[1].Payment :` ${data.current[1].Payment} - ${format(new Date(data.current[1].Check_Date),'MM/dd/yyy')} - ${data.current[1].Check_No} - ${data.current[1].Bank} `}
                       </p>
                     </div>
                   </div>
@@ -3003,7 +3003,7 @@ export default function NavigatePrint() {
                           padding: "0",
                         }}
                       >
-                        {data.current[1].Payment}
+                        {data.current[1].Payment  === 'CASH' ?data.current[1].Payment :` ${data.current[1].Payment} - ${format(new Date(data.current[1].Check_Date),'MM/dd/yyy')} - ${data.current[1].Check_No} - ${data.current[1].Bank} `}
                       </p>
                     </div>
                   </div>
@@ -3580,8 +3580,7 @@ export default function NavigatePrint() {
                   </>}
                   {
                     <div className="table">
-                      {RowNumber === 0 &&
-                        <>
+                  
                           <div className="row" style={{ height: "30px" }}></div>
                           <div className="row" style={{ borderTop: "1px solid black", borderBottom: "1px solid black" }}>
                             {column.current.map((itm: any, rowIdx: number) => {
@@ -3603,8 +3602,7 @@ export default function NavigatePrint() {
                             })}
                           </div>
                           <div style={{ height: "10px", }}></div>
-                        </>
-                      }
+                    
                       {pages.map((rowItem: any, rowIdx: number) => {
                         return (
                           <div key={rowIdx} className="row" >

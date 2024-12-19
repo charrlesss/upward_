@@ -1,4 +1,4 @@
-import { useContext, useState, useRef, useEffect } from "react";
+import { useContext, useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import {
   Button,
 } from "@mui/material";
@@ -811,6 +811,9 @@ export default function PettyCash() {
                     }
                   }}
                   onChange={(selected: any, e: any) => {
+                    console.log(selected)
+                    if (accountRef.current)
+                      accountRef.current.value = selected.Purpose
                     transactionCodeRef.current = selected.Acct_Code
                     transactionShortRef.current = selected.Short
                   }}
@@ -1037,8 +1040,7 @@ export default function PettyCash() {
 
   );
 }
-
-export const Autocomplete = ({
+export const Autocomplete = forwardRef(({
   DisplayMember,
   DataSource,
   inputRef,
@@ -1056,9 +1058,9 @@ export const Autocomplete = ({
   input = {
     width: '740px',
   },
-  containerStyle
-}: any) => {
-  const [inputValue, setInputValue] = useState("");
+  containerStyle,
+}: any, ref: any) => {
+  const [inputValue, setInputValue] = useState("aa");
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(0);
@@ -1080,7 +1082,6 @@ export const Autocomplete = ({
   const handleChange = (e: any) => {
     const value = e.target.value;
 
-    setInputValue(value);
 
     if (value.trim()) {
       const filtered = DataSource.filter((item: any) =>
@@ -1130,6 +1131,12 @@ export const Autocomplete = ({
     }, 150)
   };
 
+  useImperativeHandle(ref, () => ({
+    setDataSource: (newDataSource: Array<any>) => {
+      //  setDataSource(newDataSource)
+    }
+  }))
+
   return (
     <div style={{ flex: 1 }}>
       <TextInput
@@ -1139,7 +1146,6 @@ export const Autocomplete = ({
           ...input,
           disabled: disableInput,
           type: "text",
-          value: inputValue,
           onKeyDown: handleKeyDown,
           onChange: handleChange
         }}
@@ -1193,4 +1199,4 @@ export const Autocomplete = ({
       </style>
     </div>
   );
-};
+})

@@ -35,7 +35,6 @@ export default function ProductionReport() {
     },
   });
 
-
   const titleRef = useRef<HTMLTextAreaElement>(null)
   const format1Ref = useRef<HTMLSelectElement>(null)
   const format2Ref = useRef<HTMLSelectElement>(null)
@@ -435,7 +434,7 @@ export default function ProductionReport() {
             values={"key"}
             display={"key"}
           />
-          <SelectInput
+          {loadingAccount ? <div>Loading...</div> : <SelectInput
             label={{
               title: "Account : ",
               style: {
@@ -472,7 +471,7 @@ export default function ProductionReport() {
             datasource={dataAccount?.data.data}
             values={"Account"}
             display={"Account"}
-          />
+          />}
         </div>
         <Button onClick={generateReport} color="success" variant="contained" sx={{ height: "22px", fontSize: "12px" }}>Generate Report</Button>
       </div>

@@ -1,5 +1,6 @@
-import { HtmlHTMLAttributes, InputHTMLAttributes, useId, ReactNode, useState, LegacyRef, HTMLInputTypeAttribute, TextareaHTMLAttributes, CSSProperties } from "react";
+import { HtmlHTMLAttributes, InputHTMLAttributes, useId, ReactNode, useState, LegacyRef, HTMLInputTypeAttribute, TextareaHTMLAttributes, CSSProperties, forwardRef, useImperativeHandle } from "react";
 import "../style/design.css";
+import { AnyMxRecord } from "dns";
 
 
 interface TextInputProps {
@@ -301,26 +302,33 @@ export function TextAreaInput({
   );
 }
 
-
-export function SelectInput({
-  select,
+export const SelectInput = forwardRef(({ select,
   label,
   selectRef,
   datasource = [],
   values = "",
   display = "",
-  containerStyle
-}: {
-  selectRef?: React.RefObject<HTMLSelectElement>;
-  labelRef?: React.RefObject<HTMLLabelElement>;
-  select: InputHTMLAttributes<HTMLSelectElement>;
-  label: HtmlHTMLAttributes<HTMLLabelElement>;
-  datasource: Array<any>;
-  values: string;
-  display: string;
-  containerStyle?: React.CSSProperties | undefined
-}) {
+  containerStyle }: {
+    selectRef?: React.RefObject<HTMLSelectElement>;
+    labelRef?: React.RefObject<HTMLLabelElement>;
+    select: InputHTMLAttributes<HTMLSelectElement>;
+    label: HtmlHTMLAttributes<HTMLLabelElement>;
+    datasource: Array<any>;
+    values: string;
+    display: string;
+    containerStyle?: React.CSSProperties | undefined
+  }, ref: any) => {
+
+
+  const [_datasource, _setDataSource] = useState(datasource)
   const id = useId();
+
+  useImperativeHandle(ref, () => ({
+    setDataSource: (_dataSource: any) => {
+      _setDataSource(_dataSource)
+    }
+  }))
+
   return (
     <div
       style={{
@@ -342,7 +350,7 @@ export function SelectInput({
           ...select.style,
         }}
       >
-        {datasource.map((itm, idx) => {
+        {_datasource.map((itm, idx) => {
           return (
             <option key={idx} value={itm[values]}>
               {itm[display]}
@@ -352,7 +360,7 @@ export function SelectInput({
       </select>
     </div>
   );
-}
+})
 
 export function ButtonField({
   buttonRetRef,

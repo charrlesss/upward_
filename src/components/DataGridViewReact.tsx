@@ -18,7 +18,7 @@ export const DataGridViewReact = forwardRef(({
     getSelectedItem,
     onKeyDown,
     disbaleTable = false,
-    isTableSelectable = true,
+    isTableSelectable: _isTableSelectable = true,
     containerStyle,
     focusElementOnMaxTop
 }: any, ref) => {
@@ -29,6 +29,7 @@ export const DataGridViewReact = forwardRef(({
     const [selectedRow, setSelectedRow] = useState<any>(0)
     const [selectedRowIndex, setSelectedRowIndex] = useState<any>(null)
     const totalRowWidth = column.reduce((a: any, b: any) => a + b.width, 0)
+    const [isTableSelectable, setIsTableSelectable] = useState(_isTableSelectable)
 
     useEffect(() => {
         if (columns.length > 0) {
@@ -64,6 +65,9 @@ export const DataGridViewReact = forwardRef(({
         },
         _setSelectedRow: (value: any) => {
             return setSelectedRow(value)
+        },
+        setIsTableSelectable: (param: boolean) => {
+            setIsTableSelectable(param)
         },
         setDataFormated: (newData: any) => {
             setData(newData.map((itm: any) => {
@@ -367,11 +371,13 @@ export const DataGridViewMultiSelectionReact = forwardRef(({
     getSelectedItem,
     onKeyDown,
     disbaleTable = false,
-    isTableSelectable = true,
+    isTableSelectable: _isTableSelectable = true,
     containerStyle,
     focusElementOnMaxTop,
     onCheckAll,
-    onUnCheckAll
+    onUnCheckAll,
+    rowIsSelectable,
+    
 }: any, ref) => {
     const parentElementRef = useRef<any>(null)
     const tbodyRef = useRef<HTMLTableSectionElement>(null)
@@ -380,6 +386,7 @@ export const DataGridViewMultiSelectionReact = forwardRef(({
     const [selectedRow, setSelectedRow] = useState<any>(0)
     const [selectedRowIndex, setSelectedRowIndex] = useState<Array<any>>([])
     const totalRowWidth = column.reduce((a: any, b: any) => a + b.width, 0)
+    const [isTableSelectable, setIsTableSelectable] = useState(_isTableSelectable)
 
     useEffect(() => {
         if (columns.length > 0) {
@@ -425,6 +432,9 @@ export const DataGridViewMultiSelectionReact = forwardRef(({
                 return columns.map((col: any) => itm[col.key])
             }))
         },
+        setIsTableSelectable: (param: boolean) => {
+            setIsTableSelectable(param)
+        },
         getDataFormatted: () => {
             const newData = [...data];
             const newDataFormatted = newData.map((itm: any) => {
@@ -447,7 +457,9 @@ export const DataGridViewMultiSelectionReact = forwardRef(({
             return newDataFormatted
         },
         getElementBody: () => tbodyRef.current,
-        getParentElement: () => parentElementRef.current
+        getParentElement: () => parentElementRef.current,
+        isTableSelectable
+      
     }))
 
 
@@ -470,7 +482,7 @@ export const DataGridViewMultiSelectionReact = forwardRef(({
         >
             <div style={{ position: "absolute", width: `${totalRowWidth}px`, height: "auto" }}>
                 <table
-                    id="upward-cutom-table"
+                    id="upward-cutom-table-multi"
                     style={{
                         borderCollapse: "collapse",
                         width: "100%",
@@ -479,7 +491,7 @@ export const DataGridViewMultiSelectionReact = forwardRef(({
                     }}>
                     <thead >
                         <tr>
-                            <th style={{
+                            {isTableSelectable && <th style={{
                                 width: '30px',
                                 border: "none",
                                 position: "sticky",
@@ -510,12 +522,10 @@ export const DataGridViewMultiSelectionReact = forwardRef(({
                                                 if (onCheckAll) {
                                                     onCheckAll()
                                                 }
-                                                setSelectedRowIndex(data.map((itm: any, idx: any) => idx))
                                             } else {
                                                 if (onUnCheckAll) {
                                                     onUnCheckAll()
                                                 }
-                                                setSelectedRowIndex([])
                                             }
 
                                         }}
@@ -523,7 +533,7 @@ export const DataGridViewMultiSelectionReact = forwardRef(({
 
                                 </div>
 
-                            </th>
+                            </th>}
                             {
                                 column.map((colItm: any, idx: number) => {
                                     return (
@@ -555,8 +565,12 @@ export const DataGridViewMultiSelectionReact = forwardRef(({
                                     <tr
                                         data-index={rowIdx}
                                         key={rowIdx}
-                                        className={`row ${(selectedRow === rowIdx) || (selectedRowIndex.includes(rowIdx)) ? "selected" : ""}`}>
-                                        <td
+                                        className={`row ${(selectedRow === rowIdx) && (selectedRowIndex.includes(rowIdx)) ? "multi-selected-row-item" :
+                                            (selectedRow === rowIdx) ? "multi-selected-row" :
+                                                (selectedRowIndex.includes(rowIdx))
+                                                    ? "multi-selected-item" : ""
+                                            }`}>
+                                        {isTableSelectable && <td
                                             style={{
                                                 position: "relative",
                                                 border: "none",
@@ -584,6 +598,9 @@ export const DataGridViewMultiSelectionReact = forwardRef(({
                                                     checked={selectedRowIndex.includes(rowIdx)}
                                                     type="checkbox"
                                                     onClick={() => {
+                                                        if (rowIsSelectable && rowIsSelectable(rowItm)) {
+                                                            return
+                                                        }
                                                         if (!isTableSelectable) {
                                                             return
                                                         }
@@ -603,7 +620,7 @@ export const DataGridViewMultiSelectionReact = forwardRef(({
 
                                             </div>
 
-                                        </td>
+                                        </td>}
 
                                         {
                                             column.map((colItm: any, colIdx: number) => {
@@ -612,6 +629,9 @@ export const DataGridViewMultiSelectionReact = forwardRef(({
                                                         className={`td row-${rowIdx} col-${colIdx} `}
                                                         tabIndex={0}
                                                         onDoubleClick={() => {
+                                                            if (rowIsSelectable && rowIsSelectable(rowItm)) {
+                                                                return
+                                                            }
                                                             if (!isTableSelectable) {
                                                                 return
                                                             }
@@ -729,25 +749,41 @@ export const DataGridViewMultiSelectionReact = forwardRef(({
                 <style>
 
                     {`
-             #upward-cutom-table tr td{
+             #upward-cutom-table-multi tr td{
                border-right:1px solid #f1f5f9 !important;
              }
           
-              #upward-cutom-table tr:nth-child(odd) td {
+              #upward-cutom-table-multi tr:nth-child(odd) td {
                   background-color: #ffffff !important;
               }
-              #upward-cutom-table tr:nth-child(even) td {
+              #upward-cutom-table-multi tr:nth-child(even) td {
                   background-color: #f5f5f5 !important;
               }
-              #upward-cutom-table tr.selected td {
-                  background-color: #0076d7 !important;
-                  color: #ffffff !important;
-                  border-right:1px solid white !important;
-                border-bottom:1px solid white !important;
 
+             #upward-cutom-table-multi tr.multi-selected-row-item td {
+                background-color: rgba(84, 84, 82, 0.73) !important;
+                border-right:1px solid white !important;
+                border-bottom:1px solid white !important;
               }
-              
-               #upward-cutom-table tr.selected td input {
+              #upward-cutom-table-multi tr.multi-selected-row-item td input {
+                  color: #ffffff !important;
+              }
+
+            #upward-cutom-table-multi tr.multi-selected-item td {
+                background-color: rgba(84, 84, 82, 0.2) !important;
+                border-right:1px solid white !important;
+                border-bottom:1px solid white !important;
+              }
+              #upward-cutom-table-multi tr.multi-selected-item td input {
+                  color: black !important;
+              }
+
+              #upward-cutom-table-multi tr.multi-selected-row td {
+                  background-color: #0076d7 !important;
+                  border-right:1px solid white !important;
+                  border-bottom:1px solid white !important;
+              }
+              #upward-cutom-table-multi tr.multi-selected-row td input {
                   color: #ffffff !important;
               }
   

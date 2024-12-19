@@ -1,9 +1,7 @@
-import { useRef, useState } from "react";
+import { forwardRef, useContext, useImperativeHandle, useRef, useState } from "react";
 import {
-
   Button,
   IconButton,
-
 } from "@mui/material";
 import Swal from "sweetalert2";
 import { SelectInput, TextInput } from "../../../../components/UpwardFields";
@@ -13,6 +11,12 @@ import AssessmentIcon from '@mui/icons-material/Assessment';
 import { DataGridViewMultiSelectionReact, useUpwardTableModalSearch } from "../../../../components/DataGridViewReact";
 import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
 import { grey } from "@mui/material/colors";
+import CloseIcon from "@mui/icons-material/Close";
+import { LoadingButton } from "@mui/lab";
+import { useMutation, useQuery } from "react-query";
+import { AuthContext } from "../../../../components/AuthContext";
+import { Loading } from "../../../../components/Loading";
+import { wait } from "@testing-library/user-event/dist/utils";
 
 const warehouseColumn = [
   { key: "PNo", label: "PN No.", width: 150 },
@@ -31,6 +35,7 @@ const warehouseColumn = [
 ]
 export default function WarehouseChecks() {
   const table = useRef<any>(null)
+  const modalCheckRef = useRef<any>(null)
   const refPDCStatus = useRef<HTMLSelectElement>(null)
   const refRemarks = useRef<HTMLSelectElement>(null)
   const refSearch = useRef<HTMLSelectElement>(null)
@@ -203,6 +208,7 @@ export default function WarehouseChecks() {
       if (dt.data.data.length > 0) {
         table.current.resetTable([])
         table.current.setDataFormated(dt.data.data)
+        table.current.setIsTableSelectable(true)
         setMonitoring({
           check: "0",
           unCheck: `${dt.data.data.length}`,
@@ -218,11 +224,12 @@ export default function WarehouseChecks() {
       return
     }
 
-    if ((refSearch.current && refSearch.current.selectedIndex === 2 || refSearch.current?.selectedIndex === 4) && !isValidDate(refIDS.current?.value as string)) {
-      alert("Search is not a valid date");
-      refIDS.current?.focus();
-      return;
-    }
+    // if ((refSearch.current && refSearch.current.selectedIndex === 2 || refSearch.current?.selectedIndex === 4) && !isValidDate(refIDS.current?.value as string)) {
+    //   alert("Search is not a valid date");
+    //   refIDS.current?.focus();
+    //   return;
+    // }
+
 
     if (refPDCStatus.current && refIDS.current && refSearch.current) {
 
@@ -335,6 +342,11 @@ export default function WarehouseChecks() {
                 icon: "success",
                 timer: 1500
               }).then(async () => {
+                if (!table.current.isTableSelectable) {
+
+                  onClickNew()
+                  return
+                }
                 tsbSearch_Click()
               })
             }
@@ -617,6 +629,12 @@ export default function WarehouseChecks() {
                 }
               }}
               variant="contained"
+              onClick={() => {
+                modalCheckRef.current?.showModal()
+                wait(100).then(() => {
+                  modalCheckRef.current?.mutate()
+                })
+              }}
             >Check for pull-out</Button>
           </div>
         </div>
@@ -632,10 +650,13 @@ export default function WarehouseChecks() {
               updateMonitoring()
             }}
             onCheckAll={() => {
+              const getData = table.current.getData()
+              table.current.setSelectedRow(getData.map((itm: any, idx: any) => idx))
               updateMonitoring()
             }}
             onUnCheckAll={() => {
               updateMonitoring()
+              table.current.setSelectedRow([])
             }}
           />
           <div style={{
@@ -660,10 +681,330 @@ export default function WarehouseChecks() {
           </div>
         </div>
       </div>
+      <ModalCheck
+        ref={modalCheckRef}
+        handleOnSave={() => {
+          const refs = modalCheckRef.current.getRefs()
+
+        }}
+        handleOnClose={() => {
+
+        }}
+        getSelectedItem={async (rowItm: any) => {
+          if (rowItm) {
+            if (refPDCStatus.current && refPDCStatus.current.value !== 'Pull Out') {
+              return alert('Status should be for pull-out!')
+            }
+            if (refRemarks.current && (refRemarks.current.value === null || refRemarks.current.value === '')) {
+              return alert('No remarks selected!')
+            }
+            if (refSearch.current && (refSearch.current.value === null || refSearch.current.value === '')) {
+              return alert('Please enter ID!')
+            }
+            const { data: response } = await executeQueryToClient(`
+              Select 
+                CheckNo 
+              From PullOut_Request a 
+              Inner join PullOut_Request_Details b  on a.RCPNo = b.RCPNo 
+              Where a.Status = 'APPROVED' 
+              And a.RCPNo = '${rowItm[1]}'`)
+
+            const dr = response.data.map((itm: any) => itm.CheckNo)
+            if (dr.length > 0) {
+              if (refPDCStatus.current) {
+                refPDCStatus.current.value = 'Pull Out'
+              }
+              if (refSearch.current) {
+                refSearch.current.value = 'PNo'
+              }
+              if (refRemarks.current) {
+                refRemarks.current.value = rowItm[5]
+              }
+              if (refIDS.current) {
+                refIDS.current.value = rowItm[2]
+              }
+              tsbSearch_Click()
+              wait(100).then(() => {
+                const getData = table.current.getData()
+                const selected = getData.map((itm: any, idx: number) => {
+                  if (dr.includes(itm[5])) {
+                    return idx
+                  }
+                  return null
+                })
+
+                table.current.setSelectedRow(selected)
+                table.current.setIsTableSelectable(false)
+                table.current.setSelectedRow(getData.map((itm: any, idx: any) => idx))
+                setMonitoring({
+                  check: dr.length,
+                  unCheck: `${getData.length - dr.length}`,
+                  found: getData.length
+                })
+              })
+
+            } else {
+              return alert('No request for pull-out!')
+            }
+          } else {
+
+          }
+
+          modalCheckRef.current.closeDelay()
+        }}
+      />
     </div>
   )
 
 }
+
+const ModalCheck = forwardRef(({
+  handleOnSave,
+  handleOnClose,
+  getSelectedItem
+}: any, ref) => {
+  const { user, myAxios } = useContext(AuthContext)
+  const [showModal, setShowModal] = useState(false)
+  const [handleDelayClose, setHandleDelayClose] = useState(false)
+  const [blick, setBlick] = useState(false)
+
+  const table = useRef<any>(null)
+  const rcpnRef = useRef<HTMLSelectElement>(null)
+
+  const closeDelay = () => {
+    setHandleDelayClose(true)
+    setTimeout(() => {
+      setShowModal(false)
+      setHandleDelayClose(false)
+      handleOnClose()
+    }, 100)
+  }
+  useImperativeHandle(ref, () => ({
+
+    showModal: () => {
+      setShowModal(true)
+
+    },
+    clsoeModal: () => {
+      setShowModal(false)
+    },
+    getRefs: () => {
+      const refs = {
+        rcpnRef
+      }
+      return refs
+    },
+    mutate: () => {
+      mutate({ RCPNo: rcpnRef.current?.value })
+    },
+    closeDelay
+
+  }))
+  const {
+    isLoading: isLoadingLoadRequestNumber,
+    data: dataLoadRequestNumber,
+  } = useQuery({
+    queryKey: 'get-pullout-rcpno',
+    queryFn: async () =>
+      await myAxios.get(`/task/accounting/warehouse/get-pullout-rcpno`, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      }),
+  });
+  const {
+    isLoading: isLoading,
+    mutate: mutate
+  } = useMutation({
+    mutationKey: 'load-list',
+    mutationFn: async (variable: any) =>
+      await myAxios.post(`/task/accounting/warehouse/load-list`, variable, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      }),
+    onSuccess(res) {
+      table.current.setDataFormated(res.data.list.map((itm: any, idx: number) => {
+        return {
+          row_count: idx + 1,
+          ...itm
+        }
+      }))
+    },
+  });
+
+  return (
+    showModal ?
+      <>
+        <div style={{
+          position: "fixed",
+          top: 0,
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: "transparent",
+          zIndex: "88"
+        }}
+          onClick={() => {
+            setBlick(true)
+            setTimeout(() => {
+              setBlick(false)
+            }, 250)
+          }}
+
+        ></div>
+        {(isLoading) && <Loading />}
+        <div
+          style={{
+            height: blick ? "402px" : "400px",
+            width: blick ? "60.3%" : "60%",
+            border: "1px solid #64748b",
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%, -75%)",
+            display: "flex",
+            flexDirection: "column",
+            zIndex: handleDelayClose ? -100 : 100,
+            opacity: handleDelayClose ? 0 : 1,
+            transition: "all 150ms",
+            boxShadow: '3px 6px 32px -7px rgba(0,0,0,0.75)'
+          }}>
+          <div
+            style={{
+              height: "22px",
+              background: "white",
+              display: "flex",
+              justifyContent: "space-between",
+              padding: "5px",
+              position: "relative",
+              alignItems: "center"
+
+            }}
+          >
+            <span style={{ fontSize: "13px", fontWeight: "bold" }}>Pull Out Viewer</span>
+            <button
+              className="btn-check-exit-modal"
+              style={{
+                padding: "0 5px",
+                borderRadius: "0px",
+                background: "white",
+                color: "black",
+                height: "22px",
+                position: "absolute",
+                top: 0,
+                right: 0
+              }}
+              onClick={() => {
+                closeDelay()
+              }}
+            >
+              <CloseIcon sx={{ fontSize: "22px" }} />
+            </button>
+          </div>
+          <div
+            style={{
+              flex: 1,
+              background: "#F1F1F1",
+              padding: "5px",
+              display: "flex",
+            }}
+          >
+            <div style={{
+              width: "100%",
+              display: "flex",
+              flexDirection: "column",
+              rowGap: "5px",
+              padding: "10px",
+            }}>
+              {
+                isLoadingLoadRequestNumber ?
+                  <LoadingButton loading={isLoadingLoadRequestNumber} />
+                  : <div
+                    style={{
+                      width: "100%",
+                      marginBottom: "8px"
+                    }}>
+                    <SelectInput
+                      label={{
+                        title: "RCP No.  : ",
+                        style: {
+                          fontSize: "12px",
+                          fontWeight: "bold",
+                          width: "100px",
+                        },
+                      }}
+                      selectRef={rcpnRef}
+                      select={{
+                        style: { flex: 1, height: "22px" },
+                        defaultValue: "Non-VAT",
+                        onChange: async (e) => {
+                          mutate({ RCPNo: e.currentTarget.value })
+                        },
+                        onKeyDown: (e) => {
+                          if (e.key === 'Enter' || e.key === 'NumpadEnter') {
+                            mutate({ RCPNo: e.currentTarget.value })
+                          }
+                        }
+
+                      }}
+                      containerStyle={{
+                        width: "300px",
+                        marginBottom: "12px"
+                      }}
+                      datasource={dataLoadRequestNumber?.data.rcpn}
+                      values={"RCPNo"}
+                      display={"RCPNo"}
+                    />
+                  </div>
+              }
+              <DataGridViewMultiSelectionReact
+                ref={table}
+                columns={[
+                  { key: "row_count", label: "#", width: 35 },
+                  { key: "RCPNo", label: "RCP No.", width: 100 },
+                  { key: "PNNo", label: "PN No.", width: 150 },
+                  { key: "Name", label: "Name", width: 250 },
+                  { key: "NoOfChecks", label: "# of Checks", width: 70 },
+                  { key: "Reason", label: "Reason", width: 150 },
+                ]}
+                rows={[]}
+                containerStyle={{
+                  flex: 1,
+                }}
+                getSelectedItem={(rowItm: any) => {
+                  getSelectedItem(rowItm)
+                }}
+                onCheckAll={() => {
+                  const getData = table.current.getData()
+                  const filteredData = getData.map((itm: any, idx: number) => {
+                    if (itm.RCPNO !== "--" && itm.RCPNO !== "" && itm.Status !== 'APPROVED') {
+                      return idx
+                    }
+                    return null
+                  })
+                  const selectedRows = filteredData.filter((itm: any) => itm !== null)
+                  table.current.setSelectedRow(selectedRows)
+                }}
+                onUnCheckAll={() => {
+                  table.current.setSelectedRow([])
+                }}
+              />
+            </div>
+          </div>
+          <style>
+            {`
+              .btn-check-exit-modal:hover{
+                background:red !important;
+                color:white !important;
+              }
+            `}
+          </style>
+        </div>
+      </>
+      : null
+  )
+})
 function isValidDate(dateString: string) {
   const date = new Date(dateString);
   return !isNaN(date.getTime());
