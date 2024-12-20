@@ -221,7 +221,8 @@ export default function CheckPulloutRequest() {
         flex: "1",
         display: "flex",
         justifyContent: "center",
-        alignItems: "center"
+        alignItems: "center",
+        background: "#F1F1F1",
     }}>
         {(isLoadingSavePulloutRequest) && <Loading />}
         <div style={{
