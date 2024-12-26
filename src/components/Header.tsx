@@ -198,6 +198,13 @@ export default function Header() {
           { name: "Statement of Account", path: "/dashboard/task/production/statement-of-account" },
         ],
       },
+      {
+        name: "Production Report",
+        subLinks: [
+          { name: "Production Report", path: "/dashboard/reports/production/production-report" },
+          { name: "Renewal Notice", path: "/dashboard/reports/production/renewal-notice" },
+        ],
+      },
 
     ];
     if (user?.userAccess === 'PRODUCTION_ACCOUNTING') {
@@ -325,6 +332,13 @@ export default function Header() {
         subLinks: [
           { name: "Policy", path: "/dashboard/task/production/policy/" },
           { name: "Statement of Account", path: "/dashboard/task/production/statement-of-account" },
+        ],
+      },
+      {
+        name: "Production Report",
+        subLinks: [
+          { name: "Production Report", path: "/dashboard/reports/production/production-report" },
+          { name: "Renewal Notice", path: "/dashboard/reports/production/renewal-notice" },
         ],
       },
       ])

@@ -302,22 +302,24 @@ export function TextAreaInput({
   );
 }
 
-export const SelectInput = forwardRef(({ select,
+export const SelectInput = forwardRef(({
+  select,
   label,
   selectRef,
   datasource = [],
   values = "",
   display = "",
-  containerStyle }: {
-    selectRef?: React.RefObject<HTMLSelectElement>;
-    labelRef?: React.RefObject<HTMLLabelElement>;
-    select: InputHTMLAttributes<HTMLSelectElement>;
-    label: HtmlHTMLAttributes<HTMLLabelElement>;
-    datasource: Array<any>;
-    values: string;
-    display: string;
-    containerStyle?: React.CSSProperties | undefined
-  }, ref: any) => {
+  containerStyle
+}: {
+  selectRef?: React.RefObject<HTMLSelectElement>;
+  labelRef?: React.RefObject<HTMLLabelElement>;
+  select: InputHTMLAttributes<HTMLSelectElement>;
+  label: HtmlHTMLAttributes<HTMLLabelElement>;
+  datasource: Array<any>;
+  values: string;
+  display: string;
+  containerStyle?: React.CSSProperties | undefined
+}, ref: any) => {
 
 
   const [_datasource, _setDataSource] = useState(datasource)
@@ -326,6 +328,9 @@ export const SelectInput = forwardRef(({ select,
   useImperativeHandle(ref, () => ({
     setDataSource: (_dataSource: any) => {
       _setDataSource(_dataSource)
+    },
+    getDataSource: () => {
+      return _datasource
     }
   }))
 

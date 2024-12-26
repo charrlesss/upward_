@@ -1,5 +1,5 @@
 
-import { useContext, useRef } from "react";
+import { useContext, useRef, useState } from "react";
 import { SelectInput, TextAreaInput, TextFormatedInput, TextInput } from "../../../../components/UpwardFields";
 
 import { Button } from "@mui/material";
@@ -9,6 +9,7 @@ import { useMutation, useQuery } from "react-query";
 import { AuthContext } from "../../../../components/AuthContext";
 import { LoadingButton } from "@mui/lab";
 import { wait } from "@testing-library/user-event/dist/utils";
+import { addMonths, format } from "date-fns";
 
 const columns = [
     { key: "Check_No", label: "Check No", width: 170 },
@@ -21,6 +22,7 @@ const columns = [
 export default function ChekPostponementRequest() {
     const { myAxios, user } = useContext(AuthContext)
     const table = useRef<any>(null)
+    const [inputType, setInpuType] = useState('text')
 
     // first field
     const RPCDNoRef = useRef<HTMLInputElement>(null)
@@ -31,6 +33,7 @@ export default function ChekPostponementRequest() {
     const _NameRef = useRef<any>(null)
 
     // second field
+    const _CheckNoRef = useRef<any>(null)
     const CheckNoRef = useRef<HTMLSelectElement>(null)
     const NewDateRef = useRef<HTMLInputElement>(null)
     const DateRef = useRef<HTMLInputElement>(null)
@@ -98,13 +101,12 @@ export default function ChekPostponementRequest() {
             }
         },
     });
-
-    //fst_fill
+    //load-check
     const {
-        isLoading: isLoadingFstFill,
-        mutate: mutateFstFill
+        isLoading: isLoadingChecks,
+        mutate: mutateChecks
     } = useMutation({
-        mutationKey: 'fst-fill',
+        mutationKey: 'load-checks',
         mutationFn: async (variable: any) =>
             await myAxios.post(`/task/accounting/check-postponement/request/load-checks`, variable, {
                 headers: {
@@ -112,15 +114,68 @@ export default function ChekPostponementRequest() {
                 },
             }),
         onSuccess(response) {
-            console.log(response)
             if (!response.data.success) {
                 return alert(response.data.message)
             }
-
-
+            _CheckNoRef.current.setDataSource(response?.data.data)
+        },
+    });
+    //load check details
+    const {
+        isLoading: isLoadingCheckDetails,
+        mutate: mutateCheckDetails
+    } = useMutation({
+        mutationKey: 'load-check-details',
+        mutationFn: async (variable: any) =>
+            await myAxios.post(`/task/accounting/check-postponement/request/load-checks-details`, variable, {
+                headers: {
+                    Authorization: `Bearer ${user?.accessToken}`,
+                },
+            }),
+        onSuccess(response) {
+            if (!response.data.success) {
+                return alert(response.data.message)
+            }
+            const res = response?.data.data
+            if (res.length > 0) {
+                setInpuType('date')
+                setTimeout(() => {
+                    if (DateRef.current) {
+                        DateRef.current.value = format(new Date(res[0].CheckDate), "yyyy-MM-dd")
+                    }
+                    if (BankRef.current) {
+                        BankRef.current.value = res[0].Bank
+                    }
+                    if (AmpountRef.current) {
+                        AmpountRef.current.value = res[0].Amount
+                    }
+                }, 100);
+            } else {
+                setInpuType('text')
+                setTimeout(() => {
+                    if (DateRef.current) {
+                        DateRef.current.value = ''
+                    }
+                    if (BankRef.current) {
+                        BankRef.current.value = ''
+                    }
+                    if (AmpountRef.current) {
+                        AmpountRef.current.value = ''
+                    }
+                }, 100);
+            }
 
         },
     });
+
+    function handleAddCheck() {
+        if (((BankRef.current && BankRef.current.value === '') || (BankRef.current && BankRef.current.value === null) || (BankRef.current && BankRef.current.value === undefined)) || ((CheckNoRef.current && CheckNoRef.current.value === '') || (CheckNoRef.current && CheckNoRef.current.value === null) || (CheckNoRef.current && CheckNoRef.current.value === undefined)))
+            return alert('Incomplete details!')
+
+            
+
+
+    }
 
 
 
@@ -228,11 +283,22 @@ export default function ChekPostponementRequest() {
                                 style: { flex: 1, height: "22px" },
                                 defaultValue: "Non-VAT",
                                 onChange: (e) => {
-                                    mutateFstFill({
-                                        CMB: "PNNO",
-                                        PNNo: e.target.value,
-                                        PNNname: "",
+                                    const data = _PNNoRef.current.getDataSource()
+                                    const res = data.filter((itm: any) => itm.PNo === e.target.value)
+                                    mutateChecks({
+                                        PNNo: res[0].PNo,
                                     })
+
+                                    if (PNNoRef.current) {
+                                        PNNoRef.current.value = res[0].PNo
+                                    }
+                                    if (BranchRef.current) {
+                                        BranchRef.current.value = res[0].BName
+                                    }
+                                    if (NameRef.current) {
+                                        NameRef.current.value = res[0].Name
+                                    }
+
                                 }
 
                             }}
@@ -244,7 +310,8 @@ export default function ChekPostponementRequest() {
                             values={"PNo"}
                             display={"PNo"}
                         />}
-                    {isLoadingLoadPnnoData ? <LoadingButton loading={isLoadingLoadPnnoData} /> :
+                    {isLoadingLoadPnnoData ?
+                        <LoadingButton loading={isLoadingLoadPnnoData} /> :
                         <SelectInput
                             ref={_NameRef}
                             label={{
@@ -260,11 +327,22 @@ export default function ChekPostponementRequest() {
                                 style: { flex: 1, height: "22px" },
                                 defaultValue: "Non-VAT",
                                 onChange: (e) => {
-                                    mutateFstFill({
-                                        CMB: "PNNAME",
-                                        PNNo: '',
-                                        PNNname: e.target.value
+
+                                    const data = _NameRef.current.getDataSource()
+                                    const res = data.filter((itm: any) => itm.Name === e.target.value)
+
+                                    mutateChecks({
+                                        PNNo: res[0].PNo,
                                     })
+                                    if (PNNoRef.current) {
+                                        PNNoRef.current.value = res[0].PNo
+                                    }
+                                    if (BranchRef.current) {
+                                        BranchRef.current.value = res[0].BName
+                                    }
+                                    if (NameRef.current) {
+                                        NameRef.current.value = res[0].Name
+                                    }
                                 }
 
                             }}
@@ -301,40 +379,36 @@ export default function ChekPostponementRequest() {
                         columnGap: "50px"
                     }}
                 >
-                    <SelectInput
-                        label={{
-                            title: "Check No. :",
-                            style: {
-                                fontSize: "12px",
-                                fontWeight: "bold",
-                                width: "80px",
-                            },
-                        }}
-                        selectRef={CheckNoRef}
-                        select={{
-                            style: { flex: 1, height: "22px" },
-                            defaultValue: "Non-VAT",
-                            onChange: (e) => {
 
-                            }
+                    {isLoadingLoadAutoIdData ? <LoadingButton loading={isLoadingChecks} /> :
 
-                        }}
-                        containerStyle={{
-                            width: "50%",
-                            marginBottom: "12px"
-                        }}
-                        datasource={[
-                            { key: "", value: "" },
-                            { key: "Fully Paid", value: "Fully Paid" },
-                            { key: "Cash Replacement", value: "Cash Replacement" },
-                            { key: "Check Replacement", value: "Check Replacement" },
-                            { key: "Account Closed", value: "Account Closed" },
-                            { key: "Hold", value: "Hold" },
-                            { key: "Not Renewed by Camfin", value: "Not Renewed by Camfin" },
-                        ]}
-                        values={"value"}
-                        display={"key"}
-                    />
+                        <SelectInput
+                            ref={_CheckNoRef}
+                            label={{
+                                title: "Check No. :",
+                                style: {
+                                    fontSize: "12px",
+                                    fontWeight: "bold",
+                                    width: "80px",
+                                },
+                            }}
+                            selectRef={CheckNoRef}
+                            select={{
+                                style: { flex: 1, height: "22px" },
+                                defaultValue: "",
+                                onChange: (e) => {
+                                    mutateCheckDetails({ checkNo: e.target.value, PNNo: PNNoRef.current?.value })
+                                }
+
+                            }}
+                            containerStyle={{
+                                width: "50%",
+                                marginBottom: "12px"
+                            }}
+                            datasource={[]}
+                            values={"CheckNo"}
+                            display={"CheckNo"}
+                        />}
                     <TextInput
                         containerStyle={{
                             width: "50%",
@@ -349,7 +423,8 @@ export default function ChekPostponementRequest() {
                             },
                         }}
                         input={{
-                            type: "date",
+                            type: inputType,
+                            value: format(addMonths(new Date(), 1), "yyyy-MM-dd"),
                             style: { width: "calc(100% - 100px)" },
                             onKeyDown: (e) => {
                                 if (e.code === "NumpadEnter" || e.code === 'Enter') {
@@ -367,7 +442,7 @@ export default function ChekPostponementRequest() {
                     }}
                 >
 
-                    <div style={{
+                    {isLoadingCheckDetails ? <span>Loading...</span> : <div style={{
                         display: "flex",
                         flexDirection: "column",
                         width: "50%",
@@ -386,8 +461,10 @@ export default function ChekPostponementRequest() {
                                 },
                             }}
                             input={{
-                                type: "date",
+                                disabled: true,
+                                type: inputType,
                                 style: { width: "calc(100% - 80px)" },
+                                defaultValue: "",
                                 onKeyDown: (e) => {
                                     if (e.code === "NumpadEnter" || e.code === 'Enter') {
                                     }
@@ -409,6 +486,7 @@ export default function ChekPostponementRequest() {
                                 },
                             }}
                             input={{
+                                disabled: true,
                                 type: "text",
                                 style: { width: "calc(100% - 80px)" },
                                 onKeyDown: (e) => {
@@ -418,7 +496,7 @@ export default function ChekPostponementRequest() {
                             }}
                             inputRef={BankRef}
                         />
-                    </div>
+                    </div>}
                     <div
                         style={{
                             width: "50%"
@@ -457,7 +535,7 @@ export default function ChekPostponementRequest() {
                         justifyContent: "space-between"
                     }}
                 >
-                    <TextFormatedInput
+                    {isLoadingCheckDetails ? <span>Loading...</span> : <TextFormatedInput
                         label={{
                             title: "Amount : ",
                             style: {
@@ -470,6 +548,7 @@ export default function ChekPostponementRequest() {
                             width: "50%"
                         }}
                         input={{
+                            disabled: true,
                             type: "text",
                             style: { width: "calc(100% - 105px)" },
                             onKeyDown: (e) => {
@@ -478,15 +557,14 @@ export default function ChekPostponementRequest() {
                             }
                         }}
                         inputRef={AmpountRef}
-                    />
+                    />}
                     <Button
                         sx={{
                             height: "22px",
                             fontSize: "11px",
                         }}
                         variant="contained"
-                        onClick={() => {
-                        }}
+                        onClick={handleAddCheck}
                         color="success"
                     >
                         Add

@@ -1871,7 +1871,7 @@ export default function NavigatePrint() {
                           padding: "0",
                         }}
                       >
-                        {data.current[1].Payment  === 'CASH' ?data.current[1].Payment :` ${data.current[1].Payment} - ${format(new Date(data.current[1].Check_Date),'MM/dd/yyy')} - ${data.current[1].Check_No} - ${data.current[1].Bank} `}
+                        {data.current[1].Payment  === 'Cash' ? data.current[1].Payment : ` ${data.current[1].Payment} - ${format(new Date(data.current[1].Check_Date),'MM/dd/yyy')} - ${data.current[1].Check_No} - ${data.current[1].Bank} `}
                       </p>
                     </div>
                   </div>
@@ -2435,7 +2435,7 @@ export default function NavigatePrint() {
                           padding: "0",
                         }}
                       >
-                        {data.current[1].Payment  === 'CASH' ?data.current[1].Payment :` ${data.current[1].Payment} - ${format(new Date(data.current[1].Check_Date),'MM/dd/yyy')} - ${data.current[1].Check_No} - ${data.current[1].Bank} `}
+                        {data.current[1].Payment  === 'Cash' ?data.current[1].Payment :` ${data.current[1].Payment} - ${format(new Date(data.current[1].Check_Date),'MM/dd/yyy')} - ${data.current[1].Check_No} - ${data.current[1].Bank} `}
                       </p>
                     </div>
                   </div>
@@ -3003,7 +3003,7 @@ export default function NavigatePrint() {
                           padding: "0",
                         }}
                       >
-                        {data.current[1].Payment  === 'CASH' ?data.current[1].Payment :` ${data.current[1].Payment} - ${format(new Date(data.current[1].Check_Date),'MM/dd/yyy')} - ${data.current[1].Check_No} - ${data.current[1].Bank} `}
+                        {data.current[1].Payment  === 'Cash' ?data.current[1].Payment :` ${data.current[1].Payment} - ${format(new Date(data.current[1].Check_Date),'MM/dd/yyy')} - ${data.current[1].Check_No} - ${data.current[1].Bank} `}
                       </p>
                     </div>
                   </div>
@@ -3978,7 +3978,7 @@ export default function NavigatePrint() {
                     left: "83px",
                     top: "18px",
                     transform: "translateY(-100%)",
-                  }}>{`**${state.current.Payto}**`}</div>
+                  }}>{`${state.current.Payto}`}</div>
                   <div style={{
                     fontSize: "14px",
                     position: "absolute",
@@ -3988,7 +3988,7 @@ export default function NavigatePrint() {
                     right: "50px",
                     top: "0px",
                     textAlign: "center",
-                  }}>{`**${state.current.credit}**`}</div>
+                  }}>{`${state.current.credit}`}</div>
 
 
                   <div style={{
@@ -4000,7 +4000,7 @@ export default function NavigatePrint() {
                     left: "62px",
                     top: "48px",
                     transform: "translateY(-100%)",
-                  }}>{`**${AmountToWords(parseFloat(state.current.credit.replace(/,/g, '')))}** `}</div>
+                  }}>{`${AmountToWords(parseFloat(state.current.credit.replace(/,/g, '')))}`}</div>
                 </div>
 
               </div>
