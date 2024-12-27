@@ -9,20 +9,25 @@ import { useMutation, useQuery } from "react-query";
 import { AuthContext } from "../../../../components/AuthContext";
 import { LoadingButton } from "@mui/lab";
 import { wait } from "@testing-library/user-event/dist/utils";
-import { addMonths, format } from "date-fns";
+import { addMonths, differenceInDays, format } from "date-fns";
+import { Loading } from "../../../../components/Loading";
 
 const columns = [
-    { key: "Check_No", label: "Check No", width: 170 },
-    { key: "Check_Date", label: "Check Date", width: 170 },
-    { key: "Bank_Branch", label: "Bank/Branch", width: 300 },
-    { key: "Acct_Code", label: "DR Code", width: 170 },
-    { key: "Acct_Title", label: "DR Title", width: 300 },
-    { key: "Deposit_Slip", label: "Deposit Slip", width: 170 },
+    { key: "ln", label: "#", width: 40 },
+    { key: "CheckNo", label: "Check No", width: 100 },
+    { key: "Bank", label: "Bank", width: 200 },
+    { key: "Amount", label: "Amount", width: 120 },
+    { key: "OldDepositDate", label: "Old Deposit Date", width: 100 },
+    { key: "NewDate", label: "New Deposit Date", width: 100 },
+    { key: "Penalty", label: "Penalty", width: 100 },
+    { key: "Datediff", label: "Datediff", width: 100 },
+    { key: "Reason", label: "Reason", width: 200 },
 ]
 export default function ChekPostponementRequest() {
     const { myAxios, user } = useContext(AuthContext)
     const table = useRef<any>(null)
     const [inputType, setInpuType] = useState('text')
+    const [reason, setReason] = useState('')
 
     // first field
     const RPCDNoRef = useRef<HTMLInputElement>(null)
@@ -167,14 +172,87 @@ export default function ChekPostponementRequest() {
 
         },
     });
+    // check add row
+    const {
+        isLoading: isLoadingCheckIsPending,
+        mutate: mutateCheckIsPending
+    } = useMutation({
+        mutationKey: 'check-is-pending',
+        mutationFn: async (variable: any) =>
+            await myAxios.post(`/task/accounting/check-postponement/request/check-is-pending`, variable, {
+                headers: {
+                    Authorization: `Bearer ${user?.accessToken}`,
+                },
+            }),
+        onSuccess(response) {
+            if (!response.data.success) {
+                return alert(response.data.message)
+            }
+            const res = response?.data.data
+            if (res.length > 0) {
+                return alert(` Pending Request \nRPCD No.: ${res[0].RPCDNo}!`)
+            }
+
+
+            const tableData = table.current.getData()
+            if (tableData.some((itm: any) => itm[1] === CheckNoRef.current?.value)) {
+                return alert('Already added')
+            }
+
+            const newData = [
+                ...tableData,
+                {
+                    ln: tableData.length + 1,
+                    CheckNo: CheckNoRef.current?.value,
+                    Bank: BankRef.current?.value,
+                    Amount: AmpountRef.current?.value,
+                    OldDepositDate: DateRef.current?.value,
+                    NewDate: NewDateRef.current?.value,
+                    Penalty: '',
+                    Reason: ReasonRef.current?.value,
+                    Datediff: differenceInDays(new Date(NewDateRef.current?.value as any), new Date(DateRef.current?.value as any))
+                }
+            ]
+            table.current.setDataFormated(newData)
+            resetSecondFields()
+        },
+    });
 
     function handleAddCheck() {
-        if (((BankRef.current && BankRef.current.value === '') || (BankRef.current && BankRef.current.value === null) || (BankRef.current && BankRef.current.value === undefined)) || ((CheckNoRef.current && CheckNoRef.current.value === '') || (CheckNoRef.current && CheckNoRef.current.value === null) || (CheckNoRef.current && CheckNoRef.current.value === undefined)))
+        if ((
+            (BankRef.current && BankRef.current.value === '') ||
+            (BankRef.current && BankRef.current.value === null) ||
+            (BankRef.current && BankRef.current.value === undefined))
+            ||
+            (
+                (CheckNoRef.current && CheckNoRef.current.value === '') ||
+                (CheckNoRef.current && CheckNoRef.current.value === null) ||
+                (CheckNoRef.current && CheckNoRef.current.value === undefined))
+        ) {
             return alert('Incomplete details!')
+        }
 
-            
+        mutateCheckIsPending({ checkNo: CheckNoRef.current?.value })
+    }
 
+    function resetSecondFields() {
+        if (CheckNoRef.current) {
+            CheckNoRef.current.value = ''
+        }
 
+        if (DateRef.current) {
+            DateRef.current.value = ''
+        }
+        if (ReasonRef.current) {
+            ReasonRef.current.value = ''
+        }
+        if (BankRef.current) {
+            BankRef.current.value = ''
+        }
+        if (AmpountRef.current) {
+            AmpountRef.current.value = ''
+        }
+        setInpuType('text')
     }
 
 
@@ -185,6 +263,7 @@ export default function ChekPostponementRequest() {
             background: "#F1F1F1",
             height: "100%"
         }}>
+            {(isLoadingCheckIsPending) && <Loading />}
             {/* ===========  first field  =========== */}
             <div
                 style={{
@@ -423,8 +502,8 @@ export default function ChekPostponementRequest() {
                             },
                         }}
                         input={{
-                            type: inputType,
-                            value: format(addMonths(new Date(), 1), "yyyy-MM-dd"),
+                            type: 'date',
+                            defaultValue: format(addMonths(new Date(), 1), "yyyy-MM-dd"),
                             style: { width: "calc(100% - 100px)" },
                             onKeyDown: (e) => {
                                 if (e.code === "NumpadEnter" || e.code === 'Enter') {
@@ -521,7 +600,7 @@ export default function ChekPostponementRequest() {
                                     }
                                 },
                                 onChange: (e) => {
-
+                                    setReason(e.target.value)
                                 },
                             }}
                             _inputRef={ReasonRef}
@@ -559,6 +638,7 @@ export default function ChekPostponementRequest() {
                         inputRef={AmpountRef}
                     />}
                     <Button
+                        disabled={reason === ''}
                         sx={{
                             height: "22px",
                             fontSize: "11px",
@@ -579,13 +659,15 @@ export default function ChekPostponementRequest() {
                 containerStyle={{
                     height: '180px',
                 }}
-                getSelectedItem={(rowItm: any) => {
+                getSelectedItem={(rowItm: any, _: any, rowIdx: any) => {
                     if (rowItm) {
-
-
-
-                    } else {
-
+                        const isConfim = window.confirm(`Are you sure you want to delete?`)
+                        if (isConfim) {
+                            const tableData = table.current.getData()
+                            tableData.splice(rowIdx, 1);
+                            table.current.setDataFormated(tableData)
+                            table.current.setSelectedRow(null)
+                        }
                     }
                 }}
                 onKeyDown={(rowItm: any, rowIdx: any, e: any) => {
