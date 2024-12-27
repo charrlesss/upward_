@@ -219,7 +219,7 @@ export default function GeneralJournal() {
             showCancelButton: true,
             confirmButtonColor: "#3085d6",
             cancelButtonColor: "#d33",
-            confirmButtonText: "Yes, save it!",
+            confirmButtonText: "Yes, print it!",
           }).then((result) => {
             if (result.isConfirmed) {
               handleClickPrint()
@@ -519,6 +519,7 @@ export default function GeneralJournal() {
       });
     }
 
+  
     const generalJournalData: any = table.current.getData()
     const generalJournalDataFormatted = generalJournalData.map((itm: any) => {
       return {
@@ -571,8 +572,8 @@ export default function GeneralJournal() {
       text: `Are you sure you want to void ${state.refNo}`,
       cb: (userCodeConfirmation) => {
         mutateVoidGeneralJournal({
-          refNo: state.refNo,
-          dateEntry: state.dateEntry,
+          refNo: refRefNo.current?.value,
+          dateEntry: refDate.current?.value,
           userCodeConfirmation,
         });
       },

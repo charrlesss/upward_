@@ -14,20 +14,24 @@ import { Loading } from "../../../../components/Loading";
 
 const columns = [
     { key: "ln", label: "#", width: 40 },
-    { key: "CheckNo", label: "Check No", width: 100 },
+    { key: "CheckNo", label: "Check No", width: 120 },
     { key: "Bank", label: "Bank", width: 200 },
     { key: "Amount", label: "Amount", width: 120 },
-    { key: "OldDepositDate", label: "Old Deposit Date", width: 100 },
-    { key: "NewDate", label: "New Deposit Date", width: 100 },
-    { key: "Penalty", label: "Penalty", width: 100 },
-    { key: "Datediff", label: "Datediff", width: 100 },
+    { key: "OldDepositDate", label: "Old Deposit Date", width: 200 },
+    { key: "NewDate", label: "New Deposit Date", width: 200 },
+    { key: "Penalty", label: "Penalty", width: 120 },
+    { key: "Datediff", label: "Datediff", width: 120 },
     { key: "Reason", label: "Reason", width: 200 },
 ]
+
 export default function ChekPostponementRequest() {
     const { myAxios, user } = useContext(AuthContext)
     const table = useRef<any>(null)
     const [inputType, setInpuType] = useState('text')
     const [reason, setReason] = useState('')
+    const [paid, setPaid] = useState('')
+    const [remarks, setRemarks] = useState('')
+    const [mode, setMode] = useState('')
 
     // first field
     const RPCDNoRef = useRef<HTMLInputElement>(null)
@@ -192,15 +196,30 @@ export default function ChekPostponementRequest() {
             if (res.length > 0) {
                 return alert(` Pending Request \nRPCD No.: ${res[0].RPCDNo}!`)
             }
-
-
             const tableData = table.current.getData()
             if (tableData.some((itm: any) => itm[1] === CheckNoRef.current?.value)) {
                 return alert('Already added')
             }
-
+            const Datediff = differenceInDays(new Date(NewDateRef.current?.value as any), new Date(DateRef.current?.value as any))
+        
+            if (Datediff <= 0) {
+                return alert('Invalid date for deposit')
+            }
+            const formatedTableData = tableData.map((itm: any) => {
+                return {
+                    ln: itm[0],
+                    CheckNo: itm[1],
+                    Bank: itm[2],
+                    Amount: itm[3],
+                    OldDepositDate: itm[4],
+                    NewDate: itm[5],
+                    Penalty: itm[6],
+                    Datediff: itm[7],
+                    Reason: itm[8],
+                }
+            })
             const newData = [
-                ...tableData,
+                ...formatedTableData,
                 {
                     ln: tableData.length + 1,
                     CheckNo: CheckNoRef.current?.value,
@@ -209,8 +228,8 @@ export default function ChekPostponementRequest() {
                     OldDepositDate: DateRef.current?.value,
                     NewDate: NewDateRef.current?.value,
                     Penalty: '',
+                    Datediff,
                     Reason: ReasonRef.current?.value,
-                    Datediff: differenceInDays(new Date(NewDateRef.current?.value as any), new Date(DateRef.current?.value as any))
                 }
             ]
             table.current.setDataFormated(newData)
@@ -255,6 +274,16 @@ export default function ChekPostponementRequest() {
         setInpuType('text')
     }
 
+    function handleOnSave() {
+        const data = table.current.getData()
+
+        if (mode === 'add') {
+            console.log(data.some((itm: any) => itm[7] <= 0))
+
+        } else if (mode === 'edit') {
+
+        }
+    }
 
 
     return (
@@ -359,6 +388,7 @@ export default function ChekPostponementRequest() {
                             }}
                             selectRef={PNNoRef}
                             select={{
+                                disabled: mode === '',
                                 style: { flex: 1, height: "22px" },
                                 defaultValue: "Non-VAT",
                                 onChange: (e) => {
@@ -403,6 +433,7 @@ export default function ChekPostponementRequest() {
                             }}
                             selectRef={NameRef}
                             select={{
+                                disabled: mode === '',
                                 style: { flex: 1, height: "22px" },
                                 defaultValue: "Non-VAT",
                                 onChange: (e) => {
@@ -458,7 +489,6 @@ export default function ChekPostponementRequest() {
                         columnGap: "50px"
                     }}
                 >
-
                     {isLoadingLoadAutoIdData ? <LoadingButton loading={isLoadingChecks} /> :
 
                         <SelectInput
@@ -473,6 +503,7 @@ export default function ChekPostponementRequest() {
                             }}
                             selectRef={CheckNoRef}
                             select={{
+                                disabled: mode === '',
                                 style: { flex: 1, height: "22px" },
                                 defaultValue: "",
                                 onChange: (e) => {
@@ -502,6 +533,7 @@ export default function ChekPostponementRequest() {
                             },
                         }}
                         input={{
+                            disabled: mode === '',
                             type: 'date',
                             defaultValue: format(addMonths(new Date(), 1), "yyyy-MM-dd"),
                             style: { width: "calc(100% - 100px)" },
@@ -592,6 +624,7 @@ export default function ChekPostponementRequest() {
                                 },
                             }}
                             textarea={{
+                                disabled: mode === '',
                                 rows: 3,
                                 style: { flex: 1 },
                                 onKeyDown: (e) => {
@@ -666,8 +699,9 @@ export default function ChekPostponementRequest() {
                             const tableData = table.current.getData()
                             tableData.splice(rowIdx, 1);
                             table.current.setDataFormated(tableData)
-                            table.current.setSelectedRow(null)
                         }
+
+                        table.current.setSelectedRow(null)
                     }
                 }}
                 onKeyDown={(rowItm: any, rowIdx: any, e: any) => {
@@ -721,6 +755,8 @@ export default function ChekPostponementRequest() {
                                 width: "100%"
                             }}
                             input={{
+                                defaultValue: "0.00",
+                                disabled: mode === '',
                                 type: "text",
                                 style: { width: "calc(100% - 100px)" },
                                 onKeyDown: (e) => {
@@ -743,6 +779,8 @@ export default function ChekPostponementRequest() {
                                 width: "100%"
                             }}
                             input={{
+                                defaultValue: "0.00",
+                                disabled: mode === '',
                                 type: "text",
                                 style: { width: "calc(100% - 100px)" },
                                 onKeyDown: (e) => {
@@ -756,6 +794,7 @@ export default function ChekPostponementRequest() {
                             label={{
                                 title: "Surplus:",
                                 style: {
+
                                     fontSize: "12px",
                                     fontWeight: "bold",
                                     width: "100px",
@@ -765,6 +804,8 @@ export default function ChekPostponementRequest() {
                                 width: "100%"
                             }}
                             input={{
+                                defaultValue: "0.00",
+                                disabled: mode === '',
                                 type: "text",
                                 style: { width: "calc(100% - 100px)" },
                                 onKeyDown: (e) => {
@@ -785,12 +826,9 @@ export default function ChekPostponementRequest() {
                             }}
                             selectRef={DeductedToRef}
                             select={{
+                                disabled: mode === '',
                                 style: { flex: 1, height: "22px" },
                                 defaultValue: "Non-VAT",
-                                onChange: (e) => {
-
-                                }
-
                             }}
                             containerStyle={{
                                 width: "100%",
@@ -798,12 +836,10 @@ export default function ChekPostponementRequest() {
                             }}
                             datasource={[
                                 { key: "", value: "" },
-                                { key: "Fully Paid", value: "Fully Paid" },
-                                { key: "Cash Replacement", value: "Cash Replacement" },
-                                { key: "Check Replacement", value: "Check Replacement" },
-                                { key: "Account Closed", value: "Account Closed" },
-                                { key: "Hold", value: "Hold" },
-                                { key: "Not Renewed by Camfin", value: "Not Renewed by Camfin" },
+                                { key: "Penalties", value: "Penalties" },
+                                { key: "Loan Amortization", value: "Loan Amortization" },
+                                { key: "Loan Amort.-Other Charges", value: "Loan Amort.-Other Charges" },
+                                { key: "Miscellaneous Income", value: "Miscellaneous Income" },
                             ]}
                             values={"value"}
                             display={"key"}
@@ -821,6 +857,8 @@ export default function ChekPostponementRequest() {
                                 width: "100%"
                             }}
                             input={{
+                                defaultValue: "0.00",
+                                disabled: mode === '',
                                 type: "text",
                                 style: { width: "calc(100% - 100px)" },
                                 onKeyDown: (e) => {
@@ -843,12 +881,13 @@ export default function ChekPostponementRequest() {
                             }}
                             selectRef={HowToBePaidRef}
                             select={{
+                                disabled: mode === '',
                                 style: { flex: 1, height: "22px" },
-                                defaultValue: "Non-VAT",
+                                value: paid,
                                 onChange: (e) => {
-
+                                    setPaid(e.target.value)
+                                    setRemarks('')
                                 }
-
                             }}
                             containerStyle={{
                                 width: "50%",
@@ -856,12 +895,8 @@ export default function ChekPostponementRequest() {
                             }}
                             datasource={[
                                 { key: "", value: "" },
-                                { key: "Fully Paid", value: "Fully Paid" },
-                                { key: "Cash Replacement", value: "Cash Replacement" },
-                                { key: "Check Replacement", value: "Check Replacement" },
-                                { key: "Account Closed", value: "Account Closed" },
-                                { key: "Hold", value: "Hold" },
-                                { key: "Not Renewed by Camfin", value: "Not Renewed by Camfin" },
+                                { key: "Over-The-Counter", value: "Over-The-Counter" },
+                                { key: "Direct Deposit", value: "Direct Deposit" },
                             ]}
                             values={"value"}
                             display={"key"}
@@ -874,25 +909,19 @@ export default function ChekPostponementRequest() {
                             }}>Name of Bank && Branch / Date && Time of deposit :</label>
                         <TextAreaInput
                             label={{
-                                title: "Reason : ",
+                                title: "",
                                 style: {
-                                    fontSize: "12px",
-                                    fontWeight: "bold",
-                                    width: "110px",
                                     display: "none"
                                 },
                             }}
                             textarea={{
+                                disabled: mode === '' || paid === '' || paid === 'Over-The-Counter',
                                 rows: 4,
                                 style: { flex: 1 },
                                 id: 'remarks',
-                                onKeyDown: (e) => {
-                                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                                        //  refDate.current?.focus()
-                                    }
-                                },
+                                value: remarks,
                                 onChange: (e) => {
-
+                                    setRemarks(e.target.value)
                                 },
                             }}
                             _inputRef={RemarksRef}
@@ -905,6 +934,7 @@ export default function ChekPostponementRequest() {
                             columnGap: "7px"
                         }}>
                             <Button
+                                disabled={mode !== ''}
                                 variant="contained"
                                 color="info"
                                 style={{
@@ -913,11 +943,13 @@ export default function ChekPostponementRequest() {
                                 }}
                                 onClick={(e) => {
                                     loadARefetch()
+                                    setMode('add')
                                 }}
                             >
                                 Add
                             </Button>
                             <Button
+                                disabled={mode !== ''}
                                 variant="contained"
                                 color="success"
                                 style={{
@@ -926,26 +958,25 @@ export default function ChekPostponementRequest() {
                                     background: orange[800]
                                 }}
                                 onClick={(e) => {
-
+                                    setMode('edit')
                                 }}
                             >
                                 edit
                             </Button>
                             <Button
+                                disabled={mode === '' || paid === '' || (paid === 'Direct Deposit' && remarks === '')}
                                 variant="contained"
                                 color="success"
                                 style={{
                                     height: "25px",
                                     fontSize: "12px",
                                 }}
-                                onClick={async (e) => {
-
-
-                                }}
+                                onClick={handleOnSave}
                             >
                                 save
                             </Button>
                             <Button
+                                disabled={mode === ''}
                                 variant="contained"
                                 color="error"
                                 style={{
@@ -953,7 +984,7 @@ export default function ChekPostponementRequest() {
                                     fontSize: "12px",
                                 }}
                                 onClick={(e) => {
-
+                                    setMode('')
                                 }}
                             >
                                 cancel
