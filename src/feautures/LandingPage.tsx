@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../components/AuthContext";
 import { useMutation } from "react-query";
 import { wait } from "../lib/wait";
-import axios , { AxiosInstance } from "axios";
+import axios, { AxiosInstance } from "axios";
 import Swal from "sweetalert2";
 import "../style/landingpage.css"
 import "../style/laoding.css"
@@ -25,8 +25,9 @@ async function Login(
 
 
 
-export  default function LandingPage() {
+export default function LandingPage() {
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({
     username: false,
     password: false,
@@ -71,37 +72,15 @@ export  default function LandingPage() {
         timer: 800,
       }).then(() => {
         setUser(res.data.user);
-        myAxios
-          .post("/get-user-details", {
-            department: res.data.user?.department,
-            userAccess: res.data.user?.userAccess,
-            is_admin: res.data.user?.is_master_admin,
-            ACCESS_TOKEN: res.data.user?.accessToken,
-            REFRESH_TOKEN: res.data.user?.refreshToken,
-            ...res.data?.cokie,
-          })
-          .then((res) => {
-            console.log(res);
-          });
         if (res.data.user.is_master_admin) {
           navigate("/master-admin-dashboard");
         } else {
-          axios.get('http://localhost:7624/open-report', {
-            withCredentials: true
-          }).then((res) => {
-            if (!res.data.success) {
-              alert(res.data.message)
-            }
-          })
-            .catch(console.log)
-
-            
           navigate("/dashboard");
         }
       });
     },
   });
-  const [showPassword, setShowPassword] = useState(false);
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget as HTMLFormElement);
@@ -110,8 +89,8 @@ export  default function LandingPage() {
       password: formData.get("password") as string,
     });
   }
-  
-  
+
+
 
   return (
     <div className="main-landing-page">

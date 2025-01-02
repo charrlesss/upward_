@@ -376,14 +376,28 @@ export default function Header() {
   }, []);
 
   const openReport = () => {
-    axios.get('http://localhost:7624/open-report', {
-      withCredentials: true
-    }).then((res) => {
-      if (!res.data.success) {
-        alert(res.data.message)
-      }
-    })
-      .catch(console.log)
+    myAxios
+      .post("/open-report-by-username", {
+        username: user?.username,
+        ACCESS_TOKEN: user?.accessToken
+      }, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`
+        }
+      })
+      .then((res) => {
+        if (res.data.success) {
+          return axios.get('http://localhost:7624/open-report', {
+            withCredentials: true
+          }).then((res) => {
+            if (!res.data.success) {
+              alert(res.data.message)
+            }
+          })
+            .catch(console.log)
+        }
+      });
+
 
   }
 
@@ -420,7 +434,7 @@ export default function Header() {
             </li>
           ))}
           <li>
-            <span style={{ cursor: "pointer", fontSize: "14px", fontWeight: "bold" }} onClick={openReport}>Open Report</span>
+            <span style={{ cursor: "pointer", fontSize: "14px", fontWeight: "bold" }} onClick={openReport}>Accounting Report</span>
           </li>
         </ul>
       </nav>
