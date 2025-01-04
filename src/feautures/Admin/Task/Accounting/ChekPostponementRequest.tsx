@@ -11,6 +11,7 @@ import { LoadingButton } from "@mui/lab";
 import { wait } from "@testing-library/user-event/dist/utils";
 import { addMonths, differenceInDays, format } from "date-fns";
 import { Loading } from "../../../../components/Loading";
+import Swal from "sweetalert2";
 
 const columns = [
     { key: "ln", label: "#", width: 40 },
@@ -40,6 +41,14 @@ export default function ChekPostponementRequest() {
     const _PNNoRef = useRef<any>(null)
     const NameRef = useRef<HTMLSelectElement>(null)
     const _NameRef = useRef<any>(null)
+
+    //edit sub refs
+    const RPCDNoSubRef = useRef<HTMLSelectElement>(null)
+    const _RPCDNoSubRef = useRef<any>(null)
+
+    const PNNoSubRef = useRef<HTMLInputElement>(null)
+    const PNNoSubNameRef = useRef<HTMLInputElement>(null)
+
 
     // second field
     const _CheckNoRef = useRef<any>(null)
@@ -77,6 +86,8 @@ export default function ChekPostponementRequest() {
             const dt = response?.data.data
             if (dt.length > 0) {
                 wait(100).then(() => {
+                    if (mode === 'edit') return
+
                     _PNNoRef.current.setDataSource(dt)
                     _NameRef.current.setDataSource(dt)
                 })
@@ -176,6 +187,91 @@ export default function ChekPostponementRequest() {
 
         },
     });
+    //load check RPCDNo
+    const {
+        isLoading: isLoadingLoadRPCDNo,
+        mutate: mutateLoadRPCDNo
+    } = useMutation({
+        mutationKey: 'load-rpcdno',
+        mutationFn: async (variable: any) =>
+            await myAxios.post(`/task/accounting/check-postponement/request/load-rpcdno`, variable, {
+                headers: {
+                    Authorization: `Bearer ${user?.accessToken}`,
+                },
+            }),
+        onSuccess(response) {
+            if (!response.data.success) {
+                return alert(response.data.message)
+            }
+            const res = response?.data.data
+
+
+            wait(100).then(() => {
+                _RPCDNoSubRef.current.setDataSource(res)
+            })
+
+        },
+    });
+    //load check RPCDNo
+    const {
+        isLoading: isLoadingLoadRPCDNoDetails,
+        mutate: mutateLoadRPCDNoDetails
+    } = useMutation({
+        mutationKey: 'load-rpcd-details',
+        mutationFn: async (variable: any) =>
+            await myAxios.post(`/task/accounting/check-postponement/request/load-rpcd-details`, variable, {
+                headers: {
+                    Authorization: `Bearer ${user?.accessToken}`,
+                },
+            }),
+        onSuccess(response) {
+            if (!response.data.success) {
+                return alert(response.data.message)
+            }
+            const selected = response.data.data
+            wait(100).then(() => {
+                if (PNNoSubRef.current) {
+                    PNNoSubRef.current.value = selected[0].PNNO
+                }
+                if (PNNoSubNameRef.current) {
+                    PNNoSubNameRef.current.value = selected[0].Name
+                }
+                if (HowToBePaidRef.current) {
+                    HowToBePaidRef.current.value = selected[0].PaidVia
+                }
+                if (BranchRef.current) {
+                    BranchRef.current.value = 'HO'
+                }
+                if (RemarksRef.current) {
+                    RemarksRef.current.value = selected[0].PaidInfo
+                }
+                if (SurplusRef.current) {
+                    SurplusRef.current.value = selected[0].Surplus
+                }
+                if (DeductedToRef.current) {
+                    DeductedToRef.current.value = selected[0].Deducted_to
+                }
+
+                const data = selected.map((itm: any, idx: number) => {
+                    const Datediff = differenceInDays(new Date(itm.NewCheckDate as any), new Date(itm.OldCheckDate))
+                    return {
+                        ln: `${idx + 1}`,
+                        OldDepositDate: itm.OldCheckDate,
+                        Bank: itm.Bank,
+                        CheckNo: itm.CheckNo,
+                        Amount: itm.check_Amnt,
+                        NewDate: itm.NewCheckDate,
+                        Reason: itm.Reason,
+                        Datediff,
+                    }
+                });
+
+                table.current.setDataFormated(data)
+
+
+            })
+        },
+    });
     // check add row
     const {
         isLoading: isLoadingCheckIsPending,
@@ -201,7 +297,7 @@ export default function ChekPostponementRequest() {
                 return alert('Already added')
             }
             const Datediff = differenceInDays(new Date(NewDateRef.current?.value as any), new Date(DateRef.current?.value as any))
-        
+
             if (Datediff <= 0) {
                 return alert('Invalid date for deposit')
             }
@@ -234,6 +330,34 @@ export default function ChekPostponementRequest() {
             ]
             table.current.setDataFormated(newData)
             resetSecondFields()
+        },
+    });
+    // saving
+    const {
+        isLoading: isLoadingSave,
+        mutate: mutateSave
+    } = useMutation({
+        mutationKey: 'saving',
+        mutationFn: async (variable: any) =>
+            await myAxios.post(`/task/accounting/check-postponement/request/saving`, variable, {
+                headers: {
+                    Authorization: `Bearer ${user?.accessToken}`,
+                },
+            }),
+        onSuccess(response) {
+            if (!response.data.success) {
+                return alert(response.data.message)
+            }
+
+            return Swal.fire({
+                position: "center",
+                icon: "success",
+                title: response.data.message,
+                timer: 1500,
+            });
+
+
+
         },
     });
 
@@ -276,9 +400,33 @@ export default function ChekPostponementRequest() {
 
     function handleOnSave() {
         const data = table.current.getData()
-
         if (mode === 'add') {
-            console.log(data.some((itm: any) => itm[7] <= 0))
+            Swal.fire({
+                title: "Are you sure?",
+                text: "Do you want to save",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, save it!",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    mutateSave({
+                        RPCDNoRef: RPCDNoRef.current?.value,
+                        PNNoRef: PNNoRef.current?.value,
+                        HoldingFeesRef: HoldingFeesRef.current?.value,
+                        PenaltyChargeRef: PenaltyChargeRef.current?.value,
+                        HowToBePaidRef: HowToBePaidRef.current?.value,
+                        RemarksRef: RemarksRef.current?.value,
+                        BranchRef: BranchRef.current?.value,
+                        SurplusRef: SurplusRef.current?.value,
+                        DeductedToRef: DeductedToRef.current?.value,
+                        Prepared_By: user?.username,
+                        data: JSON.stringify(data)
+                    })
+                }
+            });
+
 
         } else if (mode === 'edit') {
 
@@ -292,7 +440,7 @@ export default function ChekPostponementRequest() {
             background: "#F1F1F1",
             height: "100%"
         }}>
-            {(isLoadingCheckIsPending) && <Loading />}
+            {(isLoadingCheckIsPending || isLoadingSave || isLoadingLoadRPCDNoDetails) && <Loading />}
             {/* ===========  first field  =========== */}
             <div
                 style={{
@@ -318,30 +466,64 @@ export default function ChekPostponementRequest() {
                         columnGap: "50px"
                     }}
                 >
-                    {isLoadingLoadAutoIdData ? <LoadingButton loading={isLoadingLoadAutoIdData} /> : <TextInput
-                        containerStyle={{
-                            width: "50%",
-                            marginBottom: "8px"
-                        }}
-                        label={{
-                            title: "RPCD no. :",
-                            style: {
-                                fontSize: "12px",
-                                fontWeight: "bold",
-                                width: "80px",
-                            },
-                        }}
-                        input={{
-                            disabled: true,
-                            type: "text",
-                            style: { width: "calc(100% - 80px) " },
-                            onKeyDown: (e) => {
-                                if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                                }
-                            },
-                        }}
-                        inputRef={RPCDNoRef}
-                    />}
+                    {
+                        mode === 'edit' ?
+                            isLoadingLoadRPCDNo ? <LoadingButton loading={isLoadingLoadRPCDNo} /> :
+                                <SelectInput
+                                    ref={_RPCDNoSubRef}
+                                    label={{
+                                        title: "RPCD no. :",
+                                        style: {
+                                            fontSize: "12px",
+                                            fontWeight: "bold",
+                                            width: "80px",
+                                        },
+                                    }}
+                                    selectRef={RPCDNoSubRef}
+                                    select={{
+                                        style: { flex: 1, height: "22px" },
+                                        defaultValue: "",
+                                        onChange: (e) => {
+                                            mutateLoadRPCDNoDetails({ RPCDNo: e.target.value })
+                                        }
+
+                                    }}
+                                    containerStyle={{
+                                        width: "50%",
+                                        marginBottom: "12px"
+                                    }}
+                                    datasource={[]}
+                                    values={"RPCDNo"}
+                                    display={"RPCDNo"}
+                                />
+                            :
+                            isLoadingLoadAutoIdData ? <LoadingButton loading={isLoadingLoadAutoIdData} /> :
+                                <TextInput
+                                    containerStyle={{
+                                        width: "50%",
+                                        marginBottom: "8px"
+                                    }}
+                                    label={{
+                                        title: "RPCD no. :",
+                                        style: {
+                                            fontSize: "12px",
+                                            fontWeight: "bold",
+                                            width: "80px",
+                                        },
+                                    }}
+                                    input={{
+                                        disabled: true,
+                                        type: "text",
+                                        style: { width: "calc(100% - 80px) " },
+                                        onKeyDown: (e) => {
+                                            if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                                            }
+                                        },
+                                    }}
+                                    inputRef={RPCDNoRef}
+                                />
+
+                    }
 
                     <TextInput
                         containerStyle={{
@@ -375,95 +557,162 @@ export default function ChekPostponementRequest() {
                         columnGap: "50px"
                     }}
                 >
-                    {isLoadingLoadPnnoData ? <LoadingButton loading={isLoadingLoadPnnoData} /> :
-                        <SelectInput
-                            ref={_PNNoRef}
-                            label={{
-                                title: "PN NO: :",
-                                style: {
-                                    fontSize: "12px",
-                                    fontWeight: "bold",
-                                    width: "80px",
-                                },
-                            }}
-                            selectRef={PNNoRef}
-                            select={{
-                                disabled: mode === '',
-                                style: { flex: 1, height: "22px" },
-                                defaultValue: "Non-VAT",
-                                onChange: (e) => {
-                                    const data = _PNNoRef.current.getDataSource()
-                                    const res = data.filter((itm: any) => itm.PNo === e.target.value)
-                                    mutateChecks({
-                                        PNNo: res[0].PNo,
-                                    })
+                    {
+                        mode === 'edit' ? <>
+                            {isLoadingLoadRPCDNoDetails ? <LoadingButton loading={isLoadingLoadRPCDNoDetails} /> : <TextInput
+                                containerStyle={{
+                                    width: "50%",
+                                    marginBottom: "8px"
+                                }}
+                                label={{
+                                    title: "PN NO :",
+                                    style: {
+                                        fontSize: "12px",
+                                        fontWeight: "bold",
+                                        width: "80px",
+                                    },
+                                }}
+                                input={{
+                                    disabled: true,
+                                    type: "text",
+                                    style: { width: "calc(100% - 80px)" },
+                                    onKeyDown: (e) => {
+                                        if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                                        }
+                                    },
+                                }}
+                                inputRef={PNNoSubRef}
+                            />}
 
-                                    if (PNNoRef.current) {
-                                        PNNoRef.current.value = res[0].PNo
-                                    }
-                                    if (BranchRef.current) {
-                                        BranchRef.current.value = res[0].BName
-                                    }
-                                    if (NameRef.current) {
-                                        NameRef.current.value = res[0].Name
-                                    }
+                        </> : <>
 
-                                }
+                            {isLoadingLoadPnnoData ? <LoadingButton loading={isLoadingLoadPnnoData} /> :
+                                <SelectInput
+                                    ref={_PNNoRef}
+                                    label={{
+                                        title: "PN NO : ",
+                                        style: {
+                                            fontSize: "12px",
+                                            fontWeight: "bold",
+                                            width: "80px",
+                                        },
+                                    }}
+                                    selectRef={PNNoRef}
+                                    select={{
+                                        disabled: mode === '',
+                                        style: { flex: 1, height: "22px" },
+                                        defaultValue: "Non-VAT",
+                                        onChange: (e) => {
+                                            const data = _PNNoRef.current.getDataSource()
+                                            const res = data.filter((itm: any) => itm.PNo === e.target.value)
+                                            mutateChecks({
+                                                PNNo: res[0].PNo,
+                                            })
 
-                            }}
-                            containerStyle={{
-                                width: "50%",
-                                marginBottom: "12px"
-                            }}
-                            datasource={[]}
-                            values={"PNo"}
-                            display={"PNo"}
-                        />}
-                    {isLoadingLoadPnnoData ?
-                        <LoadingButton loading={isLoadingLoadPnnoData} /> :
-                        <SelectInput
-                            ref={_NameRef}
-                            label={{
-                                title: "Account Name :",
-                                style: {
-                                    fontSize: "12px",
-                                    fontWeight: "bold",
-                                    width: "110px",
-                                },
-                            }}
-                            selectRef={NameRef}
-                            select={{
-                                disabled: mode === '',
-                                style: { flex: 1, height: "22px" },
-                                defaultValue: "Non-VAT",
-                                onChange: (e) => {
+                                            if (PNNoRef.current) {
+                                                PNNoRef.current.value = res[0].PNo
+                                            }
+                                            if (BranchRef.current) {
+                                                BranchRef.current.value = res[0].BName
+                                            }
+                                            if (NameRef.current) {
+                                                NameRef.current.value = res[0].Name
+                                            }
 
-                                    const data = _NameRef.current.getDataSource()
-                                    const res = data.filter((itm: any) => itm.Name === e.target.value)
+                                        }
 
-                                    mutateChecks({
-                                        PNNo: res[0].PNo,
-                                    })
-                                    if (PNNoRef.current) {
-                                        PNNoRef.current.value = res[0].PNo
-                                    }
-                                    if (BranchRef.current) {
-                                        BranchRef.current.value = res[0].BName
-                                    }
-                                    if (NameRef.current) {
-                                        NameRef.current.value = res[0].Name
-                                    }
-                                }
+                                    }}
+                                    containerStyle={{
+                                        width: "50%",
+                                        marginBottom: "12px"
+                                    }}
+                                    datasource={[]}
+                                    values={"PNo"}
+                                    display={"PNo"}
+                                />}
+                        </>
+                    }
 
-                            }}
-                            containerStyle={{
-                                width: "50%",
-                                marginBottom: "12px"
-                            }}
-                            datasource={[]}
-                            values={"Name"}
-                            display={"Name"}
-                        />}
+
+
+                    {
+                        mode === 'edit' ? <>
+                            {isLoadingLoadRPCDNoDetails ? <LoadingButton loading={isLoadingLoadPnnoData} /> : <TextInput
+                                containerStyle={{
+                                    width: "50%",
+                                    marginBottom: "8px"
+                                }}
+                                label={{
+                                    title: "Account Name :",
+                                    style: {
+                                        fontSize: "12px",
+                                        fontWeight: "bold",
+                                        width: "110px",
+                                    },
+                                }}
+                                input={{
+                                    disabled: true,
+                                    type: "text",
+                                    style: { width: "calc(100% - 100px)" },
+                                    onKeyDown: (e) => {
+                                        if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                                        }
+                                    },
+                                }}
+                                inputRef={PNNoSubNameRef}
+                            />}
+                        </> :
+                            <>
+
+                                {isLoadingLoadPnnoData ?
+                                    <LoadingButton loading={isLoadingLoadPnnoData} /> :
+                                    <SelectInput
+                                        ref={_NameRef}
+                                        label={{
+                                            title: "Account Name :",
+                                            style: {
+                                                fontSize: "12px",
+                                                fontWeight: "bold",
+                                                width: "110px",
+                                            },
+                                        }}
+                                        selectRef={NameRef}
+                                        select={{
+                                            disabled: mode === '',
+                                            style: { flex: 1, height: "22px" },
+                                            defaultValue: "",
+                                            onChange: (e) => {
+
+                                                const data = _NameRef.current.getDataSource()
+                                                const res = data.filter((itm: any) => itm.Name === e.target.value)
+
+                                                mutateChecks({
+                                                    PNNo: res[0].PNo,
+                                                })
+                                                if (PNNoRef.current) {
+                                                    PNNoRef.current.value = res[0].PNo
+                                                }
+                                                if (BranchRef.current) {
+                                                    BranchRef.current.value = res[0].BName
+                                                }
+                                                if (NameRef.current) {
+                                                    NameRef.current.value = res[0].Name
+                                                }
+                                            }
+
+                                        }}
+                                        containerStyle={{
+                                            width: "50%",
+                                            marginBottom: "12px"
+                                        }}
+                                        datasource={[]}
+                                        values={"Name"}
+                                        display={"Name"}
+                                    />}
+                            </>
+
+
+                    }
                 </div>
             </div>
             {/* ===========  second field  =========== */}
@@ -959,6 +1208,7 @@ export default function ChekPostponementRequest() {
                                 }}
                                 onClick={(e) => {
                                     setMode('edit')
+                                    mutateLoadRPCDNo({})
                                 }}
                             >
                                 edit

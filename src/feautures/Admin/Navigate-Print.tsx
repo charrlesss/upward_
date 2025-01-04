@@ -3228,14 +3228,13 @@ export default function NavigatePrint() {
                       </div>
                     </div>
                   </div>
-                  <div style={{ width: "100%" }}>
+                  <div style={{ width: "100%",borderBottom:"1px solid black" }}>
                     {column.current.map((colItem: any, colIdx: number) => {
                       return (
                         <div
                           className={`cell  `}
                           key={colIdx}
                           style={{
-                            borderBottom: "1px solid black",
                             fontSize: "12px",
                             fontWeight: "bold",
                             width: `${colItem.width} `,
@@ -3247,6 +3246,7 @@ export default function NavigatePrint() {
                                 ? "right"
                                 : "left",
                             padding: "5px",
+                            
                           }}
                         >
                           {colItem.header}
