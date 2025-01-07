@@ -359,58 +359,28 @@ export default function Collection() {
       const debit: Array<any> = [];
       const credit: Array<any> = [];
 
-
-
       for (let i = 0; i <= dataCollection.length - 1; i++) {
-        if (
-          dataCollection[i].Payment === 'Check'
-        ) {
+
+        if (dataCollection[i].Payment !== null && dataCollection[i].Payment.toString() !== '') {
+          const isCash = dataCollection[i].Payment === 'Cash'
           debit.push({
             Payment: dataCollection[i].Payment,
             Amount: dataCollection[i].Debit,
-            Check_No: dataCollection[i].Check_No,
-            Check_Date: format(new Date(dataCollection[i].Check_Date), 'yyyy-MM-dd'),
-            Bank_Branch: dataCollection[i].Bank,
+            Check_No: isCash ? "" : dataCollection[i].Check_No,
+            Check_Date: isCash ? "" : format(new Date(dataCollection[i].Check_Date), 'yyyy-MM-dd'),
+            Bank_Branch: isCash ? "" : dataCollection[i].Bank,
             Acct_Code: dataCollection[i].DRCode,
             Acct_Title: dataCollection[i].DRTitle,
             Deposit_Slip: dataCollection[i].SlipCode,
             Cntr: "",
             Remarks: dataCollection[i].DRRemarks,
-            TC: "CHK",
+            TC: isCash ? "CSH" : "CHK",
             Bank: dataCollection[i].Bank_Code,
             BankName: dataCollection[i].BankName,
           });
-
         }
 
-        if (dataCollection[i].Payment === 'Cash') {
-          debit.push({
-            Payment: dataCollection[i].Payment,
-            Amount: dataCollection[i].Debit,
-            Check_No: "",
-            Check_Date: "",
-            Bank_Branch: "",
-            Acct_Code: dataCollection[i].DRCode,
-            Acct_Title: dataCollection[i].DRTitle,
-            Deposit_Slip: dataCollection[i].SlipCode,
-            Cntr: "",
-            Remarks: "",
-            TC: "CSH",
-            Bank: "",
-            BankName: "",
-          });
-        }
-
-        if (
-          dataCollection[i].Purpose !== "" &&
-          dataCollection[i].Credit !== "0" &&
-          dataCollection[i].CRCode !== "" &&
-          dataCollection[i].CRTitle !== "" &&
-          dataCollection[i].CRLoanID !== "" &&
-          dataCollection[i].CRLoanName !== "" &&
-          dataCollection[i].CRVatType !== "" &&
-          dataCollection[i].CRInvoiceNo !== ""
-        ) {
+        if (dataCollection[i].Purpose !== null && dataCollection[i].Purpose.toString() !== "") {
           credit.push({
             temp_id: `${i}`,
             transaction: dataCollection[i].Purpose,
@@ -418,13 +388,14 @@ export default function Collection() {
             Remarks: dataCollection[i].CRRemarks,
             Code: dataCollection[i].CRCode,
             Title: dataCollection[i].CRTitle,
-            TC: dataCollection[i].CRTitle,
+            TC: dataCollection[i].TC,
             Account_No: dataCollection[i].CRLoanID,
             Name: dataCollection[i].CRLoanName,
             VATType: dataCollection[i].CRVATType,
             invoiceNo: dataCollection[i].CRInvoiceNo,
           });
         }
+      
       }
 
       debitTable.current.setDataFormated(debit)
@@ -1653,13 +1624,15 @@ export default function Collection() {
                       }
                     }}
                     width={"100%"}
-                    DisplayMember={'label'}
+                    DisplayMember={'Description'}
                     DataSource={transactionDesc?.data.transactionDesc}
                     disableInput={disableFields}
                     inputRef={transactionRef}
                     onChange={(selected: any, e: any) => {
+                      console.log(selected)
                       if (transactionRef.current)
-                        transactionRef.current.value = selected.Acct_Title
+                        transactionRef.current.value = selected.Description
+
                       accCodeRef.current = selected.Acct_Code
                       accTitleRef.current = selected.Acct_Title
                       accTCRef.current = selected.Code

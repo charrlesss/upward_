@@ -267,8 +267,6 @@ export default function ChekPostponementRequest() {
                 });
 
                 table.current.setDataFormated(data)
-
-
             })
         },
     });
@@ -332,7 +330,7 @@ export default function ChekPostponementRequest() {
             resetSecondFields()
         },
     });
-    // saving
+    // saving add
     const {
         isLoading: isLoadingSave,
         mutate: mutateSave
@@ -349,6 +347,13 @@ export default function ChekPostponementRequest() {
                 return alert(response.data.message)
             }
 
+            wait(100).then(() => {
+                resetFirstFields()
+                resetSecondFields()
+                resetThirdFields()
+                table.current.resetTable()
+                setMode('')
+            })
             return Swal.fire({
                 position: "center",
                 icon: "success",
@@ -356,6 +361,42 @@ export default function ChekPostponementRequest() {
                 timer: 1500,
             });
 
+
+
+        },
+    });
+
+    // saving edit
+    const {
+        isLoading: isLoadingEdit,
+        mutate: mutateEdit
+    } = useMutation({
+        mutationKey: 'edit',
+        mutationFn: async (variable: any) =>
+            await myAxios.post(`/task/accounting/check-postponement/request/edit`, variable, {
+                headers: {
+                    Authorization: `Bearer ${user?.accessToken}`,
+                },
+            }),
+        onSuccess(response) {
+            if (!response.data.success) {
+                return alert(response.data.message)
+            }
+
+            wait(100).then(() => {
+                resetFirstFields()
+                resetSecondFields()
+                resetThirdFields()
+                table.current.resetTable()
+                setMode('')
+            })
+
+            return Swal.fire({
+                position: "center",
+                icon: "success",
+                title: response.data.message,
+                timer: 1500,
+            })
 
 
         },
@@ -377,7 +418,35 @@ export default function ChekPostponementRequest() {
 
         mutateCheckIsPending({ checkNo: CheckNoRef.current?.value })
     }
+    function resetFirstFields() {
+        if (mode === 'add') {
+            if (RPCDNoRef.current) {
+                RPCDNoRef.current.value = ''
+            }
+            if (PNNoRef.current) {
+                PNNoRef.current.value = ''
+            }
+            if (NameRef.current) {
+                NameRef.current.value = ''
+            }
+        }
+        if (mode === 'edit') {
+            if (RPCDNoSubRef.current) {
+                RPCDNoSubRef.current.value = ''
+            }
+            if (PNNoSubRef.current) {
+                PNNoSubRef.current.value = ''
+            }
+            if (PNNoSubNameRef.current) {
+                PNNoSubNameRef.current.value = ''
+            }
+        }
 
+        if (BranchRef.current) {
+            BranchRef.current.value = ''
+        }
+
+    }
     function resetSecondFields() {
         if (CheckNoRef.current) {
             CheckNoRef.current.value = ''
@@ -397,6 +466,31 @@ export default function ChekPostponementRequest() {
         }
         setInpuType('text')
     }
+    function resetThirdFields() {
+        if (HoldingFeesRef.current) {
+            HoldingFeesRef.current.value = ''
+        }
+        if (PenaltyChargeRef.current) {
+            PenaltyChargeRef.current.value = ''
+        }
+        if (SurplusRef.current) {
+            SurplusRef.current.value = ''
+        }
+        if (DeductedToRef.current) {
+            DeductedToRef.current.value = ''
+        }
+        if (TotalRef.current) {
+            TotalRef.current.value = ''
+        }
+        if (HowToBePaidRef.current) {
+            HowToBePaidRef.current.value = ''
+        }
+        if (RemarksRef.current) {
+            RemarksRef.current.value = ''
+        } 
+        setPaid('')
+        setRemarks('')
+    }
 
     function handleOnSave() {
         const data = table.current.getData()
@@ -413,6 +507,7 @@ export default function ChekPostponementRequest() {
                 if (result.isConfirmed) {
                     mutateSave({
                         RPCDNoRef: RPCDNoRef.current?.value,
+                        NameRef: NameRef.current?.value,
                         PNNoRef: PNNoRef.current?.value,
                         HoldingFeesRef: HoldingFeesRef.current?.value,
                         PenaltyChargeRef: PenaltyChargeRef.current?.value,
@@ -427,9 +522,21 @@ export default function ChekPostponementRequest() {
                 }
             });
 
-
         } else if (mode === 'edit') {
-
+            mutateEdit({
+                RPCDNoRef: RPCDNoSubRef.current?.value,
+                NameRef: NameRef.current?.value,
+                PNNoRef: PNNoSubRef.current?.value,
+                HoldingFeesRef: HoldingFeesRef.current?.value,
+                PenaltyChargeRef: PenaltyChargeRef.current?.value,
+                HowToBePaidRef: HowToBePaidRef.current?.value,
+                RemarksRef: RemarksRef.current?.value,
+                BranchRef: BranchRef.current?.value,
+                SurplusRef: SurplusRef.current?.value,
+                DeductedToRef: DeductedToRef.current?.value,
+                Prepared_By: user?.username,
+                data: JSON.stringify(data)
+            })
         }
     }
 
@@ -440,7 +547,7 @@ export default function ChekPostponementRequest() {
             background: "#F1F1F1",
             height: "100%"
         }}>
-            {(isLoadingCheckIsPending || isLoadingSave || isLoadingLoadRPCDNoDetails) && <Loading />}
+            {(isLoadingCheckIsPending || isLoadingSave || isLoadingLoadRPCDNoDetails || isLoadingEdit) && <Loading />}
             {/* ===========  first field  =========== */}
             <div
                 style={{
@@ -752,7 +859,7 @@ export default function ChekPostponementRequest() {
                             }}
                             selectRef={CheckNoRef}
                             select={{
-                                disabled: mode === '',
+                                disabled: mode === '' ,
                                 style: { flex: 1, height: "22px" },
                                 defaultValue: "",
                                 onChange: (e) => {
@@ -1235,6 +1342,10 @@ export default function ChekPostponementRequest() {
                                 }}
                                 onClick={(e) => {
                                     setMode('')
+                                    resetFirstFields()
+                                    resetSecondFields()
+                                    resetThirdFields()
+                                    table.current.resetTable()
                                 }}
                             >
                                 cancel
