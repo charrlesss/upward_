@@ -98,10 +98,17 @@ export function TextFormatedInput({
     // Check if the value is valid
     if (value === '' || regex.test(value)) {
       // Set the formatted value back in the input field
-
       //setInputValue(formatNumber(value));
       e.target.value = formatNumber(value)
 
+    } else {
+      const numbers = value.match(/\d+/g);
+      if (numbers) {
+        const newV = numbers.join('')
+        e.target.value = formatNumber(newV)
+      } else {
+        e.target.value = "0"
+      }
     }
   };
 
@@ -140,6 +147,7 @@ export function TextFormatedInput({
         type="text"
         style={{
           height: '100%',
+          textAlign: "right",
           ...input.style,
         }}
         onChange={(e) => {

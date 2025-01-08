@@ -75,6 +75,13 @@ export default function LandingPage() {
         if (res.data.user.is_master_admin) {
           navigate("/master-admin-dashboard");
         } else {
+          window.localStorage.setItem('__policy__', 'COM')
+          if (res.data.user.department === 'UCSMI') {
+            window.localStorage.setItem('__policy_type__', 'TEMP')
+          }
+          if (res.data.user.department === 'UMIS') {
+            window.localStorage.setItem('__policy_type__', 'REG')
+          }
           navigate("/dashboard");
         }
       });

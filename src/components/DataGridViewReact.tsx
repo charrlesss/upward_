@@ -2,6 +2,8 @@ import {
     useState, useRef,
     forwardRef, useEffect,
     useImperativeHandle,
+    useContext,
+    useId,
 
 } from "react";
 import useExecuteQueryFromClient from "../lib/executeQueryFromClient";
@@ -10,6 +12,9 @@ import { TextInput } from "./UpwardFields";
 import { wait } from "../lib/wait";
 import CloseIcon from "@mui/icons-material/Close";
 import ReactDOMServer from "react-dom/server";
+import { AuthContext } from "./AuthContext";
+import { useMutation } from "react-query";
+import { Loading } from "./Loading";
 
 export const DataGridViewReact = forwardRef(({
     columns,
@@ -377,7 +382,7 @@ export const DataGridViewMultiSelectionReact = forwardRef(({
     onCheckAll,
     onUnCheckAll,
     rowIsSelectable,
-    
+
 }: any, ref) => {
     const parentElementRef = useRef<any>(null)
     const tbodyRef = useRef<HTMLTableSectionElement>(null)
@@ -459,7 +464,7 @@ export const DataGridViewMultiSelectionReact = forwardRef(({
         getElementBody: () => tbodyRef.current,
         getParentElement: () => parentElementRef.current,
         isTableSelectable
-      
+
     }))
 
 
@@ -1031,5 +1036,270 @@ export const useUpwardTableModalSearch = ({
         openModal,
         closeModal,
         UpwardTableModalSearch
+    }
+}
+
+
+
+let _dataCache: any = []
+let _searchInputValueCache = ''
+export const useUpwardTableModalSearchSafeMode = ({
+    column,
+    link,
+    getSelectedItem,
+    onKeyDown,
+    customWidth,
+    onClose
+}: any) => {
+    const [show, setShow] = useState(false)
+    const searchInputRef = useRef<HTMLInputElement>(null)
+
+    function openModal(search:string = '') {
+        const body = document.body
+        const div = document.createElement('div')
+        div.id = 'modal-portal'
+
+        if (document.getElementById('modal-portal'))
+            body.removeChild(document.getElementById('modal-portal') as HTMLElement)
+
+        body.insertBefore(div, document.getElementById('root'))
+        wait(100).then(() => {
+            div.innerHTML = ReactDOMServer.renderToString(<UpwardTableModalSearch />)
+        })
+
+
+
+        setShow(true)
+        setTimeout(() => {
+            if (searchInputRef.current) {
+                searchInputRef.current.value = search
+                const event = new KeyboardEvent("keydown", { code: "Enter", bubbles: true });
+                searchInputRef.current.focus(); // Ensure the element has focus
+                searchInputRef.current.dispatchEvent(event); // Dispatch the native event
+                setTimeout(() => {
+                    searchInputRef.current?.focus();
+                }, 100)
+            }
+        }, 100)
+    }
+    function closeModal(muteOnClose = true) {
+        if (onClose && muteOnClose) {
+            onClose()
+        }
+        setShow(false)
+        _dataCache = []
+    }
+
+    const UpwardTableModalSearch = () => {
+        const { user, myAxios } = useContext(AuthContext)
+        const tableRef = useRef<any>(null)
+        const [blick, setBlick] = useState(false)
+        const [isLoading, setIsLoading] = useState(false)
+        const [data, setData] = useState([])
+
+        function mutate(variable: any) {
+            setIsLoading(true)
+            myAxios.post(link, variable, {
+                headers: {
+                    Authorization: `Bearer ${user?.accessToken}`
+                }
+            }).then((response) => {
+                setData(response.data?.data)
+                setIsLoading(false)
+            })
+                .catch((err) => {
+                    setIsLoading(false)
+                    console.log(err)
+                }).finally(() => {
+                    setIsLoading(false)
+                })
+        }
+
+        useEffect(() => {
+            if (_dataCache.length > 0) {
+                if (searchInputRef.current) {
+                    searchInputRef.current.value = _searchInputValueCache
+                }
+                setData(_dataCache)
+            }
+        }, [setData])
+
+        useEffect(() => {
+            if (data.length > 0) {
+                _dataCache = data
+                tableRef.current?.setDataFormated(data)
+            }
+        }, [data])
+
+
+        return (
+            show ?
+                <div id="modal-inject">
+                    <div style={{
+                        position: "fixed",
+                        top: 0,
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        background: "transparent",
+                        zIndex: "88"
+                    }}
+                        onClick={() => {
+                            setBlick(true)
+                            setTimeout(() => {
+                                setBlick(false)
+                            }, 250)
+                        }}
+
+                    ></div>
+
+                    <div
+                        style={{
+                            background: "#F1F1F1",
+                            width: customWidth ? customWidth(blick, column) : blick ? "451px" : "450px",
+                            height: blick ? "501px" : "500px",
+                            position: "absolute",
+                            zIndex: 111111,
+                            top: "50%",
+                            left: "50%",
+                            transform: "translate(-50%,-50%)",
+                            boxShadow: '3px 6px 32px -7px rgba(0,0,0,0.75)',
+                            boxSizing: "border-box",
+                            display: "flex",
+                            flexDirection: "column"
+                        }}
+                    >
+                        {isLoading && <Loading />}
+                        <div
+                            style={{
+                                height: "22px",
+                                background: "white",
+                                display: "flex",
+                                justifyContent: "space-between",
+                                padding: "5px",
+                                position: "relative",
+                                alignItems: "center"
+
+                            }}
+                        >
+                            <span style={{ fontSize: "13px", fontWeight: "bold" }}>Search</span>
+                            <button
+                                className="btn-check-exit-modal"
+                                style={{
+                                    padding: "0 5px",
+                                    borderRadius: "0px",
+                                    background: "white",
+                                    color: "black",
+                                    height: "22px",
+                                    position: "absolute",
+                                    top: 0,
+                                    right: 0
+                                }}
+                                onClick={() => {
+                                    closeModal()
+                                }}
+                            >
+                                <CloseIcon sx={{ fontSize: "22px" }} />
+                            </button>
+                        </div>
+                        <div style={{
+                            padding: "5px",
+                        }}>
+                            <TextInput
+                                containerStyle={{
+                                    width: "100%"
+                                }}
+                                label={{
+                                    title: "Search : ",
+                                    style: {
+                                        fontSize: "12px",
+                                        fontWeight: "bold",
+                                        width: "70px",
+                                        display: "none"
+                                    },
+                                }}
+                                input={{
+                                    type: "text",
+                                    style: { width: "100%" },
+                                    onKeyDown: async (e) => {
+                                        if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                                            _searchInputValueCache = e.currentTarget.value
+                                            mutate({ search: e.currentTarget.value })
+
+                                        }
+
+                                        if (e.code === "ArrowDown") {
+                                            const td = document.querySelector(`.td.row-0`) as HTMLTableDataCellElement
+                                            if (td) {
+                                                const parentElement = tableRef.current.getParentElement()
+
+                                                td.focus({
+                                                    preventScroll: true
+                                                });
+                                                parentElement.style.overflow = "hidden";
+                                                wait(100).then(() => {
+                                                    parentElement.style.overflow = "auto";
+                                                })
+                                            }
+                                            tableRef.current?._setSelectedRow(0)
+                                        }
+
+                                    },
+                                    onInput:(e)=>{
+                                        if(e.currentTarget.value === ''){
+                                            mutate({ search: "" })
+                                        }
+                                    }
+                                }}
+                                inputRef={searchInputRef}
+                                icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+                                onIconClick={async (e) => {
+                                    e.preventDefault()
+                                    if (searchInputRef.current)
+                                        _searchInputValueCache = searchInputRef.current.value
+
+                                    mutate({ search: searchInputRef.current?.value })
+                                }}
+                            />
+                        </div>
+                        <div style={{
+                            flex: 1,
+                        }}>
+                            <DataGridViewReact
+                                columns={column}
+                                height={"100%"}
+                                ref={tableRef}
+                                getSelectedItem={getSelectedItem}
+                                onKeyDown={onKeyDown}
+                                focusElementOnMaxTop={() => {
+                                    searchInputRef.current?.focus()
+                                }}
+                            />
+                        </div>
+                        <div style={{ padding: "0 10px" }}>
+                            <span style={{ fontSize: "13px", fontWeight: "bold" }}>Records: Top {data.length}</span>
+                        </div>
+                        <style>
+                            {
+                                `
+                                    .btn-check-exit-modal:hover{
+                                        background:red !important;
+                                        color:white !important;
+                                    }
+                                `
+                            }
+                        </style>
+                    </div >
+                </div>
+                : <></>
+        )
+
+    }
+
+    return {
+        openModal,
+        closeModal,
+        UpwardTableModalSearch,
+        searchInputRef
     }
 }

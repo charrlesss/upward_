@@ -208,7 +208,7 @@ export default function Header() {
 
     ];
     if (user?.userAccess === 'PRODUCTION_ACCOUNTING') {
-      setMenuData([{
+      return setMenuData([{
         name: "Dashboard",
         path: "/dashboard",
       },
@@ -263,7 +263,7 @@ export default function Header() {
       },
       ])
     } else if (user?.userAccess === 'ACCOUNTING') {
-      setMenuData([
+      return setMenuData([
         {
           name: "Dashboard",
           path: "/dashboard",
@@ -305,7 +305,7 @@ export default function Header() {
         },
       ])
     } else if (user?.userAccess === 'PRODUCTION') {
-      setMenuData([{
+      return setMenuData([{
         name: "Dashboard",
         path: "/dashboard",
       },
@@ -343,7 +343,7 @@ export default function Header() {
       },
       ])
     } else if (user?.userAccess === 'CLAIMS') {
-      setMenuData([{
+      return setMenuData([{
         name: "Dashboard",
         path: "/dashboard",
       },

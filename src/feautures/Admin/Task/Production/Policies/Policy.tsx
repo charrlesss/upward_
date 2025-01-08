@@ -5,12 +5,14 @@ import useUrlParams from "../../../../../hooks/useUrlParams";
 
 export default function Policy() {
   return (
-    <div style={{padding:"5px"}}>
+    <div style={{
+      flex: 1,
+      padding: "5px",
+      msFlexDirection: "column",
+      background: "#F1F1F1",
+    }}>
       <ChipsButton />
-      <Divider sx={{ mt: 2 }} />
-      <div style={{ padding: 10 }}>
-        <Outlet />
-      </div>
+      <Outlet />
     </div>
   );
 }
@@ -59,7 +61,7 @@ function ChipsButton() {
   function handleClick(e: any, link: string) {
     navigate(
       link +
-        `?drawer=${searchParams.get("drawer")}`
+      `?drawer=${searchParams.get("drawer")}`
     );
   }
 
@@ -68,6 +70,8 @@ function ChipsButton() {
       sx={(theme) => ({
         display: "flex",
         columnGap: "5px",
+        height: "35px",
+        alignItems: "center",
         [theme.breakpoints.down("md")]: {
           flexWrap: "wrap",
           width: "100%",
