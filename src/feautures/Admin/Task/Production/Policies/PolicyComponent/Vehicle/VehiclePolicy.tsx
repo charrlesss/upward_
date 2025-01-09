@@ -47,14 +47,14 @@ import { SelectInput, TextAreaInput, TextFormatedInput, TextInput } from "../../
 import CalculateIcon from '@mui/icons-material/Calculate';
 
 
-
-
 import SearchIcon from '@mui/icons-material/Search';
 import SaveAsIcon from '@mui/icons-material/SaveAs';
 import AddBoxIcon from '@mui/icons-material/AddBox';
 import CloseIcon from '@mui/icons-material/Close';
 import { Autocomplete } from "../../../../Accounting/PettyCash";
 import { useUpwardTableModalSearchSafeMode } from "../../../../../../../components/DataGridViewReact";
+import { Loading } from "../../../../../../../components/Loading";
+import { wait } from "../../../../../../../lib/wait";
 
 export default function VehiclePolicy() {
   const { user } = useContext(AuthContext)
@@ -148,9 +148,7 @@ function COMPolicy({
               setPolicy(e.currentTarget.value)
             }
           }}
-          datasource={[
-
-          ]}
+          datasource={[]}
           values={"key"}
           display={"key"}
         />}
@@ -279,17 +277,11 @@ function COMPolicy({
 const COMRegular = forwardRef(({
   selectedPage
 }: any, ref) => {
+  const { user, myAxios } = useContext(AuthContext)
+
   const _policyInformationRef = useRef<any>(null)
   const _policyTypeDetailsRef = useRef<any>(null)
   const _policyPremiumRef = useRef<any>(null)
-
-  useImperativeHandle(ref, () => ({
-    handleOnSave: () => {
-      console.log(_policyInformationRef.current.getRefs())
-      console.log(_policyTypeDetailsRef.current.getRefs())
-      console.log(_policyPremiumRef.current.getRefs())
-    }
-  }))
 
 
   const {
@@ -305,10 +297,34 @@ const COMRegular = forwardRef(({
         key: "IDType",
         label: "ID Type",
         width: 90,
-      }
+      },
+      {
+        key: "address",
+        label: "Address",
+        width: 90,
+        hide: true
+      },
+      {
+        key: "sale_officer",
+        label: "Sale Officer",
+        width: 90,
+        hide: true
+      },
     ],
     getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
       if (rowItm) {
+        if (_policyInformationRef.current.getRefs().clientIDRef.current) {
+          _policyInformationRef.current.getRefs().clientIDRef.current.value = rowItm[0]
+        }
+        if (_policyInformationRef.current.getRefs().clientNameRef.current) {
+          _policyInformationRef.current.getRefs().clientNameRef.current.value = rowItm[1]
+        }
+        if (_policyInformationRef.current.getRefs().clientAddressRef.current) {
+          _policyInformationRef.current.getRefs().clientAddressRef.current.value = rowItm[3]
+        }
+        if (_policyInformationRef.current.getRefs().saleOfficerRef.current) {
+          _policyInformationRef.current.getRefs().saleOfficerRef.current.value = rowItm[4]
+        }
         clientCloseModal()
       }
     }
@@ -330,11 +346,202 @@ const COMRegular = forwardRef(({
     ],
     getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
       if (rowItm) {
+        console.log(rowItm)
+        if (_policyInformationRef.current.getRefs().agentIdRef.current) {
+          _policyInformationRef.current.getRefs().agentIdRef.current.value = rowItm[0]
+        }
+        if (_policyInformationRef.current.getRefs().agentNameRef.current) {
+          _policyInformationRef.current.getRefs().agentNameRef.current.value = rowItm[1]
+        }
+
         agentCloseModal()
       }
     }
   })
 
+  const {
+    mutate: mutatateAccount,
+    isLoading: isLoadingAccount
+  } = useMutation({
+    mutationKey: "account",
+    mutationFn: (variables: any) => {
+      return myAxios.post('/task/production/account', variables, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`
+        }
+      })
+    },
+    onSuccess(response) {
+      wait(100).then(() => {
+        _policyInformationRef.current.getRefs()._accountRef.current.setDataSource(response.data?.data)
+      })
+    },
+  })
+  const {
+    mutate: mutatateMortgagee,
+    isLoading: isLoadingMortgagee
+  } = useMutation({
+    mutationKey: "account",
+    mutationFn: (variables: any) => {
+      return myAxios.post('/task/production/mortgagee', variables, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`
+        }
+      })
+    },
+    onSuccess(response) {
+      wait(100).then(() => {
+        _policyPremiumRef.current.getRefs().mortgageeSelect_.current.setDataSource(response.data?.data)
+      })
+    },
+  })
+  const {
+    mutate: mutatateDenomination,
+    isLoading: isLoadingDenomination
+  } = useMutation({
+    mutationKey: "denomination",
+    mutationFn: (variables: any) => {
+      return myAxios.post('/task/production/denomination', variables, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`
+        }
+      })
+    },
+    onSuccess(response) {
+      wait(100).then(() => {
+        _policyTypeDetailsRef.current.getRefs()._dinomination.current.setDataSource(response.data?.data)
+      })
+    },
+  })
+
+  const {
+    mutate: mutatateSave,
+    isLoading: isLoadingSave
+  } = useMutation({
+    mutationKey: "denomination",
+    mutationFn: (variables: any) => {
+      return myAxios.post('/task/production/save', variables, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`
+        }
+      })
+    },
+    onSuccess(response) {
+      wait(100).then(() => {
+        _policyTypeDetailsRef.current.getRefs()._dinomination.current.setDataSource(response.data?.data)
+      })
+    },
+  })
+  useImperativeHandle(ref, () => ({
+    handleOnSave: () => {
+      const data = {
+        ..._policyInformationRef.current.getRefsValue(),
+        ..._policyTypeDetailsRef.current.getRefsValue(),
+        ..._policyPremiumRef.current.getRefsValue(),
+      }
+      mutatateSave(data)
+    },
+  }))
+  useEffect(() => {
+    mutatateAccount({ policy: window.localStorage.getItem('__policy__') })
+    mutatateMortgagee({ policy: window.localStorage.getItem('__policy__') })
+    mutatateDenomination({ policy: window.localStorage.getItem('__policy__') })
+  }, [])
+  function computation() {
+    const insuredValue = parseFloat(_policyTypeDetailsRef.current.getRefs().estimatedValueSchedVehicleRef.current?.value.replace(/,/g, "") || 0);
+    const aircon = parseFloat(_policyTypeDetailsRef.current.getRefs().airconRef.current?.value.replace(/,/g, "") || 0);
+    const stereo = parseFloat(_policyTypeDetailsRef.current.getRefs().stereoRef.current?.value.replace(/,/g, "") || 0);
+    const magwheels = parseFloat(_policyTypeDetailsRef.current.getRefs().magwheelsRef.current?.value.replace(/,/g, "") || 0);
+    const others = parseFloat(_policyTypeDetailsRef.current.getRefs().othersSpecifyRef_.current?.value.replace(/,/g, "") || 0);
+
+    const secIII = parseFloat(_policyPremiumRef.current.getRefs().sectionIIIRef.current?.value.replace(/,/g, "") || 0);
+    const premiumPaid = parseFloat(_policyTypeDetailsRef.current.getRefs().premiumPaidRef.current?.value.replace(/,/g, "") || 0);
+    const theft = parseFloat(_policyPremiumRef.current.getRefs().theftRef.current?.value.replace(/,/g, "") || 0);
+    const secIVA = parseFloat(_policyPremiumRef.current.getRefs().sectionIVARef.current?.value.replace(/,/g, "") || 0);
+    const secIVB = parseFloat(_policyPremiumRef.current.getRefs().sectionIVBRef.current?.value.replace(/,/g, "") || 0);
+    const other = parseFloat(_policyPremiumRef.current.getRefs().othersRef.current?.value || 0);
+    const aog = parseFloat(_policyPremiumRef.current.getRefs().aogRef.current?.value.replace(/,/g, "") || 0);
+    const stradCom = parseFloat(_policyPremiumRef.current.getRefs().stradComRef.current?.value.replace(/,/g, "") || 0);
+
+    const localGovTax = parseFloat(_policyPremiumRef.current.getRefs().localGovTaxRef.current?.value.replace(/,/g, "") || 0);
+
+    // Calculate Insured
+    const insured =
+      insuredValue + aircon + stereo + magwheels + others;
+    // Calculate Own Damage
+    const ownDamage = insured * (secIII / 100);
+
+    const newAog = (aog / 100) * insuredValue
+    // Calculate Premium
+    const premium =
+      premiumPaid +
+      ownDamage +
+      theft +
+      secIVA +
+      secIVB +
+      other +
+      newAog;
+    // aog;
+
+
+    const vat = premium * 0.12;
+    // Calculate Doc Stamp
+    const docStamp = premium * 0.125;
+
+    // Calculate Local Government Tax
+    const locGovTax = premium * (localGovTax / 100);
+
+    // Calculate StradCom
+    const stradComValue = stradCom;
+
+    const totalDue =
+      premium +
+      vat +
+      docStamp +
+      locGovTax +
+      stradComValue;
+
+    if (_policyPremiumRef.current.getRefs()._aogRef.current) {
+      _policyPremiumRef.current.getRefs()._aogRef.current.value =
+        newAog.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    if (_policyPremiumRef.current.getRefs().sectionI_IIRef.current) {
+      _policyPremiumRef.current.getRefs().sectionI_IIRef.current.value =
+        premiumPaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    if (_policyPremiumRef.current.getRefs().sectionI_IIRef.current) {
+      _policyPremiumRef.current.getRefs().sectionI_IIRef.current.value =
+        premiumPaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    if (_policyPremiumRef.current.getRefs().ownDamageRef.current) {
+      _policyPremiumRef.current.getRefs().ownDamageRef.current.value =
+        ownDamage.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    if (_policyPremiumRef.current.getRefs().totalPremiumRef.current) {
+      _policyPremiumRef.current.getRefs().totalPremiumRef.current.value =
+        premium.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    if (_policyPremiumRef.current.getRefs().vatRef.current) {
+      _policyPremiumRef.current.getRefs().vatRef.current.value =
+        vat.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    if (_policyPremiumRef.current.getRefs().docstampRef.current) {
+      _policyPremiumRef.current.getRefs().docstampRef.current.value =
+        docStamp.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    if (_policyPremiumRef.current.getRefs()._localGovTaxRef.current) {
+      _policyPremiumRef.current.getRefs()._localGovTaxRef.current.value =
+        locGovTax.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    if (_policyPremiumRef.current.getRefs().stradComRef.current) {
+      _policyPremiumRef.current.getRefs().stradComRef.current.value =
+        stradComValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    if (_policyPremiumRef.current.getRefs().totalDueRef.current) {
+      _policyPremiumRef.current.getRefs().totalDueRef.current.value =
+        totalDue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+  }
 
 
 
@@ -347,6 +554,7 @@ const COMRegular = forwardRef(({
         padding: "5px"
       }}
     >
+      {(isLoadingAccount || isLoadingMortgagee || isLoadingDenomination || isLoadingSave) && <Loading />}
       <ClientUpwardTableModalSearch />
       <AgentUpwardTableModalSearch />
       <div style={{
@@ -362,6 +570,9 @@ const COMRegular = forwardRef(({
           agentSearch={(input: string) => {
             agentOpenModal(input)
           }}
+          onChangeAccount={(e: any) => {
+            mutatateDenomination({ policy: window.localStorage.getItem('__policy__'), account: e.target.value })
+          }}
         />
       </div>
       <div style={{
@@ -369,14 +580,21 @@ const COMRegular = forwardRef(({
         flex: 1,
         height: "100%",
       }}>
-        <_PolicyTypeDetails ref={_policyTypeDetailsRef} />
+        <_PolicyTypeDetails
+          ref={_policyTypeDetailsRef}
+        />
       </div>
       <div style={{
         display: selectedPage === 2 ? "flex" : "none",
         flex: 1,
         height: "100%",
       }}>
-        <_PolicyPremium ref={_policyPremiumRef} />
+        <_PolicyPremium
+          ref={_policyPremiumRef}
+          onComputation={() => {
+            computation()
+          }}
+        />
       </div>
 
     </div>
@@ -522,7 +740,7 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
   const unladenWeightRef = useRef<HTMLInputElement>(null)
 
   useImperativeHandle(ref, () => ({
-    getRefs: () => {
+    getRefsValue: () => {
       return {
         clientIDRef: clientIDRef.current?.value,
         clientNameRef: clientNameRef.current?.value,
@@ -548,6 +766,35 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
         authorizedCapacityRef: authorizedCapacityRef.current?.value,
         bltFileNoRef: bltFileNoRef.current?.value,
         unladenWeightRef: unladenWeightRef.current?.value
+      }
+    },
+    getRefs: () => {
+      return {
+        clientIDRef,
+        clientNameRef,
+        clientAddressRef,
+        agentIdRef,
+        agentNameRef,
+        agentCommisionRef,
+        saleOfficerRef,
+        accountRef,
+        policyNoRef,
+        corNoRef,
+        orNoRef,
+        dateFromRef,
+        dateToRef,
+        dateIssuedRef,
+        modelRef,
+        plateNoRef,
+        makeRef,
+        chassisNoRef,
+        typeOfBodyRef,
+        motorNoRef,
+        colorRef,
+        authorizedCapacityRef,
+        bltFileNoRef,
+        unladenWeightRef,
+        _accountRef
       }
     }
   }))
@@ -583,9 +830,9 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
           <span
             style={{
               position: "absolute",
-              top: "-10px",
+              top: "-12px",
               left: "20px",
-              fontSize: "12px",
+              fontSize: "14px",
               background: "#F1F1F1",
               padding: "0 2px",
               fontWeight: "bold"
@@ -677,9 +924,9 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
           <span
             style={{
               position: "absolute",
-              top: "-10px",
+              top: "-12px",
               left: "20px",
-              fontSize: "12px",
+              fontSize: "14px",
               background: "#F1F1F1",
               padding: "0 2px",
               fontWeight: "bold"
@@ -703,7 +950,7 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
               style: { width: "calc(100% - 150px) " },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                  props.clientSearch(e.currentTarget.value)
+                  props.agentSearch(e.currentTarget.value)
 
                 }
               },
@@ -711,7 +958,7 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
             icon={<SearchIcon sx={{ fontSize: "18px" }} />}
             onIconClick={(e) => {
               e.preventDefault()
-              props.clientSearch(agentIdRef.current?.value)
+              props.agentSearch(agentIdRef.current?.value)
 
             }}
             inputRef={agentIdRef}
@@ -808,9 +1055,9 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
           <span
             style={{
               position: "absolute",
-              top: "-10px",
+              top: "-12px",
               left: "20px",
-              fontSize: "12px",
+              fontSize: "14px",
               background: "#F1F1F1",
               padding: "0 2px",
               fontWeight: "bold"
@@ -830,15 +1077,16 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
             selectRef={accountRef}
             select={{
               style: { flex: 1, height: "22px" },
-              defaultValue: "Non-VAT",
+              defaultValue: "",
+              onChange: props.onChangeAccount
             }}
             containerStyle={{
               width: "90%",
               marginBottom: "12px"
             }}
             datasource={[]}
-            values={"key"}
-            display={"key"}
+            values={"Account"}
+            display={"Account"}
           />
           <TextInput
             containerStyle={{
@@ -924,9 +1172,9 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
           <span
             style={{
               position: "absolute",
-              top: "-10px",
+              top: "-12px",
               left: "20px",
-              fontSize: "12px",
+              fontSize: "14px",
               background: "#F1F1F1",
               padding: "0 2px",
               fontWeight: "bold"
@@ -972,7 +1220,7 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
             }}
             input={{
               type: 'date',
-              defaultValue: format(new Date(), "yyyy-MM-dd"),
+              defaultValue: format(addYears(new Date(), 1), "yyyy-MM-dd"),
               style: { width: "calc(100% - 150px)" },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === 'Enter') {
@@ -1022,9 +1270,9 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
         <span
           style={{
             position: "absolute",
-            top: "-10px",
+            top: "-12px",
             left: "20px",
-            fontSize: "12px",
+            fontSize: "14px",
             background: "#F1F1F1",
             padding: "0 2px",
             fontWeight: "bold"
@@ -1287,11 +1535,12 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
   const bodyInjuryRef = useRef<HTMLInputElement>(null);
   const propertyDamageRef = useRef<HTMLInputElement>(null);
   const personalAccidentRef = useRef<HTMLInputElement>(null);
-
+  const dinomination = useRef<HTMLSelectElement>(null)
+  const _dinomination = useRef<any>(null)
 
 
   useImperativeHandle(ref, () => ({
-    getRefs: () => {
+    getRefsValue: () => {
       return {
         premiumPaidRef: premiumPaidRef.current?.value,
         estimatedValueSchedVehicleRef: estimatedValueSchedVehicleRef.current?.value,
@@ -1307,6 +1556,27 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
         bodyInjuryRef: bodyInjuryRef.current?.value,
         propertyDamageRef: propertyDamageRef.current?.value,
         personalAccidentRef: personalAccidentRef.current?.value,
+        dinomination: dinomination.current?.value
+      }
+    },
+    getRefs: () => {
+      return {
+        premiumPaidRef,
+        estimatedValueSchedVehicleRef,
+        airconRef,
+        stereoRef,
+        magwheelsRef,
+        othersSpecifyRef,
+        othersSpecifyRef_,
+        typeRef,
+        DeductibleRef,
+        towingRef,
+        authorizedRepairLimitRef,
+        bodyInjuryRef,
+        propertyDamageRef,
+        personalAccidentRef,
+        dinomination,
+        _dinomination
       }
     },
 
@@ -1389,7 +1659,17 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
             containerStyle={{
               flex: 2
             }}
-            datasource={[]}
+            datasource={[
+              { key: `` },
+              { key: `LIGHT PRIVATE VEHICLE(1YR)` },
+              { key: `MEDIUM PRIVATE VEHICLE(1YR)` },
+              { key: `HEAVY PRIVATE VEHICLE(1YR)` },
+              { key: `MC/TC - MOTORCYCLE/TRICYCLE(1YR)` },
+              { key: `LIGHT PRIVATE VEHICLE(3YR)` },
+              { key: `MEDIUM PRIVATE VEHICLE(3YR)` },
+              { key: `HEAVY PRIVATE VEHICLE(3YR)` },
+              { key: `MC/TC - MOTORCYCLE/TRICYCLE(3YR)` },
+            ]}
             values={"key"}
             display={"key"}
           />
@@ -1459,6 +1739,16 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
             }}>
 
             <TextFormatedInput
+              onBlur={(e) => {
+                let insuredValue = parseFloat(e.currentTarget.value.replace(/,/g, ""));
+                if (isNaN(insuredValue)) insuredValue = 0;
+
+                const deductible = insuredValue * 0.01;
+                if (DeductibleRef.current) {
+                  console.log(DeductibleRef)
+                  DeductibleRef.current.value = deductible.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+              }}
               label={{
                 title: "Estimated Value of Schedule Vehicle:",
                 style: {
@@ -1478,7 +1768,8 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
                 onKeyDown: (e) => {
                   if (e.code === "NumpadEnter" || e.code === 'Enter') {
                   }
-                }
+                },
+
               }}
               inputRef={estimatedValueSchedVehicleRef}
             />
@@ -1638,7 +1929,6 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
               selectRef={typeRef}
               select={{
                 disabled: isDisableTPL,
-
                 style: { flex: 1, height: "22px" },
                 defaultValue: "",
                 onChange: (e) => {
@@ -1648,7 +1938,13 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
               containerStyle={{
                 width: "100%",
               }}
-              datasource={[]}
+              datasource={[
+                { key: `` },
+                { key: `PRIVATE VEHICLE` },
+                { key: `LIGHT AND MEDIUM VEHICLE` },
+                { key: `HEAVY VEHICLE` },
+                { key: `MC/TC - MOTORCYCLE/TRICYCLE` },
+              ]}
               values={"key"}
               display={"key"}
             />
@@ -1687,7 +1983,6 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
                 }}
                 input={{
                   disabled: isDisableTPL,
-
                   defaultValue: "0.00",
                   type: "text",
                   style: { width: "calc(100% - 150px)" },
@@ -1786,15 +2081,15 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
                 inputRef={bodyInjuryRef}
                 input={{
                   disabled: isDisableTPL,
-
                   style: {
                     width: "100%",
                     flex: 1,
                   }
                 }}
                 onChange={(selected: any, e: any) => {
-                  console.log(selected)
-
+                  if (bodyInjuryRef.current) {
+                    bodyInjuryRef.current.value = selected.key
+                  }
                 }}
                 onKeydown={(e: any) => {
                   if (e.key === "Enter" || e.key === 'NumpadEnter') {
@@ -1829,15 +2124,15 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
                 inputRef={propertyDamageRef}
                 input={{
                   disabled: isDisableTPL,
-
                   style: {
                     width: "100%",
                     flex: 1,
                   }
                 }}
                 onChange={(selected: any, e: any) => {
-                  console.log(selected)
-
+                  if (propertyDamageRef.current) {
+                    propertyDamageRef.current.value = selected.key
+                  }
                 }}
                 onKeydown={(e: any) => {
                   if (e.key === "Enter" || e.key === 'NumpadEnter') {
@@ -1871,14 +2166,15 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
                 inputRef={personalAccidentRef}
                 input={{
                   disabled: isDisableTPL,
-
                   style: {
                     width: "100%",
                     flex: 1,
                   }
                 }}
                 onChange={(selected: any, e: any) => {
-                  console.log(selected)
+                  if (personalAccidentRef.current) {
+                    personalAccidentRef.current.value = selected.key
+                  }
 
                 }}
                 onKeydown={(e: any) => {
@@ -1892,7 +2188,7 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
         </div>
         <div style={{ flex: 1, width: "100%" }}>
           <SelectInput
-            ref={_typeRef}
+            ref={_dinomination}
             label={{
               title: "Donomination :",
               style: {
@@ -1901,22 +2197,19 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
                 width: "120px",
               },
             }}
-            selectRef={typeRef}
+            selectRef={dinomination}
             select={{
               disabled: isDisableTPL,
-
               style: { flex: 1, height: "22px" },
               defaultValue: "",
-              onChange: (e) => {
-              }
 
             }}
             containerStyle={{
               width: "400px",
             }}
             datasource={[]}
-            values={"key"}
-            display={"key"}
+            values={"Type"}
+            display={"Type"}
           />
         </div>
       </div>
@@ -1927,6 +2220,7 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
 })
 
 const _PolicyPremium = forwardRef((props: any, ref) => {
+  const mortgageecheckRef = useRef<HTMLInputElement>(null)
   const mortgageeSelect_ = useRef<any>(null)
   const mortgageeSelect = useRef<HTMLSelectElement>(null)
   const formIndorsementRef = useRef<HTMLTextAreaElement>(null)
@@ -1951,7 +2245,7 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
 
 
   useImperativeHandle(ref, () => ({
-    getRefs: () => {
+    getRefsValue: () => {
       return {
         mortgageeSelect: mortgageeSelect.current?.value,
         formIndorsementRef: formIndorsementRef.current?.value,
@@ -1973,8 +2267,44 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
         totalDueRef: totalDueRef.current?.value,
       }
     },
+    getRefs: () => {
+      return {
+        mortgageeSelect_,
+        mortgageeSelect,
+        formIndorsementRef,
+        sectionI_IIRef,
+        sectionIIIRef,
+        ownDamageRef,
+        theftRef,
+        sectionIVARef,
+        sectionIVBRef,
+        othersRef,
+        aogRef,
+        _aogRef,
+        totalPremiumRef,
+        vatRef,
+        docstampRef,
+        localGovTaxRef,
+        _localGovTaxRef,
+        stradComRef,
+        totalDueRef,
+      }
+    },
 
   }))
+
+  function setFormIndorseValue(check: boolean) {
+    if (check) {
+      if (formIndorsementRef.current) {
+        formIndorsementRef.current.value = "LOSS and/or DAMAGE, if any under this policy shall be payable to " + mortgageeSelect.current?.value + " as their interest may appear subject to all terms and conditions, clauses and warranties of this policy. SUBJECT TO THE ATTACHED STANDARD ACCESSORIES ENDORSEMENT CLAUSE; FULL PREMIUM PAYMENT IN CASE OF LOSS CLAUSE; MEMORANDUM ON DOCUMENTARY STAMPS TAX; ANTI CARNAPING; PREVENTION TIPS AND AUTO PA RIDER; DRUNKEN AND DRIVE CLAUSE THIS POLICY OR ANY RENEWAL THEREOF SHALL NOT BE CANCELLED WITHOUT PRIOR WRITTEN NOTIFICATION AND CONFORMIY TO " + mortgageeSelect.current?.value
+      }
+    } else {
+      if (formIndorsementRef.current) {
+        formIndorsementRef.current.value = "SUBJECT TO THE ATTACHED STANDARD ACCESSORIES ENDORSEMENT CLAUSE; FULL PREMIUM PAYMENT IN CASE OF LOSS CLAUSE; MEMORANDUM ON DOCUMENTARY STAMPS TAX; ANTI CARNAPING PREVENTION TIPS AND AUTO PA RIDER; DRUNKEN AND DRIVER CLAUSE"
+      }
+    }
+
+  }
 
   return (
     <div style={{
@@ -1989,7 +2319,7 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
           border: "1px solid #9ca3af",
           height: "100%",
           width: "65%",
-          padding: "10px",
+          padding: "15px",
           display: "flex",
           rowGap: "20px",
           boxSizing: "border-box",
@@ -2009,9 +2339,9 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
           <span
             style={{
               position: "absolute",
-              top: "-10px",
+              top: "-12px",
               left: "10px",
-              fontSize: "12px",
+              fontSize: "14px",
               background: "#F1F1F1",
               padding: "0 2px",
               fontWeight: "bold"
@@ -2028,7 +2358,10 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
 
           }}>
             <div style={{ width: "100%", display: "flex", alignItems: "center", columnGap: "10px" }}>
-              <input type="checkbox" id="mortgagee" />
+              <input ref={mortgageecheckRef} type="checkbox" id="mortgagee" onChange={(e) => {
+                setFormIndorseValue(e.target.checked)
+
+              }} />
               <label htmlFor="mortgagee"
                 style={{
                   fontSize: "12px",
@@ -2061,6 +2394,8 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
                 style: { width: "100%", height: "22px" },
                 defaultValue: "",
                 onChange: (e) => {
+                  if (mortgageecheckRef.current)
+                    setFormIndorseValue(mortgageecheckRef.current.checked)
                 }
 
               }}
@@ -2068,8 +2403,8 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
                 width: "100%",
               }}
               datasource={[]}
-              values={"key"}
-              display={"key"}
+              values={"Mortgagee"}
+              display={"Mortgagee"}
             />
             <TextAreaInput
 
@@ -2083,9 +2418,9 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
                 },
               }}
               textarea={{
-                rows: 28,
+                rows: 25,
                 style: { flex: 1 },
-                defaultValue: "",
+                defaultValue: `SUBJECT TO THE ATTACHED STANDARD ACCESSORIES ENDORSEMENT CLAUSE; FULL PREMIUM PAYMENT IN CASE OF LOSS CLAUSE; MEMORANDUM ON DOCUMENTARY STAMPS TAX; ANTI CARNAPING PREVENTION TIPS AND AUTO PA RIDER; DRUNKEN AND DRIVER CLAUSE`,
                 onChange: (e) => {
                 },
               }}
@@ -2110,9 +2445,9 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
           <span
             style={{
               position: "absolute",
-              top: "-10px",
+              top: "-12px",
               left: "10px",
-              fontSize: "12px",
+              fontSize: "14px",
               background: "#F1F1F1",
               padding: "0 2px",
               fontWeight: "bold",
@@ -2178,7 +2513,7 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
               alignItems: "center",
               justifyContent: "center"
             }}>
-              <IconButton size="small" color="info">
+              <IconButton size="small" color="info" onClick={props.onComputation}>
                 <CalculateIcon />
               </IconButton>
             </div>
@@ -2318,7 +2653,7 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
                 width: "70%"
               }}
               input={{
-                defaultValue: "0.00",
+                defaultValue: "0.5",
                 type: "text",
                 style: { width: "calc(100% - 150px)" },
                 onKeyDown: (e) => {
@@ -2440,7 +2775,7 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
                 width: "70%"
               }}
               input={{
-                defaultValue: "0.00",
+                defaultValue: "0.75",
                 type: "text",
                 style: { width: "calc(100% - 150px)" },
                 onKeyDown: (e) => {

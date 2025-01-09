@@ -24,7 +24,8 @@ import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
 import { DataGridViewReact } from "../../../../components/DataGridViewReact";
 import SearchIcon from '@mui/icons-material/Search';
 import { Loading } from "../../../../components/Loading";
-
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import { flushSync } from "react-dom";
 
 export const reducer = (state: any, action: any) => {
   switch (action.type) {
@@ -811,7 +812,6 @@ export default function PettyCash() {
                     }
                   }}
                   onChange={(selected: any, e: any) => {
-                    console.log(selected)
                     if (accountRef.current)
                       accountRef.current.value = selected.Purpose
                     transactionCodeRef.current = selected.Acct_Code
@@ -1060,7 +1060,6 @@ export const Autocomplete = forwardRef(({
   },
   containerStyle,
 }: any, ref: any) => {
-  const [inputValue, setInputValue] = useState("aa");
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(0);
@@ -1096,11 +1095,16 @@ export const Autocomplete = forwardRef(({
   };
 
   const handleClick = (suggestion: any) => {
-    setInputValue(suggestion[DisplayMember]);
     setShowSuggestions(false);
   };
 
   const handleKeyDown = (e: any) => {
+    if (e.key === 'Tab') {
+      flushSync(() => {
+        setShowSuggestions(false)
+        setFilteredSuggestions([]);
+      })
+    }
     if (e.key === "ArrowDown") {
       e.preventDefault()
       setActiveSuggestionIndex((prevIndex) =>
@@ -1114,12 +1118,9 @@ export const Autocomplete = forwardRef(({
       );
     } else if (e.key === "Enter" || e.key === 'NumpadEnter') {
       e.preventDefault()
-
-
       if (filteredSuggestions.length > 0) {
         const selectedSuggestion = filteredSuggestions[activeSuggestionIndex];
         onChange(selectedSuggestion, e)
-        setInputValue(selectedSuggestion[DisplayMember]);
         setShowSuggestions(false);
       }
 
@@ -1147,7 +1148,33 @@ export const Autocomplete = forwardRef(({
           disabled: disableInput,
           type: "text",
           onKeyDown: handleKeyDown,
-          onChange: handleChange
+          onChange: handleChange,
+          onFocus: (e) => {
+            e.preventDefault()
+            e.currentTarget?.focus()
+            setShowSuggestions(true)
+            setFilteredSuggestions(DataSource);
+            if (inputRef.current) {
+              inputRef.current.focus()
+            }
+          },
+          onBlur: (e) => {
+            if (e.relatedTarget && e.relatedTarget.tagName === 'LI') {
+              wait(250).then(() => {
+                setShowSuggestions(false)
+                setFilteredSuggestions([]);
+              })
+            } else {
+              setShowSuggestions(false)
+              setFilteredSuggestions([]);
+            }
+          }
+        }}
+        icon={<KeyboardArrowDownIcon sx={{ fontSize: "18px" }} />}
+        onIconClick={(e) => {
+          if (inputRef.current) {
+            inputRef.current.focus()
+          }
         }}
         inputRef={inputRef}
       />
@@ -1155,6 +1182,7 @@ export const Autocomplete = forwardRef(({
         <ul className="suggestions" ref={suggestionListRef}>
           {filteredSuggestions.map((suggestion, index) => (
             <li
+              tabIndex={0}
               key={index}
               onClick={(e) => {
                 handleClick(suggestion)

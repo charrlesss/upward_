@@ -26,6 +26,7 @@ interface TextAreaPrps {
 
 interface TextFormatedInputProps extends TextInputProps {
   onChange?: React.ChangeEventHandler<HTMLInputElement> | undefined
+  onBlur?: React.ChangeEventHandler<HTMLInputElement> | undefined
 }
 export function TextFormatedInput({
   input,
@@ -36,6 +37,7 @@ export function TextFormatedInput({
   disableIcon = false,
   onIconClick = (e) => { },
   onChange = (e) => { },
+  onBlur = (e) =>{},
   containerStyle
 }: TextFormatedInputProps) {
   // const [inputValue, setInputValue] = useState('');
@@ -156,6 +158,7 @@ export function TextFormatedInput({
         }}
         onBlur={(e) => {
           handleBlur(e)
+          onBlur(e)
         }}  // Add .00 on blur
 
       />
