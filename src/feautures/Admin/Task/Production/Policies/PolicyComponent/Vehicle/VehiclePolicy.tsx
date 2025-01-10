@@ -57,7 +57,7 @@ import { Loading } from "../../../../../../../components/Loading";
 import { wait } from "../../../../../../../lib/wait";
 
 export default function VehiclePolicy() {
-  const { user } = useContext(AuthContext)
+  const { user, myAxios } = useContext(AuthContext)
   const [policy, setPolicy] = useState(window.localStorage.getItem('__policy__'))
   const _policy = useRef<any>(null)
 
@@ -90,6 +90,7 @@ export default function VehiclePolicy() {
       {policy === 'COM' ?
         <COMPolicy
           user={user}
+          myAxios={myAxios}
           policy={policy}
           setPolicy={setPolicy}
           _policy={_policy}
@@ -98,6 +99,7 @@ export default function VehiclePolicy() {
         :
         <TPLPolicy
           user={user}
+          myAxios={myAxios}
           policy={policy}
           setPolicy={setPolicy}
           _policy={_policy}
@@ -109,6 +111,7 @@ export default function VehiclePolicy() {
 
 function COMPolicy({
   user,
+  myAxios,
   policy,
   setPolicy,
   _policy
@@ -117,14 +120,63 @@ function COMPolicy({
   const [policyType, setPolicyType] = useState(window.localStorage.getItem('__policy_type__'))
   const searchRef = useRef<HTMLInputElement>(null)
   const regularPolicyRef = useRef<any>(null)
-
+  const subAccountRef = useRef<HTMLSelectElement>(null)
+  const subAccountRef_ = useRef<any>(null)
   function handleSave() {
     regularPolicyRef.current.handleOnSave()
   }
+  const { isLoading } = useQuery({
+    queryKey: "sub-account",
+    queryFn: () => {
+      return myAxios.get('/task/production/sub-account', {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`
+        }
+      })
+    },
+    onSuccess(response) {
+      wait(100).then(() => {
+        subAccountRef_.current.setDataSource(response.data?.data)
+        wait(100).then(() => {
+          if (subAccountRef.current)
+            subAccountRef.current.value = 'HO'
+        })
+      })
+    },
+  })
+  const {
+    UpwardTableModalSearch: PolicySearchUpwardTableModalSearch,
+    openModal: policySearchOpenModal,
+    closeModal: policySearchCloseModal
+  } = useUpwardTableModalSearchSafeMode({
+    size: "medium",
+    link: "/task/production/search-policy",
+    column: [
+      { key: "Date", label: "Date", width: 110 },
+      { key: "PolicyNo", label: "PolicyNo", width: 150 },
+      {
+        key: "Account",
+        label: "Account",
+        width: 100,
+      },
+      {
+        key: "Name",
+        label: "Name",
+        width: 255,
+      }
+    ],
+    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
+      if (rowItm) {
+        regularPolicyRef.current.loadPolicy(rowItm)
+        policySearchCloseModal()
+      }
+    }
+  })
 
   return (
 
     <>
+      <PolicySearchUpwardTableModalSearch />
       <div style={{ display: "flex", columnGap: "8px", alignItems: "center", marginBottom: "15px" }}>
         {user?.department === 'UMIS' && <SelectInput
           ref={_policy}
@@ -168,7 +220,7 @@ function COMPolicy({
             onKeyDown: (e) => {
               if (e.key === "Enter" || e.key === "NumpadEnter") {
                 e.preventDefault();
-                // openModalSearchCollection(e.currentTarget.value);
+                policySearchOpenModal(e.currentTarget.value);
               }
             },
             style: { width: "100%", height: "22px" },
@@ -177,9 +229,8 @@ function COMPolicy({
           icon={<SearchIcon sx={{ fontSize: "18px" }} />}
           onIconClick={(e) => {
             e.preventDefault()
-            alert('qwe')
-            // if (searchRef.current)
-            // openModalSearchCollection(searchRef.current.value);
+            if (searchRef.current)
+              policySearchOpenModal(searchRef.current.value);
           }}
           inputRef={searchRef}
         />
@@ -194,7 +245,7 @@ function COMPolicy({
         </IconButton>
       </div>
       <div style={{ display: "flex", columnGap: "7px", marginBottom: "6px" }}>
-        <div style={{ display: "flex", columnGap: "2px" }}>
+        <div style={{ display: "flex", columnGap: "5px", alignItems: "center", }}>
           <Button
             disabled={policyType === 'REG'}
             sx={{
@@ -220,6 +271,7 @@ function COMPolicy({
             variant="contained"
             color={policyType === 'TEMP' ? "secondary" : "info"}
           >TEMPORAY</Button>
+         
         </div>
         <div>|</div>
         <div style={{ display: "flex", columnGap: "2px" }}>
@@ -268,21 +320,44 @@ function COMPolicy({
             }}
             variant="contained"
           >Policy Premium</Button>
+           {isLoading ? <div>Loading..</div> : <SelectInput
+            ref={subAccountRef_}
+            label={{
+              title: "Sub Account :",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "100px",
+              },
+            }}
+            selectRef={subAccountRef}
+            select={{
+              style: { flex: 1, height: "22px" },
+              defaultValue: "HO",
+            }}
+            containerStyle={{
+              flex: 2,
+               marginLeft:"20px"
+            }}
+            datasource={[]}
+            values={"Acronym"}
+            display={"Acronym"}
+          />}
         </div>
       </div>
-      {policyType === 'REG' ? <COMRegular ref={regularPolicyRef} selectedPage={selectedPage} /> : <COMTemporary selectedPage={selectedPage} />}
+      {policyType === 'REG' ? <COMRegular subAccountRef={subAccountRef} ref={regularPolicyRef} selectedPage={selectedPage} policyType={policyType} /> : <COMTemporary selectedPage={selectedPage} policyType={policyType} />}
     </>
   )
 }
 const COMRegular = forwardRef(({
-  selectedPage
+  selectedPage,
+  policyType,
+  subAccountRef
 }: any, ref) => {
   const { user, myAxios } = useContext(AuthContext)
-
   const _policyInformationRef = useRef<any>(null)
   const _policyTypeDetailsRef = useRef<any>(null)
   const _policyPremiumRef = useRef<any>(null)
-
 
   const {
     UpwardTableModalSearch: ClientUpwardTableModalSearch,
@@ -358,7 +433,6 @@ const COMRegular = forwardRef(({
       }
     }
   })
-
   const {
     mutate: mutatateAccount,
     isLoading: isLoadingAccount
@@ -413,7 +487,6 @@ const COMRegular = forwardRef(({
       })
     },
   })
-
   const {
     mutate: mutatateSave,
     isLoading: isLoadingSave
@@ -427,21 +500,250 @@ const COMRegular = forwardRef(({
       })
     },
     onSuccess(response) {
-      wait(100).then(() => {
-        _policyTypeDetailsRef.current.getRefs()._dinomination.current.setDataSource(response.data?.data)
+      if (response.data.success) {
+        return Swal.fire({
+          position: "center",
+          icon: "success",
+          title: response.data.message,
+          showConfirmButton: false,
+          timer: 1500,
+        })
+      }
+      return Swal.fire({
+        position: "center",
+        icon: "error",
+        title: response.data.message,
+        showConfirmButton: false,
+        timer: 1500,
       })
     },
   })
+  const {
+    mutate: mutatateSelectedSearch,
+    isLoading: isLoadingSelectedSearch
+  } = useMutation({
+    mutationKey: "selected-search",
+    mutationFn: (variables: any) => {
+      return myAxios.post('/task/production/search-policy-selected', variables, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`
+        }
+      })
+    },
+    onSuccess(response) {
+      if (response.data.success) {
+        const dt = response.data.data1
+        const dtVP = response.data.data2
+
+        if (dt.length <= 0 || dtVP.length <= 0) {
+          return alert('Unable to load data!')
+        }
+
+        if (dt.length > 0) {
+          if (_policyInformationRef.current.getRefs().clientIDRef.current) {
+            _policyInformationRef.current.getRefs().clientIDRef.current.value = dt[0].IDNo
+          }
+          if (_policyInformationRef.current.getRefs().clientNameRef.current) {
+            _policyInformationRef.current.getRefs().clientNameRef.current.value = dt[0].InsName
+          }
+          if (_policyInformationRef.current.getRefs().clientAddressRef.current) {
+            _policyInformationRef.current.getRefs().clientAddressRef.current.value = dt[0].InsAdd
+          }
+          if (_policyInformationRef.current.getRefs().accountRef.current) {
+            _policyInformationRef.current.getRefs().accountRef.current.value = dt[0].Account
+          }
+          if (_policyInformationRef.current.getRefs().policyNoRef.current) {
+            _policyInformationRef.current.getRefs().policyNoRef.current.value = dt[0].PolicyNo
+          }
+          if (_policyInformationRef.current.getRefs().dateIssuedRef.current) {
+            _policyInformationRef.current.getRefs().dateIssuedRef.current.value = format(new Date(dt[0].DateIssued), "yyyy-MM-dd")
+          }
+          if (_policyPremiumRef.current.getRefs().totalPremiumRef.current) {
+            _policyPremiumRef.current.getRefs().totalPremiumRef.current.value = formatNumber(parseFloat(dt[0].TotalPremium.replace(/,/g, '')))
+          }
+          if (_policyPremiumRef.current.getRefs().vatRef.current) {
+            _policyPremiumRef.current.getRefs().vatRef.current.value = formatNumber(parseFloat(dt[0].Vat.replace(/,/g, '')))
+          }
+          if (_policyPremiumRef.current.getRefs().docstampRef.current) {
+            _policyPremiumRef.current.getRefs().docstampRef.current.value = formatNumber(parseFloat(dt[0].DocStamp.replace(/,/g, '')))
+          }
+          if (_policyPremiumRef.current.getRefs()._localGovTaxRef.current) {
+            _policyPremiumRef.current.getRefs()._localGovTaxRef.current.value = formatNumber(parseFloat(dt[0].LGovTax.replace(/,/g, '')))
+          }
+          if (_policyPremiumRef.current.getRefs().stradComRef.current) {
+            _policyPremiumRef.current.getRefs().stradComRef.current.value = formatNumber(parseFloat(dt[0].Misc.replace(/,/g, '')))
+          }
+          if (_policyPremiumRef.current.getRefs().totalDueRef.current) {
+            _policyPremiumRef.current.getRefs().totalDueRef.current.value = formatNumber(parseFloat(dt[0].TotalDue.replace(/,/g, '')))
+          }
+          if (_policyInformationRef.current.getRefs().agentCommisionRef.current) {
+            _policyInformationRef.current.getRefs().agentCommisionRef.current.value = formatNumber(parseFloat(dt[0].AgentCom.replace(/,/g, '')))
+          }
+
+
+        }
+
+
+        if (dtVP.length > 0) {
+          if (_policyPremiumRef.current.getRefs().aogRef.current) {
+            _policyPremiumRef.current.getRefs().aogRef.current.value = formatNumber(parseFloat(dtVP[0].AOGPercent.replace(/,/g, '')))
+          }
+          if (_policyPremiumRef.current.getRefs()._aogRef.current) {
+            _policyPremiumRef.current.getRefs()._aogRef.current.value = formatNumber(parseFloat(dtVP[0].AOG.replace(/,/g, '')))
+          }
+          if (_policyPremiumRef.current.getRefs().localGovTaxRef.current) {
+            _policyPremiumRef.current.getRefs().localGovTaxRef.current.value = formatNumber(parseFloat(dtVP[0].LocalGovTaxPercent.replace(/,/g, '')))
+          }
+
+
+          if (_policyInformationRef.current.getRefs().corNoRef.current) {
+            _policyInformationRef.current.getRefs().corNoRef.current.value = dtVP[0].CoverNo
+          }
+          if (_policyInformationRef.current.getRefs().orNoRef.current) {
+            _policyInformationRef.current.getRefs().orNoRef.current.value = dtVP[0].CoverNo
+          }
+          if (_policyInformationRef.current.getRefs().dateFromRef.current) {
+            _policyInformationRef.current.getRefs().dateFromRef.current.value = format(new Date(dtVP[0].DateFrom), "yyyy-MM-dd")
+          }
+          if (_policyInformationRef.current.getRefs().dateToRef.current) {
+            _policyInformationRef.current.getRefs().dateToRef.current.value = format(new Date(dtVP[0].DateTo), "yyyy-MM-dd")
+          }
+          if (_policyInformationRef.current.getRefs().modelRef.current) {
+            _policyInformationRef.current.getRefs().modelRef.current.value = dtVP[0].Model
+          }
+          if (_policyInformationRef.current.getRefs().makeRef.current) {
+            _policyInformationRef.current.getRefs().makeRef.current.value = dtVP[0].Make
+          }
+          if (_policyInformationRef.current.getRefs().typeOfBodyRef.current) {
+            _policyInformationRef.current.getRefs().typeOfBodyRef.current.value = dtVP[0].BodyType
+          }
+          if (_policyInformationRef.current.getRefs().colorRef.current) {
+            _policyInformationRef.current.getRefs().colorRef.current.value = dtVP[0].Color
+          }
+          if (_policyInformationRef.current.getRefs().bltFileNoRef.current) {
+            _policyInformationRef.current.getRefs().bltFileNoRef.current.value = dtVP[0].BLTFileNo
+          }
+          if (_policyInformationRef.current.getRefs().plateNoRef.current) {
+            _policyInformationRef.current.getRefs().plateNoRef.current.value = dtVP[0].PlateNo
+          }
+          if (_policyInformationRef.current.getRefs().chassisNoRef.current) {
+            _policyInformationRef.current.getRefs().chassisNoRef.current.value = dtVP[0].ChassisNo
+          }
+          if (_policyInformationRef.current.getRefs().motorNoRef.current) {
+            _policyInformationRef.current.getRefs().motorNoRef.current.value = dtVP[0].MotorNo
+          }
+          if (_policyInformationRef.current.getRefs().authorizedCapacityRef.current) {
+            _policyInformationRef.current.getRefs().authorizedCapacityRef.current.value = dtVP[0].AuthorizedCap
+          }
+          if (_policyInformationRef.current.getRefs().unladenWeightRef.current) {
+            _policyInformationRef.current.getRefs().unladenWeightRef.current.value = dtVP[0].UnladenWeight
+          }
+
+
+          if (_policyTypeDetailsRef.current.getRefs().premiumPaidRef.current) {
+            _policyTypeDetailsRef.current.getRefs().premiumPaidRef.current.value = formatNumber(parseFloat(dtVP[0].PremiumPaid.replace(/,/g, '')))
+          }
+
+          if (_policyTypeDetailsRef.current.getRefs().estimatedValueSchedVehicleRef.current) {
+            _policyTypeDetailsRef.current.getRefs().estimatedValueSchedVehicleRef.current.value = formatNumber(parseFloat(dtVP[0].EstimatedValue.replace(/,/g, '')))
+          }
+          if (_policyTypeDetailsRef.current.getRefs().airconRef.current) {
+            _policyTypeDetailsRef.current.getRefs().airconRef.current.value = formatNumber(parseFloat(dtVP[0].Aircon.replace(/,/g, '')))
+          }
+          if (_policyTypeDetailsRef.current.getRefs().stereoRef.current) {
+            _policyTypeDetailsRef.current.getRefs().stereoRef.current.value = formatNumber(parseFloat(dtVP[0].Stereo.replace(/,/g, '')))
+          }
+          if (_policyTypeDetailsRef.current.getRefs().magwheelsRef.current) {
+            _policyTypeDetailsRef.current.getRefs().magwheelsRef.current.value = formatNumber(parseFloat(dtVP[0].Magwheels.replace(/,/g, '')))
+          }
+          if (_policyTypeDetailsRef.current.getRefs().othersSpecifyRef.current) {
+            _policyTypeDetailsRef.current.getRefs().othersSpecifyRef.current.value = dtVP[0].Others
+          }
+          if (_policyTypeDetailsRef.current.getRefs().othersSpecifyRef_.current) {
+            _policyTypeDetailsRef.current.getRefs().othersSpecifyRef_.current.value = formatNumber(parseFloat(dtVP[0].OthersAmount.replace(/,/g, '')))
+          }
+          if (_policyTypeDetailsRef.current.getRefs().DeductibleRef.current) {
+            _policyTypeDetailsRef.current.getRefs().DeductibleRef.current.value = formatNumber(parseFloat(dtVP[0].Deductible.replace(/,/g, '')))
+          }
+          if (_policyTypeDetailsRef.current.getRefs().towingRef.current) {
+            _policyTypeDetailsRef.current.getRefs().towingRef.current.value = formatNumber(parseFloat(dtVP[0].Towing.replace(/,/g, '')))
+          }
+          if (_policyTypeDetailsRef.current.getRefs().authorizedRepairLimitRef.current) {
+            _policyTypeDetailsRef.current.getRefs().authorizedRepairLimitRef.current.value = formatNumber(parseFloat(dtVP[0].RepairLimit.replace(/,/g, '')))
+          }
+          if (_policyTypeDetailsRef.current.getRefs().bodyInjuryRef.current) {
+            _policyTypeDetailsRef.current.getRefs().bodyInjuryRef.current.value = formatNumber(parseFloat(dtVP[0].BodilyInjury.replace(/,/g, '')))
+          }
+          if (_policyTypeDetailsRef.current.getRefs().propertyDamageRef.current) {
+            _policyTypeDetailsRef.current.getRefs().propertyDamageRef.current.value = formatNumber(parseFloat(dtVP[0].PropertyDamage.replace(/,/g, '')))
+          }
+          if (_policyTypeDetailsRef.current.getRefs().personalAccidentRef.current) {
+            _policyTypeDetailsRef.current.getRefs().personalAccidentRef.current.value = formatNumber(parseFloat(dtVP[0].PersonalAccident.replace(/,/g, '')))
+          }
+          if (_policyPremiumRef.current.getRefs().sectionI_IIRef.current) {
+            _policyPremiumRef.current.getRefs().sectionI_IIRef.current.value = formatNumber(parseFloat(dtVP[0].SecI.replace(/,/g, '')))
+          }
+          if (_policyPremiumRef.current.getRefs().sectionIIIRef.current) {
+            _policyPremiumRef.current.getRefs().sectionIIIRef.current.value = formatNumber(parseFloat(dtVP[0].SecIIPercent.replace(/,/g, '')))
+          }
+          if (_policyPremiumRef.current.getRefs().ownDamageRef.current) {
+            _policyPremiumRef.current.getRefs().ownDamageRef.current.value = formatNumber(parseFloat(dtVP[0].ODamage.replace(/,/g, '')))
+          }
+          if (_policyPremiumRef.current.getRefs().theftRef.current) {
+            _policyPremiumRef.current.getRefs().theftRef.current.value = formatNumber(parseFloat(dtVP[0].Theft.replace(/,/g, '')))
+          }
+          if (_policyPremiumRef.current.getRefs().sectionIVARef.current) {
+            _policyPremiumRef.current.getRefs().sectionIVARef.current.value = formatNumber(parseFloat(dtVP[0].Sec4A.replace(/,/g, '')))
+          }
+          if (_policyPremiumRef.current.getRefs().sectionIVBRef.current) {
+            _policyPremiumRef.current.getRefs().sectionIVBRef.current.value = formatNumber(parseFloat(dtVP[0].Sec4B.replace(/,/g, '')))
+          }
+          if (_policyPremiumRef.current.getRefs().othersRef.current) {
+            _policyPremiumRef.current.getRefs().othersRef.current.value = formatNumber(parseFloat(dtVP[0].Sec4C.replace(/,/g, '')))
+          }
+          if (_policyPremiumRef.current.getRefs().mortgageecheckRef.current) {
+            _policyPremiumRef.current.getRefs().mortgageecheckRef.current.checked = Boolean(parseInt(dtVP[0].MortgageeForm))
+          }
+          if (_policyPremiumRef.current.getRefs().mortgageeSelect.current) {
+            _policyPremiumRef.current.getRefs().mortgageeSelect.current.value = dtVP[0].Mortgagee
+          }
+          if (_policyTypeDetailsRef.current.getRefs().dinomination.current) {
+            _policyTypeDetailsRef.current.getRefs().dinomination.current.value = dtVP[0].Denomi
+          }
+
+          if (_policyTypeDetailsRef.current.getRefs().typeRef.current) {
+            _policyTypeDetailsRef.current.getRefs().typeRef.current.value = dtVP[0].TPLTypeSection_I_II
+          }
+
+
+        }
+
+      }
+    },
+  })
+
   useImperativeHandle(ref, () => ({
     handleOnSave: () => {
       const data = {
         ..._policyInformationRef.current.getRefsValue(),
         ..._policyTypeDetailsRef.current.getRefsValue(),
         ..._policyPremiumRef.current.getRefsValue(),
+        policy: window.localStorage.getItem('__policy__'),
+        form_action: policyType,
+        subAccountRef: subAccountRef.current?.value
       }
       mutatateSave(data)
     },
+    loadPolicy: (selected: any) => {
+      console.log(selected)
+      mutatateSelectedSearch({
+        account: selected[2],
+        policy: window.localStorage.getItem('__policy__'),
+        policyNo: selected[1],
+      })
+    }
   }))
+
   useEffect(() => {
     mutatateAccount({ policy: window.localStorage.getItem('__policy__') })
     mutatateMortgagee({ policy: window.localStorage.getItem('__policy__') })
@@ -545,6 +847,12 @@ const COMRegular = forwardRef(({
 
 
 
+  function formatNumber(Amount: number) {
+    return Amount.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+  }
   return (
     <div
       style={{
@@ -554,7 +862,7 @@ const COMRegular = forwardRef(({
         padding: "5px"
       }}
     >
-      {(isLoadingAccount || isLoadingMortgagee || isLoadingDenomination || isLoadingSave) && <Loading />}
+      {(isLoadingAccount || isLoadingMortgagee || isLoadingDenomination || isLoadingSave || isLoadingSelectedSearch) && <Loading />}
       <ClientUpwardTableModalSearch />
       <AgentUpwardTableModalSearch />
       <div style={{
@@ -623,7 +931,8 @@ function TPLPolicy({
   user,
   policy,
   setPolicy,
-  _policy
+  _policy,
+
 }: any) {
   const searchRef = useRef<HTMLInputElement>(null)
 
@@ -1538,6 +1847,8 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
   const dinomination = useRef<HTMLSelectElement>(null)
   const _dinomination = useRef<any>(null)
 
+  const rbTPLRef = useRef<HTMLInputElement>(null);
+  const rbCompreRef = useRef<HTMLInputElement>(null);
 
   useImperativeHandle(ref, () => ({
     getRefsValue: () => {
@@ -1556,7 +1867,9 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
         bodyInjuryRef: bodyInjuryRef.current?.value,
         propertyDamageRef: propertyDamageRef.current?.value,
         personalAccidentRef: personalAccidentRef.current?.value,
-        dinomination: dinomination.current?.value
+        dinomination: dinomination.current?.value,
+        rbTPLRef: rbTPLRef.current?.value,
+        rbCompreRef: rbCompreRef.current?.value,
       }
     },
     getRefs: () => {
@@ -1637,7 +1950,6 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
             }}
           >Section I/II</span>
           <SelectInput
-
             ref={_typeRef}
             label={{
               title: "Type :",
@@ -2218,7 +2530,6 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
     </div>
   )
 })
-
 const _PolicyPremium = forwardRef((props: any, ref) => {
   const mortgageecheckRef = useRef<HTMLInputElement>(null)
   const mortgageeSelect_ = useRef<any>(null)
@@ -2265,6 +2576,7 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
         _localGovTaxRef: _localGovTaxRef.current?.value,
         stradComRef: stradComRef.current?.value,
         totalDueRef: totalDueRef.current?.value,
+        mortgageecheckRef: mortgageecheckRef.current?.checked,
       }
     },
     getRefs: () => {
@@ -2288,6 +2600,7 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
         _localGovTaxRef,
         stradComRef,
         totalDueRef,
+        mortgageecheckRef,
       }
     },
 
@@ -2379,10 +2692,9 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
             padding: "5px",
             display: "flex",
             flexDirection: "column",
-            rowGap: '10px'
-
+            rowGap: '10px',
           }}>
-            <SelectInput
+            {/* <SelectInput
               ref={mortgageeSelect_}
               label={{
                 style: {
@@ -2405,27 +2717,69 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
               datasource={[]}
               values={"Mortgagee"}
               display={"Mortgagee"}
-            />
-            <TextAreaInput
+            /> */}
 
-              label={{
-                title: "Address",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "150px",
-                  display: "none"
-                },
-              }}
-              textarea={{
-                rows: 25,
-                style: { flex: 1 },
-                defaultValue: `SUBJECT TO THE ATTACHED STANDARD ACCESSORIES ENDORSEMENT CLAUSE; FULL PREMIUM PAYMENT IN CASE OF LOSS CLAUSE; MEMORANDUM ON DOCUMENTARY STAMPS TAX; ANTI CARNAPING PREVENTION TIPS AND AUTO PA RIDER; DRUNKEN AND DRIVER CLAUSE`,
-                onChange: (e) => {
-                },
-              }}
-              _inputRef={formIndorsementRef}
-            />
+            <div>
+              <Autocomplete
+                ref={mortgageeSelect_}
+                containerStyle={{
+                  width: "100%",
+                }}
+                label={{
+                  title: "Bodily Injury: ",
+                  style: {
+                   display:"none"
+                  }
+                }}
+                DisplayMember={'Mortgagee'}
+                DataSource={[]}
+                inputRef={mortgageeSelect}
+                input={{
+                  style: {
+                    width: "100%",
+                    flex: 1,
+                  }
+                }}
+                onChange={(selected: any, e: any) => {
+                  if (mortgageeSelect.current) {
+                    mortgageeSelect.current.value = selected.Mortgagee
+                  }
+                }}
+                onKeydown={(e: any) => {
+                  if (e.key === "Enter" || e.key === 'NumpadEnter') {
+                    e.preventDefault()
+                  }
+                }}
+              />
+            </div>
+            <div style={{
+              flex:1,
+              display:"flex"
+            }}>
+              <TextAreaInput
+                containerStyle={{
+                  flex: 1
+                }}
+                label={{
+                  title: "Address",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "150px",
+                    display: "none"
+                  },
+                }}
+                textarea={{
+                  // rows: 25,
+                  style: { flex: 1 },
+                  defaultValue: `SUBJECT TO THE ATTACHED STANDARD ACCESSORIES ENDORSEMENT CLAUSE; FULL PREMIUM PAYMENT IN CASE OF LOSS CLAUSE; MEMORANDUM ON DOCUMENTARY STAMPS TAX; ANTI CARNAPING PREVENTION TIPS AND AUTO PA RIDER; DRUNKEN AND DRIVER CLAUSE`,
+                  onChange: (e) => {
+                  },
+                }}
+
+                _inputRef={formIndorsementRef}
+              />
+            </div>
           </div>
         </div>
         {/* second layer */}
@@ -2860,6 +3214,65 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
   )
 })
 
+// {
+//   clientIDRef: '',
+//   clientNameRef: '',
+//   clientAddressRef: '',
+//   agentIdRef: '',
+//   agentNameRef: '',
+//   agentCommisionRef: '0.00',
+//   saleOfficerRef: '',
+//   accountRef: '',
+//   policyNoRef: '',
+//   corNoRef: '',
+//   orNoRef: '',
+//   dateFromRef: '2025-01-10',
+//   dateToRef: '2026-01-10',
+//   dateIssuedRef: '2025-01-10',
+//   modelRef: '',
+//   plateNoRef: '',
+//   makeRef: '',
+//   chassisNoRef: '',
+//   typeOfBodyRef: '',
+//   motorNoRef: '',
+//   colorRef: '',
+//   authorizedCapacityRef: '',
+//   bltFileNoRef: '',
+//   unladenWeightRef: '',
+//   premiumPaidRef: '0.00',
+//   estimatedValueSchedVehicleRef: '0.00',
+//   airconRef: '0.00',
+//   stereoRef: '0.00',
+//   magwheelsRef: '0.00',
+//   othersSpecifyRef: '',
+//   othersSpecifyRef_: '0.00',
+//   typeRef: '',
+//   DeductibleRef: '0.00',
+//   towingRef: '0.00',
+//   authorizedRepairLimitRef: '0.00',
+//   bodyInjuryRef: '',
+//   propertyDamageRef: '',
+//   personalAccidentRef: '',
+//   dinomination: '',
+//   mortgageeSelect: '',
+//   formIndorsementRef: 'SUBJECT TO THE ATTACHED STANDARD ACCESSORIES ENDORSEMENT CLAUSE; FULL PREMIUM PAYMENT IN CASE OF LOSS CLAUSE; MEMORANDUM ON DOCUMENTARY STAMPS TAX; ANTI CARNAPING PREVENTION TIPS AND AUTO PA RIDER; DRUNKEN AND DRIVER CLAUSE',
+//   sectionI_IIRef: '0.00',
+//   sectionIIIRef: '0.00',
+//   ownDamageRef: '0.00',
+//   theftRef: '0.00',
+//   sectionIVARef: '0.00',
+//   sectionIVBRef: '0.00',
+//   othersRef: '0.00',
+//   aogRef: '0.5',
+//   _aogRef: '0.00',
+//   totalPremiumRef: '0.00',
+//   vatRef: '0.00',
+//   docstampRef: '0.00',
+//   localGovTaxRef: '0.75',
+//   _localGovTaxRef: '0.00',
+//   stradComRef: '0.00',
+//   totalDueRef: '0.00'
+// }
 
 interface CustomButtonProps {
   currentStepIndex: number;

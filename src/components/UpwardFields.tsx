@@ -22,6 +22,7 @@ interface TextAreaPrps {
   iconPosition?: 'start' | 'end'; // New prop to choose icon position
   onIconClick?: React.MouseEventHandler<HTMLDivElement> | undefined,
   disableIcon?: boolean
+  containerStyle?:CSSProperties
 }
 
 interface TextFormatedInputProps extends TextInputProps {
@@ -259,7 +260,8 @@ export function TextAreaInput({
   icon,
   iconPosition = 'end', // Default position is 'end'
   disableIcon = false,
-  onIconClick = (e) => { }
+  onIconClick = (e) => { },
+  containerStyle
 }: TextAreaPrps) {
   const id = useId();
 
@@ -268,7 +270,8 @@ export function TextAreaInput({
       style={{
         display: 'flex',
         alignItems: 'center',
-        position: 'relative', // Enable absolute positioning for icon
+        position: 'relative', 
+        ...containerStyle// Enable absolute positioning for icon
       }}
     >
       <label {...label} htmlFor={id}>

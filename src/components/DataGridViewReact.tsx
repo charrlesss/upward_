@@ -1049,12 +1049,13 @@ export const useUpwardTableModalSearchSafeMode = ({
     getSelectedItem,
     onKeyDown,
     customWidth,
-    onClose
+    onClose,
+    size = 'small'
 }: any) => {
     const [show, setShow] = useState(false)
     const searchInputRef = useRef<HTMLInputElement>(null)
 
-    function openModal(search:string = '') {
+    function openModal(search: string = '') {
         const body = document.body
         const div = document.createElement('div')
         div.id = 'modal-portal'
@@ -1131,7 +1132,15 @@ export const useUpwardTableModalSearchSafeMode = ({
             }
         }, [data])
 
-
+        function customWidth(blick:boolean) {
+            if (size === 'large') {
+                return  blick ? "851px" : "850px"
+            } else if (size === 'medium') {
+                return  blick ? "651px" : "650px"
+            } else {
+                return  blick ? "451px" : "450px"
+            }
+        }
         return (
             show ?
                 <div id="modal-inject">
@@ -1156,7 +1165,7 @@ export const useUpwardTableModalSearchSafeMode = ({
                     <div
                         style={{
                             background: "#F1F1F1",
-                            width: customWidth ? customWidth(blick, column) : blick ? "451px" : "450px",
+                            width: customWidth(blick),
                             height: blick ? "501px" : "500px",
                             position: "absolute",
                             zIndex: 111111,
@@ -1245,8 +1254,8 @@ export const useUpwardTableModalSearchSafeMode = ({
                                         }
 
                                     },
-                                    onInput:(e)=>{
-                                        if(e.currentTarget.value === ''){
+                                    onInput: (e) => {
+                                        if (e.currentTarget.value === '') {
                                             mutate({ search: "" })
                                         }
                                     }

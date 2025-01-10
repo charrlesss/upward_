@@ -1042,7 +1042,7 @@ export default function PettyCash() {
 }
 export const Autocomplete = forwardRef(({
   DisplayMember,
-  DataSource,
+  DataSource:_DataSource,
   inputRef,
   disableInput = false,
   onKeydown,
@@ -1060,6 +1060,7 @@ export const Autocomplete = forwardRef(({
   },
   containerStyle,
 }: any, ref: any) => {
+  const [DataSource ,setDataSource] = useState(_DataSource)
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(0);
@@ -1134,7 +1135,7 @@ export const Autocomplete = forwardRef(({
 
   useImperativeHandle(ref, () => ({
     setDataSource: (newDataSource: Array<any>) => {
-      //  setDataSource(newDataSource)
+       setDataSource(newDataSource)
     }
   }))
 
