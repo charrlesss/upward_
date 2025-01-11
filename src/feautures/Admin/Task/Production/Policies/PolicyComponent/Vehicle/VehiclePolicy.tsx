@@ -116,6 +116,7 @@ function COMPolicy({
   setPolicy,
   _policy
 }: any) {
+  const [mode, setMode] = useState('')
   const [selectedPage, setSelectedPage] = useState(0)
   const [policyType, setPolicyType] = useState(window.localStorage.getItem('__policy_type__'))
   const searchRef = useRef<HTMLInputElement>(null)
@@ -123,7 +124,7 @@ function COMPolicy({
   const subAccountRef = useRef<HTMLSelectElement>(null)
   const subAccountRef_ = useRef<any>(null)
   function handleSave() {
-    regularPolicyRef.current.handleOnSave()
+    regularPolicyRef.current.handleOnSave(mode)
   }
   const { isLoading } = useQuery({
     queryKey: "sub-account",
@@ -169,6 +170,7 @@ function COMPolicy({
       if (rowItm) {
         regularPolicyRef.current.loadPolicy(rowItm)
         policySearchCloseModal()
+        setMode('edit')
       }
     }
   })
@@ -234,7 +236,9 @@ function COMPolicy({
           }}
           inputRef={searchRef}
         />
-        <IconButton size="small" color="primary">
+        <IconButton size="small" color="primary" onClick={() => {
+          setMode('add')
+        }}>
           <AddBoxIcon />
         </IconButton>
         <IconButton size="small" onClick={handleSave}>
@@ -271,7 +275,7 @@ function COMPolicy({
             variant="contained"
             color={policyType === 'TEMP' ? "secondary" : "info"}
           >TEMPORAY</Button>
-         
+
         </div>
         <div>|</div>
         <div style={{ display: "flex", columnGap: "2px" }}>
@@ -320,7 +324,7 @@ function COMPolicy({
             }}
             variant="contained"
           >Policy Premium</Button>
-           {isLoading ? <div>Loading..</div> : <SelectInput
+          {isLoading ? <div>Loading..</div> : <SelectInput
             ref={subAccountRef_}
             label={{
               title: "Sub Account :",
@@ -337,7 +341,7 @@ function COMPolicy({
             }}
             containerStyle={{
               flex: 2,
-               marginLeft:"20px"
+              marginLeft: "20px"
             }}
             datasource={[]}
             values={"Acronym"}
@@ -345,14 +349,15 @@ function COMPolicy({
           />}
         </div>
       </div>
-      {policyType === 'REG' ? <COMRegular subAccountRef={subAccountRef} ref={regularPolicyRef} selectedPage={selectedPage} policyType={policyType} /> : <COMTemporary selectedPage={selectedPage} policyType={policyType} />}
+      {policyType === 'REG' ? <COMRegular setMode={setMode} subAccountRef={subAccountRef} ref={regularPolicyRef} selectedPage={selectedPage} policyType={policyType} /> : <COMTemporary selectedPage={selectedPage} policyType={policyType} />}
     </>
   )
 }
 const COMRegular = forwardRef(({
   selectedPage,
   policyType,
-  subAccountRef
+  subAccountRef,
+  setMode
 }: any, ref) => {
   const { user, myAxios } = useContext(AuthContext)
   const _policyInformationRef = useRef<any>(null)
@@ -487,37 +492,7 @@ const COMRegular = forwardRef(({
       })
     },
   })
-  const {
-    mutate: mutatateSave,
-    isLoading: isLoadingSave
-  } = useMutation({
-    mutationKey: "denomination",
-    mutationFn: (variables: any) => {
-      return myAxios.post('/task/production/save', variables, {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`
-        }
-      })
-    },
-    onSuccess(response) {
-      if (response.data.success) {
-        return Swal.fire({
-          position: "center",
-          icon: "success",
-          title: response.data.message,
-          showConfirmButton: false,
-          timer: 1500,
-        })
-      }
-      return Swal.fire({
-        position: "center",
-        icon: "error",
-        title: response.data.message,
-        showConfirmButton: false,
-        timer: 1500,
-      })
-    },
-  })
+
   const {
     mutate: mutatateSelectedSearch,
     isLoading: isLoadingSelectedSearch
@@ -538,8 +513,10 @@ const COMRegular = forwardRef(({
         if (dt.length <= 0 || dtVP.length <= 0) {
           return alert('Unable to load data!')
         }
-
         if (dt.length > 0) {
+          if(subAccountRef.current){
+           subAccountRef.current.value = dt[0].SubAcct   
+          }
           if (_policyInformationRef.current.getRefs().clientIDRef.current) {
             _policyInformationRef.current.getRefs().clientIDRef.current.value = dt[0].IDNo
           }
@@ -722,20 +699,115 @@ const COMRegular = forwardRef(({
     },
   })
 
-  useImperativeHandle(ref, () => ({
-    handleOnSave: () => {
-      const data = {
-        ..._policyInformationRef.current.getRefsValue(),
-        ..._policyTypeDetailsRef.current.getRefsValue(),
-        ..._policyPremiumRef.current.getRefsValue(),
-        policy: window.localStorage.getItem('__policy__'),
-        form_action: policyType,
-        subAccountRef: subAccountRef.current?.value
+  const {
+    mutate: mutatateSave,
+    isLoading: isLoadingSave
+  } = useMutation({
+    mutationKey: "denomination",
+    mutationFn: (variables: any) => {
+      return myAxios.post('/task/production/save', variables, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`
+        }
+      })
+    },
+    onSuccess(response) {
+      if (response.data.success) {
+        return Swal.fire({
+          position: "center",
+          icon: "success",
+          title: response.data.message,
+          showConfirmButton: false,
+          timer: 1500,
+        })
       }
-      mutatateSave(data)
+      return Swal.fire({
+        position: "center",
+        icon: "error",
+        title: response.data.message,
+        showConfirmButton: false,
+        timer: 1500,
+      })
+    },
+  })
+
+  const {
+    mutate: mutatateUpdate,
+    isLoading: isLoadingUpdate
+  } = useMutation({
+    mutationKey: "denomination",
+    mutationFn: (variables: any) => {
+      return myAxios.post('/task/production/com-update-regular', variables, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`
+        }
+      })
+    },
+    onSuccess(response) {
+      if (response.data.success) {
+        _policyInformationRef.current.resetRefs()
+        _policyTypeDetailsRef.current.resetRefs()
+        _policyPremiumRef.current.resetRefs()
+        if (subAccountRef.current) {
+          subAccountRef.current.value = 'HO'
+        }
+        setMode('')
+
+        return Swal.fire({
+          position: "center",
+          icon: "success",
+          title: response.data.message,
+          showConfirmButton: false,
+          timer: 1500,
+        })
+      }
+      return Swal.fire({
+        position: "center",
+        icon: "error",
+        title: response.data.message,
+        showConfirmButton: false,
+        timer: 1500,
+      })
+    },
+  })
+  useImperativeHandle(ref, () => ({
+    handleOnSave: (mode: string) => {
+
+      if (mode === "edit") {
+        codeCondfirmationAlert({
+          isUpdate: true,
+          cb: (userCodeConfirmation) => {
+            const data = {
+              ..._policyInformationRef.current.getRefsValue(),
+              ..._policyTypeDetailsRef.current.getRefsValue(),
+              ..._policyPremiumRef.current.getRefsValue(),
+              policy: window.localStorage.getItem('__policy__'),
+              form_action: policyType,
+              subAccountRef: subAccountRef.current?.value,
+              userCodeConfirmation
+            }
+            mutatateUpdate(data)
+          },
+        });
+      } else {
+        saveCondfirmationAlert({
+          isConfirm: () => {
+            const data = {
+              ..._policyInformationRef.current.getRefsValue(),
+              ..._policyTypeDetailsRef.current.getRefsValue(),
+              ..._policyPremiumRef.current.getRefsValue(),
+              policy: window.localStorage.getItem('__policy__'),
+              form_action: policyType,
+              subAccountRef: subAccountRef.current?.value
+            }
+            mutatateSave(data)
+          },
+        });
+      }
+
+
     },
     loadPolicy: (selected: any) => {
-      console.log(selected)
       mutatateSelectedSearch({
         account: selected[2],
         policy: window.localStorage.getItem('__policy__'),
@@ -749,6 +821,7 @@ const COMRegular = forwardRef(({
     mutatateMortgagee({ policy: window.localStorage.getItem('__policy__') })
     mutatateDenomination({ policy: window.localStorage.getItem('__policy__') })
   }, [])
+
   function computation() {
     const insuredValue = parseFloat(_policyTypeDetailsRef.current.getRefs().estimatedValueSchedVehicleRef.current?.value.replace(/,/g, "") || 0);
     const aircon = parseFloat(_policyTypeDetailsRef.current.getRefs().airconRef.current?.value.replace(/,/g, "") || 0);
@@ -845,14 +918,13 @@ const COMRegular = forwardRef(({
     }
   }
 
-
-
   function formatNumber(Amount: number) {
     return Amount.toLocaleString("en-US", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })
   }
+
   return (
     <div
       style={{
@@ -862,7 +934,7 @@ const COMRegular = forwardRef(({
         padding: "5px"
       }}
     >
-      {(isLoadingAccount || isLoadingMortgagee || isLoadingDenomination || isLoadingSave || isLoadingSelectedSearch) && <Loading />}
+      {(isLoadingUpdate || isLoadingAccount || isLoadingMortgagee || isLoadingDenomination || isLoadingSave || isLoadingSelectedSearch) && <Loading />}
       <ClientUpwardTableModalSearch />
       <AgentUpwardTableModalSearch />
       <div style={{
@@ -1105,6 +1177,88 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
         unladenWeightRef,
         _accountRef
       }
+    },
+    resetRefs: () => {
+      if (clientIDRef.current) {
+        clientIDRef.current.value = ''
+      }
+      if (clientNameRef.current) {
+        clientNameRef.current.value = ''
+      }
+      if (clientAddressRef.current) {
+        clientAddressRef.current.value = ''
+      }
+      if (agentIdRef.current) {
+        agentIdRef.current.value = ''
+      }
+      if (agentNameRef.current) {
+        agentNameRef.current.value = ''
+      }
+      if (agentCommisionRef.current) {
+        agentCommisionRef.current.value = ''
+      }
+      if (saleOfficerRef.current) {
+        saleOfficerRef.current.value = ''
+      }
+      if (accountRef.current) {
+        accountRef.current.value = ''
+      }
+      if (policyNoRef.current) {
+        policyNoRef.current.value = ''
+      }
+      if (corNoRef.current) {
+        corNoRef.current.value = ''
+      }
+      if (orNoRef.current) {
+        orNoRef.current.value = ''
+      }
+
+      if (dateFromRef.current) {
+        dateFromRef.current.value = format(new Date(), "yyyy-MM-dd")
+      }
+      if (dateToRef.current) {
+        dateToRef.current.value = format(addYears(new Date(), 1), "yyyy-MM-dd")
+      }
+      if (dateIssuedRef.current) {
+        dateIssuedRef.current.value = format(new Date(), "yyyy-MM-dd")
+      }
+
+
+
+      if (modelRef.current) {
+        modelRef.current.value = ''
+      }
+      if (plateNoRef.current) {
+        plateNoRef.current.value = ''
+      }
+      if (makeRef.current) {
+        makeRef.current.value = ''
+      }
+      if (chassisNoRef.current) {
+        chassisNoRef.current.value = ''
+      }
+      if (typeOfBodyRef.current) {
+        typeOfBodyRef.current.value = ''
+      }
+      if (motorNoRef.current) {
+        motorNoRef.current.value = ''
+      }
+      if (colorRef.current) {
+        colorRef.current.value = ''
+      }
+      if (authorizedCapacityRef.current) {
+        authorizedCapacityRef.current.value = ''
+      }
+      if (bltFileNoRef.current) {
+        bltFileNoRef.current.value = ''
+      }
+
+      if (unladenWeightRef.current) {
+        unladenWeightRef.current.value = ''
+      }
+
+
+
     }
   }))
 
@@ -1892,7 +2046,60 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
         _dinomination
       }
     },
+    resetRefs: () => {
+      if (premiumPaidRef.current) {
+        premiumPaidRef.current.value = '0.00'
+      }
+      if (estimatedValueSchedVehicleRef.current) {
+        estimatedValueSchedVehicleRef.current.value = '0.00'
+      }
+      if (airconRef.current) {
+        airconRef.current.value = '0.00'
+      }
+      if (stereoRef.current) {
+        stereoRef.current.value = '0.00'
+      }
+      if (magwheelsRef.current) {
+        magwheelsRef.current.value = '0.00'
+      }
+      if (othersSpecifyRef.current) {
+        othersSpecifyRef.current.value = ''
+      }
+      if (othersSpecifyRef_.current) {
+        othersSpecifyRef_.current.value = '0.00'
+      }
+      if (typeRef.current) {
+        typeRef.current.value = ''
+      }
+      if (DeductibleRef.current) {
+        DeductibleRef.current.value = '0.00'
+      }
+      if (towingRef.current) {
+        towingRef.current.value = '0.00'
+      }
+      if (authorizedRepairLimitRef.current) {
+        authorizedRepairLimitRef.current.value = '0.00'
+      }
+      if (bodyInjuryRef.current) {
+        bodyInjuryRef.current.value = ''
+      }
+      if (propertyDamageRef.current) {
+        propertyDamageRef.current.value = ''
+      }
+      if (personalAccidentRef.current) {
+        personalAccidentRef.current.value = ''
+      }
+      if (dinomination.current) {
+        dinomination.current.value = ''
+      }
+      if (rbTPLRef.current) {
+        rbTPLRef.current.checked = policy === 'TPL'
+      }
+      if (rbCompreRef.current) {
+        rbCompreRef.current.checked = policy === 'COM'
+      }
 
+    }
   }))
 
   const isDisableTPL = policy !== 'COM'
@@ -2603,6 +2810,73 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
         mortgageecheckRef,
       }
     },
+    resetRefs: () => {
+      if (mortgageecheckRef.current) {
+        mortgageecheckRef.current.checked = false
+      }
+      if (mortgageeSelect.current) {
+        mortgageeSelect.current.value = ''
+      }
+      if (formIndorsementRef.current) {
+        formIndorsementRef.current.value = `SUBJECT TO THE ATTACHED STANDARD ACCESSORIES ENDORSEMENT CLAUSE; FULL PREMIUM PAYMENT IN CASE OF LOSS CLAUSE; MEMORANDUM ON DOCUMENTARY STAMPS TAX; ANTI CARNAPING PREVENTION TIPS AND AUTO PA RIDER; DRUNKEN AND DRIVER CLAUSE`
+      }
+
+
+      if (sectionI_IIRef.current) {
+        sectionI_IIRef.current.value = '0.00'
+      }
+      if (sectionIIIRef.current) {
+        sectionIIIRef.current.value = '0.00'
+      }
+      if (ownDamageRef.current) {
+        ownDamageRef.current.value = '0.00'
+      }
+
+      if (theftRef.current) {
+        theftRef.current.value = '0.00'
+      }
+      if (sectionIVARef.current) {
+        sectionIVARef.current.value = '0.00'
+      }
+      if (sectionIVBRef.current) {
+        sectionIVBRef.current.value = '0.00'
+      }
+      if (othersRef.current) {
+        othersRef.current.value = '0.00'
+      }
+      if (aogRef.current) {
+        aogRef.current.value = '0.50'
+      }
+      if (_aogRef.current) {
+        _aogRef.current.value = '0.00'
+      }
+
+      if (totalPremiumRef.current) {
+        totalPremiumRef.current.value = '0.00'
+      }
+      if (vatRef.current) {
+        vatRef.current.value = '0.00'
+      }
+      if (docstampRef.current) {
+        docstampRef.current.value = '0.00'
+      }
+
+      if (localGovTaxRef.current) {
+        localGovTaxRef.current.value = '0.75'
+      }
+      if (_localGovTaxRef.current) {
+        _localGovTaxRef.current.value = '0.00'
+      }
+      if (stradComRef.current) {
+        stradComRef.current.value = '0.00'
+      }
+
+      if (totalDueRef.current) {
+        totalDueRef.current.value = '0.00'
+      }
+
+
+    }
 
   }))
 
@@ -2728,7 +3002,7 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
                 label={{
                   title: "Bodily Injury: ",
                   style: {
-                   display:"none"
+                    display: "none"
                   }
                 }}
                 DisplayMember={'Mortgagee'}
@@ -2753,8 +3027,8 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
               />
             </div>
             <div style={{
-              flex:1,
-              display:"flex"
+              flex: 1,
+              display: "flex"
             }}>
               <TextAreaInput
                 containerStyle={{
