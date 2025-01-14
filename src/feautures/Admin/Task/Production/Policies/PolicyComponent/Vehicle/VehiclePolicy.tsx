@@ -6,7 +6,6 @@ import {
 } from "../../../../../../../lib/confirmationAlert";
 import { addYears, format } from "date-fns";
 import styled from "@emotion/styled";
-
 import {
   useContext,
   useState,
@@ -30,7 +29,10 @@ import SearchIcon from "@mui/icons-material/Search";
 import SaveAsIcon from "@mui/icons-material/SaveAs";
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import CloseIcon from "@mui/icons-material/Close";
-import { Autocomplete } from "../../../../Accounting/PettyCash";
+import {
+  Autocomplete,
+  AutocompleteNumber,
+} from "../../../../Accounting/PettyCash";
 import { useUpwardTableModalSearchSafeMode } from "../../../../../../../components/DataGridViewReact";
 import { Loading } from "../../../../../../../components/Loading";
 import { wait } from "../../../../../../../lib/wait";
@@ -51,6 +53,13 @@ export default function VehiclePolicy() {
       }
     }
   }, [user, policy]);
+
+  useEffect(() => {
+    window.localStorage.setItem("__policy__", policy as string);
+    if (policy === "TPL") {
+      window.localStorage.setItem("__policy_type__", "REG");
+    }
+  }, [policy]);
 
   return (
     <div
@@ -217,7 +226,14 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
                 setPolicy(e.currentTarget.value);
               },
             }}
-            datasource={[]}
+            datasource={[
+              {
+                key: "COM",
+              },
+              {
+                key: "TPL",
+              },
+            ]}
             values={"key"}
             display={"key"}
           />
@@ -287,7 +303,26 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           disabled={mode === ""}
           size="small"
           onClick={() => {
-            regularPolicyRef.current?.resetFields();
+            Swal.fire({
+              title: "Are you sure?",
+              text: "You won't be able to revert this!",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Yes, cencel it!",
+              cancelButtonText:"No"
+            }).then((result) => {
+              if (result.isConfirmed) {
+                if (policyType === "COM") {
+                  regularPolicyRef.current?.resetFields();
+                }
+                if (policyType === "TEMP") {
+                  temporaryPolicyRef.current?.resetFields();
+                }
+                setMode("");
+              }
+            });
           }}
         >
           <CloseIcon
@@ -312,6 +347,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
             color={policyType === "REG" ? "secondary" : "info"}
             onClick={() => {
               setPolicyType("REG");
+              window.localStorage.setItem("__policy_type__", "REG");
             }}
           >
             REGULAR
@@ -325,6 +361,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
             }}
             onClick={() => {
               setPolicyType("TEMP");
+              window.localStorage.setItem("__policy_type__", "TEMP");
             }}
             variant="contained"
             color={policyType === "TEMP" ? "secondary" : "info"}
@@ -421,6 +458,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           ref={regularPolicyRef}
           selectedPage={selectedPage}
           policyType={policyType}
+          mode={mode}
         />
       ) : (
         <COMTemporary
@@ -429,6 +467,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           ref={temporaryPolicyRef}
           selectedPage={selectedPage}
           policyType={policyType}
+          mode={mode}
         />
       )}
     </>
@@ -436,7 +475,14 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
 }
 const COMRegular = forwardRef(
   (
-    { selectedPage, policyType, subAccountRef, setMode, searchPolicyNo }: any,
+    {
+      selectedPage,
+      policyType,
+      subAccountRef,
+      setMode,
+      searchPolicyNo,
+      mode,
+    }: any,
     ref
   ) => {
     const { user, myAxios } = useContext(AuthContext);
@@ -492,9 +538,13 @@ const COMRegular = forwardRef(
               rowItm[4];
           }
           clientCloseModal();
+          wait(100).then(() => {
+            _policyInformationRef.current.getRefs().agentIdRef.current?.focus();
+          });
         }
       },
     });
+    
     const {
       UpwardTableModalSearch: AgentUpwardTableModalSearch,
       openModal: agentOpenModal,
@@ -512,7 +562,6 @@ const COMRegular = forwardRef(
       ],
       getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
         if (rowItm) {
-          console.log(rowItm);
           if (_policyInformationRef.current.getRefs().agentIdRef.current) {
             _policyInformationRef.current.getRefs().agentIdRef.current.value =
               rowItm[0];
@@ -523,6 +572,9 @@ const COMRegular = forwardRef(
           }
 
           agentCloseModal();
+          wait(100).then(() => {
+            _policyInformationRef.current.getRefs().accountRef.current?.focus();
+          });
         }
       },
     });
@@ -580,6 +632,10 @@ const COMRegular = forwardRef(
           });
         },
       });
+
+    const mutatateAccountRef = useRef(mutatateAccount);
+    const mutatateMortgageeRef = useRef(mutatateMortgagee);
+    const mutatateDenominationRef = useRef(mutatateDenomination);
     const {
       mutate: mutatateSelectedSearch,
       isLoading: isLoadingSelectedSearch,
@@ -600,7 +656,7 @@ const COMRegular = forwardRef(
         if (response.data.success) {
           const dt = response.data.data1;
           const dtVP = response.data.data2;
-
+          console.log(dtVP);
           if (dt.length <= 0 || dtVP.length <= 0) {
             return alert("Unable to load data!");
           }
@@ -871,11 +927,20 @@ const COMRegular = forwardRef(
               _policyTypeDetailsRef.current.getRefs().typeRef.current.value =
                 dtVP[0].TPLTypeSection_I_II;
             }
+
+            if (_policyPremiumRef.current.getRefs().remarksRef.current) {
+              _policyPremiumRef.current.getRefs().remarksRef.current.value =
+                dtVP[0].Remarks;
+            }
+            setFormIndorseValue(
+              Boolean(parseInt(dtVP[0].MortgageeForm)),
+              _policyPremiumRef.current.getRefs().formIndorsementRef,
+              _policyPremiumRef.current.getRefs().mortgageeSelect
+            );
           }
         }
       },
     });
-
     const { mutate: mutatateSave, isLoading: isLoadingSave } = useMutation({
       mutationKey: "save",
       mutationFn: (variables: any) => {
@@ -887,6 +952,13 @@ const COMRegular = forwardRef(
       },
       onSuccess(response) {
         if (response.data.success) {
+          _policyInformationRef.current.resetRefs();
+          _policyTypeDetailsRef.current.resetRefs();
+          _policyPremiumRef.current.resetRefs();
+          if (subAccountRef.current) {
+            subAccountRef.current.value = "HO";
+          }
+          setMode("");
           return Swal.fire({
             position: "center",
             icon: "success",
@@ -1002,9 +1074,13 @@ const COMRegular = forwardRef(
     }));
 
     useEffect(() => {
-      mutatateAccount({ policy: window.localStorage.getItem("__policy__") });
-      mutatateMortgagee({ policy: window.localStorage.getItem("__policy__") });
-      mutatateDenomination({
+      mutatateAccountRef.current({
+        policy: window.localStorage.getItem("__policy__"),
+      });
+      mutatateMortgageeRef.current({
+        policy: window.localStorage.getItem("__policy__"),
+      });
+      mutatateDenominationRef.current({
         policy: window.localStorage.getItem("__policy__"),
       });
     }, []);
@@ -1207,7 +1283,8 @@ const COMRegular = forwardRef(
             height: "100%",
           }}
         >
-          <_PolicyInformation
+          <PolicyInformation
+            disabled={mode === ""}
             ref={_policyInformationRef}
             clientSearch={(input: string) => {
               clientOpenModal(input);
@@ -1231,7 +1308,10 @@ const COMRegular = forwardRef(
             height: "100%",
           }}
         >
-          <_PolicyTypeDetails ref={_policyTypeDetailsRef} />
+          <PolicyTypeDetails
+            disabled={mode === ""}
+            ref={_policyTypeDetailsRef}
+          />
         </div>
         <div
           style={{
@@ -1240,7 +1320,8 @@ const COMRegular = forwardRef(
             height: "100%",
           }}
         >
-          <_PolicyPremium
+          <PolicyPremium
+            disabled={mode === ""}
             ref={_policyPremiumRef}
             onComputation={() => {
               computation();
@@ -1394,6 +1475,11 @@ const COMTemporary = forwardRef(
           });
         },
       });
+
+    const mutatateAccountRef = useRef(mutatateAccount);
+    const mutatateMortgageeRef = useRef(mutatateMortgagee);
+    const mutatateDenominationRef = useRef(mutatateDenomination);
+
     const { mutate: mutatateSave, isLoading: isLoadingSave } = useMutation({
       mutationKey: "save",
       mutationFn: (variables: any) => {
@@ -1405,6 +1491,14 @@ const COMTemporary = forwardRef(
       },
       onSuccess(response) {
         if (response.data.success) {
+          _policyInformationRef.current.resetRefs();
+          _policyTypeDetailsRef.current.resetRefs();
+          _policyPremiumRef.current.resetRefs();
+          if (subAccountRef.current) {
+            subAccountRef.current.value = "HO";
+          }
+          setMode("");
+          refetchTempID();
           return Swal.fire({
             position: "center",
             icon: "success",
@@ -1440,6 +1534,7 @@ const COMTemporary = forwardRef(
             subAccountRef.current.value = "HO";
           }
           setMode("");
+          refetchTempID();
 
           return Swal.fire({
             position: "center",
@@ -1749,11 +1844,21 @@ const COMTemporary = forwardRef(
               _policyTypeDetailsRef.current.getRefs().typeRef.current.value =
                 dtVP[0].TPLTypeSection_I_II;
             }
+            if (_policyPremiumRef.current.getRefs().remarksRef.current) {
+              _policyPremiumRef.current.getRefs().remarksRef.current.value =
+                dtVP[0].Remarks;
+            }
+
+            setFormIndorseValue(
+              Boolean(parseInt(dtVP[0].MortgageeForm)),
+              _policyPremiumRef.current.getRefs().formIndorsementRef,
+              _policyPremiumRef.current.getRefs().mortgageeSelect
+            );
           }
         }
       },
     });
-    const { isLoading: isLoadingTempId } = useQuery({
+    const { isLoading: isLoadingTempId, refetch: refetchTempID } = useQuery({
       queryKey: "temp-id",
       queryFn: () => {
         return myAxios.get("/task/production/temp-id", {
@@ -1816,6 +1921,7 @@ const COMTemporary = forwardRef(
         });
       },
       resetFields: () => {
+        refetchTempID();
         _policyInformationRef.current.resetRefs();
         _policyTypeDetailsRef.current.resetRefs();
         _policyPremiumRef.current.resetRefs();
@@ -1827,9 +1933,13 @@ const COMTemporary = forwardRef(
     }));
 
     useEffect(() => {
-      mutatateAccount({ policy: window.localStorage.getItem("__policy__") });
-      mutatateMortgagee({ policy: window.localStorage.getItem("__policy__") });
-      mutatateDenomination({
+      mutatateAccountRef.current({
+        policy: window.localStorage.getItem("__policy__"),
+      });
+      mutatateMortgageeRef.current({
+        policy: window.localStorage.getItem("__policy__"),
+      });
+      mutatateDenominationRef.current({
         policy: window.localStorage.getItem("__policy__"),
       });
     }, []);
@@ -2001,13 +2111,6 @@ const COMTemporary = forwardRef(
       }
     }
 
-    function formatNumber(Amount: number) {
-      return Amount.toLocaleString("en-US", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      });
-    }
-
     return (
       <div
         style={{
@@ -2033,7 +2136,7 @@ const COMTemporary = forwardRef(
             height: "100%",
           }}
         >
-          <_PolicyInformation
+          <PolicyInformation
             ref={_policyInformationRef}
             clientSearch={(input: string) => {
               clientOpenModal(input);
@@ -2056,7 +2159,7 @@ const COMTemporary = forwardRef(
             height: "100%",
           }}
         >
-          <_PolicyTypeDetails ref={_policyTypeDetailsRef} />
+          <PolicyTypeDetails ref={_policyTypeDetailsRef} />
         </div>
         <div
           style={{
@@ -2065,7 +2168,7 @@ const COMTemporary = forwardRef(
             height: "100%",
           }}
         >
-          <_PolicyPremium
+          <PolicyPremium
             ref={_policyPremiumRef}
             onComputation={() => {
               computation();
@@ -2108,7 +2211,6 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
       });
     },
   });
-
   const {
     UpwardTableModalSearch: PolicySearchUpwardTableModalSearch,
     openModal: policySearchOpenModal,
@@ -2138,7 +2240,6 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
       }
     },
   });
-
   const {
     UpwardTableModalSearch: PolicyNoUpwardTableModalSearch,
     openModal: policyNoOpenModal,
@@ -2166,6 +2267,12 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           ._policyInformationRef.current.getRefs().rateCostRef.current =
           rowItm[1];
         policyNoCloseModal();
+        wait(100).then(() => {
+          regularPolicyRef.current
+            .getRefs()
+            ._policyInformationRef.current.getRefs()
+            .corNoRef.current?.focus();
+        });
       }
     },
   });
@@ -2261,7 +2368,21 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           disabled={mode === ""}
           size="small"
           onClick={() => {
-            regularPolicyRef.current?.resetFields();
+            Swal.fire({
+              title: "Are you sure?",
+              text: "You won't be able to revert this!",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Yes, cencel it!",
+              cancelButtonText:"No"
+            }).then((result) => {
+              if (result.isConfirmed) {
+                  regularPolicyRef.current?.resetFields();
+                setMode("");
+              }
+            });
           }}
         >
           <CloseIcon
@@ -2405,13 +2526,14 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
         searchPolicyNo={(input: string) => {
           policyNoOpenModal(input);
         }}
+        mode={mode}
       />
     </>
   );
 }
-
-const _PolicyInformation = forwardRef((props: any, ref) => {
+const PolicyInformation = forwardRef((props: any, ref) => {
   const policy = window.localStorage.getItem("__policy__");
+  const policy_type = window.localStorage.getItem("__policy_type__");
 
   // Insurer Information
   const clientIDRef = useRef<HTMLInputElement>(null);
@@ -2526,7 +2648,7 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
         agentNameRef.current.value = "";
       }
       if (agentCommisionRef.current) {
-        agentCommisionRef.current.value = "";
+        agentCommisionRef.current.value = "0.00";
       }
       if (saleOfficerRef.current) {
         saleOfficerRef.current.value = "";
@@ -2534,8 +2656,10 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
       if (accountRef.current) {
         accountRef.current.value = "";
       }
-      if (policyNoRef.current) {
-        policyNoRef.current.value = "";
+      if (policy_type === "REG") {
+        if (policyNoRef.current) {
+          policyNoRef.current.value = "";
+        }
       }
       if (corNoRef.current) {
         corNoRef.current.value = "";
@@ -2644,6 +2768,7 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
               },
             }}
             input={{
+              disabled: props.disabled,
               type: "text",
               style: { width: "calc(100% - 150px) " },
               onKeyDown: (e) => {
@@ -2672,6 +2797,7 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
               },
             }}
             input={{
+              disabled: props.disabled,
               type: "text",
               style: { width: "calc(100% - 150px) " },
               onKeyDown: (e) => {
@@ -2691,6 +2817,7 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
               },
             }}
             textarea={{
+              disabled: props.disabled,
               rows: 3,
               style: { flex: 1 },
               defaultValue: "",
@@ -2738,6 +2865,7 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
               },
             }}
             input={{
+              disabled: props.disabled,
               type: "text",
               style: { width: "calc(100% - 150px) " },
               onKeyDown: (e) => {
@@ -2766,6 +2894,7 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
               },
             }}
             input={{
+              disabled: props.disabled,
               type: "text",
               style: { width: "calc(100% - 150px) " },
               onKeyDown: (e) => {
@@ -2788,6 +2917,7 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
               width: "50%",
             }}
             input={{
+              disabled: props.disabled,
               defaultValue: "0.00",
               type: "text",
               style: { width: "calc(100% - 150px)" },
@@ -2811,6 +2941,7 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
               },
             }}
             input={{
+              disabled: props.disabled,
               type: "text",
               style: { width: "calc(100% - 150px) " },
               onKeyDown: (e) => {
@@ -2867,9 +2998,15 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
             }}
             selectRef={accountRef}
             select={{
+              disabled: props.disabled,
               style: { flex: 1, height: "22px" },
               defaultValue: "",
               onChange: props.onChangeAccount,
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  policyNoRef.current?.focus();
+                }
+              },
             }}
             containerStyle={{
               width: "90%",
@@ -2893,10 +3030,12 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
                 },
               }}
               input={{
+                disabled: props.disabled,
                 type: "text",
                 style: { width: "calc(100% - 150px) " },
                 onKeyDown: (e) => {
                   if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    corNoRef.current?.focus();
                   }
                 },
               }}
@@ -2916,6 +3055,7 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
                 },
               }}
               input={{
+                disabled: props.disabled,
                 readOnly: true,
                 type: "text",
                 style: { width: "calc(100% - 150px) " },
@@ -2949,10 +3089,12 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
               },
             }}
             input={{
+              disabled: props.disabled,
               type: "text",
               style: { width: "calc(100% - 150px) " },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  orNoRef.current?.focus();
                 }
               },
             }}
@@ -2971,10 +3113,12 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
               },
             }}
             input={{
+              disabled: props.disabled,
               type: "text",
               style: { width: "calc(100% - 150px) " },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  dateFromRef.current?.focus();
                 }
               },
             }}
@@ -3021,11 +3165,13 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
               },
             }}
             input={{
+              disabled: props.disabled,
               type: "date",
               defaultValue: format(new Date(), "yyyy-MM-dd"),
               style: { width: "calc(100% - 150px)" },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  dateToRef.current?.focus();
                 }
               },
             }}
@@ -3045,11 +3191,13 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
               },
             }}
             input={{
+              disabled: props.disabled,
               type: "date",
               defaultValue: format(addYears(new Date(), 1), "yyyy-MM-dd"),
               style: { width: "calc(100% - 150px)" },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  dateIssuedRef.current?.focus();
                 }
               },
             }}
@@ -3069,11 +3217,13 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
               },
             }}
             input={{
+              disabled: props.disabled,
               type: "date",
               defaultValue: format(new Date(), "yyyy-MM-dd"),
               style: { width: "calc(100% - 150px)" },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  modelRef.current?.focus();
                 }
               },
             }}
@@ -3122,10 +3272,12 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
               },
             }}
             input={{
+              disabled: props.disabled,
               type: "text",
               style: { width: "calc(100% - 150px) " },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  plateNoRef.current?.focus();
                 }
               },
             }}
@@ -3136,7 +3288,7 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
               width: "90%",
             }}
             label={{
-              title: "Make:",
+              title: "Plate No.:",
               style: {
                 fontSize: "12px",
                 fontWeight: "bold",
@@ -3144,10 +3296,12 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
               },
             }}
             input={{
+              disabled: props.disabled,
               type: "text",
               style: { width: "calc(100% - 150px) " },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  makeRef.current?.focus();
                 }
               },
             }}
@@ -3168,10 +3322,12 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
               },
             }}
             input={{
+              disabled: props.disabled,
               type: "text",
               style: { width: "calc(100% - 150px) " },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  chassisNoRef.current?.focus();
                 }
               },
             }}
@@ -3190,10 +3346,12 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
               },
             }}
             input={{
+              disabled: props.disabled,
               type: "text",
               style: { width: "calc(100% - 150px) " },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  typeOfBodyRef.current?.focus();
                 }
               },
             }}
@@ -3214,10 +3372,12 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
               },
             }}
             input={{
+              disabled: props.disabled,
               type: "text",
               style: { width: "calc(100% - 150px) " },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  motorNoRef.current?.focus();
                 }
               },
             }}
@@ -3236,10 +3396,12 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
               },
             }}
             input={{
+              disabled: props.disabled,
               type: "text",
               style: { width: "calc(100% - 150px) " },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  colorRef.current?.focus();
                 }
               },
             }}
@@ -3260,10 +3422,12 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
               },
             }}
             input={{
+              disabled: props.disabled,
               type: "text",
               style: { width: "calc(100% - 150px) " },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  authorizedCapacityRef.current?.focus();
                 }
               },
             }}
@@ -3282,10 +3446,12 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
               },
             }}
             input={{
+              disabled: props.disabled,
               type: "text",
               style: { width: "calc(100% - 150px) " },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  bltFileNoRef.current?.focus();
                 }
               },
             }}
@@ -3306,10 +3472,12 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
               },
             }}
             input={{
+              disabled: props.disabled,
               type: "text",
               style: { width: "calc(100% - 150px) " },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  unladenWeightRef.current?.focus();
                 }
               },
             }}
@@ -3328,6 +3496,7 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
               },
             }}
             input={{
+              disabled: props.disabled,
               type: "text",
               style: { width: "calc(100% - 150px) " },
               onKeyDown: (e) => {
@@ -3342,7 +3511,7 @@ const _PolicyInformation = forwardRef((props: any, ref) => {
     </div>
   );
 });
-const _PolicyTypeDetails = forwardRef((props: any, ref) => {
+const PolicyTypeDetails = forwardRef((props: any, ref) => {
   const policy = window.localStorage.getItem("__policy__");
   const premiumPaidRef = useRef<HTMLInputElement>(null);
   const estimatedValueSchedVehicleRef = useRef<HTMLInputElement>(null);
@@ -3489,7 +3658,7 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
       >
         <div style={{ width: "100%", display: "flex", alignItems: "center" }}>
           <input
-            disabled={!isDisableTPL}
+            disabled={!isDisableTPL || props.disabled}
             type="checkbox"
             id="tpl"
             defaultChecked={policy === "TPL"}
@@ -3541,10 +3710,15 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
             }}
             selectRef={typeRef}
             select={{
-              disabled: !isDisableTPL,
+              disabled: !isDisableTPL || props.disabled,
               style: { flex: 1, height: "22px" },
               defaultValue: "",
               onChange: (e) => {},
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  premiumPaidRef.current?.focus();
+                }
+              },
             }}
             containerStyle={{
               flex: 2,
@@ -3576,12 +3750,13 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
               flex: 1,
             }}
             input={{
-              disabled: !isDisableTPL,
+              disabled: !isDisableTPL || props.disabled,
               defaultValue: "0.00",
               type: "text",
               style: { width: "100%" },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  dinomination.current?.focus();
                 }
               },
             }}
@@ -3646,7 +3821,6 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
 
                 const deductible = insuredValue * 0.01;
                 if (DeductibleRef.current) {
-                  console.log(DeductibleRef);
                   DeductibleRef.current.value = deductible.toLocaleString(
                     undefined,
                     { minimumFractionDigits: 2, maximumFractionDigits: 2 }
@@ -3665,12 +3839,13 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
                 width: "100%",
               }}
               input={{
-                disabled: isDisableTPL,
+                disabled: isDisableTPL || props.disabled,
                 defaultValue: "0.00",
                 type: "text",
                 style: { width: "calc(100% - 260px)" },
                 onKeyDown: (e) => {
                   if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    airconRef.current?.focus();
                   }
                 },
               }}
@@ -3689,13 +3864,14 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
                 width: "100%",
               }}
               input={{
-                disabled: isDisableTPL,
+                disabled: isDisableTPL || props.disabled,
 
                 defaultValue: "0.00",
                 type: "text",
                 style: { width: "calc(100% - 260px)" },
                 onKeyDown: (e) => {
                   if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    stereoRef.current?.focus();
                   }
                 },
               }}
@@ -3714,13 +3890,14 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
                 width: "100%",
               }}
               input={{
-                disabled: isDisableTPL,
+                disabled: isDisableTPL || props.disabled,
 
                 defaultValue: "0.00",
                 type: "text",
                 style: { width: "calc(100% - 260px)" },
                 onKeyDown: (e) => {
                   if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    magwheelsRef.current?.focus();
                   }
                 },
               }}
@@ -3739,13 +3916,14 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
                 width: "100%",
               }}
               input={{
-                disabled: isDisableTPL,
+                disabled: isDisableTPL || props.disabled,
 
                 defaultValue: "0.00",
                 type: "text",
                 style: { width: "calc(100% - 260px)" },
                 onKeyDown: (e) => {
                   if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    othersSpecifyRef.current?.focus();
                   }
                 },
               }}
@@ -3774,12 +3952,13 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
                 },
               }}
               input={{
-                disabled: isDisableTPL,
+                disabled: isDisableTPL || props.disabled,
 
                 type: "text",
                 style: { width: "calc(100% - 120px)" },
                 onKeyDown: (e) => {
                   if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    othersSpecifyRef_.current?.focus();
                   }
                 },
               }}
@@ -3787,7 +3966,7 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
             />
             <TextFormatedInput
               label={{
-                title: "Magwheels:",
+                title: "",
                 style: {
                   display: "none",
                 },
@@ -3796,13 +3975,14 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
                 width: "53%",
               }}
               input={{
-                disabled: isDisableTPL,
+                disabled: isDisableTPL || props.disabled,
 
                 defaultValue: "0.00",
                 type: "text",
                 style: { width: "100%" },
                 onKeyDown: (e) => {
                   if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    typeRef.current?.focus();
                   }
                 },
               }}
@@ -3830,10 +4010,15 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
               }}
               selectRef={typeRef}
               select={{
-                disabled: isDisableTPL,
+                disabled: isDisableTPL || props.disabled,
                 style: { flex: 1, height: "22px" },
                 defaultValue: "",
                 onChange: (e) => {},
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    DeductibleRef.current?.focus();
+                  }
+                },
               }}
               containerStyle={{
                 width: "100%",
@@ -3882,12 +4067,13 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
                   flex: 1,
                 }}
                 input={{
-                  disabled: isDisableTPL,
+                  disabled: isDisableTPL || props.disabled,
                   defaultValue: "0.00",
                   type: "text",
                   style: { width: "calc(100% - 150px)" },
                   onKeyDown: (e) => {
                     if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      towingRef.current?.focus();
                     }
                   },
                 }}
@@ -3906,15 +4092,31 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
                   flex: 1,
                 }}
                 input={{
-                  disabled: isDisableTPL,
-
+                  disabled: isDisableTPL || props.disabled,
                   defaultValue: "0.00",
                   type: "text",
                   style: { width: "calc(100% - 150px)" },
                   onKeyDown: (e) => {
                     if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      authorizedRepairLimitRef.current?.focus();
                     }
                   },
+                }}
+                onBlur={(e) => {
+                  if (DeductibleRef.current) {
+                    let tow = parseFloat(
+                      e.currentTarget.value.replace(/,/g, "")
+                    );
+                    const deduc = parseFloat(
+                      DeductibleRef.current.value.replace(/,/g, "")
+                    );
+
+                    if (authorizedRepairLimitRef.current) {
+                      authorizedRepairLimitRef.current.value = formatNumber(
+                        tow + deduc
+                      );
+                    }
+                  }
                 }}
                 inputRef={towingRef}
               />
@@ -3931,12 +4133,13 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
                   flex: 1,
                 }}
                 input={{
-                  disabled: isDisableTPL,
+                  disabled: isDisableTPL || props.disabled,
                   defaultValue: "0.00",
                   type: "text",
                   style: { width: "calc(100% - 150px)" },
                   onKeyDown: (e) => {
                     if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      bodyInjuryRef.current?.focus();
                     }
                   },
                 }}
@@ -3953,8 +4156,8 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
                 padding: "8px",
               }}
             >
-              <Autocomplete
-                disableInput={isDisableTPL}
+              <AutocompleteNumber
+                disableInput={isDisableTPL || props.disabled}
                 containerStyle={{
                   width: "100%",
                 }}
@@ -3992,11 +4195,14 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
                 onKeydown={(e: any) => {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
+                    wait(100).then(() => {
+                      propertyDamageRef.current?.focus();
+                    });
                   }
                 }}
               />
-              <Autocomplete
-                disableInput={isDisableTPL}
+              <AutocompleteNumber
+                disableInput={isDisableTPL || props.disabled}
                 containerStyle={{
                   width: "100%",
                 }}
@@ -4021,7 +4227,7 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
                 ]}
                 inputRef={propertyDamageRef}
                 input={{
-                  disabled: isDisableTPL,
+                  disabled: isDisableTPL || props.disabled,
                   style: {
                     width: "100%",
                     flex: 1,
@@ -4035,11 +4241,14 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
                 onKeydown={(e: any) => {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
+                    wait(100).then(() => {
+                      personalAccidentRef.current?.focus();
+                    });
                   }
                 }}
               />
-              <Autocomplete
-              disableInput={isDisableTPL}
+              <AutocompleteNumber
+                disableInput={isDisableTPL || props.disabled}
                 containerStyle={{
                   width: "100%",
                 }}
@@ -4064,7 +4273,7 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
                 ]}
                 inputRef={personalAccidentRef}
                 input={{
-                  disabled: isDisableTPL,
+                  disabled: isDisableTPL || props.disabled,
                   style: {
                     width: "100%",
                     flex: 1,
@@ -4078,6 +4287,9 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
                 onKeydown={(e: any) => {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
+                    wait(100).then(() => {
+                      dinomination.current?.focus();
+                    });
                   }
                 }}
               />
@@ -4097,6 +4309,7 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
             }}
             selectRef={dinomination}
             select={{
+              disabled: props.disabled,
               style: { flex: 1, height: "22px" },
               defaultValue: "",
             }}
@@ -4112,11 +4325,12 @@ const _PolicyTypeDetails = forwardRef((props: any, ref) => {
     </div>
   );
 });
-const _PolicyPremium = forwardRef((props: any, ref) => {
+const PolicyPremium = forwardRef((props: any, ref) => {
   const mortgageecheckRef = useRef<HTMLInputElement>(null);
   const mortgageeSelect_ = useRef<any>(null);
   const mortgageeSelect = useRef<HTMLSelectElement>(null);
   const formIndorsementRef = useRef<HTMLTextAreaElement>(null);
+  const remarksRef = useRef<HTMLTextAreaElement>(null);
 
   //Premiums
   const sectionI_IIRef = useRef<HTMLInputElement>(null);
@@ -4141,6 +4355,7 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
       return {
         mortgageeSelect: mortgageeSelect.current?.value,
         formIndorsementRef: formIndorsementRef.current?.value,
+        remarksRef: remarksRef.current?.value,
         sectionI_IIRef: sectionI_IIRef.current?.value,
         sectionIIIRef: sectionIIIRef.current?.value,
         ownDamageRef: ownDamageRef.current?.value,
@@ -4182,6 +4397,7 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
         stradComRef,
         totalDueRef,
         mortgageecheckRef,
+        remarksRef,
       };
     },
     resetRefs: () => {
@@ -4194,7 +4410,9 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
       if (formIndorsementRef.current) {
         formIndorsementRef.current.value = `SUBJECT TO THE ATTACHED STANDARD ACCESSORIES ENDORSEMENT CLAUSE; FULL PREMIUM PAYMENT IN CASE OF LOSS CLAUSE; MEMORANDUM ON DOCUMENTARY STAMPS TAX; ANTI CARNAPING PREVENTION TIPS AND AUTO PA RIDER; DRUNKEN AND DRIVER CLAUSE`;
       }
-
+      if (remarksRef.current) {
+        remarksRef.current.value = "";
+      }
       if (sectionI_IIRef.current) {
         sectionI_IIRef.current.value = "0.00";
       }
@@ -4249,23 +4467,6 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
       }
     },
   }));
-
-  function setFormIndorseValue(check: boolean) {
-    if (check) {
-      if (formIndorsementRef.current) {
-        formIndorsementRef.current.value =
-          "LOSS and/or DAMAGE, if any under this policy shall be payable to " +
-          mortgageeSelect.current?.value +
-          " as their interest may appear subject to all terms and conditions, clauses and warranties of this policy. SUBJECT TO THE ATTACHED STANDARD ACCESSORIES ENDORSEMENT CLAUSE; FULL PREMIUM PAYMENT IN CASE OF LOSS CLAUSE; MEMORANDUM ON DOCUMENTARY STAMPS TAX; ANTI CARNAPING; PREVENTION TIPS AND AUTO PA RIDER; DRUNKEN AND DRIVE CLAUSE THIS POLICY OR ANY RENEWAL THEREOF SHALL NOT BE CANCELLED WITHOUT PRIOR WRITTEN NOTIFICATION AND CONFORMIY TO " +
-          mortgageeSelect.current?.value;
-      }
-    } else {
-      if (formIndorsementRef.current) {
-        formIndorsementRef.current.value =
-          "SUBJECT TO THE ATTACHED STANDARD ACCESSORIES ENDORSEMENT CLAUSE; FULL PREMIUM PAYMENT IN CASE OF LOSS CLAUSE; MEMORANDUM ON DOCUMENTARY STAMPS TAX; ANTI CARNAPING PREVENTION TIPS AND AUTO PA RIDER; DRUNKEN AND DRIVER CLAUSE";
-      }
-    }
-  }
 
   return (
     <div
@@ -4331,11 +4532,16 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
               }}
             >
               <input
+                disabled={props.disabled}
                 ref={mortgageecheckRef}
                 type="checkbox"
                 id="mortgagee"
                 onChange={(e) => {
-                  setFormIndorseValue(e.target.checked);
+                  setFormIndorseValue(
+                    e.target.checked,
+                    formIndorsementRef,
+                    mortgageeSelect
+                  );
                 }}
               />
               <label
@@ -4372,33 +4578,9 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
               rowGap: "10px",
             }}
           >
-            {/* <SelectInput
-              ref={mortgageeSelect_}
-              label={{
-                style: {
-                  display: "none"
-                },
-              }}
-              selectRef={mortgageeSelect}
-              select={{
-                style: { width: "100%", height: "22px" },
-                defaultValue: "",
-                onChange: (e) => {
-                  if (mortgageecheckRef.current)
-                    setFormIndorseValue(mortgageecheckRef.current.checked)
-                }
-
-              }}
-              containerStyle={{
-                width: "100%",
-              }}
-              datasource={[]}
-              values={"Mortgagee"}
-              display={"Mortgagee"}
-            /> */}
-
             <div>
               <Autocomplete
+                disableInput={props.disabled}
                 ref={mortgageeSelect_}
                 containerStyle={{
                   width: "100%",
@@ -4426,6 +4608,7 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
                 onKeydown={(e: any) => {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
+                    formIndorsementRef.current?.focus();
                   }
                 }}
               />
@@ -4451,11 +4634,51 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
                 }}
                 textarea={{
                   // rows: 25,
+                  disabled: props.disabled,
                   style: { flex: 1 },
                   defaultValue: `SUBJECT TO THE ATTACHED STANDARD ACCESSORIES ENDORSEMENT CLAUSE; FULL PREMIUM PAYMENT IN CASE OF LOSS CLAUSE; MEMORANDUM ON DOCUMENTARY STAMPS TAX; ANTI CARNAPING PREVENTION TIPS AND AUTO PA RIDER; DRUNKEN AND DRIVER CLAUSE`,
-                  onChange: (e) => {},
+                  onKeyDown: (e: any) => {
+                    if (e.key === "Enter" || e.key === "NumpadEnter") {
+                      e.preventDefault();
+                      remarksRef.current?.focus();
+                    }
+                  },
                 }}
                 _inputRef={formIndorsementRef}
+              />
+            </div>
+            <div
+              style={{
+                height: "150px",
+                display: "flex",
+              }}
+            >
+              <TextAreaInput
+                containerStyle={{
+                  flex: 1,
+                }}
+                label={{
+                  title: "Remarks",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "130px",
+                    display: "none",
+                  },
+                }}
+                textarea={{
+                  disabled: props.disabled,
+                  placeholder: "Remarks",
+                  style: { flex: 1 },
+                  defaultValue: "",
+                  onKeyDown: (e: any) => {
+                    if (e.key === "Enter" || e.key === "NumpadEnter") {
+                      e.preventDefault();
+                      sectionI_IIRef.current?.focus();
+                    }
+                  },
+                }}
+                _inputRef={remarksRef}
               />
             </div>
           </div>
@@ -4499,11 +4722,14 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
               width: "100%",
             }}
             input={{
+              disabled: props.disabled,
               defaultValue: "0.00",
               type: "text",
               style: { width: "calc(100% - 150px)" },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  props.onComputation();
+                  sectionIIIRef.current?.focus();
                 }
               },
             }}
@@ -4529,11 +4755,14 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
                 width: "100%",
               }}
               input={{
+                disabled: props.disabled,
                 defaultValue: "0.00",
                 type: "text",
                 style: { width: "calc(100% - 150px)" },
                 onKeyDown: (e) => {
                   if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    props.onComputation();
+                    ownDamageRef.current?.focus();
                   }
                 },
               }}
@@ -4571,11 +4800,13 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
               width: "100%",
             }}
             input={{
+              disabled: props.disabled,
               defaultValue: "0.00",
               type: "text",
               style: { width: "calc(100% - 150px)" },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  theftRef.current?.focus();
                 }
               },
             }}
@@ -4594,11 +4825,13 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
               width: "100%",
             }}
             input={{
+              disabled: props.disabled,
               defaultValue: "0.00",
               type: "text",
               style: { width: "calc(100% - 150px)" },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  sectionIVARef.current?.focus();
                 }
               },
             }}
@@ -4617,11 +4850,13 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
               width: "100%",
             }}
             input={{
+              disabled: props.disabled,
               defaultValue: "0.00",
               type: "text",
               style: { width: "calc(100% - 150px)" },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  sectionIVBRef.current?.focus();
                 }
               },
             }}
@@ -4640,11 +4875,13 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
               width: "100%",
             }}
             input={{
+              disabled: props.disabled,
               defaultValue: "0.00",
               type: "text",
               style: { width: "calc(100% - 150px)" },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  othersRef.current?.focus();
                 }
               },
             }}
@@ -4663,11 +4900,13 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
               width: "100%",
             }}
             input={{
+              disabled: props.disabled,
               defaultValue: "0.00",
               type: "text",
               style: { width: "calc(100% - 150px)" },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  aogRef.current?.focus();
                 }
               },
             }}
@@ -4694,11 +4933,13 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
                 width: "70%",
               }}
               input={{
+                disabled: props.disabled,
                 defaultValue: "0.5",
                 type: "text",
                 style: { width: "calc(100% - 150px)" },
                 onKeyDown: (e) => {
                   if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    _aogRef.current?.focus();
                   }
                 },
               }}
@@ -4715,11 +4956,13 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
                 width: "30%",
               }}
               input={{
+                disabled: props.disabled,
                 defaultValue: "0.00",
                 type: "text",
                 style: { width: "100%" },
                 onKeyDown: (e) => {
                   if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    totalPremiumRef.current?.focus();
                   }
                 },
               }}
@@ -4746,11 +4989,13 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
               width: "100%",
             }}
             input={{
+              disabled: props.disabled,
               defaultValue: "0.00",
               type: "text",
               style: { width: "calc(100% - 150px)" },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  vatRef.current?.focus();
                 }
               },
             }}
@@ -4769,11 +5014,13 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
               width: "100%",
             }}
             input={{
+              disabled: props.disabled,
               defaultValue: "0.00",
               type: "text",
               style: { width: "calc(100% - 150px)" },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  docstampRef.current?.focus();
                 }
               },
             }}
@@ -4792,11 +5039,13 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
               width: "100%",
             }}
             input={{
+              disabled: props.disabled,
               defaultValue: "0.00",
               type: "text",
               style: { width: "calc(100% - 150px)" },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  localGovTaxRef.current?.focus();
                 }
               },
             }}
@@ -4823,11 +5072,13 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
                 width: "70%",
               }}
               input={{
+                disabled: props.disabled,
                 defaultValue: "0.75",
                 type: "text",
                 style: { width: "calc(100% - 150px)" },
                 onKeyDown: (e) => {
                   if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    _localGovTaxRef.current?.focus();
                   }
                 },
               }}
@@ -4844,11 +5095,13 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
                 width: "30%",
               }}
               input={{
+                disabled: props.disabled,
                 defaultValue: "0.00",
                 type: "text",
                 style: { width: "100%" },
                 onKeyDown: (e) => {
                   if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    stradComRef.current?.focus();
                   }
                 },
               }}
@@ -4868,11 +5121,13 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
               width: "100%",
             }}
             input={{
+              disabled: props.disabled,
               defaultValue: "0.00",
               type: "text",
               style: { width: "calc(100% - 150px)" },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  totalDueRef.current?.focus();
                 }
               },
             }}
@@ -4898,6 +5153,7 @@ const _PolicyPremium = forwardRef((props: any, ref) => {
               width: "100%",
             }}
             input={{
+              disabled: props.disabled,
               defaultValue: "0.00",
               type: "text",
               style: { width: "calc(100% - 150px)" },
@@ -4932,3 +5188,29 @@ export const CustomButton = styled.button`
     background:white;
   },
 `;
+function formatNumber(Amount: number) {
+  return Amount.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+function setFormIndorseValue(
+  check: boolean,
+  formIndorsementRef: any,
+  mortgageeSelect: any
+) {
+  if (check) {
+    if (formIndorsementRef.current) {
+      formIndorsementRef.current.value =
+        "LOSS and/or DAMAGE, if any under this policy shall be payable to " +
+        mortgageeSelect.current?.value +
+        " as their interest may appear subject to all terms and conditions, clauses and warranties of this policy. SUBJECT TO THE ATTACHED STANDARD ACCESSORIES ENDORSEMENT CLAUSE; FULL PREMIUM PAYMENT IN CASE OF LOSS CLAUSE; MEMORANDUM ON DOCUMENTARY STAMPS TAX; ANTI CARNAPING; PREVENTION TIPS AND AUTO PA RIDER; DRUNKEN AND DRIVE CLAUSE THIS POLICY OR ANY RENEWAL THEREOF SHALL NOT BE CANCELLED WITHOUT PRIOR WRITTEN NOTIFICATION AND CONFORMIY TO " +
+        mortgageeSelect.current?.value;
+    }
+  } else {
+    if (formIndorsementRef.current) {
+      formIndorsementRef.current.value =
+        "SUBJECT TO THE ATTACHED STANDARD ACCESSORIES ENDORSEMENT CLAUSE; FULL PREMIUM PAYMENT IN CASE OF LOSS CLAUSE; MEMORANDUM ON DOCUMENTARY STAMPS TAX; ANTI CARNAPING PREVENTION TIPS AND AUTO PA RIDER; DRUNKEN AND DRIVER CLAUSE";
+    }
+  }
+}

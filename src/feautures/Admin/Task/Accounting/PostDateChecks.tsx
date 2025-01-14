@@ -1,4 +1,10 @@
-import React, { useContext, useState, useRef, useEffect, useCallback } from "react";
+import React, {
+  useContext,
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+} from "react";
 import {
   Box,
   Typography,
@@ -29,16 +35,18 @@ import ReactDOMServer from "react-dom/server";
 import { grey } from "@mui/material/colors";
 import { useUpwardTableModal } from "../../../../hooks/useUpwardTableModal";
 import { TextAreaInput, TextInput } from "../../../../components/UpwardFields";
-import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import { NumericFormat } from "react-number-format";
 import { format } from "date-fns";
 import PageHelmet from "../../../../components/Helmet";
 import { wait } from "@testing-library/user-event/dist/utils";
-import SearchIcon from '@mui/icons-material/Search';
-import { DataGridViewReact } from "../../../../components/DataGridViewReact";
+import SearchIcon from "@mui/icons-material/Search";
+import {
+  DataGridViewReact,
+  useUpwardTableModalSearchSafeMode,
+} from "../../../../components/DataGridViewReact";
 import { Loading } from "../../../../components/Loading";
-
-
+import { size } from "lodash";
 
 export const reducer = (state: any, action: any) => {
   switch (action.type) {
@@ -96,12 +104,10 @@ export default function PostDateChecks() {
   const [openPdcInputModal, setOpenPdcInputModal] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
-
-
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const [hasSelectedRow, setHasSelectedRow] = useState(null)
-  const [pdcMode, setPdcMode] = useState('')
+  const [hasSelectedRow, setHasSelectedRow] = useState(null);
+  const [pdcMode, setPdcMode] = useState("");
 
   const { myAxios, user } = useContext(AuthContext);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -110,15 +116,13 @@ export default function PostDateChecks() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const savePDCButtonRef = useRef<HTMLButtonElement>(null);
 
-
   //check modal refs
 
   const checkModalSaveButton = useRef<HTMLButtonElement>(null);
   const checkModalSaveButtonActionRef = useRef<any>(null);
   // search modal auto focus on load
 
-
-  // modal 
+  // modal
   const _checknoRef = useRef<HTMLInputElement>(null);
   const _bankRef = useRef<HTMLInputElement>(null);
   const _branchRef = useRef<HTMLInputElement>(null);
@@ -126,17 +130,16 @@ export default function PostDateChecks() {
   const _chekdateRef = useRef<HTMLInputElement>(null);
   const _amountRef = useRef<HTMLInputElement>(null);
   const _checkcountRef = useRef<HTMLInputElement>(null);
-  const _bankCode = useRef('');
-  const _slipCodeRef = useRef('');
-  const _slipDateRef = useRef('');
-  const _checkOR = useRef('');
+  const _bankCode = useRef("");
+  const _slipCodeRef = useRef("");
+  const _slipDateRef = useRef("");
+  const _checkOR = useRef("");
 
   const addRefButton = useRef<HTMLButtonElement>(null);
 
-
-  const subRefNoRef = useRef('');
-  const PNoRef = useRef('');
-  const subAccountRef = useRef('');
+  const subRefNoRef = useRef("");
+  const PNoRef = useRef("");
+  const subAccountRef = useRef("");
 
   const refNoRef = useRef<HTMLInputElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
@@ -144,7 +147,6 @@ export default function PostDateChecks() {
   const pnRef = useRef<HTMLInputElement>(null);
   const branchRef = useRef<HTMLInputElement>(null);
   const clientnameRef = useRef<HTMLTextAreaElement>(null);
-
 
   const { isLoading: newRefNumberLoading, refetch: refetchNewRefNumber } =
     useQuery({
@@ -160,17 +162,16 @@ export default function PostDateChecks() {
       onSuccess: (res) => {
         const response = res as any;
         wait(100).then(() => {
-          subRefNoRef.current = response.data.RefNo[0].pdcID
+          subRefNoRef.current = response.data.RefNo[0].pdcID;
           if (refNoRef.current) {
-            refNoRef.current.value = response.data.RefNo[0].pdcID
+            refNoRef.current.value = response.data.RefNo[0].pdcID;
           }
-        })
-
+        });
       },
     });
 
   const { mutate, isLoading: loadingAddNew } = useMutation({
-    mutationKey: 'update-pdc',
+    mutationKey: "update-pdc",
     mutationFn: async (variables: any) => {
       if (pdcMode === "update") {
         delete variables.mode;
@@ -189,7 +190,7 @@ export default function PostDateChecks() {
     },
     onSuccess: (res) => {
       if (res.data.success) {
-        resetPDC()
+        resetPDC();
         return Swal.fire({
           position: "center",
           icon: "success",
@@ -212,7 +213,7 @@ export default function PostDateChecks() {
 
   const { mutate: mutateSelectedSearch, isLoading: isLoadingSelectedSearch } =
     useMutation({
-      mutationKey: 'get-search-pdc-check',
+      mutationKey: "get-search-pdc-check",
       mutationFn: async (variables: any) =>
         await myAxios.post("/task/accounting/get-search-pdc-check", variables, {
           headers: {
@@ -264,101 +265,162 @@ export default function PostDateChecks() {
           return newObjContainer;
         }
 
-        tableRef.current.setDataFormated(response.data.getSearchPDCCheck)
+        tableRef.current.setDataFormated(response.data.getSearchPDCCheck);
 
         if (refNoRef.current) {
-          refNoRef.current.value = response.data.getSearchPDCCheck[0].Ref_No
+          refNoRef.current.value = response.data.getSearchPDCCheck[0].Ref_No;
         }
         if (clientnameRef.current) {
-          clientnameRef.current.value = response.data.getSearchPDCCheck[0].Name
+          clientnameRef.current.value = response.data.getSearchPDCCheck[0].Name;
         }
         if (dateRef.current) {
-          dateRef.current.value = response.data.getSearchPDCCheck[0].Date
+          dateRef.current.value = response.data.getSearchPDCCheck[0].Date;
         }
         if (pnRef.current) {
-          pnRef.current.value = response.data.getSearchPDCCheck[0].PNo
+          pnRef.current.value = response.data.getSearchPDCCheck[0].PNo;
         }
         if (branchRef.current) {
-          branchRef.current.value = response.data.getSearchPDCCheck[0].Acronym
+          branchRef.current.value = response.data.getSearchPDCCheck[0].Acronym;
         }
         if (remakrsRef.current) {
-          remakrsRef.current.value = response.data.getSearchPDCCheck[0].Remarks
+          remakrsRef.current.value = response.data.getSearchPDCCheck[0].Remarks;
         }
-        PNoRef.current = response.data.getSearchPDCCheck[0].IDNo
-        subAccountRef.current = response.data.getSearchPDCCheck[0].sub_account
-
-
-
+        PNoRef.current = response.data.getSearchPDCCheck[0].IDNo;
+        subAccountRef.current = response.data.getSearchPDCCheck[0].sub_account;
       },
     });
 
   // policy ids search table modal
+
   const {
-    Modal: ModalSearchPdcIDs,
-    closeModal: closeModalSearchPdcIDs,
-    openModal: openModalSearchPdcIDs,
-    isLoading: isLoadingModalSearchPdcIDs,
-  } = useUpwardTableModal({
-    myAxios,
-    user,
-    link: {
-      url: "/task/accounting/search-pdc-policy-id",
-      queryUrlName: "searchPdcPolicyIds",
-    },
+    UpwardTableModalSearch: ClientUpwardTableModalSearch,
+    openModal: clientOpenModal,
+    closeModal: clientCloseModal,
+  } = useUpwardTableModalSearchSafeMode({
+    size: "large",
+    link: "/task/accounting/search-pdc-policy-id",
     column: [
-      { field: "Type", headerName: "Type", width: 130 },
-      { field: "IDNo", headerName: "ID No.", width: 200 },
-      { field: "chassis", headerName: "Chassis No.", width: 200, hide: true },
+      { key: "Type", label: "Type", width: 100 },
+      { key: "IDNo", label: "ID No.", width: 120 },
       {
-        field: "Name",
-        headerName: "Name",
+        key: "Name",
+        label: "Name",
         width: 350,
       },
+      { key: "chassis", label: "Chassis No.", width: 200 },
       {
-        field: "ID",
-        headerName: "ID",
-        width: 300,
+        key: "remarks",
+        label: "remarks",
+        width: 0,
         hide: true,
       },
       {
-        field: "client_id",
-        headerName: "client_id",
-        width: 200,
+        key: "client_id",
+        label: "client_id",
+        width: 0,
+        hide: true,
+      },
+      {
+        key: "Acronym",
+        label: "Acronym",
+        width: 0,
+        hide: true,
+      },
+      {
+        key: "sub_account",
+        label: "sub_account",
+        width: 0,
         hide: true,
       },
     ],
-    onSelectionChange: (selectedRow: any) => {
-      if (selectedRow.length > 0) {
-
+    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
+      if (rowItm) {
         wait(100).then(() => {
-          PNoRef.current = selectedRow[0].client_id
-          subAccountRef.current = selectedRow[0].sub_account
+          PNoRef.current = rowItm[5];
+          subAccountRef.current = rowItm[7];
           if (pnRef.current) {
-            pnRef.current.value = selectedRow[0].IDNo
+            pnRef.current.value = rowItm[1];
           }
           if (clientnameRef.current) {
-            clientnameRef.current.value = selectedRow[0].Name
+            clientnameRef.current.value = rowItm[2];
           }
           if (branchRef.current) {
-            branchRef.current.value = selectedRow[0].Acronym
+            branchRef.current.value = rowItm[6];
           }
-          if (selectedRow[0].Remarks && selectedRow[0].Remarks !== '') {
+          if (rowItm[4] && rowItm[4] !== "") {
             if (remakrsRef.current) {
-              remakrsRef.current.value = selectedRow[0].Remarks
+              remakrsRef.current.value = rowItm[4];
             }
           }
-
-        })
-
-        closeModalSearchPdcIDs();
-
+        });
+        clientCloseModal()
       }
     },
-
-    responseDataKey: "clientsId",
   });
+  // const {
+  //   Modal: ModalSearchPdcIDs,
+  //   closeModal: closeModalSearchPdcIDs,
+  //   openModal: openModalSearchPdcIDs,
+  //   isLoading: isLoadingModalSearchPdcIDs,
+  // } = useUpwardTableModal({
+  //   myAxios,
+  //   user,
+  //   link: {
+  //     url: "/task/accounting/search-pdc-policy-id",
+  //     queryUrlName: "searchPdcPolicyIds",
+  //   },
+  //   column: [
+  //     { field: "Type", headerName: "Type", width: 130 },
+  //     { field: "IDNo", headerName: "ID No.", width: 200 },
+  //     { field: "chassis", headerName: "Chassis No.", width: 200, hide: true },
+  //     {
+  //       field: "Name",
+  //       headerName: "Name",
+  //       width: 350,
+  //     },
+  //     {
+  //       field: "ID",
+  //       headerName: "ID",
+  //       width: 300,
+  //       hide: true,
+  //     },
+  //     {
+  //       field: "client_id",
+  //       headerName: "client_id",
+  //       width: 200,
+  //       hide: true,
+  //     },
+  //   ],
+  //   onSelectionChange: (selectedRow: any) => {
+  //     if (selectedRow.length > 0) {
+  //       wait(100).then(() => {
+  //         PNoRef.current = selectedRow[0].client_id;
+  //         subAccountRef.current = selectedRow[0].sub_account;
+  //         if (pnRef.current) {
+  //           pnRef.current.value = selectedRow[0].IDNo;
+  //         }
+  //         if (clientnameRef.current) {
+  //           clientnameRef.current.value = selectedRow[0].Name;
+  //         }
+  //         if (branchRef.current) {
+  //           branchRef.current.value = selectedRow[0].Acronym;
+  //         }
+  //         if (selectedRow[0].Remarks && selectedRow[0].Remarks !== "") {
+  //           if (remakrsRef.current) {
+  //             remakrsRef.current.value = selectedRow[0].Remarks;
+  //           }
+  //         }
+  //       });
+
+  //       closeModalSearchPdcIDs();
+  //     }
+  //   },
+
+  //   responseDataKey: "clientsId",
+  // });
 
   // bank search table modal
+
   const {
     Modal: ModalSearchBanks,
     closeModal: closeModalSearchBanks,
@@ -378,16 +440,16 @@ export default function PostDateChecks() {
     onSelectionChange: (selectedRow: any) => {
       if (selectedRow.length > 0) {
         setTimeout(() => {
-          _bankCode.current = selectedRow[0].Bank_Code
+          _bankCode.current = selectedRow[0].Bank_Code;
           if (_bankRef.current) {
-            _bankRef.current.value = selectedRow[0].Bank
+            _bankRef.current.value = selectedRow[0].Bank;
           }
-        }, 100)
+        }, 100);
 
         closeModalSearchBanks();
         setOpenPdcInputModal(true);
         setTimeout(() => {
-          _branchRef.current?.focus()
+          _branchRef.current?.focus();
         }, 100);
       }
     },
@@ -423,7 +485,7 @@ export default function PostDateChecks() {
     onSelectionChange: (selectedRow: any) => {
       if (selectedRow.length > 0) {
         mutateSelectedSearch({ ref_no: selectedRow[0].Ref_No });
-        setPdcMode('update')
+        setPdcMode("update");
         closeUpwardPDCModal();
         if (searchRef.current) {
           searchRef.current?.focus();
@@ -433,86 +495,89 @@ export default function PostDateChecks() {
     responseDataKey: "searchPDC",
   });
 
-  const handleOnSave = useCallback(async (e: any) => {
-    const pdcTableData = tableRef.current.getDataFormatted()
+  const handleOnSave = useCallback(
+    async (e: any) => {
+      const pdcTableData = tableRef.current.getDataFormatted();
 
-    if (pnRef.current && pnRef.current.value === "") {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Please provide loan information!",
-        timer: 1500,
-      }).then(() => {
-        setTimeout(() => {
-          pnRef.current?.click();
-        }, 350);
-      });
-    }
-    if (pdcTableData.length <= 0) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Please provide entry!",
-        timer: 1500,
-      }).then(() => {
-        setOpenPdcInputModal(true);
-      });
-    }
+      if (pnRef.current && pnRef.current.value === "") {
+        return Swal.fire({
+          position: "center",
+          icon: "warning",
+          title: "Please provide loan information!",
+          timer: 1500,
+        }).then(() => {
+          setTimeout(() => {
+            pnRef.current?.click();
+          }, 350);
+        });
+      }
+      if (pdcTableData.length <= 0) {
+        return Swal.fire({
+          position: "center",
+          icon: "warning",
+          title: "Please provide entry!",
+          timer: 1500,
+        }).then(() => {
+          setOpenPdcInputModal(true);
+        });
+      }
 
-    const filePromises: Array<any> = [];
-    function fileTransfer(filePromises: Array<any>) {
-      const files = selectedFiles;
-      if (files.length > 0) {
-        for (let i = 0; i < files.length; i++) {
-          const file = files[i];
-          const reader = new FileReader();
-          filePromises.push(
-            new Promise((resolve, reject) => {
-              reader.onload = function (event) {
-                resolve({
-                  datakey: "pdc_file",
-                  fileName: file.name,
-                  fileContent: event.target?.result,
-                  fileType: file.type,
-                  file,
-                });
-              };
-              reader.onerror = function (event) {
-                reject(new Error("Error reading file: " + file.name));
-              };
-              reader.readAsDataURL(file);
-            })
-          );
+      const filePromises: Array<any> = [];
+      function fileTransfer(filePromises: Array<any>) {
+        const files = selectedFiles;
+        if (files.length > 0) {
+          for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const reader = new FileReader();
+            filePromises.push(
+              new Promise((resolve, reject) => {
+                reader.onload = function (event) {
+                  resolve({
+                    datakey: "pdc_file",
+                    fileName: file.name,
+                    fileContent: event.target?.result,
+                    fileType: file.type,
+                    file,
+                  });
+                };
+                reader.onerror = function (event) {
+                  reject(new Error("Error reading file: " + file.name));
+                };
+                reader.readAsDataURL(file);
+              })
+            );
+          }
         }
       }
-    }
-    fileTransfer(filePromises);
-    const fileToSave = await Promise.all(filePromises);
-    const stateSubmited = {
-      Ref_No: refNoRef.current?.value,
-      PNo: pnRef.current?.value,
-      IDNo: PNoRef.current,
-      Date: dateRef.current?.value,
-      Name: clientnameRef.current?.value,
-      Remarks: remakrsRef.current?.value,
-      Branch: branchRef.current?.value,
-      checks: JSON.stringify(pdcTableData),
-    };
-    if (pdcMode === "update") {
-      codeCondfirmationAlert({
-        isUpdate: true,
-        cb: (userCodeConfirmation) => {
-          mutate({ ...stateSubmited, userCodeConfirmation, fileToSave });
-        },
-      });
-    } else {
-      saveCondfirmationAlert({
-        isConfirm: () => {
-          mutate({ ...stateSubmited, fileToSave });
-        },
-      });
-    }
-  }, [mutate, selectedFiles, pdcMode])
+      fileTransfer(filePromises);
+      const fileToSave = await Promise.all(filePromises);
+      const stateSubmited = {
+        Ref_No: refNoRef.current?.value,
+        PNo: pnRef.current?.value,
+        IDNo: PNoRef.current,
+        Date: dateRef.current?.value,
+        Name: clientnameRef.current?.value,
+        Remarks: remakrsRef.current?.value,
+        Branch: branchRef.current?.value,
+        checks: JSON.stringify(pdcTableData),
+      };
+      if (pdcMode === "update") {
+        codeCondfirmationAlert({
+          isUpdate: true,
+          cb: (userCodeConfirmation) => {
+            mutate({ ...stateSubmited, userCodeConfirmation, fileToSave });
+          },
+        });
+      } else {
+        saveCondfirmationAlert({
+          isConfirm: () => {
+            mutate({ ...stateSubmited, fileToSave });
+          },
+        });
+      }
+    },
+    [mutate, selectedFiles, pdcMode]
+  );
 
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -536,7 +601,7 @@ export default function PostDateChecks() {
     }
   };
   const clickPDCReceipt = () => {
-    const pdcTableData = tableRef.current.getDataFormatted()
+    const pdcTableData = tableRef.current.getDataFormatted();
 
     flushSync(() => {
       const state = {
@@ -639,53 +704,44 @@ export default function PostDateChecks() {
   };
 
   function resetPDC() {
-    setPdcMode('')
-    tableRef.current.setSelectedRow(null)
-    tableRef.current.setData([])
-    refetchNewRefNumber()
+    setPdcMode("");
+    tableRef.current.setSelectedRow(null);
+    tableRef.current.setData([]);
+    refetchNewRefNumber();
 
     if (dateRef.current) {
-      dateRef.current.value = format(new Date(), "yyyy-MM-dd")
+      dateRef.current.value = format(new Date(), "yyyy-MM-dd");
     }
     if (remakrsRef.current) {
-      remakrsRef.current.value = ''
+      remakrsRef.current.value = "";
     }
     if (pnRef.current) {
-      pnRef.current.value = ''
+      pnRef.current.value = "";
     }
     if (branchRef.current) {
-      branchRef.current.value = ''
+      branchRef.current.value = "";
     }
     if (clientnameRef.current) {
-      clientnameRef.current.value = ''
+      clientnameRef.current.value = "";
     }
-
-
-
   }
   function formatNumber(num: number) {
     return (num || 0).toLocaleString("en-US", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    })
+    });
   }
   function handleCheckDetailsSave() {
-
-    function incrementStringNumbers(
-      str: string,
-      increment: number
-    ) {
+    function incrementStringNumbers(str: string, increment: number) {
       let num = parseInt(str);
       num = num + increment;
       return num.toString().padStart(str.length, "0");
     }
     function incrementDate(dateString: any, i: number) {
-      const currentDate = new Date(
-        dateString
-      );
+      const currentDate = new Date(dateString);
       currentDate.setMonth(currentDate.getMonth() + i);
 
-      return format(currentDate, 'yyyy-MM-dd')
+      return format(currentDate, "yyyy-MM-dd");
     }
     function isValidDate(dateString: string): boolean {
       const date = new Date(dateString);
@@ -701,44 +757,41 @@ export default function PostDateChecks() {
       _amountRef.current &&
       _checkcountRef.current
     ) {
-
-
-      const tableRows = tableRef.current.getDataFormatted()
-      const selectedIndex = tableRef.current.getSelectedRow()
+      const tableRows = tableRef.current.getDataFormatted();
+      const selectedIndex = tableRef.current.getSelectedRow();
 
       const filteredChecks = tableRows.filter((itm: any) => {
-        return _checknoRef.current && _checknoRef.current.value === itm.Check_No
-      })
-
+        return (
+          _checknoRef.current && _checknoRef.current.value === itm.Check_No
+        );
+      });
 
       if (filteredChecks.length > 0 && selectedIndex === null) {
-        alert('check no. is already exist!')
-        _checknoRef.current.focus()
-        return
+        alert("check no. is already exist!");
+        _checknoRef.current.focus();
+        return;
       }
-      if (_checknoRef.current.value === '') {
-        alert('check no. is required!')
-        _checknoRef.current.focus()
-        return
-      } else if (_bankRef.current.value === '') {
-        alert('bank is required!')
-        _bankRef.current.focus()
-        return
-      } else if (_branchRef.current.value === '') {
-        alert('branch is required!')
-        _branchRef.current.focus()
-        return
+      if (_checknoRef.current.value === "") {
+        alert("check no. is required!");
+        _checknoRef.current.focus();
+        return;
+      } else if (_bankRef.current.value === "") {
+        alert("bank is required!");
+        _bankRef.current.focus();
+        return;
+      } else if (_branchRef.current.value === "") {
+        alert("branch is required!");
+        _branchRef.current.focus();
+        return;
       } else if (!isValidDate(_chekdateRef.current.value)) {
-        alert('invalid date!')
-        _chekdateRef.current.focus()
-        return
-      } else if (parseFloat(_amountRef.current.value.replace(/,/g, '')) <= 0) {
-        alert('amount must be greater than 0!')
-        _amountRef.current.focus()
-        return
+        alert("invalid date!");
+        _chekdateRef.current.focus();
+        return;
+      } else if (parseFloat(_amountRef.current.value.replace(/,/g, "")) <= 0) {
+        alert("amount must be greater than 0!");
+        _amountRef.current.focus();
+        return;
       }
-
-
 
       if (
         _checknoRef.current &&
@@ -749,36 +802,26 @@ export default function PostDateChecks() {
         _amountRef.current &&
         _checkcountRef.current
       ) {
-
-
-
         if (selectedIndex) {
-          const selectedRow = tableRef.current.getData()
-          selectedRow[selectedIndex][0] = _checknoRef.current.value
-          selectedRow[selectedIndex][1] = _chekdateRef.current.value
-          selectedRow[selectedIndex][2] = _amountRef.current.value
-          selectedRow[selectedIndex][3] = _bankRef.current.value
-          selectedRow[selectedIndex][4] = _branchRef.current.value
-          selectedRow[selectedIndex][5] = _remarksRef.current.value
-          selectedRow[selectedIndex][6] = _slipCodeRef.current
-          selectedRow[selectedIndex][7] = _slipDateRef.current
-          selectedRow[selectedIndex][8] = _checkOR.current
-          selectedRow[selectedIndex][9] = _bankCode.current
-          tableRef.current.setData(selectedRow)
-          tableRef.current.setSelectedRow(null)
-          setHasSelectedRow(null)
+          const selectedRow = tableRef.current.getData();
+          selectedRow[selectedIndex][0] = _checknoRef.current.value;
+          selectedRow[selectedIndex][1] = _chekdateRef.current.value;
+          selectedRow[selectedIndex][2] = _amountRef.current.value;
+          selectedRow[selectedIndex][3] = _bankRef.current.value;
+          selectedRow[selectedIndex][4] = _branchRef.current.value;
+          selectedRow[selectedIndex][5] = _remarksRef.current.value;
+          selectedRow[selectedIndex][6] = _slipCodeRef.current;
+          selectedRow[selectedIndex][7] = _slipDateRef.current;
+          selectedRow[selectedIndex][8] = _checkOR.current;
+          selectedRow[selectedIndex][9] = _bankCode.current;
+          tableRef.current.setData(selectedRow);
+          tableRef.current.setSelectedRow(null);
+          setHasSelectedRow(null);
         } else {
-          const newData: any = []
-          for (
-            let i = 0;
-            i < parseInt(_checkcountRef.current.value);
-            i++
-          ) {
+          const newData: any = [];
+          for (let i = 0; i < parseInt(_checkcountRef.current.value); i++) {
             const data: any = {
-              Check_No: incrementStringNumbers(
-                _checknoRef.current.value,
-                i
-              ),
+              Check_No: incrementStringNumbers(_checknoRef.current.value, i),
               Check_Date: incrementDate(_chekdateRef.current.value, i),
               Check_Amnt: _amountRef.current.value,
               BankName: _bankRef.current.value,
@@ -789,43 +832,35 @@ export default function PostDateChecks() {
               DateDeposit: _slipDateRef.current,
               OR_No: _checkOR.current,
             };
-            newData.push(data)
+            newData.push(data);
           }
-          tableRef.current.setDataFormated(newData)
-
+          tableRef.current.setDataFormated(newData);
         }
       }
 
-
-
       setOpenPdcInputModal(false);
     }
-
   }
   useEffect(() => {
     const handleKeyDown = (event: any) => {
-      if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+      if ((event.ctrlKey || event.metaKey) && event.key === "s") {
         event.preventDefault();
         handleOnSave(event);
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [handleOnSave]);
 
   const isDisableField = pdcMode === "";
 
-
-
-
   return (
     <>
       <PageHelmet title="PDC" />
-      {(loadingAddNew ||
-        isLoadingSelectedSearch) && <Loading />}
+      {(loadingAddNew || isLoadingSelectedSearch) && <Loading />}
       <div
         style={{
           width: "100%",
@@ -834,13 +869,11 @@ export default function PostDateChecks() {
           background: "red",
           padding: "10px",
           backgroundColor: "#F1F1F1",
-
         }}
       >
-
         {ModalSearchBanks}
         {UpwardPDCModal}
-        {ModalSearchPdcIDs}
+        <ClientUpwardTableModalSearch />
         <Box
           sx={(theme) => ({
             display: "flex",
@@ -885,13 +918,11 @@ export default function PostDateChecks() {
                   },
                   style: { width: "500px" },
                 }}
-
                 icon={<SearchIcon sx={{ fontSize: "18px" }} />}
                 onIconClick={(e) => {
-                  e.preventDefault()
+                  e.preventDefault();
                   if (searchInputRef.current)
                     openUpwardPDCModal(searchInputRef.current.value);
-
                 }}
                 inputRef={searchInputRef}
               />
@@ -907,8 +938,7 @@ export default function PostDateChecks() {
                 id="entry-header-save-button"
                 color="primary"
                 onClick={() => {
-
-                  setPdcMode('add')
+                  setPdcMode("add");
                 }}
               >
                 New
@@ -950,7 +980,7 @@ export default function PostDateChecks() {
                     confirmButtonText: "Yes, cancel it!",
                   }).then((result) => {
                     if (result.isConfirmed) {
-                      resetPDC()
+                      resetPDC();
                     }
                   });
                 }}
@@ -973,7 +1003,7 @@ export default function PostDateChecks() {
                 });
 
                 wait(100).then(() => {
-                  const tableRows = tableRef.current.getDataFormatted()
+                  const tableRows = tableRef.current.getDataFormatted();
                   const getLastCheck_No: any = tableRows[tableRows.length - 1];
                   if (_checknoRef.current) {
                     _checknoRef.current.value = incrementCheckNo(
@@ -981,10 +1011,10 @@ export default function PostDateChecks() {
                     );
                   }
 
-                  tableRef.current.setSelectedRow(null)
-                  setHasSelectedRow(null)
+                  tableRef.current.setSelectedRow(null);
+                  setHasSelectedRow(null);
                   _checknoRef.current?.focus();
-                })
+                });
               }}
               ref={addRefButton}
             >
@@ -1076,7 +1106,6 @@ export default function PostDateChecks() {
                   {newRefNumberLoading ? (
                     <LoadingButton loading={newRefNumberLoading} />
                   ) : (
-
                     <TextInput
                       label={{
                         title: "Reference No.",
@@ -1093,16 +1122,21 @@ export default function PostDateChecks() {
                         onKeyDown: (e) => {
                           if (e.key === "Enter" || e.key === "NumpadEnter") {
                             e.preventDefault();
-                            dateRef.current?.focus()
+                            dateRef.current?.focus();
                           }
-                        }
+                        },
                       }}
                       inputRef={refNoRef}
-                      icon={<RestartAltIcon sx={{ fontSize: "18px", color: isDisableField ? "gray" : "black" }} />}
-
+                      icon={
+                        <RestartAltIcon
+                          sx={{
+                            fontSize: "18px",
+                            color: isDisableField ? "gray" : "black",
+                          }}
+                        />
+                      }
                       disableIcon={isDisableField}
                     />
-
                   )}
 
                   <TextInput
@@ -1120,15 +1154,13 @@ export default function PostDateChecks() {
                       defaultValue: format(new Date(), "yyyy-MM-dd"),
                       style: { width: "190px" },
                       onKeyDown: (e) => {
-                        if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                          remakrsRef.current?.focus()
+                        if (e.code === "NumpadEnter" || e.code === "Enter") {
+                          remakrsRef.current?.focus();
                         }
-                      }
+                      },
                     }}
                     inputRef={dateRef}
                   />
-
-
                 </div>
 
                 <TextAreaInput
@@ -1145,17 +1177,17 @@ export default function PostDateChecks() {
                     disabled: isDisableField,
                     style: { flex: 1 },
                     onKeyDown: (e) => {
-                      e.stopPropagation()
-                      if ((e.code === "NumpadEnter" && !e.shiftKey) || (e.code === 'Enter' && !e.shiftKey)) {
-                        pnRef.current?.focus()
+                      e.stopPropagation();
+                      if (
+                        (e.code === "NumpadEnter" && !e.shiftKey) ||
+                        (e.code === "Enter" && !e.shiftKey)
+                      ) {
+                        pnRef.current?.focus();
                       }
                     },
-
                   }}
                   _inputRef={remakrsRef}
                 />
-
-
               </fieldset>
               <fieldset
                 style={
@@ -1171,45 +1203,52 @@ export default function PostDateChecks() {
                 }
               >
                 <div
-                  style={{ width: "100%", flex: 1, display: "flex", gap: "15px" }}
+                  style={{
+                    width: "100%",
+                    flex: 1,
+                    display: "flex",
+                    gap: "15px",
+                  }}
                 >
-                  {isLoadingModalSearchPdcIDs ? (
-                    <LoadingButton loading={isLoadingModalSearchPdcIDs} />
-                  ) : (
-                    <TextInput
-                      label={{
-                        title: "PN/Client ID : ",
-                        style: {
-                          fontSize: "12px",
-                          fontWeight: "bold",
-                          width: "100px",
-                        },
-                      }}
-                      input={{
-                        disabled: isDisableField,
-                        type: "text",
-                        style: { width: "250px", height: "22px" },
-                        onKeyDown: (e) => {
-                          if (e.key === "Enter" || e.key === "NumpadEnter") {
-                            e.preventDefault();
-                            if (pnRef.current) {
-                              openModalSearchPdcIDs(pnRef.current.value)
-                            }
+                  <TextInput
+                    label={{
+                      title: "PN/Client ID : ",
+                      style: {
+                        fontSize: "12px",
+                        fontWeight: "bold",
+                        width: "100px",
+                      },
+                    }}
+                    input={{
+                      disabled: isDisableField,
+                      type: "text",
+                      style: { width: "250px", height: "22px" },
+                      onKeyDown: (e) => {
+                        if (e.key === "Enter" || e.key === "NumpadEnter") {
+                          e.preventDefault();
+                          if (pnRef.current) {
+                            clientOpenModal(pnRef.current.value);
                           }
                         }
-                      }}
-                      inputRef={pnRef}
-                      icon={<PersonSearchIcon sx={{ fontSize: "18px", color: isDisableField ? "gray" : "black" }} />}
-                      onIconClick={(e) => {
-                        e.preventDefault()
-                        if (pnRef.current) {
-                          openModalSearchPdcIDs(pnRef.current.value)
-                        }
-                      }}
-                      disableIcon={isDisableField}
-                    />
-
-                  )}
+                      },
+                    }}
+                    inputRef={pnRef}
+                    icon={
+                      <PersonSearchIcon
+                        sx={{
+                          fontSize: "18px",
+                          color: isDisableField ? "gray" : "black",
+                        }}
+                      />
+                    }
+                    onIconClick={(e) => {
+                      e.preventDefault();
+                      if (pnRef.current) {
+                        clientOpenModal(pnRef.current.value);
+                      }
+                    }}
+                    disableIcon={isDisableField}
+                  />
 
                   <TextInput
                     label={{
@@ -1225,14 +1264,13 @@ export default function PostDateChecks() {
                       type: "text",
                       style: { width: "auto", height: "22px" },
                       onKeyDown: (e) => {
-                        if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                          clientnameRef.current?.focus()
+                        if (e.code === "NumpadEnter" || e.code === "Enter") {
+                          clientnameRef.current?.focus();
                         }
-                      }
+                      },
                     }}
                     inputRef={branchRef}
                   />
-
                 </div>
 
                 <div
@@ -1252,12 +1290,14 @@ export default function PostDateChecks() {
                       disabled: isDisableField,
                       style: { width: "325px" },
                       onKeyDown: (e) => {
-                        e.stopPropagation()
-                        if ((e.code === "NumpadEnter" && !e.shiftKey) || (e.code === 'Enter' && !e.shiftKey)) {
+                        e.stopPropagation();
+                        if (
+                          (e.code === "NumpadEnter" && !e.shiftKey) ||
+                          (e.code === "Enter" && !e.shiftKey)
+                        ) {
                           savePDCButtonRef.current?.click();
                         }
                       },
-
                     }}
                     _inputRef={clientnameRef}
                   />
@@ -1292,8 +1332,8 @@ export default function PostDateChecks() {
                 (rowSelected[7] && rowSelected[7] !== "") ||
                 (rowSelected[8] && rowSelected[8] !== "")
               ) {
-                setHasSelectedRow(null)
-                tableRef.current.setSelectedRow(null)
+                setHasSelectedRow(null);
+                tableRef.current.setSelectedRow(null);
                 return Swal.fire({
                   position: "center",
                   icon: "warning",
@@ -1304,7 +1344,7 @@ export default function PostDateChecks() {
               }
               flushSync(() => {
                 setOpenPdcInputModal(true);
-              })
+              });
               wait(100).then(() => {
                 if (
                   _checknoRef.current &&
@@ -1314,37 +1354,38 @@ export default function PostDateChecks() {
                   _chekdateRef.current &&
                   _amountRef.current
                 ) {
-                  _checknoRef.current.value = rowSelected[0]
-                  _chekdateRef.current.value = rowSelected[1]
-                  _amountRef.current.value = formatNumber(parseFloat(rowSelected[2].replace(/,/g, '')))
-                  _bankRef.current.value = rowSelected[3]
-                  _branchRef.current.value = rowSelected[4]
-                  _remarksRef.current.value = rowSelected[5]
-                  _slipCodeRef.current = rowSelected[6] || ""
-                  _slipDateRef.current = rowSelected[7] || ""
-                  _checkOR.current = rowSelected[8] || ""
-                  _bankCode.current = rowSelected[9]
+                  _checknoRef.current.value = rowSelected[0];
+                  _chekdateRef.current.value = rowSelected[1];
+                  _amountRef.current.value = formatNumber(
+                    parseFloat(rowSelected[2].replace(/,/g, ""))
+                  );
+                  _bankRef.current.value = rowSelected[3];
+                  _branchRef.current.value = rowSelected[4];
+                  _remarksRef.current.value = rowSelected[5];
+                  _slipCodeRef.current = rowSelected[6] || "";
+                  _slipDateRef.current = rowSelected[7] || "";
+                  _checkOR.current = rowSelected[8] || "";
+                  _bankCode.current = rowSelected[9];
 
-                  console.log(rowSelected[0])
-                  _bankRef.current.focus()
+                  console.log(rowSelected[0]);
+                  _bankRef.current.focus();
                 }
-              })
+              });
 
-              setHasSelectedRow(RowIndex)
+              setHasSelectedRow(RowIndex);
             } else {
-              setHasSelectedRow(null)
+              setHasSelectedRow(null);
             }
           }}
           onKeyDown={(rowSelected: any, RowIndex: any, e: any) => {
             if (e.code === "Delete" || e.code === "Backspace") {
-
               if (
                 (rowSelected[6] && rowSelected[6] !== "") ||
                 (rowSelected[7] && rowSelected[7] !== "") ||
                 (rowSelected[8] && rowSelected[8] !== "")
               ) {
-                setHasSelectedRow(null)
-                tableRef.current.setSelectedRow(null)
+                setHasSelectedRow(null);
+                tableRef.current.setSelectedRow(null);
 
                 return Swal.fire({
                   position: "center",
@@ -1354,7 +1395,6 @@ export default function PostDateChecks() {
                   timer: 1500,
                 });
               }
-
 
               Swal.fire({
                 title: "Are you sure?",
@@ -1367,13 +1407,13 @@ export default function PostDateChecks() {
               }).then((result) => {
                 if (result.isConfirmed) {
                   setTimeout(() => {
-                    const newData = tableRef.current.getData()
+                    const newData = tableRef.current.getData();
                     newData.splice(RowIndex, 1);
-                    tableRef.current.setData(newData)
+                    tableRef.current.setData(newData);
 
-                    setHasSelectedRow(null)
-                    tableRef.current.setSelectedRow(null)
-                  }, 100)
+                    setHasSelectedRow(null);
+                    tableRef.current.setSelectedRow(null);
+                  }, 100);
                 }
               });
             }
@@ -1384,9 +1424,8 @@ export default function PostDateChecks() {
           open={openPdcInputModal}
           onClose={() => {
             setOpenPdcInputModal(false);
-            tableRef.current.setSelectedRow(null)
-            setHasSelectedRow(null)
-
+            tableRef.current.setSelectedRow(null);
+            setHasSelectedRow(null);
           }}
           aria-labelledby="modal-modal-title"
           aria-describedby="modal-modal-description"
@@ -1433,8 +1472,8 @@ export default function PostDateChecks() {
                     type: "text",
                     style: { width: "190px" },
                     onKeyDown: (e) => {
-                      if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                        _bankRef.current?.focus()
+                      if (e.code === "NumpadEnter" || e.code === "Enter") {
+                        _bankRef.current?.focus();
                       }
                     },
                   }}
@@ -1456,20 +1495,16 @@ export default function PostDateChecks() {
                       type: "text",
                       style: { width: "190px" },
                       onKeyDown: (e) => {
-                        if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                          return openModalSearchBanks(
-                            e.currentTarget.value
-                          );
+                        if (e.code === "NumpadEnter" || e.code === "Enter") {
+                          return openModalSearchBanks(e.currentTarget.value);
                         }
-                      }
+                      },
                     }}
                     icon={<AccountBalanceIcon sx={{ fontSize: "18px" }} />}
                     onIconClick={(e) => {
-                      e.preventDefault()
+                      e.preventDefault();
                       if (_bankRef.current) {
-                        openModalSearchBanks(
-                          _bankRef.current?.value
-                        );
+                        openModalSearchBanks(_bankRef.current?.value);
                       }
                     }}
                     inputRef={_bankRef}
@@ -1489,8 +1524,8 @@ export default function PostDateChecks() {
                     type: "text",
                     style: { width: "190px" },
                     onKeyDown: (e) => {
-                      if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                        _remarksRef.current?.focus()
+                      if (e.code === "NumpadEnter" || e.code === "Enter") {
+                        _remarksRef.current?.focus();
                       }
                     },
                   }}
@@ -1511,10 +1546,10 @@ export default function PostDateChecks() {
                     style: { flex: 1 },
                     onKeyDown: (e) => {
                       if (e.key === "Enter" && e.shiftKey) {
-                        return
+                        return;
                       }
-                      if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                        _chekdateRef.current?.focus()
+                      if (e.code === "NumpadEnter" || e.code === "Enter") {
+                        _chekdateRef.current?.focus();
                       }
                     },
                   }}
@@ -1528,7 +1563,6 @@ export default function PostDateChecks() {
                   flexDirection: "column",
                 }}
               >
-
                 <TextInput
                   label={{
                     title: "Check Dated : ",
@@ -1544,25 +1578,31 @@ export default function PostDateChecks() {
                     style: { width: "190px" },
                     defaultValue: new Date().toISOString().split("T")[0],
                     onKeyDown: (e) => {
-                      if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                        _amountRef.current?.focus()
+                      if (e.code === "NumpadEnter" || e.code === "Enter") {
+                        _amountRef.current?.focus();
                       }
                     },
                   }}
                   inputRef={_chekdateRef}
                 />
 
-                <div style={{
-                  display: "flex"
-                }}>
-                  <label style={{
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "90px",
-                  }}>Amount :</label>
+                <div
+                  style={{
+                    display: "flex",
+                  }}
+                >
+                  <label
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "90px",
+                    }}
+                  >
+                    Amount :
+                  </label>
                   <NumericFormat
                     style={{
-                      flex: 1
+                      flex: 1,
                     }}
                     value={_amountRef.current?.value ?? ""}
                     getInputRef={_amountRef}
@@ -1572,19 +1612,24 @@ export default function PostDateChecks() {
                     onKeyDown={(e) => {
                       if (e.code === "Enter" || e.code === "NumpadEnter") {
                         let currentValue = _amountRef.current?.value as string;
-                        let numericValue = parseFloat(currentValue.replace(/,/g, ''));
+                        let numericValue = parseFloat(
+                          currentValue.replace(/,/g, "")
+                        );
                         if (_amountRef.current) {
                           if (isNaN(numericValue)) {
                             _amountRef.current.value = "0.00";
                           } else {
                             if (!currentValue.includes(".")) {
-                              _amountRef.current.value = `${formatNumber(numericValue)}`;
+                              _amountRef.current.value = `${formatNumber(
+                                numericValue
+                              )}`;
                             } else {
-                              _amountRef.current.value = formatNumber(numericValue);
+                              _amountRef.current.value =
+                                formatNumber(numericValue);
                             }
                           }
                         }
-                        _checkcountRef.current?.focus()
+                        _checkcountRef.current?.focus();
                       }
                     }}
                   />
@@ -1604,7 +1649,7 @@ export default function PostDateChecks() {
                       type: "number",
                       style: { width: "190px" },
                       onKeyDown: (e) => {
-                        if (e.code === "NumpadEnter" || e.code === 'Enter') {
+                        if (e.code === "NumpadEnter" || e.code === "Enter") {
                           const timeout = setTimeout(() => {
                             checkModalSaveButton.current?.click();
                             clearTimeout(timeout);
@@ -1633,7 +1678,7 @@ export default function PostDateChecks() {
                   variant="contained"
                   autoFocus={hasSelectedRow !== null}
                   onClick={() => {
-                    handleCheckDetailsSave()
+                    handleCheckDetailsSave();
                   }}
                   sx={{
                     height: "30px",
@@ -1651,8 +1696,8 @@ export default function PostDateChecks() {
                   }}
                   onClick={() => {
                     setOpenPdcInputModal(false);
-                    tableRef.current.setSelectedRow(null)
-                    setHasSelectedRow(null)
+                    tableRef.current.setSelectedRow(null);
+                    setHasSelectedRow(null);
                   }}
                 >
                   Cancel
@@ -1665,8 +1710,8 @@ export default function PostDateChecks() {
                   }}
                   aria-label="search-client"
                   onClick={() => {
-                    tableRef.current.setSelectedRow(null)
-                    setHasSelectedRow(null)
+                    tableRef.current.setSelectedRow(null);
+                    setHasSelectedRow(null);
                     setOpenPdcInputModal(false);
                   }}
                 >

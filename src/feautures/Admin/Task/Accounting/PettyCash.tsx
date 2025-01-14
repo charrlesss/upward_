@@ -1,7 +1,12 @@
-import { useContext, useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import {
-  Button,
-} from "@mui/material";
+  useContext,
+  useState,
+  useRef,
+  useEffect,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
+import { Button } from "@mui/material";
 import LoadingButton from "@mui/lab/LoadingButton";
 import AddIcon from "@mui/icons-material/Add";
 import SaveIcon from "@mui/icons-material/Save";
@@ -22,9 +27,9 @@ import { NumericFormat } from "react-number-format";
 import { format } from "date-fns";
 import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
 import { DataGridViewReact } from "../../../../components/DataGridViewReact";
-import SearchIcon from '@mui/icons-material/Search';
+import SearchIcon from "@mui/icons-material/Search";
 import { Loading } from "../../../../components/Loading";
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { flushSync } from "react-dom";
 
 export const reducer = (state: any, action: any) => {
@@ -69,17 +74,16 @@ export const chartColumn = [
 
 export default function PettyCash() {
   const { myAxios, user } = useContext(AuthContext);
-  const [pettyCashMode, setPettyCashMode] = useState('')
-  const { executeQueryToClient } = useExecuteQueryFromClient()
-  const tableRef = useRef<any>(null)
-  const inputSearchRef = useRef<HTMLInputElement>(null)
+  const [pettyCashMode, setPettyCashMode] = useState("");
+  const { executeQueryToClient } = useExecuteQueryFromClient();
+  const tableRef = useRef<any>(null);
+  const inputSearchRef = useRef<HTMLInputElement>(null);
 
-  const subrefNoRef = useRef('')
-  const refNoRef = useRef<HTMLInputElement>(null)
-  const dateRef = useRef<HTMLInputElement>(null)
-  const payeeRef = useRef<HTMLInputElement>(null)
-  const explanationRef = useRef<HTMLInputElement>(null)
-
+  const subrefNoRef = useRef("");
+  const refNoRef = useRef<HTMLInputElement>(null);
+  const dateRef = useRef<HTMLInputElement>(null);
+  const payeeRef = useRef<HTMLInputElement>(null);
+  const explanationRef = useRef<HTMLInputElement>(null);
 
   const accountRef = useRef<HTMLInputElement>(null);
   const usageRef = useRef<HTMLInputElement>(null);
@@ -87,17 +91,14 @@ export default function PettyCash() {
   const vatRef = useRef<HTMLSelectElement>(null);
   const invoiceRef = useRef<HTMLInputElement>(null);
 
-
   const pdcSearchInput = useRef<HTMLInputElement>(null);
 
-  const transactionCodeRef = useRef('')
-  const transactionShortRef = useRef('')
-  const clientIdRef = useRef('')
-  const subAcctRef = useRef('')
-
+  const transactionCodeRef = useRef("");
+  const transactionShortRef = useRef("");
+  const clientIdRef = useRef("");
+  const subAcctRef = useRef("");
 
   const isDisableField = pettyCashMode === "";
-
 
   const {
     isLoading: loadingPettyCashIdGenerator,
@@ -114,11 +115,11 @@ export default function PettyCash() {
     onSuccess: (data) => {
       const response = data as any;
       wait(100).then(() => {
-        subrefNoRef.current = response.data.pettyCashId[0].petty_cash_id
+        subrefNoRef.current = response.data.pettyCashId[0].petty_cash_id;
         if (refNoRef.current) {
-          refNoRef.current.value = response.data.pettyCashId[0].petty_cash_id
+          refNoRef.current.value = response.data.pettyCashId[0].petty_cash_id;
         }
-      })
+      });
     },
   });
   const {
@@ -135,7 +136,7 @@ export default function PettyCash() {
     onSuccess: (data) => {
       const response = data as any;
       if (response.data.success) {
-        resetPettyCash()
+        resetPettyCash();
         return Swal.fire({
           position: "center",
           icon: "success",
@@ -169,37 +170,38 @@ export default function PettyCash() {
     onSuccess: (data) => {
       const response = data as any;
       const loadPettyCash = response.data.loadSelectedPettyCash;
-      subrefNoRef.current = loadPettyCash[0].PC_No
+      subrefNoRef.current = loadPettyCash[0].PC_No;
       if (refNoRef.current) {
-        refNoRef.current.value = loadPettyCash[0].PC_No
+        refNoRef.current.value = loadPettyCash[0].PC_No;
       }
       if (dateRef.current) {
-        dateRef.current.value = format(new Date(loadPettyCash[0].PC_Date), "yyyy-MM-dd")
+        dateRef.current.value = format(
+          new Date(loadPettyCash[0].PC_Date),
+          "yyyy-MM-dd"
+        );
       }
       if (payeeRef.current) {
-        payeeRef.current.value = loadPettyCash[0].Payee
+        payeeRef.current.value = loadPettyCash[0].Payee;
       }
       if (explanationRef.current) {
-        explanationRef.current.value = loadPettyCash[0].Explanation
+        explanationRef.current.value = loadPettyCash[0].Explanation;
       }
 
-      tableRef.current.setDataFormated(loadPettyCash)
+      tableRef.current.setDataFormated(loadPettyCash);
     },
   });
 
-  const {
-    isLoading: laodPettyCashTransaction,
-    data: dataCashTransaction
-  } = useQuery({
-    queryKey: "load-transcation",
-    queryFn: async () =>
-      await myAxios.get(`/task/accounting/load-transcation`, {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      }),
-    refetchOnWindowFocus: false,
-  });
+  const { isLoading: laodPettyCashTransaction, data: dataCashTransaction } =
+    useQuery({
+      queryKey: "load-transcation",
+      queryFn: async () =>
+        await myAxios.get(`/task/accounting/load-transcation`, {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }),
+      refetchOnWindowFocus: false,
+    });
 
   const {
     ModalComponent: ModalClientIDs,
@@ -232,18 +234,16 @@ export default function PettyCash() {
     onSelected: (selectedRowData, data) => {
       closeCliendIDsModal();
       wait(100).then(() => {
-        clientIdRef.current = selectedRowData[0].IDNo
-        subAcctRef.current = selectedRowData[0].Acronym
-        if (usageRef.current)
-          usageRef.current.value = selectedRowData[0].Name
-      })
+        clientIdRef.current = selectedRowData[0].IDNo;
+        subAcctRef.current = selectedRowData[0].Acronym;
+        if (usageRef.current) usageRef.current.value = selectedRowData[0].Name;
+      });
       wait(200).then(() => {
         if (amountRef.current) {
-          amountRef.current?.focus()
-          amountRef.current.value = ''
+          amountRef.current?.focus();
+          amountRef.current.value = "";
         }
-
-      })
+      });
     },
     searchRef: pdcSearchInput,
   });
@@ -283,12 +283,11 @@ export default function PettyCash() {
     onSelected: (selectedRowData) => {
       mutateLoadSelectedPettyCash({ PC_No: selectedRowData[0].PC_No });
 
-      setPettyCashMode("edit")
+      setPettyCashMode("edit");
 
       closeModalSearchPettyCash();
     },
     searchRef: pdcSearchInput,
-
   });
 
   function handleOnSave() {
@@ -317,7 +316,7 @@ export default function PettyCash() {
       });
     }
 
-    const newData = tableRef.current.getData()
+    const newData = tableRef.current.getData();
     const newDataFormatted = newData.map((itm: any) => {
       let newItm = {
         purpose: itm[0],
@@ -331,9 +330,9 @@ export default function PettyCash() {
         accountShort: itm[8],
         vatType: itm[9],
         invoice: itm[10],
-      }
-      return newItm
-    })
+      };
+      return newItm;
+    });
 
     if (newDataFormatted.length <= 0) {
       return Swal.fire({
@@ -343,8 +342,6 @@ export default function PettyCash() {
         timer: 1500,
       });
     }
-
-
 
     if (pettyCashMode === "edit") {
       codeCondfirmationAlert({
@@ -402,7 +399,11 @@ export default function PettyCash() {
         });
       });
     }
-    if (amountRef.current && (amountRef.current.value === "" || parseFloat(amountRef.current.value.replace(/,/g, "")) < 1)) {
+    if (
+      amountRef.current &&
+      (amountRef.current.value === "" ||
+        parseFloat(amountRef.current.value.replace(/,/g, "")) < 1)
+    ) {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -426,105 +427,103 @@ export default function PettyCash() {
               Chart_Account ON Petty_Log.Acct_Code = Chart_Account.Acct_Code
           WHERE
               Petty_Log.Acct_Code = '${transactionCodeRef.current}'
-      `)
+      `);
 
-    const currentData = tableRef.current.getData()
-    let RowIndex = 0
+    const currentData = tableRef.current.getData();
+    let RowIndex = 0;
     if (currentData.length <= 0) {
-      currentData[0] = []
+      currentData[0] = [];
     } else {
-      const getSelectedRow = tableRef.current.getSelectedRow()
+      const getSelectedRow = tableRef.current.getSelectedRow();
       if (getSelectedRow) {
-        RowIndex = getSelectedRow
+        RowIndex = getSelectedRow;
       } else {
-        RowIndex = currentData.length
-        currentData[currentData.length] = []
+        RowIndex = currentData.length;
+        currentData[currentData.length] = [];
       }
-
     }
-    currentData[RowIndex][0] = accountRef.current?.value
-    currentData[RowIndex][1] = amountRef.current?.value
-    currentData[RowIndex][2] = `${usageRef.current?.value} > ${clientIdRef.current} > ${subAcctRef.current}`
-    currentData[RowIndex][3] = `${TransDetail.data.data[0].Short} > ${TransDetail.data.data[0].Acct_Code}`
-    currentData[RowIndex][4] = subAcctRef.current
-    currentData[RowIndex][5] = clientIdRef.current
-    currentData[RowIndex][6] = usageRef.current?.value
-    currentData[RowIndex][7] = TransDetail.data.data[0].Acct_Code
-    currentData[RowIndex][8] = TransDetail.data.data[0].Short
-    currentData[RowIndex][9] = vatRef.current?.value
-    currentData[RowIndex][10] = invoiceRef.current?.value
-    tableRef.current.setData(currentData)
-    tableRef.current.setSelectedRow(null)
+    currentData[RowIndex][0] = accountRef.current?.value;
+    currentData[RowIndex][1] = amountRef.current?.value;
+    currentData[
+      RowIndex
+    ][2] = `${usageRef.current?.value} > ${clientIdRef.current} > ${subAcctRef.current}`;
+    currentData[
+      RowIndex
+    ][3] = `${TransDetail.data.data[0].Short} > ${TransDetail.data.data[0].Acct_Code}`;
+    currentData[RowIndex][4] = subAcctRef.current;
+    currentData[RowIndex][5] = clientIdRef.current;
+    currentData[RowIndex][6] = usageRef.current?.value;
+    currentData[RowIndex][7] = TransDetail.data.data[0].Acct_Code;
+    currentData[RowIndex][8] = TransDetail.data.data[0].Short;
+    currentData[RowIndex][9] = vatRef.current?.value;
+    currentData[RowIndex][10] = invoiceRef.current?.value;
+    tableRef.current.setData(currentData);
+    tableRef.current.setSelectedRow(null);
 
-
-    resetRefs()
+    resetRefs();
 
     if (accountRef.current) {
-      accountRef.current.focus()
+      accountRef.current.focus();
     }
   }
 
   function resetRefs() {
     setTimeout(() => {
       if (accountRef.current) {
-        accountRef.current.value = ''
+        accountRef.current.value = "";
       }
       if (amountRef.current) {
-        amountRef.current.value = ''
+        amountRef.current.value = "";
       }
       if (usageRef.current) {
-        usageRef.current.value = ''
+        usageRef.current.value = "";
       }
       if (vatRef.current) {
-        vatRef.current.value = 'NON-VAT'
+        vatRef.current.value = "NON-VAT";
       }
       if (invoiceRef.current) {
-        invoiceRef.current.value = ''
+        invoiceRef.current.value = "";
       }
-      subAcctRef.current = ''
-      clientIdRef.current = ''
-      transactionCodeRef.current = ''
-      transactionShortRef.current = ''
-    }, 100)
+      subAcctRef.current = "";
+      clientIdRef.current = "";
+      transactionCodeRef.current = "";
+      transactionShortRef.current = "";
+    }, 100);
   }
   function resetRefsEntry() {
     setTimeout(() => {
-      refetchettyCashIdGenerator()
+      refetchettyCashIdGenerator();
       if (dateRef.current) {
-        dateRef.current.value = format(new Date(), "yyyy-MM-dd")
+        dateRef.current.value = format(new Date(), "yyyy-MM-dd");
       }
       if (payeeRef.current) {
-        payeeRef.current.value = ''
+        payeeRef.current.value = "";
       }
       if (explanationRef.current) {
-        explanationRef.current.value = ''
+        explanationRef.current.value = "";
       }
-
-    }, 100)
+    }, 100);
   }
   function resetPettyCash() {
-    setPettyCashMode('');
+    setPettyCashMode("");
     refetchettyCashIdGenerator();
-    resetRefsEntry()
-    resetRefs()
-    tableRef.current.setData([])
+    resetRefsEntry();
+    resetRefs();
+    tableRef.current.setData([]);
   }
   function valueIsNaN(input: any) {
-    if (input !== '' && input !== null) {
-      const num = parseFloat(input.replace(/,/g, ''));
-      return isNaN(num) ? '0.00' : input
+    if (input !== "" && input !== null) {
+      const num = parseFloat(input.replace(/,/g, ""));
+      return isNaN(num) ? "0.00" : input;
     }
-    return '0.00'
+    return "0.00";
   }
-
-
-
 
   return (
     <>
-      {(isLoadingLoadSelectedPettyCash ||
-        loadingAddUpdatePettyCash
-      ) && <Loading />}
+      {(isLoadingLoadSelectedPettyCash || loadingAddUpdatePettyCash) && (
+        <Loading />
+      )}
       <PageHelmet title="Petty Cash" />
       <div
         style={{
@@ -542,7 +541,7 @@ export default function PettyCash() {
             display: "flex",
             alignItems: "center",
             columnGap: "5px",
-            marginBottom: "10px"
+            marginBottom: "10px",
           }}
         >
           {isLoadingModalSearchPettyCash ? (
@@ -577,15 +576,12 @@ export default function PettyCash() {
               }}
               icon={<SearchIcon sx={{ fontSize: "18px" }} />}
               onIconClick={(e) => {
-                e.preventDefault()
+                e.preventDefault();
                 if (inputSearchRef.current)
                   openModalSearchPettyCash(inputSearchRef.current.value);
-
               }}
               inputRef={inputSearchRef}
             />
-
-
           )}
           {pettyCashMode === "" && (
             <Button
@@ -597,7 +593,7 @@ export default function PettyCash() {
               startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
               id="entry-header-save-button"
               onClick={() => {
-                setPettyCashMode('add')
+                setPettyCashMode("add");
               }}
             >
               New
@@ -639,7 +635,7 @@ export default function PettyCash() {
                   confirmButtonText: "Yes, cancel it!",
                 }).then((result) => {
                   if (result.isConfirmed) {
-                    resetPettyCash()
+                    resetPettyCash();
                   }
                 });
               }}
@@ -684,15 +680,15 @@ export default function PettyCash() {
                   style: { width: "200px" },
                   readOnly: true,
                   onKeyDown: (e) => {
-                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                      dateRef.current?.focus()
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      dateRef.current?.focus();
                     }
-                  }
+                  },
                 }}
                 icon={<RestartAltIcon sx={{ fontSize: "18px" }} />}
                 onIconClick={(e) => {
-                  e.preventDefault()
-                  refetchettyCashIdGenerator()
+                  e.preventDefault();
+                  refetchettyCashIdGenerator();
                 }}
                 inputRef={refNoRef}
               />
@@ -713,10 +709,10 @@ export default function PettyCash() {
                 style: { width: "200px" },
                 disabled: isDisableField,
                 onKeyDown: (e) => {
-                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                    payeeRef.current?.focus()
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    payeeRef.current?.focus();
                   }
-                }
+                },
               }}
               inputRef={dateRef}
             />
@@ -727,7 +723,8 @@ export default function PettyCash() {
               display: "flex",
               flexDirection: "column",
               rowGap: "10px",
-            }}>
+            }}
+          >
             <TextInput
               label={{
                 title: "Payee : ",
@@ -740,12 +737,12 @@ export default function PettyCash() {
               input={{
                 disabled: isDisableField,
                 type: "text",
-                style: { width: '400px' },
+                style: { width: "400px" },
                 onKeyDown: (e) => {
-                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                    explanationRef.current?.focus()
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    explanationRef.current?.focus();
                   }
-                }
+                },
               }}
               inputRef={payeeRef}
             />
@@ -763,72 +760,75 @@ export default function PettyCash() {
                 type: "text",
                 style: { flex: 1 },
                 onKeyDown: (e) => {
-                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                    accountRef.current?.focus()
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    accountRef.current?.focus();
                   }
-                }
+                },
               }}
               inputRef={explanationRef}
             />
           </div>
         </div>
-        <div style={{
-          display: "flex",
-          flexDirection: "row",
-          width: "100%",
-          paddingTop: "20px",
-          gap: "50px",
-          borderRadius: "3px",
-        }}>
-          <div style={{
+        <div
+          style={{
             display: "flex",
-            flexDirection: "column",
-            rowGap: "10px",
-
-          }}>
-            {
-              laodPettyCashTransaction ?
-                <LoadingButton loading={laodPettyCashTransaction} /> :
-                <Autocomplete
-                  containerStyle={{
+            flexDirection: "row",
+            width: "100%",
+            paddingTop: "20px",
+            gap: "50px",
+            borderRadius: "3px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              rowGap: "10px",
+            }}
+          >
+            {laodPettyCashTransaction ? (
+              <LoadingButton loading={laodPettyCashTransaction} />
+            ) : (
+              <Autocomplete
+                containerStyle={{
+                  width: "100%",
+                }}
+                label={{
+                  title: "Transaction : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "80px",
+                  },
+                }}
+                DisplayMember={"Purpose"}
+                DataSource={dataCashTransaction?.data.laodTranscation}
+                disableInput={isDisableField}
+                inputRef={accountRef}
+                input={{
+                  style: {
                     width: "100%",
-                  }}
-                  label={{
-                    title: "Transaction : ",
-                    style: {
-                      fontSize: "12px",
-                      fontWeight: "bold",
-                      width: "80px",
-                    }
-                  }}
-                  DisplayMember={'Purpose'}
-                  DataSource={dataCashTransaction?.data.laodTranscation}
-                  disableInput={isDisableField}
-                  inputRef={accountRef}
-                  input={{
-                    style: {
-                      width: "100%",
-                      flex: 1,
-                    }
-                  }}
-                  onChange={(selected: any, e: any) => {
-                    if (accountRef.current)
-                      accountRef.current.value = selected.Purpose
-                    transactionCodeRef.current = selected.Acct_Code
-                    transactionShortRef.current = selected.Short
-                  }}
-                  onKeydown={(e: any) => {
-                    if (e.key === "Enter" || e.key === 'NumpadEnter') {
-                      e.preventDefault()
-                      usageRef.current?.focus()
-                    }
-                  }}
-                />
-            }
+                    flex: 1,
+                  },
+                }}
+                onChange={(selected: any, e: any) => {
+                  if (accountRef.current)
+                    accountRef.current.value = selected.Purpose;
+                  transactionCodeRef.current = selected.Acct_Code;
+                  transactionShortRef.current = selected.Short;
+                }}
+                onKeydown={(e: any) => {
+                  if (e.key === "Enter" || e.key === "NumpadEnter") {
+                    e.preventDefault();
+                    usageRef.current?.focus();
+                  }
+                }}
+              />
+            )}
             <div
               style={{
                 display: "flex",
-                columnGap: "20px"
+                columnGap: "20px",
               }}
             >
               {isLoadingClientIdsModal ? (
@@ -848,47 +848,52 @@ export default function PettyCash() {
                     type: "text",
                     style: { width: "450px" },
                     onKeyDown: (e) => {
-                      if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                        openCliendIDsModal(e.currentTarget.value)
+                      if (e.code === "NumpadEnter" || e.code === "Enter") {
+                        openCliendIDsModal(e.currentTarget.value);
                       }
-                    }
+                    },
                   }}
                   icon={<RestartAltIcon sx={{ fontSize: "18px" }} />}
                   onIconClick={(e) => {
-                    e.preventDefault()
+                    e.preventDefault();
                     if (usageRef.current) {
-                      openCliendIDsModal(usageRef.current.value)
+                      openCliendIDsModal(usageRef.current.value);
                     }
                   }}
                   inputRef={usageRef}
                 />
               )}
-              <div style={{
-                display: "flex",
-              }}>
-                <label style={{
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "70px",
-                }}>Amount :</label>
+              <div
+                style={{
+                  display: "flex",
+                }}
+              >
+                <label
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "70px",
+                  }}
+                >
+                  Amount :
+                </label>
                 <NumericFormat
                   disabled={isDisableField}
                   getInputRef={amountRef}
                   decimalScale={2}
                   fixedDecimalScale={true}
                   style={{
-                    width: '200px',
+                    width: "200px",
                   }}
                   onKeyDown={(e) => {
-                    if (e.code === 'Enter' || e.code === 'NumpadEnter') {
-                      e.currentTarget.value = valueIsNaN(e.currentTarget.value)
-                      vatRef.current?.focus()
+                    if (e.code === "Enter" || e.code === "NumpadEnter") {
+                      e.currentTarget.value = valueIsNaN(e.currentTarget.value);
+                      vatRef.current?.focus();
                     }
-
                   }}
                   onBlur={(e) => {
-                    if (e.currentTarget.value === '') {
-                      e.currentTarget.value = '0.00'
+                    if (e.currentTarget.value === "") {
+                      e.currentTarget.value = "0.00";
                     }
                   }}
                   allowNegative={false}
@@ -896,12 +901,13 @@ export default function PettyCash() {
                   valueIsNumericString
                 />
               </div>
-
             </div>
-            <div style={{
-              display: "flex",
-              columnGap: "20px"
-            }}>
+            <div
+              style={{
+                display: "flex",
+                columnGap: "20px",
+              }}
+            >
               <SelectInput
                 containerStyle={{
                   fontSize: "12px",
@@ -925,12 +931,12 @@ export default function PettyCash() {
                     cursor: "pointer",
                   },
                   onKeyDown: (e) => {
-                    if (e.code === 'Enter' || e.code === 'NumpadEnter') {
-                      invoiceRef.current?.focus()
+                    if (e.code === "Enter" || e.code === "NumpadEnter") {
+                      invoiceRef.current?.focus();
                     }
                   },
                 }}
-                datasource={[{ key: 'NON-VAT' }, { key: 'VAT' }]}
+                datasource={[{ key: "NON-VAT" }, { key: "VAT" }]}
                 values={"key"}
                 display={"key"}
                 selectRef={vatRef}
@@ -947,13 +953,13 @@ export default function PettyCash() {
                 input={{
                   disabled: isDisableField,
                   type: "text",
-                  style: { width: '270px' },
+                  style: { width: "270px" },
                   onKeyDown: (e) => {
-                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                      e.preventDefault()
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      e.preventDefault();
                       handleAddTransaction();
                     }
-                  }
+                  },
                 }}
                 inputRef={invoiceRef}
               />
@@ -961,7 +967,12 @@ export default function PettyCash() {
                 disabled={isDisableField}
                 color="success"
                 variant="contained"
-                style={{ gridArea: "button", height: "22px", fontSize: "12px", width: "270px" }}
+                style={{
+                  gridArea: "button",
+                  height: "22px",
+                  fontSize: "12px",
+                  width: "270px",
+                }}
                 startIcon={<AddIcon />}
                 onClick={() => {
                   handleAddTransaction();
@@ -978,31 +989,35 @@ export default function PettyCash() {
           width="100%"
           height="350px"
           columns={columns}
-          getSelectedItem={(rowItm: any, colItm: any, rowIdx: any, colIdx: any) => {
+          getSelectedItem={(
+            rowItm: any,
+            colItm: any,
+            rowIdx: any,
+            colIdx: any
+          ) => {
             if (rowItm) {
               if (accountRef.current) {
-                accountRef.current.value = rowItm[0]
+                accountRef.current.value = rowItm[0];
               }
               if (amountRef.current) {
-                amountRef.current.value = rowItm[1]
+                amountRef.current.value = rowItm[1];
               }
               if (usageRef.current) {
-                usageRef.current.value = rowItm[6]
+                usageRef.current.value = rowItm[6];
               }
               if (vatRef.current) {
-                vatRef.current.value = rowItm[9]
+                vatRef.current.value = rowItm[9];
               }
               if (invoiceRef.current) {
-                invoiceRef.current.value = rowItm[10]
+                invoiceRef.current.value = rowItm[10];
               }
-              subAcctRef.current = rowItm[4]
-              clientIdRef.current = rowItm[5]
-              transactionCodeRef.current = rowItm[7]
-              transactionShortRef.current = rowItm[8]
+              subAcctRef.current = rowItm[4];
+              clientIdRef.current = rowItm[5];
+              transactionCodeRef.current = rowItm[7];
+              transactionShortRef.current = rowItm[8];
             } else {
-              resetRefs()
+              resetRefs();
             }
-
           }}
         />
         {/* <PettyCashTableSelected
@@ -1037,171 +1052,172 @@ export default function PettyCash() {
         {ModalSearchPettyCash}
       </div>
     </>
-
   );
 }
-export const Autocomplete = forwardRef(({
-  DisplayMember,
-  DataSource:_DataSource,
-  inputRef,
-  disableInput = false,
-  onKeydown,
-  onChange,
-  label = {
-    title: "Transaction : ",
-    style: {
-      fontSize: "12px",
-      fontWeight: "bold",
-      width: "100px",
-    },
-  },
-  input = {
-    width: '740px',
-  },
-  containerStyle,
-}: any, ref: any) => {
-  const [DataSource ,setDataSource] = useState(_DataSource)
-  const [filteredSuggestions, setFilteredSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(0);
+export const Autocomplete = forwardRef(
+  (
+    {
+      DisplayMember,
+      DataSource: _DataSource,
+      inputRef,
+      disableInput = false,
+      onKeydown,
+      onChange,
+      label = {
+        title: "Transaction : ",
+        style: {
+          fontSize: "12px",
+          fontWeight: "bold",
+          width: "100px",
+        },
+      },
+      input = {
+        width: "740px",
+      },
+      containerStyle,
+    }: any,
+    ref: any
+  ) => {
+    const [DataSource, setDataSource] = useState(_DataSource);
+    const [filteredSuggestions, setFilteredSuggestions] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(0);
 
-  // Ref to store the suggestion container
-  const suggestionListRef = useRef<HTMLUListElement>(null);
+    // Ref to store the suggestion container
+    const suggestionListRef = useRef<HTMLUListElement>(null);
 
-  useEffect(() => {
-    // Scroll the active suggestion into view
-    const activeElement = suggestionListRef.current?.children[activeSuggestionIndex];
-    if (activeElement) {
-      activeElement.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-      });
-    }
-  }, [activeSuggestionIndex]);
+    useEffect(() => {
+      // Scroll the active suggestion into view
+      const activeElement =
+        suggestionListRef.current?.children[activeSuggestionIndex];
+      if (activeElement) {
+        activeElement.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+        });
+      }
+    }, [activeSuggestionIndex]);
 
-  const handleChange = (e: any) => {
-    const value = e.target.value;
+    const handleChange = (e: any) => {
+      const value = e.target.value;
 
-
-    if (value.trim()) {
-      const filtered = DataSource.filter((item: any) =>
-        item[DisplayMember].toLowerCase().includes(value.toLowerCase())
-      );
-      setFilteredSuggestions(filtered);
-      setShowSuggestions(true);
-    } else {
-      setFilteredSuggestions([]);
-      setShowSuggestions(false);
-    }
-  };
-
-  const handleClick = (suggestion: any) => {
-    setShowSuggestions(false);
-  };
-
-  const handleKeyDown = (e: any) => {
-    if (e.key === 'Tab') {
-      flushSync(() => {
-        setShowSuggestions(false)
+      if (value.trim()) {
+        const filtered = DataSource.filter((item: any) =>
+          item[DisplayMember].toLowerCase().includes(value.toLowerCase())
+        );
+        setFilteredSuggestions(filtered);
+        setShowSuggestions(true);
+      } else {
         setFilteredSuggestions([]);
-      })
-    }
-    if (e.key === "ArrowDown") {
-      e.preventDefault()
-      setActiveSuggestionIndex((prevIndex) =>
-        Math.min(prevIndex + 1, filteredSuggestions.length - 1)
-      );
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault()
-
-      setActiveSuggestionIndex((prevIndex) =>
-        Math.max(prevIndex - 1, 0)
-      );
-    } else if (e.key === "Enter" || e.key === 'NumpadEnter') {
-      e.preventDefault()
-      if (filteredSuggestions.length > 0) {
-        const selectedSuggestion = filteredSuggestions[activeSuggestionIndex];
-        onChange(selectedSuggestion, e)
         setShowSuggestions(false);
       }
+    };
 
-    }
+    const handleClick = (suggestion: any) => {
+      setShowSuggestions(false);
+    };
 
-    setTimeout(() => {
-      if (onKeydown)
-        onKeydown(e)
-    }, 150)
-  };
+    const handleKeyDown = (e: any) => {
+      if (e.key === "Tab") {
+        flushSync(() => {
+          setShowSuggestions(false);
+          setFilteredSuggestions([]);
+        });
+      }
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveSuggestionIndex((prevIndex) =>
+          Math.min(prevIndex + 1, filteredSuggestions.length - 1)
+        );
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
 
-  useImperativeHandle(ref, () => ({
-    setDataSource: (newDataSource: Array<any>) => {
-       setDataSource(newDataSource)
-    }
-  }))
+        setActiveSuggestionIndex((prevIndex) => Math.max(prevIndex - 1, 0));
+      } else if (e.key === "Enter" || e.key === "NumpadEnter") {
+        e.preventDefault();
+        if (filteredSuggestions.length > 0) {
+          const selectedSuggestion = filteredSuggestions[activeSuggestionIndex];
+          onChange(selectedSuggestion, e);
+          setShowSuggestions(false);
+        }
+      }
 
-  return (
-    <div style={{ flex: 1 }}>
-      <TextInput
-        containerStyle={containerStyle}
-        label={label}
-        input={{
-          ...input,
-          disabled: disableInput,
-          type: "text",
-          onKeyDown: handleKeyDown,
-          onChange: handleChange,
-          onFocus: (e) => {
-            e.preventDefault()
-            e.currentTarget?.focus()
-            setShowSuggestions(true)
-            setFilteredSuggestions(DataSource);
-            if (inputRef.current) {
-              inputRef.current.focus()
-            }
-          },
-          onBlur: (e) => {
-            if (e.relatedTarget && e.relatedTarget.tagName === 'LI') {
-              wait(250).then(() => {
-                setShowSuggestions(false)
+      setTimeout(() => {
+        if (onKeydown) onKeydown(e);
+      }, 150);
+    };
+
+    useImperativeHandle(ref, () => ({
+      setDataSource: (newDataSource: Array<any>) => {
+        setDataSource(newDataSource);
+      },
+    }));
+
+    return (
+      <div style={{ flex: 1 }}>
+        <TextInput
+          containerStyle={containerStyle}
+          label={label}
+          input={{
+            ...input,
+            disabled: disableInput,
+            type: "text",
+            onKeyDown: handleKeyDown,
+            onChange: handleChange,
+            onFocus: (e) => {
+              e.preventDefault();
+              e.currentTarget?.focus();
+              setShowSuggestions(true);
+              setFilteredSuggestions(DataSource);
+              if (inputRef.current) {
+                inputRef.current.focus();
+              }
+            },
+            onBlur: (e) => {
+              if (e.relatedTarget && e.relatedTarget.tagName === "LI") {
+                wait(250).then(() => {
+                  setShowSuggestions(false);
+                  setFilteredSuggestions([]);
+                });
+              } else {
+                setShowSuggestions(false);
                 setFilteredSuggestions([]);
-              })
-            } else {
-              setShowSuggestions(false)
-              setFilteredSuggestions([]);
+              }
+            },
+          }}
+          icon={<KeyboardArrowDownIcon sx={{ fontSize: "18px" }} />}
+          onIconClick={(e) => {
+            if (inputRef.current) {
+              inputRef.current.focus();
             }
-          }
-        }}
-        icon={<KeyboardArrowDownIcon sx={{ fontSize: "18px" }} />}
-        onIconClick={(e) => {
-          if (inputRef.current) {
-            inputRef.current.focus()
-          }
-        }}
-        inputRef={inputRef}
-      />
-      {showSuggestions && filteredSuggestions.length > 0 && (
-        <ul className="suggestions" ref={suggestionListRef}>
-          {filteredSuggestions.map((suggestion, index) => (
-            <li
-              tabIndex={0}
-              key={index}
-              onClick={(e) => {
-                handleClick(suggestion)
-                onChange(suggestion, e)
-              }}
-              className={index === activeSuggestionIndex ? "active" : ""}
-              onMouseEnter={(e) => {
-                e.preventDefault()
-                setActiveSuggestionIndex(Math.min(index, filteredSuggestions.length - 1));
-              }}
-            >
-              {suggestion[DisplayMember]}
-            </li>
-          ))}
-        </ul>
-      )}
-      <style>
-        {`
+          }}
+          inputRef={inputRef}
+        />
+        {showSuggestions && filteredSuggestions.length > 0 && (
+          <ul className="suggestions" ref={suggestionListRef}>
+            {filteredSuggestions.map((suggestion, index) => (
+              <li
+                tabIndex={0}
+                key={index}
+                onClick={(e) => {
+                  handleClick(suggestion);
+                  onChange(suggestion, e);
+                }}
+                className={index === activeSuggestionIndex ? "active" : ""}
+                onMouseEnter={(e) => {
+                  e.preventDefault();
+                  setActiveSuggestionIndex(
+                    Math.min(index, filteredSuggestions.length - 1)
+                  );
+                }}
+              >
+                {suggestion[DisplayMember]}
+              </li>
+            ))}
+          </ul>
+        )}
+        <style>
+          {`
           .suggestions {
             margin-top: 0;
             padding: 0;
@@ -1225,7 +1241,280 @@ export const Autocomplete = forwardRef(({
           }
       
         `}
-      </style>
-    </div>
-  );
-})
+        </style>
+      </div>
+    );
+  }
+);
+
+export const AutocompleteNumber = forwardRef(
+  (
+    {
+      DisplayMember,
+      DataSource: _DataSource,
+      inputRef,
+      disableInput = false,
+      onKeydown,
+      onChange,
+      label = {
+        title: "Transaction : ",
+        style: {
+          fontSize: "12px",
+          fontWeight: "bold",
+          width: "100px",
+        },
+      },
+      input = {
+        width: "740px",
+      },
+      containerStyle,
+    }: any,
+    ref: any
+  ) => {
+    const [DataSource, setDataSource] = useState(_DataSource);
+    const [filteredSuggestions, setFilteredSuggestions] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(0);
+
+    // Ref to store the suggestion container
+    const suggestionListRef = useRef<HTMLUListElement>(null);
+
+    useEffect(() => {
+      // Scroll the active suggestion into view
+      const activeElement =
+        suggestionListRef.current?.children[activeSuggestionIndex];
+      if (activeElement) {
+        activeElement.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+        });
+      }
+    }, [activeSuggestionIndex]);
+
+    const handleClick = (suggestion: any) => {
+      setShowSuggestions(false);
+    };
+
+    const handleKeyDown = (e: any) => {
+      if (e.key === "Tab") {
+        flushSync(() => {
+          setShowSuggestions(false);
+          setFilteredSuggestions([]);
+        });
+      }
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveSuggestionIndex((prevIndex) =>
+          Math.min(prevIndex + 1, filteredSuggestions.length - 1)
+        );
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+
+        setActiveSuggestionIndex((prevIndex) => Math.max(prevIndex - 1, 0));
+      } else if (e.key === "Enter" || e.key === "NumpadEnter") {
+        e.preventDefault();
+        if (filteredSuggestions.length > 0) {
+          const selectedSuggestion = filteredSuggestions[activeSuggestionIndex];
+          onChange(selectedSuggestion, e);
+          setShowSuggestions(false);
+        }
+      }
+
+      setTimeout(() => {
+        if (onKeydown) onKeydown(e);
+      }, 150);
+    };
+
+    const formatNumber = (value: string) => {
+      if (!value) return value;
+
+      // Split the value into integer and decimal parts
+      const parts = value.split(".");
+
+      // Add commas to the integer part only
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+      // Join the integer and decimal parts if decimal exists
+      return parts.join(".");
+    };
+
+    // Helper function to remove commas
+    const unformatNumber = (value: string) => {
+      return value.replace(/,/g, "");
+    };
+
+    // Function to ensure two decimal places
+    const ensureTwoDecimals = (value: string) => {
+      // If the value has no decimal part, append '.00'
+      if (!value.includes(".")) {
+        if (value === "") {
+          return "0.00";
+        } else {
+          return value + ".00";
+        }
+      }
+
+      // If the value has one decimal place, append '0'
+      const parts = value.split(".");
+      if (parts[1].length === 1) {
+        return value + "0";
+      }
+
+      // If it already has two decimal places, return as is
+      return value;
+    };
+
+    const handleChange = (e: any) => {
+      let value = e.target.value;
+
+      // Remove commas for processing
+      value = unformatNumber(value);
+
+      // Allow only numbers, commas, and one decimal point
+      const regex = /^-?\d+(,\d{3})*(\.\d*)?$/;
+
+      // Remove commas for processing
+      value = unformatNumber(value);
+
+      // Check if the value is valid
+      if (value === "" || regex.test(value)) {
+        // Set the formatted value back in the input field
+        //setInputValue(formatNumber(value));
+        e.target.value = formatNumber(value);
+      } else {
+        const numbers = value.match(/\d+/g);
+        if (numbers) {
+          const newV = numbers.join("");
+          e.target.value = formatNumber(newV);
+        } else {
+          e.target.value = "0";
+        }
+      }
+
+      filterOnChange(e.target.value);
+    };
+
+    const filterOnChange = (value: any) => {
+      if (value.trim()) {
+        const filtered = DataSource.filter((item: any) =>
+          item[DisplayMember].toLowerCase().includes(value.toLowerCase())
+        );
+        setFilteredSuggestions(filtered);
+        setShowSuggestions(true);
+      } else {
+        setFilteredSuggestions([]);
+        setShowSuggestions(false);
+      }
+    };
+
+    const formatOnBlur = (value: any, e: any) => {
+      let newValue = unformatNumber(value);
+
+      // Ensure the value has two decimal places
+      newValue = ensureTwoDecimals(newValue);
+
+      // Set the value with commas and .00 (if needed)
+      // setInputValue(formatNumber(value));
+      e.target.value = formatNumber(newValue);
+    };
+
+    useImperativeHandle(ref, () => ({
+      setDataSource: (newDataSource: Array<any>) => {
+        setDataSource(newDataSource);
+      },
+    }));
+
+    return (
+      <div style={{ flex: 1 }}>
+        <TextInput
+          containerStyle={containerStyle}
+          label={label}
+          input={{
+            ...input,
+            disabled: disableInput,
+            type: "text",
+            onKeyDown: handleKeyDown,
+            onChange: handleChange,
+            onFocus: (e) => {
+              e.preventDefault();
+              e.currentTarget?.focus();
+              setShowSuggestions(true);
+              setFilteredSuggestions(DataSource);
+              if (inputRef.current) {
+                inputRef.current.focus();
+              }
+            },
+            onBlur: (e) => {
+              formatOnBlur(e.currentTarget.value, e);
+              if (e.relatedTarget && e.relatedTarget.tagName === "LI") {
+                wait(250).then(() => {
+                  setShowSuggestions(false);
+                  setFilteredSuggestions([]);
+                });
+              } else {
+                setShowSuggestions(false);
+                setFilteredSuggestions([]);
+              }
+            },
+          }}
+          icon={<KeyboardArrowDownIcon sx={{ fontSize: "18px" }} />}
+          onIconClick={(e) => {
+            if (inputRef.current) {
+              inputRef.current.focus();
+            }
+          }}
+          inputRef={inputRef}
+        />
+        {showSuggestions && filteredSuggestions.length > 0 && (
+          <ul className="suggestions" ref={suggestionListRef}>
+            {filteredSuggestions.map((suggestion, index) => (
+              <li
+                tabIndex={0}
+                key={index}
+                onClick={(e) => {
+                  handleClick(suggestion);
+                  onChange(suggestion, e);
+                }}
+                className={index === activeSuggestionIndex ? "active" : ""}
+                onMouseEnter={(e) => {
+                  e.preventDefault();
+                  setActiveSuggestionIndex(
+                    Math.min(index, filteredSuggestions.length - 1)
+                  );
+                }}
+              >
+                {suggestion[DisplayMember]}
+              </li>
+            ))}
+          </ul>
+        )}
+        <style>
+          {`
+          .suggestions {
+            margin-top: 0;
+            padding: 0;
+            list-style: none;
+            max-height: 150px;
+            overflow-y: auto;
+            position:absolute;
+            z-index:100;
+            background:white;
+            width:350px;
+            border:1px solid #e5e7eb;
+            box-shadow: 0px 23px 32px -17px rgba(0,0,0,0.75);
+          }
+          .suggestions li {
+            padding:3px 10px;
+            cursor: pointer;
+            font-size:14px;
+          }
+          .suggestions li.active {
+            background-color: #e2e8f0;
+          }
+      
+        `}
+        </style>
+      </div>
+    );
+  }
+);

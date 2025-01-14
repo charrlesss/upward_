@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import '../style/header.css'
+import "../style/header.css";
 import { AuthContext } from "./AuthContext";
 import { Logout } from "./Sidebars/Logout";
 import AccountCircle from "@mui/icons-material/AccountCircle";
@@ -31,44 +31,89 @@ export default function Header() {
         { name: "Bank", path: "/dashboard/reference/bank" },
         { name: "Bank Account", path: "/dashboard/reference/bank-account" },
         { name: "Booklet", path: "/dashboard/reference/booklet" },
-        { name: "Chart of Accounts", path: "/dashboard/reference/chart-accounts" },
+        {
+          name: "Chart of Accounts",
+          path: "/dashboard/reference/chart-accounts",
+        },
         { name: "Sub Account", path: "/dashboard/reference/sub-account" },
-        { name: "Transaction Code", path: "/dashboard/reference/transaction-code" },
+        {
+          name: "Transaction Code",
+          path: "/dashboard/reference/transaction-code",
+        },
         { name: "ID Entry", path: "/dashboard/reference/id-entry" },
         { name: "Subline", path: "/dashboard/reference/subline" },
         { name: "Rates", path: "/dashboard/reference/rates" },
         { name: "CTPL", path: "/dashboard/reference/ctpl" },
-        { name: "Petty Cash Transaction", path: "/dashboard/reference/petty-cash-transaction" },
+        {
+          name: "Petty Cash Transaction",
+          path: "/dashboard/reference/petty-cash-transaction",
+        },
         { name: "Mortgagee", path: "/dashboard/reference/mortgagee" },
       ],
     },
     {
       name: "Accounting",
       subLinks: [
-        { name: "Post Dated Checks", path: "/dashboard/task/accounting/post-date-checks" },
+        {
+          name: "Post Dated Checks",
+          path: "/dashboard/task/accounting/post-date-checks",
+        },
         { name: "Collections", path: "/dashboard/task/accounting/collections" },
         { name: "Deposit", path: "/dashboard/task/accounting/deposit" },
-        { name: "Return Check", path: "/dashboard/task/accounting/return-check" },
+        {
+          name: "Return Check",
+          path: "/dashboard/task/accounting/return-check",
+        },
         { name: "Petty Cash", path: "/dashboard/task/accounting/petty-cash" },
-        { name: "General Journal", path: "/dashboard/task/accounting/general-journal" },
-        { name: "Cash Disbursement", path: "/dashboard/task/accounting/cash-disbursement" },
-        { name: "Treasury", path: "/dashboard/task/accounting/warehouse-checks" },
-        { name: "Check Pullout", path: "/dashboard/task/accounting/check-pullout" },
-        { name: "Check Pullout Request", path: "/dashboard/task/accounting/check-pullout-request" },
-        { name: "Check Pullout Approved", path: "/dashboard/task/accounting/check-pullout-approved" },
-        { name: "Check Postponement", path: "/dashboard/task/accounting/check-postponement" },
-        { name: "Check Postponement Request", path: "/dashboard/task/accounting/check-postponement-request" },
-        { name: "Check Postponement Approved", path: "/dashboard/task/accounting/check-postponement-approved" },
+        {
+          name: "General Journal",
+          path: "/dashboard/task/accounting/general-journal",
+        },
+        {
+          name: "Cash Disbursement",
+          path: "/dashboard/task/accounting/cash-disbursement",
+        },
+        {
+          name: "Treasury",
+          path: "/dashboard/task/accounting/warehouse-checks",
+        },
+        {
+          name: "Check Pullout",
+          path: "/dashboard/task/accounting/check-pullout",
+        },
+        {
+          name: "Check Pullout Request",
+          path: "/dashboard/task/accounting/check-pullout-request",
+        },
+        {
+          name: "Check Pullout Approved",
+          path: "/dashboard/task/accounting/check-pullout-approved",
+        },
+        {
+          name: "Check Postponement",
+          path: "/dashboard/task/accounting/check-postponement",
+        },
+        {
+          name: "Check Postponement Request",
+          path: "/dashboard/task/accounting/check-postponement-request",
+        },
+        {
+          name: "Check Postponement Approved",
+          path: "/dashboard/task/accounting/check-postponement-approved",
+        },
       ],
     },
     {
       name: "Production",
       subLinks: [
         { name: "Policy", path: "/dashboard/task/production/policy/" },
-        { name: "Statement of Account", path: "/dashboard/task/production/statement-of-account" },
+        {
+          name: "Statement of Account",
+          path: "/dashboard/task/production/statement-of-account",
+        },
       ],
     },
-  ])
+  ]);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -79,7 +124,7 @@ export default function Header() {
     enabled: false,
     onSuccess: (res) => {
       if (res.data.success) {
-        setOpenUserMenu(false)
+        setOpenUserMenu(false);
         Swal.fire({
           position: "center",
           icon: "success",
@@ -95,7 +140,6 @@ export default function Header() {
   });
 
   const handleLogout = () => {
-
     Swal.fire({
       title: "Are you sure?",
       text: "You want to logout!",
@@ -103,28 +147,25 @@ export default function Header() {
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, logout it!"
+      confirmButtonText: "Yes, logout it!",
     }).then((result) => {
       if (result.isConfirmed) {
-
-        axios.get('http://localhost:7624/close-report', {
-          withCredentials: true
-        }).then((res) => {
-          if (!res.data.success) {
-            alert(res.data.message)
-          }
-
-
-        })
-          .catch(console.log)
+        axios
+          .get("http://localhost:7624/close-report", {
+            withCredentials: true,
+          })
+          .then((res) => {
+            if (!res.data.success) {
+              alert(res.data.message);
+            }
+          })
+          .catch(console.log);
 
         setTimeout(() => {
           refetch();
-        }, 500)
+        }, 500);
       }
     });
-
-
   };
 
   const handleMouseEnter = (menuItem: any) => {
@@ -143,7 +184,6 @@ export default function Header() {
   const handleSubLinkClick = () => {
     // Close submenu after clicking any sublink
     setOpenMenu(null);
-
   };
 
   useEffect(() => {
@@ -159,110 +199,105 @@ export default function Header() {
       {
         name: "Reference",
         subLinks: [
-          { name: "Policy Account", path: "/dashboard/reference/policy-account" },
+          {
+            name: "Policy Account",
+            path: "/dashboard/reference/policy-account",
+          },
           { name: "Bank", path: "/dashboard/reference/bank" },
           { name: "Bank Account", path: "/dashboard/reference/bank-account" },
           { name: "Booklet", path: "/dashboard/reference/booklet" },
-          { name: "Chart of Accounts", path: "/dashboard/reference/chart-accounts" },
+          {
+            name: "Chart of Accounts",
+            path: "/dashboard/reference/chart-accounts",
+          },
           { name: "Sub Account", path: "/dashboard/reference/sub-account" },
-          { name: "Transaction Code", path: "/dashboard/reference/transaction-code" },
+          {
+            name: "Transaction Code",
+            path: "/dashboard/reference/transaction-code",
+          },
           { name: "ID Entry", path: "/dashboard/reference/id-entry" },
           { name: "Subline", path: "/dashboard/reference/subline" },
           { name: "Rates", path: "/dashboard/reference/rates" },
           { name: "CTPL", path: "/dashboard/reference/ctpl" },
-          { name: "Petty Cash Transaction", path: "/dashboard/reference/petty-cash-transaction" },
+          {
+            name: "Petty Cash Transaction",
+            path: "/dashboard/reference/petty-cash-transaction",
+          },
           { name: "Mortgagee", path: "/dashboard/reference/mortgagee" },
         ],
       },
       {
         name: "Accounting",
         subLinks: [
-          { name: "Post Dated Checks", path: "/dashboard/task/accounting/post-date-checks" },
-          { name: "Collections", path: "/dashboard/task/accounting/collections" },
+          {
+            name: "Post Dated Checks",
+            path: "/dashboard/task/accounting/post-date-checks",
+          },
+          {
+            name: "Collections",
+            path: "/dashboard/task/accounting/collections",
+          },
           { name: "Deposit", path: "/dashboard/task/accounting/deposit" },
-          { name: "Return Check", path: "/dashboard/task/accounting/return-check" },
+          {
+            name: "Return Check",
+            path: "/dashboard/task/accounting/return-check",
+          },
           { name: "Petty Cash", path: "/dashboard/task/accounting/petty-cash" },
-          { name: "General Journal", path: "/dashboard/task/accounting/general-journal" },
-          { name: "Cash Disbursement", path: "/dashboard/task/accounting/cash-disbursement" },
-          { name: "Treasury", path: "/dashboard/task/accounting/warehouse-checks" },
-          { name: "Check Pullout Request", path: "/dashboard/task/accounting/check-pullout-request" },
-          { name: "Check Pullout Approved", path: "/dashboard/task/accounting/check-pullout-approved" },
-          { name: "Check Postponement Request", path: "/dashboard/task/accounting/check-postponement-request" },
-          { name: "Check Postponement Approved", path: "/dashboard/task/accounting/check-postponement-approved" },
+          {
+            name: "General Journal",
+            path: "/dashboard/task/accounting/general-journal",
+          },
+          {
+            name: "Cash Disbursement",
+            path: "/dashboard/task/accounting/cash-disbursement",
+          },
+          {
+            name: "Treasury",
+            path: "/dashboard/task/accounting/warehouse-checks",
+          },
+          {
+            name: "Check Pullout Request",
+            path: "/dashboard/task/accounting/check-pullout-request",
+          },
+          {
+            name: "Check Pullout Approved",
+            path: "/dashboard/task/accounting/check-pullout-approved",
+          },
+          {
+            name: "Check Postponement Request",
+            path: "/dashboard/task/accounting/check-postponement-request",
+          },
+          {
+            name: "Check Postponement Approved",
+            path: "/dashboard/task/accounting/check-postponement-approved",
+          },
         ],
       },
       {
         name: "Production",
         subLinks: [
           { name: "Policy", path: "/dashboard/task/production/policy/" },
-          { name: "Statement of Account", path: "/dashboard/task/production/statement-of-account" },
+          {
+            name: "Statement of Account",
+            path: "/dashboard/task/production/statement-of-account",
+          },
         ],
       },
       {
         name: "Production Report",
         subLinks: [
-          { name: "Production Report", path: "/dashboard/reports/production/production-report" },
-          { name: "Renewal Notice", path: "/dashboard/reports/production/renewal-notice" },
+          {
+            name: "Production Report",
+            path: "/dashboard/reports/production/production-report",
+          },
+          {
+            name: "Renewal Notice",
+            path: "/dashboard/reports/production/renewal-notice",
+          },
         ],
       },
-
     ];
-    if (user?.userAccess === 'PRODUCTION_ACCOUNTING') {
-      return setMenuData([{
-        name: "Dashboard",
-        path: "/dashboard",
-      },
-      {
-        name: "Reference",
-        subLinks: [
-          { name: "Policy Account", path: "/dashboard/reference/policy-account" },
-          { name: "Bank", path: "/dashboard/reference/bank" },
-          { name: "Bank Account", path: "/dashboard/reference/bank-account" },
-          { name: "Booklet", path: "/dashboard/reference/booklet" },
-          { name: "Chart of Accounts", path: "/dashboard/reference/chart-accounts" },
-          { name: "Sub Account", path: "/dashboard/reference/sub-account" },
-          { name: "Transaction Code", path: "/dashboard/reference/transaction-code" },
-          { name: "ID Entry", path: "/dashboard/reference/id-entry" },
-          { name: "Subline", path: "/dashboard/reference/subline" },
-          { name: "Rates", path: "/dashboard/reference/rates" },
-          { name: "CTPL", path: "/dashboard/reference/ctpl" },
-          { name: "Petty Cash Transaction", path: "/dashboard/reference/petty-cash-transaction" },
-          { name: "Mortgagee", path: "/dashboard/reference/mortgagee" },
-        ],
-      },
-      {
-        name: "Accounting",
-        subLinks: [
-          { name: "Post Dated Checks", path: "/dashboard/task/accounting/post-date-checks" },
-          { name: "Collections", path: "/dashboard/task/accounting/collections" },
-          { name: "Deposit", path: "/dashboard/task/accounting/deposit" },
-          { name: "Return Check", path: "/dashboard/task/accounting/return-check" },
-          { name: "Petty Cash", path: "/dashboard/task/accounting/petty-cash" },
-          { name: "General Journal", path: "/dashboard/task/accounting/general-journal" },
-          { name: "Cash Disbursement", path: "/dashboard/task/accounting/cash-disbursement" },
-          { name: "Treasury", path: "/dashboard/task/accounting/warehouse-checks" },
-          { name: "Check Pullout Request", path: "/dashboard/task/accounting/check-pullout-request" },
-          { name: "Check Pullout Approved", path: "/dashboard/task/accounting/check-pullout-approved" },
-          { name: "Check Postponement Request", path: "/dashboard/task/accounting/check-postponement-request" },
-          { name: "Check Postponement Approved", path: "/dashboard/task/accounting/check-postponement-approved" },
-        ],
-      },
-      {
-        name: "Production",
-        subLinks: [
-          { name: "Policy", path: "/dashboard/task/production/policy/" },
-          { name: "Statement of Account", path: "/dashboard/task/production/statement-of-account" },
-        ],
-      },
-      {
-        name: "Production Report",
-        subLinks: [
-          { name: "Production Report", path: "/dashboard/reports/production/production-report" },
-          { name: "Renewal Notice", path: "/dashboard/reports/production/renewal-notice" },
-        ],
-      },
-      ])
-    } else if (user?.userAccess === 'ACCOUNTING') {
+    if (user?.userAccess === "PRODUCTION_ACCOUNTING") {
       return setMenuData([
         {
           name: "Dashboard",
@@ -271,90 +306,269 @@ export default function Header() {
         {
           name: "Reference",
           subLinks: [
-            { name: "Policy Account", path: "/dashboard/reference/policy-account" },
+            {
+              name: "Policy Account",
+              path: "/dashboard/reference/policy-account",
+            },
             { name: "Bank", path: "/dashboard/reference/bank" },
             { name: "Bank Account", path: "/dashboard/reference/bank-account" },
             { name: "Booklet", path: "/dashboard/reference/booklet" },
-            { name: "Chart of Accounts", path: "/dashboard/reference/chart-accounts" },
+            {
+              name: "Chart of Accounts",
+              path: "/dashboard/reference/chart-accounts",
+            },
             { name: "Sub Account", path: "/dashboard/reference/sub-account" },
-            { name: "Transaction Code", path: "/dashboard/reference/transaction-code" },
+            {
+              name: "Transaction Code",
+              path: "/dashboard/reference/transaction-code",
+            },
             { name: "ID Entry", path: "/dashboard/reference/id-entry" },
             { name: "Subline", path: "/dashboard/reference/subline" },
             { name: "Rates", path: "/dashboard/reference/rates" },
             { name: "CTPL", path: "/dashboard/reference/ctpl" },
-            { name: "Petty Cash Transaction", path: "/dashboard/reference/petty-cash-transaction" },
+            {
+              name: "Petty Cash Transaction",
+              path: "/dashboard/reference/petty-cash-transaction",
+            },
             { name: "Mortgagee", path: "/dashboard/reference/mortgagee" },
           ],
         },
         {
           name: "Accounting",
           subLinks: [
-            { name: "Post Dated Checks", path: "/dashboard/task/accounting/post-date-checks" },
-            { name: "Collections", path: "/dashboard/task/accounting/collections" },
+            {
+              name: "Post Dated Checks",
+              path: "/dashboard/task/accounting/post-date-checks",
+            },
+            {
+              name: "Collections",
+              path: "/dashboard/task/accounting/collections",
+            },
             { name: "Deposit", path: "/dashboard/task/accounting/deposit" },
-            { name: "Return Check", path: "/dashboard/task/accounting/return-check" },
-            { name: "Petty Cash", path: "/dashboard/task/accounting/petty-cash" },
-            { name: "General Journal", path: "/dashboard/task/accounting/general-journal" },
-            { name: "Cash Disbursement", path: "/dashboard/task/accounting/cash-disbursement" },
-            { name: "Treasury", path: "/dashboard/task/accounting/warehouse-checks" },
-            { name: "Check Pullout Request", path: "/dashboard/task/accounting/check-pullout-request" },
-            { name: "Check Pullout Approved", path: "/dashboard/task/accounting/check-pullout-approved" },
-            { name: "Check Postponement Request", path: "/dashboard/task/accounting/check-postponement-request" },
-            { name: "Check Postponement Approved", path: "/dashboard/task/accounting/check-postponement-approved" },
+            {
+              name: "Return Check",
+              path: "/dashboard/task/accounting/return-check",
+            },
+            {
+              name: "Petty Cash",
+              path: "/dashboard/task/accounting/petty-cash",
+            },
+            {
+              name: "General Journal",
+              path: "/dashboard/task/accounting/general-journal",
+            },
+            {
+              name: "Cash Disbursement",
+              path: "/dashboard/task/accounting/cash-disbursement",
+            },
+            {
+              name: "Treasury",
+              path: "/dashboard/task/accounting/warehouse-checks",
+            },
+            {
+              name: "Check Pullout Request",
+              path: "/dashboard/task/accounting/check-pullout-request",
+            },
+            {
+              name: "Check Pullout Approved",
+              path: "/dashboard/task/accounting/check-pullout-approved",
+            },
+            {
+              name: "Check Postponement Request",
+              path: "/dashboard/task/accounting/check-postponement-request",
+            },
+            {
+              name: "Check Postponement Approved",
+              path: "/dashboard/task/accounting/check-postponement-approved",
+            },
           ],
         },
-      ])
-    } else if (user?.userAccess === 'PRODUCTION') {
-      return setMenuData([{
-        name: "Dashboard",
-        path: "/dashboard",
-      },
-      {
-        name: "Reference",
-        subLinks: [
-          { name: "Policy Account", path: "/dashboard/reference/policy-account" },
-          { name: "Bank", path: "/dashboard/reference/bank" },
-          { name: "Bank Account", path: "/dashboard/reference/bank-account" },
-          { name: "Booklet", path: "/dashboard/reference/booklet" },
-          { name: "Chart of Accounts", path: "/dashboard/reference/chart-accounts" },
-          { name: "Sub Account", path: "/dashboard/reference/sub-account" },
-          { name: "Transaction Code", path: "/dashboard/reference/transaction-code" },
-          { name: "ID Entry", path: "/dashboard/reference/id-entry" },
-          { name: "Subline", path: "/dashboard/reference/subline" },
-          { name: "Rates", path: "/dashboard/reference/rates" },
-          { name: "CTPL", path: "/dashboard/reference/ctpl" },
-          { name: "Petty Cash Transaction", path: "/dashboard/reference/petty-cash-transaction" },
-          { name: "Mortgagee", path: "/dashboard/reference/mortgagee" },
-        ],
-      },
-      {
-        name: "Production",
-        subLinks: [
-          { name: "Policy", path: "/dashboard/task/production/policy/" },
-          { name: "Statement of Account", path: "/dashboard/task/production/statement-of-account" },
-        ],
-      },
-      {
-        name: "Production Report",
-        subLinks: [
-          { name: "Production Report", path: "/dashboard/reports/production/production-report" },
-          { name: "Renewal Notice", path: "/dashboard/reports/production/renewal-notice" },
-        ],
-      },
-      ])
-    } else if (user?.userAccess === 'CLAIMS') {
-      return setMenuData([{
-        name: "Dashboard",
-        path: "/dashboard",
-      },
-      {
-        name: "Claim",
-        path: "/dashboard/task/claims/claims",
-      },])
+        {
+          name: "Production",
+          subLinks: [
+            { name: "Policy", path: "/dashboard/task/production/policy/" },
+            {
+              name: "Statement of Account",
+              path: "/dashboard/task/production/statement-of-account",
+            },
+          ],
+        },
+        {
+          name: "Production Report",
+          subLinks: [
+            {
+              name: "Production Report",
+              path: "/dashboard/reports/production/production-report",
+            },
+            {
+              name: "Renewal Notice",
+              path: "/dashboard/reports/production/renewal-notice",
+            },
+          ],
+        },
+      ]);
+    } else if (user?.userAccess === "ACCOUNTING") {
+      return setMenuData([
+        {
+          name: "Dashboard",
+          path: "/dashboard",
+        },
+        {
+          name: "Reference",
+          subLinks: [
+            {
+              name: "Policy Account",
+              path: "/dashboard/reference/policy-account",
+            },
+            { name: "Bank", path: "/dashboard/reference/bank" },
+            { name: "Bank Account", path: "/dashboard/reference/bank-account" },
+            { name: "Booklet", path: "/dashboard/reference/booklet" },
+            {
+              name: "Chart of Accounts",
+              path: "/dashboard/reference/chart-accounts",
+            },
+            { name: "Sub Account", path: "/dashboard/reference/sub-account" },
+            {
+              name: "Transaction Code",
+              path: "/dashboard/reference/transaction-code",
+            },
+            { name: "ID Entry", path: "/dashboard/reference/id-entry" },
+            { name: "Subline", path: "/dashboard/reference/subline" },
+            { name: "Rates", path: "/dashboard/reference/rates" },
+            { name: "CTPL", path: "/dashboard/reference/ctpl" },
+            {
+              name: "Petty Cash Transaction",
+              path: "/dashboard/reference/petty-cash-transaction",
+            },
+            { name: "Mortgagee", path: "/dashboard/reference/mortgagee" },
+          ],
+        },
+        {
+          name: "Accounting",
+          subLinks: [
+            {
+              name: "Post Dated Checks",
+              path: "/dashboard/task/accounting/post-date-checks",
+            },
+            {
+              name: "Collections",
+              path: "/dashboard/task/accounting/collections",
+            },
+            { name: "Deposit", path: "/dashboard/task/accounting/deposit" },
+            {
+              name: "Return Check",
+              path: "/dashboard/task/accounting/return-check",
+            },
+            {
+              name: "Petty Cash",
+              path: "/dashboard/task/accounting/petty-cash",
+            },
+            {
+              name: "General Journal",
+              path: "/dashboard/task/accounting/general-journal",
+            },
+            {
+              name: "Cash Disbursement",
+              path: "/dashboard/task/accounting/cash-disbursement",
+            },
+            {
+              name: "Treasury",
+              path: "/dashboard/task/accounting/warehouse-checks",
+            },
+            {
+              name: "Check Pullout Request",
+              path: "/dashboard/task/accounting/check-pullout-request",
+            },
+            {
+              name: "Check Pullout Approved",
+              path: "/dashboard/task/accounting/check-pullout-approved",
+            },
+            {
+              name: "Check Postponement Request",
+              path: "/dashboard/task/accounting/check-postponement-request",
+            },
+            {
+              name: "Check Postponement Approved",
+              path: "/dashboard/task/accounting/check-postponement-approved",
+            },
+          ],
+        },
+      ]);
+    } else if (user?.userAccess === "PRODUCTION") {
+      return setMenuData([
+        {
+          name: "Dashboard",
+          path: "/dashboard",
+        },
+        {
+          name: "Reference",
+          subLinks: [
+            {
+              name: "Policy Account",
+              path: "/dashboard/reference/policy-account",
+            },
+            { name: "Bank", path: "/dashboard/reference/bank" },
+            { name: "Bank Account", path: "/dashboard/reference/bank-account" },
+            { name: "Booklet", path: "/dashboard/reference/booklet" },
+            {
+              name: "Chart of Accounts",
+              path: "/dashboard/reference/chart-accounts",
+            },
+            { name: "Sub Account", path: "/dashboard/reference/sub-account" },
+            {
+              name: "Transaction Code",
+              path: "/dashboard/reference/transaction-code",
+            },
+            { name: "ID Entry", path: "/dashboard/reference/id-entry" },
+            { name: "Subline", path: "/dashboard/reference/subline" },
+            { name: "Rates", path: "/dashboard/reference/rates" },
+            { name: "CTPL", path: "/dashboard/reference/ctpl" },
+            {
+              name: "Petty Cash Transaction",
+              path: "/dashboard/reference/petty-cash-transaction",
+            },
+            { name: "Mortgagee", path: "/dashboard/reference/mortgagee" },
+          ],
+        },
+        {
+          name: "Production",
+          subLinks: [
+            { name: "Policy", path: "/dashboard/task/production/policy/" },
+            {
+              name: "Statement of Account",
+              path: "/dashboard/task/production/statement-of-account",
+            },
+          ],
+        },
+        {
+          name: "Production Report",
+          subLinks: [
+            {
+              name: "Production Report",
+              path: "/dashboard/reports/production/production-report",
+            },
+            {
+              name: "Renewal Notice",
+              path: "/dashboard/reports/production/renewal-notice",
+            },
+          ],
+        },
+      ]);
+    } else if (user?.userAccess === "CLAIMS") {
+      return setMenuData([
+        {
+          name: "Dashboard",
+          path: "/dashboard",
+        },
+        {
+          name: "Claim",
+          path: "/dashboard/task/claims/claims",
+        },
+      ]);
     } else {
-      setMenuData(_menuData)
+      setMenuData(_menuData);
     }
-  }, [user?.userAccess])
+  }, [user?.userAccess]);
   // Add event listener to handle clicks outside the menu
   useEffect(() => {
     const handleClickOutside = (e: any) => {
@@ -362,9 +576,8 @@ export default function Header() {
         setOpenMenu(null);
       }
 
-
       if (menuUserRef.current && !menuUserRef.current.contains(e.target)) {
-        setOpenUserMenu(false)
+        setOpenUserMenu(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -377,100 +590,153 @@ export default function Header() {
 
   const openReport = () => {
     myAxios
-      .post("/open-report-by-username", {
-        username: user?.username,
-        ACCESS_TOKEN: user?.accessToken
-      }, {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`
+      .post(
+        "/open-report-by-username",
+        {
+          username: user?.username,
+          ACCESS_TOKEN: user?.accessToken,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
         }
-      })
+      )
       .then((res) => {
         if (res.data.success) {
-          return axios.get('http://localhost:7624/open-report', {
-            withCredentials: true
-          }).then((res) => {
-            if (!res.data.success) {
-              alert(res.data.message)
-            }
-          })
-            .catch(console.log)
+          return axios
+            .get("http://localhost:7624/open-report", {
+              withCredentials: true,
+            })
+            .then((res) => {
+              if (!res.data.success) {
+                alert(res.data.message);
+              }
+            })
+            .catch(console.log);
         }
       });
+  };
 
-
-  }
-
-
-
+  console.log("qweqwe ");
   return (
-    <header >
-      <nav ref={menuRef} className="menu header-ch" >
+    <header>
+      <nav ref={menuRef} className="menu header-ch">
         <ul className="main-menu">
           {menuData.map((menuItem: any, index: any) => (
-            <li
-              key={index}
-              onMouseEnter={() => handleMouseEnter(menuItem)}
-            >
+            <li key={index} onMouseEnter={() => handleMouseEnter(menuItem)}>
               {/* Conditional rendering for click vs link */}
               {menuItem.path ? (
-                <Link style={{ fontSize: "14px", fontWeight: "bold" }} to={menuItem.path}>{menuItem.name}</Link>
+                <Link
+                  style={{ fontSize: "14px", fontWeight: "bold" }}
+                  to={menuItem.path}
+                >
+                  {menuItem.name}
+                </Link>
               ) : (
-                <span style={{ cursor: "pointer", fontSize: "14px", fontWeight: "bold" }} onClick={() => handleClick(menuItem)}>{menuItem.name}</span>
+                <span
+                  style={{
+                    cursor: "pointer",
+                    fontSize: "14px",
+                    fontWeight: "bold",
+                  }}
+                  onClick={() => handleClick(menuItem)}
+                >
+                  {menuItem.name}
+                </span>
               )}
 
               {/* Show submenu based on hover or click */}
               {menuItem.subLinks && openMenu === menuItem.name && (
                 <ul className="submenu">
                   {menuItem.subLinks.map((subLink: any, subIndex: any) => (
-                    <li key={subIndex} style={{
-                      background: subLink.path === location.pathname ? "#555" : ""
-                    }}>
-                      <Link to={subLink.path} onClick={handleSubLinkClick}>{subLink.name}</Link>
+                    <li
+                      key={subIndex}
+                      style={{
+                        background:
+                          subLink.path === location.pathname ? "#555" : "",
+                      }}
+                    >
+                      <Link to={subLink.path} onClick={handleSubLinkClick}>
+                        {subLink.name}
+                      </Link>
                     </li>
                   ))}
                 </ul>
               )}
             </li>
           ))}
-          <li>
-            <span style={{ cursor: "pointer", fontSize: "14px", fontWeight: "bold" }} onClick={openReport}>Accounting Report</span>
-          </li>
+        {( user?.userAccess !== "PRODUCTION" && user?.userAccess !== "CLAIMS") && <li>
+            <span
+              style={{
+                cursor: "pointer",
+                fontSize: "14px",
+                fontWeight: "bold",
+              }}
+              onClick={openReport}
+            >
+              Accounting Report
+            </span>
+          </li>}
         </ul>
       </nav>
 
-      <div className="header-ch" style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", columnGap: "10px" }}>
+      <div
+        className="header-ch"
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          alignItems: "center",
+          columnGap: "10px",
+        }}
+      >
         <div className="profile-sub-menu">
           <span>{user?.department}</span>
         </div>
-        <div ref={menuUserRef} style={{ position: "relative", display: "flex", alignItems: "center" }}>
+        <div
+          ref={menuUserRef}
+          style={{
+            position: "relative",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
           <AccountCircle
             color="info"
             sx={{
-              cursor: "pointer"
+              cursor: "pointer",
             }}
             onClick={() => {
-              setOpenUserMenu((d) => !d)
+              setOpenUserMenu((d) => !d);
             }}
           />
-          {openUserMenu && <ul className="user-menu">
-            <li>
-              <span>Profile</span>
-            </li>
-            <li>
-              <span onClick={() => {
-                handleLogout()
-              }} >Logout</span>
-            </li>
-          </ul>}
+          {openUserMenu && (
+            <ul className="user-menu">
+              <li>
+                <span>Profile</span>
+              </li>
+              <li>
+                <span
+                  onClick={() => {
+                    handleLogout();
+                  }}
+                >
+                  Logout
+                </span>
+              </li>
+            </ul>
+          )}
         </div>
         <Clock />
       </div>
-      {(isLoading) && <div className="loading-component"><div className="loader"></div></div>}
+      {isLoading && (
+        <div className="loading-component">
+          <div className="loader"></div>
+        </div>
+      )}
     </header>
   );
 }
-
 
 function Clock() {
   const [time, setTime] = useState(new Date());
@@ -499,6 +765,8 @@ function Clock() {
   };
 
   return (
-    <p style={{ fontSize: "13px", padding: 0, margin: 0 }}>{formatTime(time)}</p>
+    <p style={{ fontSize: "13px", padding: 0, margin: 0 }}>
+      {formatTime(time)}
+    </p>
   );
 }

@@ -1128,8 +1128,8 @@ export const useUpwardTableModalSearchSafeMode = ({
         useEffect(() => {
             if (data.length > 0) {
                 _dataCache = data
-                tableRef.current?.setDataFormated(data)
             }
+            tableRef.current?.setDataFormated(data)
         }, [data])
 
         function customWidth(blick:boolean) {
