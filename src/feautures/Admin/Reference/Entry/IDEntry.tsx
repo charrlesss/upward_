@@ -65,7 +65,7 @@ function LoadingEntry() {
         bottom: "0",
         left: "0",
         right: "0",
-        background: "rgba(210, 236, 248, 0.226)",
+        background:"#F1F1F1"
       }}
     >
       <div>

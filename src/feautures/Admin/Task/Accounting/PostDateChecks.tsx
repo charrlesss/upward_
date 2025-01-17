@@ -4,6 +4,8 @@ import React, {
   useRef,
   useEffect,
   useCallback,
+  useImperativeHandle,
+  forwardRef,
 } from "react";
 import {
   Box,
@@ -34,9 +36,11 @@ import { DisplayFile, checkFile } from "../Claims/Claims";
 import ReactDOMServer from "react-dom/server";
 import { grey } from "@mui/material/colors";
 import { useUpwardTableModal } from "../../../../hooks/useUpwardTableModal";
-import { TextAreaInput, TextInput } from "../../../../components/UpwardFields";
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
-import { NumericFormat } from "react-number-format";
+import {
+  TextAreaInput,
+  TextFormatedInput,
+  TextInput,
+} from "../../../../components/UpwardFields";
 import { format } from "date-fns";
 import PageHelmet from "../../../../components/Helmet";
 import { wait } from "@testing-library/user-event/dist/utils";
@@ -46,7 +50,7 @@ import {
   useUpwardTableModalSearchSafeMode,
 } from "../../../../components/DataGridViewReact";
 import { Loading } from "../../../../components/Loading";
-import { size } from "lodash";
+import AccountBoxIcon from "@mui/icons-material/AccountBox";
 
 export const reducer = (state: any, action: any) => {
   switch (action.type) {
@@ -90,6 +94,7 @@ export const pdcBanksColumn = [
 ];
 
 export default function PostDateChecks() {
+  const modalCheckRef = useRef<any>(null);
   const tableRef = useRef<any>(null);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -101,7 +106,6 @@ export default function PostDateChecks() {
   };
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<Array<File>>([]);
-  const [openPdcInputModal, setOpenPdcInputModal] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -115,25 +119,6 @@ export default function PostDateChecks() {
   // pdc form save button
   const fileInputRef = useRef<HTMLInputElement>(null);
   const savePDCButtonRef = useRef<HTMLButtonElement>(null);
-
-  //check modal refs
-
-  const checkModalSaveButton = useRef<HTMLButtonElement>(null);
-  const checkModalSaveButtonActionRef = useRef<any>(null);
-  // search modal auto focus on load
-
-  // modal
-  const _checknoRef = useRef<HTMLInputElement>(null);
-  const _bankRef = useRef<HTMLInputElement>(null);
-  const _branchRef = useRef<HTMLInputElement>(null);
-  const _remarksRef = useRef<HTMLTextAreaElement>(null);
-  const _chekdateRef = useRef<HTMLInputElement>(null);
-  const _amountRef = useRef<HTMLInputElement>(null);
-  const _checkcountRef = useRef<HTMLInputElement>(null);
-  const _bankCode = useRef("");
-  const _slipCodeRef = useRef("");
-  const _slipDateRef = useRef("");
-  const _checkOR = useRef("");
 
   const addRefButton = useRef<HTMLButtonElement>(null);
 
@@ -291,7 +276,6 @@ export default function PostDateChecks() {
     });
 
   // policy ids search table modal
-
   const {
     UpwardTableModalSearch: ClientUpwardTableModalSearch,
     openModal: clientOpenModal,
@@ -353,146 +337,37 @@ export default function PostDateChecks() {
             }
           }
         });
-        clientCloseModal()
+        clientCloseModal();
       }
     },
   });
-  // const {
-  //   Modal: ModalSearchPdcIDs,
-  //   closeModal: closeModalSearchPdcIDs,
-  //   openModal: openModalSearchPdcIDs,
-  //   isLoading: isLoadingModalSearchPdcIDs,
-  // } = useUpwardTableModal({
-  //   myAxios,
-  //   user,
-  //   link: {
-  //     url: "/task/accounting/search-pdc-policy-id",
-  //     queryUrlName: "searchPdcPolicyIds",
-  //   },
-  //   column: [
-  //     { field: "Type", headerName: "Type", width: 130 },
-  //     { field: "IDNo", headerName: "ID No.", width: 200 },
-  //     { field: "chassis", headerName: "Chassis No.", width: 200, hide: true },
-  //     {
-  //       field: "Name",
-  //       headerName: "Name",
-  //       width: 350,
-  //     },
-  //     {
-  //       field: "ID",
-  //       headerName: "ID",
-  //       width: 300,
-  //       hide: true,
-  //     },
-  //     {
-  //       field: "client_id",
-  //       headerName: "client_id",
-  //       width: 200,
-  //       hide: true,
-  //     },
-  //   ],
-  //   onSelectionChange: (selectedRow: any) => {
-  //     if (selectedRow.length > 0) {
-  //       wait(100).then(() => {
-  //         PNoRef.current = selectedRow[0].client_id;
-  //         subAccountRef.current = selectedRow[0].sub_account;
-  //         if (pnRef.current) {
-  //           pnRef.current.value = selectedRow[0].IDNo;
-  //         }
-  //         if (clientnameRef.current) {
-  //           clientnameRef.current.value = selectedRow[0].Name;
-  //         }
-  //         if (branchRef.current) {
-  //           branchRef.current.value = selectedRow[0].Acronym;
-  //         }
-  //         if (selectedRow[0].Remarks && selectedRow[0].Remarks !== "") {
-  //           if (remakrsRef.current) {
-  //             remakrsRef.current.value = selectedRow[0].Remarks;
-  //           }
-  //         }
-  //       });
 
-  //       closeModalSearchPdcIDs();
-  //     }
-  //   },
-
-  //   responseDataKey: "clientsId",
-  // });
-
-  // bank search table modal
-
-  const {
-    Modal: ModalSearchBanks,
-    closeModal: closeModalSearchBanks,
-    openModal: openModalSearchBanks,
-    isLoading: isLoadingModalSearchbanks,
-  } = useUpwardTableModal({
-    myAxios,
-    user,
-    link: {
-      url: "/task/accounting/search-pdc-banks",
-      queryUrlName: "searchPdcBanks",
-    },
-    column: [
-      { field: "Bank_Code", headerName: "Code", width: 100 },
-      { field: "Bank", headerName: "Bank Name", width: 350 },
-    ],
-    onSelectionChange: (selectedRow: any) => {
-      if (selectedRow.length > 0) {
-        setTimeout(() => {
-          _bankCode.current = selectedRow[0].Bank_Code;
-          if (_bankRef.current) {
-            _bankRef.current.value = selectedRow[0].Bank;
-          }
-        }, 100);
-
-        closeModalSearchBanks();
-        setOpenPdcInputModal(true);
-        setTimeout(() => {
-          _branchRef.current?.focus();
-        }, 100);
-      }
-    },
-    onModalClose: () => {
-      setTimeout(() => {
-        setOpenPdcInputModal(true);
-      }, 100);
-    },
-    responseDataKey: "pdcBanks",
-  });
   // pdc search table modal
   const {
-    Modal: UpwardPDCModal,
-    closeModal: closeUpwardPDCModal,
-    openModal: openUpwardPDCModal,
-    isLoading: isLoadingModalSearchPDC,
-  } = useUpwardTableModal({
-    myAxios,
-    user,
+    UpwardTableModalSearch: PDCUpwardTableModalSearch,
+    openModal: pdcOpenModal,
+    closeModal: pdcCloseModal,
+  } = useUpwardTableModalSearchSafeMode({
+    link: "/task/accounting/search-pdc",
     column: [
-      { field: "Date", headerName: "Date Received", width: 90 },
-      { field: "Ref_No", headerName: "Ref No.", width: 80 },
+      { key: "Date", label: "Date Received", width: 90 },
+      { key: "Ref_No", label: "Ref No.", width: 70 },
       {
-        field: "Name",
-        headerName: "Name",
+        key: "Name",
+        label: "Name",
         width: 320,
       },
     ],
-    link: {
-      url: "/task/accounting/search-pdc",
-      queryUrlName: "searchPDCInput",
-    },
-    onSelectionChange: (selectedRow: any) => {
-      if (selectedRow.length > 0) {
-        mutateSelectedSearch({ ref_no: selectedRow[0].Ref_No });
-        setPdcMode("update");
-        closeUpwardPDCModal();
-        if (searchRef.current) {
-          searchRef.current?.focus();
-        }
+    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
+      if (rowItm) {
+        wait(100).then(() => {
+          console.log(rowItm[2]);
+          mutateSelectedSearch({ ref_no: rowItm[1] });
+          setPdcMode("update");
+        });
+        pdcCloseModal();
       }
     },
-    responseDataKey: "searchPDC",
   });
 
   const handleOnSave = useCallback(
@@ -517,8 +392,6 @@ export default function PostDateChecks() {
           icon: "warning",
           title: "Please provide entry!",
           timer: 1500,
-        }).then(() => {
-          setOpenPdcInputModal(true);
         });
       }
 
@@ -600,107 +473,136 @@ export default function PostDateChecks() {
       setSelectedFiles(newFiles);
     }
   };
+
+  const { mutate: mutatePrint, isLoading: isLoadingPrint } = useMutation({
+    mutationKey: "print",
+    mutationFn: async (variables: any) => {
+      return await myAxios.post("/task/accounting/print", variables, {
+        responseType: 'arraybuffer',
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      });
+    },
+    onSuccess: (response) => {
+      console.log(response);
+
+      const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      // window.open(pdfUrl);
+      var newTab = window.open();
+      if (newTab) {
+        newTab.document.write('<!DOCTYPE html>');
+        newTab.document.write('<html><head><title>New Tab with iframe</title></head>');
+        newTab.document.write('<body style="width:100vw;height:100vh;padding:0;margin:0;box-sizing:border-box;">');
+        newTab.document.write(`<iframe style="border:none;outline:none;padding:0;margin:0" src="${pdfUrl}" width="99%" height="99%"></iframe>`);
+        // newTab.document.write(`<button id="excel" style="width:auto;height:auto;padding:5px;border-radius:50%;background:transparent;position:absolute;top:37px;right:19px;font-size:11px;cursor:pointer;border:none;">
+        //   <svg 
+        //     xmlns="http://www.w3.org/2000/svg" 
+        //     width="20px" 
+        //     height="20px" 
+        //     viewBox="0 0 32 32">
+        //     <title>Download Excel</title>
+        //     <path d="M28.781,4.405H18.651V2.018L2,4.588V27.115l16.651,2.868V26.445H28.781A1.162,1.162,0,0,0,30,25.349V5.5A1.162,1.162,0,0,0,28.781,4.405Zm.16,21.126H18.617L18.6,23.642h2.487v-2.2H18.581l-.012-1.3h2.518v-2.2H18.55l-.012-1.3h2.549v-2.2H18.53v-1.3h2.557v-2.2H18.53v-1.3h2.557v-2.2H18.53v-2H28.941Z" style="fill:#20744a;fill-rule:evenodd"/><rect x="22.487" y="7.439" width="4.323" height="2.2" style="fill:#20744a"/><rect x="22.487" y="10.94" width="4.323" height="2.2" style="fill:#20744a"/><rect x="22.487" y="14.441" width="4.323" height="2.2" style="fill:#20744a"/><rect x="22.487" y="17.942" width="4.323" height="2.2" style="fill:#20744a"/><rect x="22.487" y="21.443" width="4.323" height="2.2" style="fill:#20744a"/><polygon points="6.347 10.673 8.493 10.55 9.842 14.259 11.436 10.397 13.582 10.274 10.976 15.54 13.582 20.819 11.313 20.666 9.781 16.642 8.248 20.513 6.163 20.329 8.585 15.666 6.347 10.673" style="fill:#ffffff;fill-rule:evenodd"/>
+        //     </svg>
+        //   </button>
+        //   `);
+        
+        newTab.document.write('</body></html>');
+        // Optional: Close the document stream after writing
+        newTab.document.close();
+      }
+    },
+  });
+
   const clickPDCReceipt = () => {
     const pdcTableData = tableRef.current.getDataFormatted();
-
-    flushSync(() => {
-      const state = {
-        Ref_No: refNoRef.current?.value,
-        PNo: pnRef.current?.value,
-        IDNo: PNoRef.current,
-        Date: dateRef.current?.value,
-        Name: clientnameRef.current?.value,
-        Remarks: remakrsRef.current?.value,
-        Branch: branchRef.current?.value,
-      };
-
-      localStorage.removeItem("printString");
-      localStorage.setItem("dataString", JSON.stringify(pdcTableData));
-      localStorage.setItem("paper-width", "8.5in");
-      localStorage.setItem("paper-height", "11in");
-      localStorage.setItem("module", "pdc");
-      localStorage.setItem("state", JSON.stringify(state));
-      localStorage.setItem(
-        "column",
-        JSON.stringify([
-          { datakey: "Check_No", header: "CHECK NO", width: "80px" },
-          { datakey: "Check_Date", header: "DATE", width: "130px" },
-          { datakey: "BankName", header: "BANK", width: "240px" },
-          { datakey: "Check_Amnt", header: "AMOUNT", width: "70px" },
-          { datakey: "SEQ", header: "SEQ", width: "30px" },
-        ])
-      );
-
-      localStorage.setItem(
-        "title",
-        user?.department === "UMIS"
-          ? "UPWARD MANAGEMENT INSURANCE SERVICES\n Post Date Checks Receipt"
-          : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.\n Post Date Checks Receipt"
-      );
+    const state = {
+      Ref_No: refNoRef.current?.value,
+      PNo: pnRef.current?.value,
+      IDNo: PNoRef.current,
+      Date: dateRef.current?.value,
+      Name: clientnameRef.current?.value,
+      Remarks: remakrsRef.current?.value,
+      Branch: branchRef.current?.value,
+    };
+    mutatePrint({
+      printOption: "receipt",
+      pdcTableData,
+      state,
     });
-    window.open("/dashboard/print", "_blank");
   };
   const clickPDCLabeling = () => {
-    let printString = () => {
-      return (
-        <div>
-          <p
-            style={{
-              color: "#d1d5db",
-              fontSize: "11px",
-              textAlign: "center",
-              padding: 0,
-              marginTop: "8px",
-              marginBottom: 0,
-            }}
-          >
-            UCSMI
-          </p>
-          <p
-            style={{
-              color: "#d1d5db",
-              fontSize: "11px",
-              textAlign: "center",
-              padding: 0,
-              margin: 0,
-            }}
-          >
-            {clientnameRef.current?.value}
-          </p>
-          <p
-            style={{
-              color: "#d1d5db",
-              fontSize: "11px",
-              textAlign: "center",
-              padding: 0,
-              margin: 0,
-            }}
-          >
-            {PNoRef.current}
-          </p>
-          <p
-            style={{
-              color: "#d1d5db",
-              fontSize: "11px",
-              textAlign: "center",
-              padding: 0,
-              margin: "20px",
-            }}
-          >
-            {refNoRef.current?.value}
-          </p>
-        </div>
-      );
+    const state = {
+      name: clientnameRef.current?.value,
+      pno: PNoRef.current,
+      ref: refNoRef.current?.value,
     };
-
-    flushSync(() => {
-      const elementString = ReactDOMServer.renderToString(printString());
-      localStorage.setItem("printString", elementString);
-      localStorage.removeItem("dataString");
-      localStorage.setItem("paper-width", "8.5in");
-      localStorage.setItem("paper-height", "11in");
+    mutatePrint({
+      printOption: "labeling",
+      pdcTableData: [],
+      state,
     });
-    window.open("/dashboard/print", "_blank");
+    // let printString = () => {
+    //   return (
+    //     <div>
+    //       <p
+    //         style={{
+    //           color: "#d1d5db",
+    //           fontSize: "11px",
+    //           textAlign: "center",
+    //           padding: 0,
+    //           marginTop: "8px",
+    //           marginBottom: 0,
+    //         }}
+    //       >
+    //         UCSMI
+    //       </p>
+    //       <p
+    //         style={{
+    //           color: "#d1d5db",
+    //           fontSize: "11px",
+    //           textAlign: "center",
+    //           padding: 0,
+    //           margin: 0,
+    //         }}
+    //       >
+    //         {clientnameRef.current?.value}
+    //       </p>
+    //       <p
+    //         style={{
+    //           color: "#d1d5db",
+    //           fontSize: "11px",
+    //           textAlign: "center",
+    //           padding: 0,
+    //           margin: 0,
+    //         }}
+    //       >
+    //         {PNoRef.current}
+    //       </p>
+    //       <p
+    //         style={{
+    //           color: "#d1d5db",
+    //           fontSize: "11px",
+    //           textAlign: "center",
+    //           padding: 0,
+    //           margin: "20px",
+    //         }}
+    //       >
+    //         {refNoRef.current?.value}
+    //       </p>
+    //     </div>
+    //   );
+    // };
+
+    // flushSync(() => {
+    //   const elementString = ReactDOMServer.renderToString(printString());
+    //   localStorage.setItem("printString", elementString);
+    //   localStorage.removeItem("dataString");
+    //   localStorage.setItem("paper-width", "8.5in");
+    //   localStorage.setItem("paper-height", "11in");
+    // });
+    // window.open("/dashboard/print", "_blank");
   };
 
   function resetPDC() {
@@ -749,96 +651,130 @@ export default function PostDateChecks() {
     }
 
     if (
-      _checknoRef.current &&
-      _bankRef.current &&
-      _branchRef.current &&
-      _remarksRef.current &&
-      _chekdateRef.current &&
-      _amountRef.current &&
-      _checkcountRef.current
+      modalCheckRef.current.getRefs().checknoRef.current &&
+      modalCheckRef.current.getRefs().bankRef.current &&
+      modalCheckRef.current.getRefs().branchRef.current &&
+      modalCheckRef.current.getRefs().remarksRef.current &&
+      modalCheckRef.current.getRefs().checkdateRef.current &&
+      modalCheckRef.current.getRefs().amountRef.current
     ) {
       const tableRows = tableRef.current.getDataFormatted();
       const selectedIndex = tableRef.current.getSelectedRow();
 
       const filteredChecks = tableRows.filter((itm: any) => {
         return (
-          _checknoRef.current && _checknoRef.current.value === itm.Check_No
+          modalCheckRef.current.getRefs().checknoRef.current &&
+          modalCheckRef.current.getRefs().checknoRef.current.value ===
+            itm.Check_No
         );
       });
 
       if (filteredChecks.length > 0 && selectedIndex === null) {
         alert("check no. is already exist!");
-        _checknoRef.current.focus();
+        modalCheckRef.current.getRefs().checknoRef.current.focus();
         return;
       }
-      if (_checknoRef.current.value === "") {
+      if (modalCheckRef.current.getRefs().checknoRef.current.value === "") {
         alert("check no. is required!");
-        _checknoRef.current.focus();
+        modalCheckRef.current.getRefs().checknoRef.current.focus();
         return;
-      } else if (_bankRef.current.value === "") {
+      } else if (modalCheckRef.current.getRefs().bankRef.current.value === "") {
         alert("bank is required!");
-        _bankRef.current.focus();
+        modalCheckRef.current.getRefs().bankRef.current.focus();
         return;
-      } else if (_branchRef.current.value === "") {
+      } else if (
+        modalCheckRef.current.getRefs().branchRef.current.value === ""
+      ) {
         alert("branch is required!");
-        _branchRef.current.focus();
+        modalCheckRef.current.getRefs().bankRef.current.focus();
         return;
-      } else if (!isValidDate(_chekdateRef.current.value)) {
+      } else if (
+        !isValidDate(modalCheckRef.current.getRefs().checkdateRef.current.value)
+      ) {
         alert("invalid date!");
-        _chekdateRef.current.focus();
+        modalCheckRef.current.getRefs().checkdateRef.current.focus();
         return;
-      } else if (parseFloat(_amountRef.current.value.replace(/,/g, "")) <= 0) {
+      } else if (
+        parseFloat(
+          modalCheckRef.current
+            .getRefs()
+            .amountRef.current.value.replace(/,/g, "")
+        ) <= 0
+      ) {
         alert("amount must be greater than 0!");
-        _amountRef.current.focus();
+        modalCheckRef.current.getRefs().amountRef.current.focus();
         return;
       }
 
       if (
-        _checknoRef.current &&
-        _bankRef.current &&
-        _branchRef.current &&
-        _remarksRef.current &&
-        _chekdateRef.current &&
-        _amountRef.current &&
-        _checkcountRef.current
+        modalCheckRef.current.getRefs().checknoRef.current &&
+        modalCheckRef.current.getRefs().bankRef.current &&
+        modalCheckRef.current.getRefs().branchRef.current &&
+        modalCheckRef.current.getRefs().remarksRef.current &&
+        modalCheckRef.current.getRefs().checkdateRef.current &&
+        modalCheckRef.current.getRefs().amountRef.current
       ) {
-        if (selectedIndex) {
+        if (selectedIndex !== null) {
           const selectedRow = tableRef.current.getData();
-          selectedRow[selectedIndex][0] = _checknoRef.current.value;
-          selectedRow[selectedIndex][1] = _chekdateRef.current.value;
-          selectedRow[selectedIndex][2] = _amountRef.current.value;
-          selectedRow[selectedIndex][3] = _bankRef.current.value;
-          selectedRow[selectedIndex][4] = _branchRef.current.value;
-          selectedRow[selectedIndex][5] = _remarksRef.current.value;
-          selectedRow[selectedIndex][6] = _slipCodeRef.current;
-          selectedRow[selectedIndex][7] = _slipDateRef.current;
-          selectedRow[selectedIndex][8] = _checkOR.current;
-          selectedRow[selectedIndex][9] = _bankCode.current;
+          selectedRow[selectedIndex][0] =
+            modalCheckRef.current.getRefs().checknoRef.current.value;
+          selectedRow[selectedIndex][1] =
+            modalCheckRef.current.getRefs().checkdateRef.current.value;
+          selectedRow[selectedIndex][2] =
+            modalCheckRef.current.getRefs().amountRef.current.value;
+          selectedRow[selectedIndex][3] =
+            modalCheckRef.current.getRefs().bankRef.current.value;
+          selectedRow[selectedIndex][4] =
+            modalCheckRef.current.getRefs().branchRef.current.value;
+          selectedRow[selectedIndex][5] =
+            modalCheckRef.current.getRefs().remarksRef.current.value;
+          selectedRow[selectedIndex][6] =
+            modalCheckRef.current.getRefs()._slipCodeRef.current;
+          selectedRow[selectedIndex][7] =
+            modalCheckRef.current.getRefs()._slipDateRef.current;
+          selectedRow[selectedIndex][8] =
+            modalCheckRef.current.getRefs()._checkOR.current;
+          selectedRow[selectedIndex][9] =
+            modalCheckRef.current.getRefs().bankCode.current;
           tableRef.current.setData(selectedRow);
           tableRef.current.setSelectedRow(null);
           setHasSelectedRow(null);
         } else {
           const newData: any = [];
-          for (let i = 0; i < parseInt(_checkcountRef.current.value); i++) {
+          for (
+            let i = 0;
+            i <
+            parseInt(
+              modalCheckRef.current.getRefs()._checkcountRef.current.value
+            );
+            i++
+          ) {
             const data: any = {
-              Check_No: incrementStringNumbers(_checknoRef.current.value, i),
-              Check_Date: incrementDate(_chekdateRef.current.value, i),
-              Check_Amnt: _amountRef.current.value,
-              BankName: _bankRef.current.value,
-              BankCode: _bankCode.current,
-              Branch: _branchRef.current.value,
-              Check_Remarks: _remarksRef.current.value,
-              Deposit_Slip: _slipCodeRef.current,
-              DateDeposit: _slipDateRef.current,
-              OR_No: _checkOR.current,
+              Check_No: incrementStringNumbers(
+                modalCheckRef.current.getRefs().checknoRef.current.value,
+                i
+              ),
+              Check_Date: incrementDate(
+                modalCheckRef.current.getRefs().checkdateRef.current.value,
+                i
+              ),
+              Check_Amnt:
+                modalCheckRef.current.getRefs().amountRef.current.value,
+              BankName: modalCheckRef.current.getRefs().bankRef.current.value,
+              BankCode: modalCheckRef.current.getRefs().bankCode.current,
+              Branch: modalCheckRef.current.getRefs().branchRef.current.value,
+              Check_Remarks:
+                modalCheckRef.current.getRefs().remarksRef.current.value,
+              Deposit_Slip:
+                modalCheckRef.current.getRefs()._slipCodeRef.current,
+              DateDeposit: modalCheckRef.current.getRefs()._slipDateRef.current,
+              OR_No: modalCheckRef.current.getRefs()._checkOR.current,
             };
             newData.push(data);
           }
           tableRef.current.setDataFormated(newData);
         }
       }
-
-      setOpenPdcInputModal(false);
     }
   }
   useEffect(() => {
@@ -859,8 +795,24 @@ export default function PostDateChecks() {
 
   return (
     <>
+      <ModalCheck
+        ref={modalCheckRef}
+        handleOnSave={() => {
+          handleCheckDetailsSave();
+          modalCheckRef.current.clsoeModal();
+        }}
+        handleOnClose={() => {
+          tableRef.current.setSelectedRow(null);
+          // buttonCheckSave.current?.focus();
+        }}
+        hasSelectedRow={hasSelectedRow}
+      />
+      <ClientUpwardTableModalSearch />
+      <PDCUpwardTableModalSearch />
       <PageHelmet title="PDC" />
-      {(loadingAddNew || isLoadingSelectedSearch) && <Loading />}
+      {(loadingAddNew || isLoadingSelectedSearch || isLoadingPrint) && (
+        <Loading />
+      )}
       <div
         style={{
           width: "100%",
@@ -871,9 +823,7 @@ export default function PostDateChecks() {
           backgroundColor: "#F1F1F1",
         }}
       >
-        {ModalSearchBanks}
-        {UpwardPDCModal}
-        <ClientUpwardTableModalSearch />
+
         <Box
           sx={(theme) => ({
             display: "flex",
@@ -895,38 +845,34 @@ export default function PostDateChecks() {
               marginBottom: "15px",
             }}
           >
-            {isLoadingModalSearchPDC ? (
-              <LoadingButton loading={isLoadingModalSearchPDC} />
-            ) : (
-              <TextInput
-                label={{
-                  title: "Search: ",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "50px",
-                  },
-                }}
-                input={{
-                  className: "search-input-up-on-key-down",
-                  type: "search",
-                  onKeyDown: (e) => {
-                    if (e.key === "Enter" || e.key === "NumpadEnter") {
-                      e.preventDefault();
-                      openUpwardPDCModal(e.currentTarget.value);
-                    }
-                  },
-                  style: { width: "500px" },
-                }}
-                icon={<SearchIcon sx={{ fontSize: "18px" }} />}
-                onIconClick={(e) => {
-                  e.preventDefault();
-                  if (searchInputRef.current)
-                    openUpwardPDCModal(searchInputRef.current.value);
-                }}
-                inputRef={searchInputRef}
-              />
-            )}
+            <TextInput
+              label={{
+                title: "Search: ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "50px",
+                },
+              }}
+              input={{
+                className: "search-input-up-on-key-down",
+                type: "search",
+                onKeyDown: (e) => {
+                  if (e.key === "Enter" || e.key === "NumpadEnter") {
+                    e.preventDefault();
+                    pdcOpenModal(e.currentTarget.value);
+                  }
+                },
+                style: { width: "500px" },
+              }}
+              icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+              onIconClick={(e) => {
+                e.preventDefault();
+                if (searchInputRef.current)
+                  pdcOpenModal(searchInputRef.current.value);
+              }}
+              inputRef={searchInputRef}
+            />
             {pdcMode === "" && (
               <Button
                 sx={{
@@ -998,23 +944,18 @@ export default function PostDateChecks() {
               variant="contained"
               startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
               onClick={() => {
-                flushSync(() => {
-                  setOpenPdcInputModal(true);
-                });
-
                 wait(100).then(() => {
                   const tableRows = tableRef.current.getDataFormatted();
                   const getLastCheck_No: any = tableRows[tableRows.length - 1];
-                  if (_checknoRef.current) {
-                    _checknoRef.current.value = incrementCheckNo(
-                      getLastCheck_No?.Check_No
-                    );
+                  if (modalCheckRef.current.getRefs().checknoRef.current) {
+                    modalCheckRef.current.getRefs().checknoRef.current.value =
+                      incrementCheckNo(getLastCheck_No?.Check_No);
                   }
-
                   tableRef.current.setSelectedRow(null);
                   setHasSelectedRow(null);
-                  _checknoRef.current?.focus();
+                  modalCheckRef.current.getRefs().checknoRef.current?.focus();
                 });
+                modalCheckRef.current?.showModal();
               }}
               ref={addRefButton}
             >
@@ -1342,37 +1283,41 @@ export default function PostDateChecks() {
                   timer: 1500,
                 });
               }
-              flushSync(() => {
-                setOpenPdcInputModal(true);
-              });
+              setHasSelectedRow(RowIndex);
+              modalCheckRef.current?.showModal();
               wait(100).then(() => {
                 if (
-                  _checknoRef.current &&
-                  _bankRef.current &&
-                  _branchRef.current &&
-                  _remarksRef.current &&
-                  _chekdateRef.current &&
-                  _amountRef.current
+                  modalCheckRef.current.getRefs().checknoRef.current &&
+                  modalCheckRef.current.getRefs().bankRef.current &&
+                  modalCheckRef.current.getRefs().branchRef.current &&
+                  modalCheckRef.current.getRefs().remarksRef.current &&
+                  modalCheckRef.current.getRefs().checkdateRef.current &&
+                  modalCheckRef.current.getRefs().amountRef.current
                 ) {
-                  _checknoRef.current.value = rowSelected[0];
-                  _chekdateRef.current.value = rowSelected[1];
-                  _amountRef.current.value = formatNumber(
-                    parseFloat(rowSelected[2].replace(/,/g, ""))
-                  );
-                  _bankRef.current.value = rowSelected[3];
-                  _branchRef.current.value = rowSelected[4];
-                  _remarksRef.current.value = rowSelected[5];
-                  _slipCodeRef.current = rowSelected[6] || "";
-                  _slipDateRef.current = rowSelected[7] || "";
-                  _checkOR.current = rowSelected[8] || "";
-                  _bankCode.current = rowSelected[9];
+                  modalCheckRef.current.getRefs().checknoRef.current.value =
+                    rowSelected[0];
+                  modalCheckRef.current.getRefs().checkdateRef.current.value =
+                    rowSelected[1];
+                  modalCheckRef.current.getRefs().amountRef.current.value =
+                    formatNumber(parseFloat(rowSelected[2].replace(/,/g, "")));
+                  modalCheckRef.current.getRefs().bankRef.current.value =
+                    rowSelected[3];
+                  modalCheckRef.current.getRefs().branchRef.current.value =
+                    rowSelected[4];
+                  modalCheckRef.current.getRefs().remarksRef.current.value =
+                    rowSelected[5];
+                  modalCheckRef.current.getRefs()._slipCodeRef.current =
+                    rowSelected[6] || "";
+                  modalCheckRef.current.getRefs()._slipDateRef.current =
+                    rowSelected[7] || "";
+                  modalCheckRef.current.getRefs()._checkOR.current =
+                    rowSelected[8] || "";
+                  modalCheckRef.current.getRefs().bankCode.current =
+                    rowSelected[9];
 
-                  console.log(rowSelected[0]);
-                  _bankRef.current.focus();
+                  modalCheckRef.current.getRefs().bankRef.current.focus();
                 }
               });
-
-              setHasSelectedRow(RowIndex);
             } else {
               setHasSelectedRow(null);
             }
@@ -1420,307 +1365,6 @@ export default function PostDateChecks() {
           }}
         />
 
-        <Modal
-          open={openPdcInputModal}
-          onClose={() => {
-            setOpenPdcInputModal(false);
-            tableRef.current.setSelectedRow(null);
-            setHasSelectedRow(null);
-          }}
-          aria-labelledby="modal-modal-title"
-          aria-describedby="modal-modal-description"
-        >
-          <Box
-            sx={{
-              position: "absolute" as "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              width: "auto",
-              bgcolor: "background.paper",
-              p: 4,
-            }}
-          >
-            <Typography id="modal-modal-title" variant="h6" component="h2">
-              Check Detail
-            </Typography>
-            <br />
-            <div
-              style={{
-                display: "flex",
-                columnGap: "10px",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "10px",
-                }}
-              >
-                <TextInput
-                  label={{
-                    title: "Check No : ",
-                    style: {
-                      fontSize: "12px",
-                      fontWeight: "bold",
-                      width: "70px",
-                    },
-                  }}
-                  input={{
-                    disabled: hasSelectedRow !== null,
-                    type: "text",
-                    style: { width: "190px" },
-                    onKeyDown: (e) => {
-                      if (e.code === "NumpadEnter" || e.code === "Enter") {
-                        _bankRef.current?.focus();
-                      }
-                    },
-                  }}
-                  inputRef={_checknoRef}
-                />
-                {isLoadingModalSearchbanks ? (
-                  <LoadingButton loading={isLoadingModalSearchbanks} />
-                ) : (
-                  <TextInput
-                    label={{
-                      title: "Bank : ",
-                      style: {
-                        fontSize: "12px",
-                        fontWeight: "bold",
-                        width: "70px",
-                      },
-                    }}
-                    input={{
-                      type: "text",
-                      style: { width: "190px" },
-                      onKeyDown: (e) => {
-                        if (e.code === "NumpadEnter" || e.code === "Enter") {
-                          return openModalSearchBanks(e.currentTarget.value);
-                        }
-                      },
-                    }}
-                    icon={<AccountBalanceIcon sx={{ fontSize: "18px" }} />}
-                    onIconClick={(e) => {
-                      e.preventDefault();
-                      if (_bankRef.current) {
-                        openModalSearchBanks(_bankRef.current?.value);
-                      }
-                    }}
-                    inputRef={_bankRef}
-                  />
-                )}
-
-                <TextInput
-                  label={{
-                    title: "Branch : ",
-                    style: {
-                      fontSize: "12px",
-                      fontWeight: "bold",
-                      width: "70px",
-                    },
-                  }}
-                  input={{
-                    type: "text",
-                    style: { width: "190px" },
-                    onKeyDown: (e) => {
-                      if (e.code === "NumpadEnter" || e.code === "Enter") {
-                        _remarksRef.current?.focus();
-                      }
-                    },
-                  }}
-                  inputRef={_branchRef}
-                />
-                <TextAreaInput
-                  label={{
-                    title: "Remarks : ",
-                    style: {
-                      fontSize: "12px",
-                      fontWeight: "bold",
-                      width: "70px",
-                    },
-                  }}
-                  textarea={{
-                    rows: 4,
-                    disabled: isDisableField,
-                    style: { flex: 1 },
-                    onKeyDown: (e) => {
-                      if (e.key === "Enter" && e.shiftKey) {
-                        return;
-                      }
-                      if (e.code === "NumpadEnter" || e.code === "Enter") {
-                        _chekdateRef.current?.focus();
-                      }
-                    },
-                  }}
-                  _inputRef={_remarksRef}
-                />
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  gap: "10px",
-                  flexDirection: "column",
-                }}
-              >
-                <TextInput
-                  label={{
-                    title: "Check Dated : ",
-                    style: {
-                      fontSize: "12px",
-                      fontWeight: "bold",
-                      width: "90px",
-                    },
-                  }}
-                  input={{
-                    disabled: isDisableField,
-                    type: "date",
-                    style: { width: "190px" },
-                    defaultValue: new Date().toISOString().split("T")[0],
-                    onKeyDown: (e) => {
-                      if (e.code === "NumpadEnter" || e.code === "Enter") {
-                        _amountRef.current?.focus();
-                      }
-                    },
-                  }}
-                  inputRef={_chekdateRef}
-                />
-
-                <div
-                  style={{
-                    display: "flex",
-                  }}
-                >
-                  <label
-                    style={{
-                      fontSize: "12px",
-                      fontWeight: "bold",
-                      width: "90px",
-                    }}
-                  >
-                    Amount :
-                  </label>
-                  <NumericFormat
-                    style={{
-                      flex: 1,
-                    }}
-                    value={_amountRef.current?.value ?? ""}
-                    getInputRef={_amountRef}
-                    allowNegative={false}
-                    thousandSeparator
-                    valueIsNumericString
-                    onKeyDown={(e) => {
-                      if (e.code === "Enter" || e.code === "NumpadEnter") {
-                        let currentValue = _amountRef.current?.value as string;
-                        let numericValue = parseFloat(
-                          currentValue.replace(/,/g, "")
-                        );
-                        if (_amountRef.current) {
-                          if (isNaN(numericValue)) {
-                            _amountRef.current.value = "0.00";
-                          } else {
-                            if (!currentValue.includes(".")) {
-                              _amountRef.current.value = `${formatNumber(
-                                numericValue
-                              )}`;
-                            } else {
-                              _amountRef.current.value =
-                                formatNumber(numericValue);
-                            }
-                          }
-                        }
-                        _checkcountRef.current?.focus();
-                      }
-                    }}
-                  />
-                </div>
-                {hasSelectedRow === null && (
-                  <TextInput
-                    label={{
-                      title: "Check Count : ",
-                      style: {
-                        fontSize: "12px",
-                        fontWeight: "bold",
-                        width: "90px",
-                      },
-                    }}
-                    input={{
-                      disabled: isDisableField,
-                      type: "number",
-                      style: { width: "190px" },
-                      onKeyDown: (e) => {
-                        if (e.code === "NumpadEnter" || e.code === "Enter") {
-                          const timeout = setTimeout(() => {
-                            checkModalSaveButton.current?.click();
-                            clearTimeout(timeout);
-                          }, 100);
-                        }
-                      },
-                    }}
-                    inputRef={_checkcountRef}
-                  />
-                )}
-              </div>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                width: "100%",
-                marginTop: "10px",
-              }}
-            >
-              <div style={{ display: "flex", gap: "10px" }}>
-                <Button
-                  ref={checkModalSaveButton}
-                  action={checkModalSaveButtonActionRef}
-                  color="primary"
-                  variant="contained"
-                  autoFocus={hasSelectedRow !== null}
-                  onClick={() => {
-                    handleCheckDetailsSave();
-                  }}
-                  sx={{
-                    height: "30px",
-                    fontSize: "11px",
-                  }}
-                >
-                  {hasSelectedRow !== null ? "Update" : "Save"}
-                </Button>
-                <Button
-                  color="success"
-                  variant="contained"
-                  sx={{
-                    height: "30px",
-                    fontSize: "11px",
-                  }}
-                  onClick={() => {
-                    setOpenPdcInputModal(false);
-                    tableRef.current.setSelectedRow(null);
-                    setHasSelectedRow(null);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <IconButton
-                  style={{
-                    position: "absolute",
-                    top: "10px",
-                    right: "10px",
-                  }}
-                  aria-label="search-client"
-                  onClick={() => {
-                    tableRef.current.setSelectedRow(null);
-                    setHasSelectedRow(null);
-                    setOpenPdcInputModal(false);
-                  }}
-                >
-                  <CloseIcon />
-                </IconButton>
-              </div>
-            </div>
-          </Box>
-        </Modal>
         <div
           style={{
             display: showModal ? "flex" : "none",
@@ -1871,6 +1515,420 @@ export default function PostDateChecks() {
     </>
   );
 }
+
+const ModalCheck = forwardRef(
+  ({ handleOnSave, handleOnClose, hasSelectedRow }: any, ref) => {
+    const [showModal, setShowModal] = useState(false);
+    const [handleDelayClose, setHandleDelayClose] = useState(false);
+    const [blick, setBlick] = useState(false);
+
+    const checknoRef = useRef<HTMLInputElement>(null);
+    const bankRef = useRef<HTMLInputElement>(null);
+    const branchRef = useRef<HTMLInputElement>(null);
+    const remarksRef = useRef<HTMLTextAreaElement>(null);
+    const checkdateRef = useRef<HTMLInputElement>(null);
+    const amountRef = useRef<HTMLInputElement>(null);
+    const bankCode = useRef("");
+    const _checkcountRef = useRef<HTMLInputElement>(null);
+    const searchModalInputRef = useRef<HTMLInputElement>(null);
+
+    const _slipCodeRef = useRef("");
+    const _slipDateRef = useRef("");
+    const _checkOR = useRef("");
+
+    const closeDelay = () => {
+      setHandleDelayClose(true);
+      setTimeout(() => {
+        setShowModal(false);
+        setHandleDelayClose(false);
+        handleOnClose();
+      }, 100);
+    };
+    const closeDelayRef = useRef<any>(closeDelay);
+
+    useImperativeHandle(ref, () => ({
+      showModal: () => {
+        setShowModal(true);
+      },
+      clsoeModal: () => {
+        setShowModal(false);
+      },
+      getRefs: () => {
+        const refs = {
+          checknoRef,
+          bankRef,
+          branchRef,
+          remarksRef,
+          checkdateRef,
+          amountRef,
+          bankCode,
+          _checkcountRef,
+          _slipCodeRef,
+          _slipDateRef,
+          _checkOR,
+        };
+        return refs;
+      },
+      checknoRef,
+      bankRef,
+      branchRef,
+      remarksRef,
+      checkdateRef,
+      amountRef,
+      bankCode,
+      searchModalInputRef,
+      closeDelay,
+    }));
+
+    const {
+      UpwardTableModalSearch: BankUpwardTableModalSearch,
+      openModal: BankOpenModal,
+      closeModal: BankCloseModal,
+    } = useUpwardTableModalSearchSafeMode({
+      link: "/task/accounting/search-pdc-banks",
+      column: [
+        { key: "Bank_Code", label: "Code", width: 100 },
+        { key: "Bank", label: "Bank Name", width: 350 },
+      ],
+      getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
+        if (rowItm) {
+          wait(100).then(() => {
+            bankCode.current = rowItm[0];
+            if (bankRef.current) {
+              bankRef.current.value = rowItm[1];
+            }
+            branchRef.current?.focus();
+          });
+          BankCloseModal();
+        }
+      },
+    });
+
+    useEffect(() => {
+      window.addEventListener("keydown", (e: any) => {
+        if (e.key === "Escape") {
+          closeDelayRef.current();
+        }
+      });
+    }, []);
+
+    return showModal ? (
+      <>
+        <BankUpwardTableModalSearch />
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            background: "transparent",
+            zIndex: "88",
+          }}
+          onClick={() => {
+            setBlick(true);
+            setTimeout(() => {
+              setBlick(false);
+            }, 250);
+          }}
+        ></div>
+        <div
+          style={{
+            height: blick ? "202px" : "200px",
+            width: blick ? "60.3%" : "60%",
+            border: "1px solid #64748b",
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%, -75%)",
+            display: "flex",
+            flexDirection: "column",
+            zIndex: handleDelayClose ? -100 : 100,
+            opacity: handleDelayClose ? 0 : 1,
+            transition: "all 150ms",
+            boxShadow: "3px 6px 32px -7px rgba(0,0,0,0.75)",
+          }}
+        >
+          <div
+            style={{
+              height: "22px",
+              background: "white",
+              display: "flex",
+              justifyContent: "space-between",
+              padding: "5px",
+              position: "relative",
+              alignItems: "center",
+            }}
+          >
+            <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+              Check Details
+            </span>
+            <button
+              className="btn-check-exit-modal"
+              style={{
+                padding: "0 5px",
+                borderRadius: "0px",
+                background: "white",
+                color: "black",
+                height: "22px",
+                position: "absolute",
+                top: 0,
+                right: 0,
+              }}
+              onClick={() => {
+                closeDelay();
+              }}
+            >
+              <CloseIcon sx={{ fontSize: "22px" }} />
+            </button>
+          </div>
+          <div
+            style={{
+              flex: 1,
+              background: "#F1F1F1",
+              padding: "5px",
+              display: "flex",
+            }}
+          >
+            <div
+              style={{
+                width: "55%",
+                display: "flex",
+                flexDirection: "column",
+                rowGap: "5px",
+                padding: "10px",
+              }}
+            >
+              <TextInput
+                label={{
+                  title: "Check No. : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "70px",
+                  },
+                }}
+                input={{
+                  disabled: hasSelectedRow !== null,
+                  type: "text",
+                  style: { width: "160px" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      bankRef.current?.focus();
+                    }
+                  },
+                }}
+                inputRef={checknoRef}
+              />
+
+              <TextInput
+                containerStyle={{
+                  width: "370px",
+                }}
+                label={{
+                  title: "Bank : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "70px",
+                  },
+                }}
+                input={{
+                  disabled: false,
+                  type: "text",
+                  style: { width: "300px" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      BankOpenModal(e.currentTarget.value);
+                    }
+                  },
+                }}
+                icon={<AccountBoxIcon sx={{ fontSize: "18px" }} />}
+                onIconClick={(e) => {
+                  e.preventDefault();
+                  if (bankRef.current) {
+                    BankOpenModal(bankRef.current.value);
+                  }
+                }}
+                inputRef={bankRef}
+              />
+
+              <TextInput
+                label={{
+                  title: "Branch : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "70px",
+                  },
+                }}
+                input={{
+                  type: "text",
+                  style: { width: "300px" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      remarksRef.current?.focus();
+                    }
+                  },
+                }}
+                inputRef={branchRef}
+              />
+              <TextAreaInput
+                label={{
+                  title: "Remarks : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "70px",
+                  },
+                }}
+                textarea={{
+                  rows: 4,
+                  style: { width: "300px" },
+                  onKeyDown: (e) => {
+                    e.stopPropagation();
+                    if (
+                      (e.code === "NumpadEnter" && !e.shiftKey) ||
+                      (e.code === "Enter" && !e.shiftKey)
+                    ) {
+                      checkdateRef.current?.focus();
+                    }
+                  },
+                }}
+                _inputRef={remarksRef}
+              />
+            </div>
+            <div
+              style={{
+                width: "45%",
+                display: "flex",
+                flexDirection: "column",
+                rowGap: "5px",
+                position: "relative",
+                padding: "10px",
+                alignItems: "flex-end",
+              }}
+            >
+              <TextInput
+                label={{
+                  title: "Date : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "90px",
+                  },
+                }}
+                input={{
+                  type: "date",
+                  style: { width: "200px" },
+                  defaultValue: format(new Date(), "yyyy-MM-dd"),
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      amountRef.current?.focus();
+                    }
+                  },
+                }}
+                inputRef={checkdateRef}
+              />
+              <TextFormatedInput
+                label={{
+                  title: "Amount : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "90px",
+                  },
+                }}
+                input={{
+                  defaultValue: "0.00",
+                  type: "text",
+                  style: { width: "200px" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      if (handleOnSave) {
+                        _checkcountRef.current?.focus();
+                      }
+                    }
+                  },
+                }}
+                inputRef={amountRef}
+              />
+              {hasSelectedRow === null && (
+                <TextInput
+                  label={{
+                    title: "Check Count : ",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "90px",
+                    },
+                  }}
+                  input={{
+                    defaultValue: "0",
+                    type: "number",
+                    style: { width: "200px", textAlign: "right" },
+                    onKeyDown: (e) => {
+                      if (e.code === "NumpadEnter" || e.code === "Enter") {
+                        handleOnSave();
+                      }
+                    },
+                  }}
+                  inputRef={_checkcountRef}
+                />
+              )}
+              <div
+                style={{
+                  display: "flex",
+                  columnGap: "10px",
+                  flex: 1,
+                  justifyContent: "flex-end",
+                  alignItems: "flex-end",
+                }}
+              >
+                <Button
+                  variant="contained"
+                  color="success"
+                  style={{
+                    height: "22px",
+                    fontSize: "12px",
+                  }}
+                  onClick={(e) => {
+                    if (handleOnSave) {
+                      handleOnSave();
+                    }
+                  }}
+                >
+                  OK
+                </Button>
+                <Button
+                  variant="contained"
+                  color="error"
+                  style={{
+                    height: "22px",
+                    fontSize: "12px",
+                  }}
+                  onClick={(e) => {
+                    closeDelay();
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+          <style>
+            {`
+              .btn-check-exit-modal:hover{
+                background:red !important;
+                color:white !important;
+              }
+            `}
+          </style>
+        </div>
+      </>
+    ) : null;
+  }
+);
 
 export function setNewStateValue(dispatch: any, obj: any) {
   Object.entries(obj).forEach(([field, value]) => {

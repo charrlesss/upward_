@@ -1,53 +1,53 @@
 import { AxiosInstance } from "axios";
 import { User } from "../../../components/AuthContext";
 
-export const clientColumn = [
-  { field: "entry_client_id", headerName: "ID", width: 130 },
-  { field: "company", headerName: "Company", width: 200 },
-  { field: "firstname", headerName: "First Name", width: 200 },
+export const clientColumn:any = [
+  { key: "entry_client_id", label: "ID", width: 130 },
+  { key: "company", label: "Company", width: 200 },
+  { key: "firstname", label: "First Name", width: 200 },
   {
-    field: "lastname",
-    headerName: "Last Name",
+    key: "lastname",
+    label: "Last Name",
     width: 200,
   },
   {
-    field: "middlename",
-    headerName: "Middle Name",
+    key: "middlename",
+    label: "Middle Name",
     width: 200,
   },
   {
-    field: "email",
-    headerName: "Email",
+    key: "email",
+    label: "Email",
     width: 200,
   },
   {
-    field: "mobile",
-    headerName: "Mobile",
+    key: "mobile",
+    label: "Mobile",
     width: 200,
   },
   {
-    field: "sale_officer",
-    headerName: "Sale Officer",
+    key: "sale_officer",
+    label: "Sale Officer",
     width: 200,
   },
   {
-    field: "NewShortName",
-    headerName: "Sub Account",
+    key: "NewShortName",
+    label: "Sub Account",
     width: 130,
   },
   {
-    field: "option",
-    headerName: "Option",
+    key: "option",
+    label: "Option",
     width: 130,
   },
   {
-    field: "createdAt",
-    headerName: "Created At",
+    key: "createdAt",
+    label: "Created At",
     width: 130,
   },
   {
-    field: "address",
-    headerName: "Address",
+    key: "address",
+    label: "Address",
     width: 500,
   },
 ];

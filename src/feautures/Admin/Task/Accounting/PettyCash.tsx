@@ -1154,7 +1154,7 @@ export const Autocomplete = forwardRef(
     }));
 
     return (
-      <div style={{ flex: 1 }}>
+      <div style={{ width: "100%" }}>
         <TextInput
           containerStyle={containerStyle}
           label={label}
