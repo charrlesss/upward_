@@ -1,4 +1,11 @@
-import { useReducer, useContext, useState, useRef, useEffect, useCallback } from "react";
+import {
+  useReducer,
+  useContext,
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+} from "react";
 import {
   Button,
   FormControl,
@@ -33,18 +40,25 @@ import {
 
 import { flushSync } from "react-dom";
 import SaveIcon from "@mui/icons-material/Save";
-import { SelectInput, TextFormatedInput, TextInput } from "../../../../components/UpwardFields";
-import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import {
+  SelectInput,
+  TextFormatedInput,
+  TextInput,
+} from "../../../../components/UpwardFields";
+import SupervisorAccountIcon from "@mui/icons-material/SupervisorAccount";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import { format, lastDayOfMonth } from "date-fns";
 import PageHelmet from "../../../../components/Helmet";
-import { DataGridViewReact } from "../../../../components/DataGridViewReact";
+import {
+  DataGridViewReact,
+  useUpwardTableModalSearchSafeMode,
+} from "../../../../components/DataGridViewReact";
 import { Loading } from "../../../../components/Loading";
 import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
+import SearchIcon from "@mui/icons-material/Search";
 
 const initialState = {
-
   totalDebit: "",
   totalCredit: "",
   totalBalance: "",
@@ -99,41 +113,44 @@ const selectedCollectionColumns = [
 ];
 
 export default function GeneralJournal() {
-  const { executeQueryToClient } = useExecuteQueryFromClient()
-  const [mode, setMode] = useState<"update" | "add" | "">("")
+  const { executeQueryToClient } = useExecuteQueryFromClient();
+  const [mode, setMode] = useState<"update" | "add" | "">("");
   const [monitoring, setMonitoring] = useState({
     totalRow: "0",
     totalDebit: "0.00",
     totalCredit: "0.00",
-    balance: "0.00"
-  })
+    balance: "0.00",
+  });
 
-  const [loadingJob, setLoadingJob] = useState(false)
-  const inputSearchRef = useRef<HTMLInputElement>(null)
+  const [loadingJob, setLoadingJob] = useState(false);
+  const inputSearchRef = useRef<HTMLInputElement>(null);
 
-  const refRefNo = useRef<HTMLInputElement>(null)
-  const _refSubRefNo = useRef<HTMLInputElement>(null)
-  const refDate = useRef<HTMLInputElement>(null)
-  const refExplanation = useRef<HTMLInputElement>(null)
+  const refRefNo = useRef<HTMLInputElement>(null);
+  const _refSubRefNo = useRef<HTMLInputElement>(null);
+  const refDate = useRef<HTMLInputElement>(null);
+  const refExplanation = useRef<HTMLInputElement>(null);
 
-  const refCode = useRef<HTMLInputElement>(null)
-  const refAccountName = useRef<HTMLInputElement>(null)
-  const refSubAccount = useRef<HTMLInputElement>(null)
-  const refName = useRef<HTMLInputElement>(null)
+  const refCode = useRef<HTMLInputElement>(null);
+  const refAccountName = useRef<HTMLInputElement>(null);
+  const refSubAccount = useRef<HTMLInputElement>(null);
+  const refName = useRef<HTMLInputElement>(null);
 
-  const refDebit = useRef<HTMLInputElement>(null)
-  const refCredit = useRef<HTMLInputElement>(null)
-  const refTC = useRef<HTMLInputElement>(null)
-  const refRemarks = useRef<HTMLInputElement>(null)
-  const refVat = useRef<HTMLSelectElement>(null)
-  const refInvoice = useRef<HTMLInputElement>(null)
+  const refDebit = useRef<HTMLInputElement>(null);
+  const refCredit = useRef<HTMLInputElement>(null);
+  const refTC = useRef<HTMLInputElement>(null);
+  const refRemarks = useRef<HTMLInputElement>(null);
 
-  //client details 
-  const refIDNo = useRef<string>('')
-  const refSubAcct = useRef<string>('')
+
+
+  const refVat = useRef<HTMLSelectElement>(null);
+  const refInvoice = useRef<HTMLInputElement>(null);
+
+  //client details
+  const refIDNo = useRef<string>("");
+  const refSubAcct = useRef<string>("");
 
   //TC details
-  const refTCDesc = useRef<string>('')
+  const refTCDesc = useRef<string>("");
 
   const { myAxios, user } = useContext(AuthContext);
   const [state, dispatch] = useReducer(reducer, initialState);
@@ -143,11 +160,9 @@ export default function GeneralJournal() {
   const IdsSearchInput = useRef<HTMLInputElement>(null);
   const table = useRef<any>(null);
 
-
-  const modeAdd = mode === 'add'
-  const modeUpdate = mode === 'update'
-  const modeDefault = mode === ''
-
+  const modeAdd = mode === "add";
+  const modeUpdate = mode === "update";
+  const modeDefault = mode === "";
 
   const {
     isLoading: loadingGeneralJournalGenerator,
@@ -176,18 +191,19 @@ export default function GeneralJournal() {
       }
       wait(100).then(() => {
         if (refRefNo.current) {
-          refRefNo.current.value = response.data.generateGeneralJournalID[0].general_journal_id
+          refRefNo.current.value =
+            response.data.generateGeneralJournalID[0].general_journal_id;
         }
         if (_refSubRefNo.current) {
-          _refSubRefNo.current.value = response.data.generateGeneralJournalID[0].general_journal_id
+          _refSubRefNo.current.value =
+            response.data.generateGeneralJournalID[0].general_journal_id;
         }
 
         if (refVat.current) {
-          refVat.current.value = 'Non-VAT'
+          refVat.current.value = "Non-VAT";
         }
-      })
+      });
     },
-
   });
   const {
     mutate: addGeneralJournalMutate,
@@ -207,7 +223,6 @@ export default function GeneralJournal() {
     onSuccess: (res) => {
       const response = res as any;
       if (response.data.success) {
-
         return Swal.fire({
           position: "center",
           icon: "success",
@@ -222,17 +237,17 @@ export default function GeneralJournal() {
             confirmButtonText: "Yes, print it!",
           }).then((result) => {
             if (result.isConfirmed) {
-              handleClickPrint()
+              handleClickPrint();
             }
             wait(100).then(() => {
-              resetFieldRef()
-              resetRowFieldRef()
-              resetTable()
-              resetMonitoring()
-              setMode('')
-            })
+              resetFieldRef();
+              resetRowFieldRef();
+              resetTable();
+              resetMonitoring();
+              setMode("");
+            });
           });
-        })
+        });
       }
       return Swal.fire({
         position: "center",
@@ -261,11 +276,11 @@ export default function GeneralJournal() {
     onSuccess: (res) => {
       const response = res as any;
       if (response.data.success) {
-        resetFieldRef()
-        resetRowFieldRef()
-        resetTable()
-        resetMonitoring()
-        setMode('')
+        resetFieldRef();
+        resetRowFieldRef();
+        resetTable();
+        resetMonitoring();
+        setMode("");
 
         return Swal.fire({
           position: "center",
@@ -303,171 +318,167 @@ export default function GeneralJournal() {
       const { explanation, dateEntry, refNo } = selected[0];
 
       if (refRefNo.current) {
-        refRefNo.current.value = refNo
+        refRefNo.current.value = refNo;
       }
       if (refDate.current) {
-        refDate.current.value = format(new Date(dateEntry), "yyyy-MM-dd")
+        refDate.current.value = format(new Date(dateEntry), "yyyy-MM-dd");
       }
       if (refExplanation.current) {
-        refExplanation.current.value = explanation
+        refExplanation.current.value = explanation;
       }
 
-      table.current.setDataFormated(selected)
-      monitor()
+      table.current.setDataFormated(selected);
+      monitor();
     },
   });
+  //Collection Search
   const {
-    ModalComponent: ModalSearchGeneralJounal,
-    openModal: openSearchGeneralJounal,
-    isLoading: isLoadingSearchGeneralJounal,
-    closeModal: closeSearchGeneralJounal,
-  } = useQueryModalTable({
-    link: {
-      url: "/task/accounting/general-journal/search-general-journal",
-      queryUrlName: "searchGeneralJournal",
-    },
-    columns: [
-      { field: "Date_Entry", headerName: "Date", width: 130 },
-      { field: "Source_No", headerName: "Ref No.", width: 250 },
+    UpwardTableModalSearch: SearchCollectionUpwardTableModalSearch,
+    openModal: searchCollectionCreditOpenModal,
+    closeModal: searchCollectionCreditCloseModal,
+  } = useUpwardTableModalSearchSafeMode({
+    size: "medium",
+    link: "/task/accounting/general-journal/search-general-journal",
+    column: [
+      { key: "Date_Entry", headerName: "Date", width: 130 },
+      { key: "Source_No", headerName: "Ref No.", width: 150 },
       {
-        field: "Explanation",
+        key: "Explanation",
         headerName: "Explanation",
-        flex: 1,
+        width: 300,
       },
     ],
-    queryKey: "search-general-journal",
-    uniqueId: "Source_No",
-    responseDataKey: "searchGeneralJournal",
-    onSelected: (selectedRowData, data) => {
-      getSearchSelectedGeneralJournal({
-        Source_No: selectedRowData[0].Source_No,
-      });
-      setMode("update")
-      table.current.resetTable()
-      closeSearchGeneralJounal();
-      resetRow()
+    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
+      if (rowItm) {
+        wait(100).then(() => {
+          getSearchSelectedGeneralJournal({
+            Source_No: rowItm[1],
+          });
+          setMode("update");
+          table.current.resetTable();
+          resetRow();
+        });
+        searchCollectionCreditCloseModal();
+      }
     },
-    onCloseFunction: (value: any) => {
-      dispatch({ type: "UPDATE_FIELD", field: "search", value });
-    },
-    searchRef: chartAccountSearchInput,
   });
-
-  // fields
+  // chart of account Search
   const {
-    ModalComponent: ModalChartAccountSearch,
-    openModal: openChartAccountSearch,
-    isLoading: isLoadingChartAccountSearch,
-    closeModal: closeChartAccountSearch,
-  } = useQueryModalTable({
-    link: {
-      url: "/task/accounting/general-journal/get-chart-account",
-      queryUrlName: "chartAccountSearch",
-    },
-    columns: [
-      { field: "Acct_Code", headerName: "Account Code", width: 130 },
-      { field: "Acct_Title", headerName: "Account Title.", width: 250 },
+    UpwardTableModalSearch: ChartAccountUpwardTableModalSearch,
+    openModal: chartAccountOpenModal,
+    closeModal: chartAccountCloseModal,
+  } = useUpwardTableModalSearchSafeMode({
+    size: "medium",
+    link: "/task/accounting/general-journal/get-chart-account",
+    column: [
+      { key: "Acct_Code", label: "Account Code", width: 130 },
+      { key: "Acct_Title", label: "Account Title.", width: 250 },
       {
-        field: "Short",
-        headerName: "Short",
-        flex: 1,
+        key: "Short",
+        label: "Short",
+        width: 300,
       },
     ],
-    queryKey: "get-chart-account",
-    uniqueId: "Acct_Code",
-    responseDataKey: "getChartOfAccount",
-    onSelected: (selectedRowData, data) => {
-      if (refCode.current) {
-        refCode.current.value = selectedRowData[0].Acct_Code
-      }
-      if (refAccountName.current) {
-        refAccountName.current.value = selectedRowData[0].Acct_Title
-      }
+    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
+      if (rowItm) {
+        wait(100).then(() => {
+          if (refCode.current) {
+            refCode.current.value = rowItm[0];
+          }
+          if (refAccountName.current) {
+            refAccountName.current.value = rowItm[1];
+          }
 
-      closeChartAccountSearch();
-      setTimeout(() => {
-        refName.current?.focus();
-      }, 250);
+          refName.current?.focus();
+        });
+        chartAccountCloseModal();
+      }
     },
-    searchRef: chartAccountSearchInput,
   });
+  // Client Search
   const {
-    ModalComponent: ModalPolicyIdClientIdRefId,
-    openModal: openPolicyIdClientIdRefId,
-    isLoading: isLoadingPolicyIdClientIdRefId,
-    closeModal: closePolicyIdClientIdRefId,
-  } = useQueryModalTable({
-    link: {
-      url: "/task/accounting/search-pdc-policy-id",
-      queryUrlName: "searchPdcPolicyIds",
-    },
-    columns: [
-      { field: "Type", headerName: "Type", width: 130 },
-      { field: "IDNo", headerName: "ID No.", width: 200 },
+    UpwardTableModalSearch: ClientUpwardTableModalSearch,
+    openModal: clientOpenModal,
+    closeModal: clientCloseModal,
+  } = useUpwardTableModalSearchSafeMode({
+    size: "medium",
+    link: "/task/accounting/search-pdc-policy-id",
+    column: [
+      { key: "Type", label: "Type", width: 130 },
+      { key: "IDNo", label: "ID No.", width: 150 },
       {
-        field: "Name",
-        headerName: "Name",
-        flex: 1,
+        key: "Name",
+        label: "Name",
+        width: 300,
       },
       {
-        field: "ID",
-        headerName: "ID",
+        key: "ID",
+        label: "ID",
+        hide: true,
+      },
+      {
+        key: "client_id",
+        label: "client_id",
+        hide: true,
+      },
+      {
+        key: "sub_account",
+        label: "sub_account",
+        hide: true,
+      },
+      {
+        key: "ShortName",
+        label: "ShortName",
         hide: true,
       },
     ],
-    queryKey: "get-policyId-ClientId-RefId",
-    uniqueId: "IDNo",
-    responseDataKey: "clientsId",
-    onSelected: (selectedRowData) => {
-      if (refName.current) {
-        refName.current.value = selectedRowData[0].Name ?? ""
-      }
-      if (refSubAccount.current) {
-        refSubAccount.current.value = selectedRowData[0].ShortName ?? ""
-      }
-      refIDNo.current = selectedRowData[0].IDNo
-      refSubAcct.current = selectedRowData[0].sub_account
+    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
+      if (rowItm) {
+        wait(100).then(() => {
+          if (refName.current) {
+            refName.current.value = rowItm[2] ?? "";
+          }
+          if (refSubAccount.current) {
+            refSubAccount.current.value = rowItm[6] ?? "";
+          }
+          refIDNo.current = rowItm[1];
+          refSubAcct.current = rowItm[5];
 
-      closePolicyIdClientIdRefId();
-      setTimeout(() => {
-        refDebit.current?.focus();
-      }, 200);
+          refDebit.current?.focus();
+        });
+        clientCloseModal();
+      }
     },
-    searchRef: IdsSearchInput,
   });
+  //  Transaction Accoun Search
   const {
-    ModalComponent: ModalTransactionAccount,
-    openModal: openTransactionAccount,
-    isLoading: isLoadingTransactionAccount,
-    closeModal: closeTransactionAccount,
-  } = useQueryModalTable({
-    link: {
-      url: "/task/accounting/general-journal/get-transaction-account",
-      queryUrlName: "transactionCodeSearch",
-    },
-    columns: [
-      { field: "Code", headerName: "Code", width: 130 },
+    UpwardTableModalSearch: TransactionAccountUpwardTableModalSearch,
+    openModal: TransactionAccountOpenModal,
+    closeModal: TransactionAccountCloseModal,
+  } = useUpwardTableModalSearchSafeMode({
+    link: "/task/accounting/general-journal/get-transaction-account",
+    column: [
+      { key: "Code", label: "Code", width: 130 },
       {
-        field: "Description",
-        headerName: "Description",
-        flex: 1,
+        key: "Description",
+        label: "Description",
+        width: 300,
       },
     ],
-    queryKey: "get-transaction-account",
-    uniqueId: "Code",
-    responseDataKey: "getTransactionAccount",
-    onSelected: (selectedRowData) => {
-      if (refTC.current) {
-        refTC.current.value = selectedRowData[0].Code
+    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
+      if (rowItm) {
+        wait(100).then(() => {
+          if (refTC.current) {
+            refTC.current.value = rowItm[0];
+          }
+          refTCDesc.current = rowItm[1];
+          refRemarks.current?.focus();
+        });
+        TransactionAccountCloseModal();
       }
-      refTCDesc.current = selectedRowData[0].Description
-      closeTransactionAccount();
-      setTimeout(() => {
-        refRemarks.current?.focus();
-      }, 200);
     },
-    searchRef: IdsSearchInput,
   });
+
   const handleInputChange = (e: any) => {
     const { name, value } = e.target;
     dispatch({ type: "UPDATE_FIELD", field: name, value });
@@ -494,8 +505,8 @@ export default function GeneralJournal() {
       });
     }
     if (
-      parseFloat(monitoring.totalDebit.replace(/,/g, '')) <= 0 ||
-      parseFloat(monitoring.totalCredit.replace(/,/g, '')) <= 0
+      parseFloat(monitoring.totalDebit.replace(/,/g, "")) <= 0 ||
+      parseFloat(monitoring.totalCredit.replace(/,/g, "")) <= 0
     ) {
       return Swal.fire({
         position: "center",
@@ -504,7 +515,7 @@ export default function GeneralJournal() {
           "Total Debit and Credit amount must not be zero(0), please double check the entries",
         timer: 1500,
       }).then(() => {
-        wait(300).then(() => { });
+        wait(300).then(() => {});
       });
     }
     if (monitoring.totalDebit !== monitoring.totalCredit) {
@@ -515,12 +526,11 @@ export default function GeneralJournal() {
           "Total Debit and Credit amount must be balance, please double check the entries",
         timer: 1500,
       }).then(() => {
-        wait(300).then(() => { });
+        wait(300).then(() => {});
       });
     }
 
-  
-    const generalJournalData: any = table.current.getData()
+    const generalJournalData: any = table.current.getData();
     const generalJournalDataFormatted = generalJournalData.map((itm: any) => {
       return {
         code: itm[0],
@@ -536,8 +546,8 @@ export default function GeneralJournal() {
         TempID: itm[10],
         IDNo: itm[11],
         BranchCode: itm[12],
-      }
-    })
+      };
+    });
     if (modeUpdate) {
       codeCondfirmationAlert({
         isUpdate: true,
@@ -565,7 +575,7 @@ export default function GeneralJournal() {
         },
       });
     }
-  }, [monitoring, addGeneralJournalMutate, modeUpdate])
+  }, [monitoring, addGeneralJournalMutate, modeUpdate]);
   function handleVoid() {
     codeCondfirmationAlert({
       isUpdate: false,
@@ -581,39 +591,39 @@ export default function GeneralJournal() {
   }
   function resetRow() {
     if (refCode.current) {
-      refCode.current.value = ""
+      refCode.current.value = "";
     }
     if (refAccountName.current) {
-      refAccountName.current.value = ""
+      refAccountName.current.value = "";
     }
     if (refName.current) {
-      refName.current.value = ""
+      refName.current.value = "";
     }
     if (refSubAccount.current) {
-      refSubAccount.current.value = ""
+      refSubAccount.current.value = "";
     }
     if (refTC.current) {
-      refTC.current.value = ""
+      refTC.current.value = "";
     }
     if (refDebit.current) {
-      refDebit.current.value = ""
+      refDebit.current.value = "";
     }
     if (refCredit.current) {
-      refCredit.current.value = ""
+      refCredit.current.value = "";
     }
     if (refRemarks.current) {
-      refRemarks.current.value = ""
+      refRemarks.current.value = "";
     }
     if (refVat.current) {
-      refVat.current.value = "Non-VAT"
+      refVat.current.value = "Non-VAT";
     }
     if (refInvoice.current) {
-      refInvoice.current.value = ""
+      refInvoice.current.value = "";
     }
 
-    refTCDesc.current = ""
-    refIDNo.current = ""
-    refSubAcct.current = ""
+    refTCDesc.current = "";
+    refIDNo.current = "";
+    refSubAcct.current = "";
   }
   function handleRowSave() {
     if (refCode.current && refCode.current.value === "") {
@@ -624,8 +634,8 @@ export default function GeneralJournal() {
         timer: 1500,
       }).then(() => {
         wait(300).then(() => {
-          return openChartAccountSearch(state.code);
-        })
+          return chartAccountOpenModal(state.code);
+        });
       });
     }
 
@@ -637,12 +647,15 @@ export default function GeneralJournal() {
         timer: 1500,
       }).then(() => {
         wait(300).then(() => {
-          return openPolicyIdClientIdRefId(refName.current?.value)
-        })
+          return clientOpenModal(refName.current?.value);
+        });
       });
     }
 
-    if (refDebit.current && isNaN(parseFloat(refDebit.current?.value.replace(/,/g, "")))) {
+    if (
+      refDebit.current &&
+      isNaN(parseFloat(refDebit.current?.value.replace(/,/g, "")))
+    ) {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -650,11 +663,14 @@ export default function GeneralJournal() {
         timer: 1500,
       }).then(() => {
         wait(300).then(() => {
-          refDebit.current?.focus()
-        })
-      })
+          refDebit.current?.focus();
+        });
+      });
     }
-    if (refCredit.current && isNaN(parseFloat(refCredit.current?.value.replace(/,/g, "")))) {
+    if (
+      refCredit.current &&
+      isNaN(parseFloat(refCredit.current?.value.replace(/,/g, "")))
+    ) {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -662,9 +678,9 @@ export default function GeneralJournal() {
         timer: 1500,
       }).then(() => {
         wait(300).then(() => {
-          refCredit.current?.focus()
-        })
-      })
+          refCredit.current?.focus();
+        });
+      });
     }
     if (
       refDebit.current &&
@@ -679,9 +695,9 @@ export default function GeneralJournal() {
         timer: 1500,
       }).then(() => {
         wait(300).then(() => {
-          refCredit.current?.focus()
-        })
-      })
+          refCredit.current?.focus();
+        });
+      });
     }
     if (refTC.current && refTC.current?.value === "") {
       return Swal.fire({
@@ -691,8 +707,8 @@ export default function GeneralJournal() {
         timer: 1500,
       }).then(() => {
         wait(300).then(() => {
-          openTransactionAccount(state.TC_Code);
-        })
+          TransactionAccountOpenModal(state.TC_Code);
+        });
       });
     }
     if (refCode.current && refCode.current?.value.length >= 200) {
@@ -703,9 +719,9 @@ export default function GeneralJournal() {
         timer: 1500,
       }).then(() => {
         wait(300).then(() => {
-          refCode.current?.focus()
-        })
-      })
+          refCode.current?.focus();
+        });
+      });
     }
     if (refName.current && refName.current?.value.length >= 200) {
       return Swal.fire({
@@ -715,9 +731,9 @@ export default function GeneralJournal() {
         timer: 1500,
       }).then(() => {
         wait(300).then(() => {
-          refName.current?.focus()
-        })
-      })
+          refName.current?.focus();
+        });
+      });
     }
     if (refTC.current && refTC.current.value.length >= 200) {
       return Swal.fire({
@@ -727,9 +743,9 @@ export default function GeneralJournal() {
         timer: 1500,
       }).then(() => {
         wait(300).then(() => {
-          refTC.current?.focus()
-        })
-      })
+          refTC.current?.focus();
+        });
+      });
     }
     if (refInvoice.current && refInvoice.current.value.length >= 200) {
       return Swal.fire({
@@ -739,12 +755,12 @@ export default function GeneralJournal() {
         timer: 1500,
       }).then(() => {
         wait(300).then(() => {
-          refInvoice.current?.focus()
-        })
-      })
+          refInvoice.current?.focus();
+        });
+      });
     }
-    const getSelectedRow = table.current.getSelectedRow()
-    const isUpdate = getSelectedRow !== null
+    const getSelectedRow = table.current.getSelectedRow();
+    const isUpdate = getSelectedRow !== null;
 
     Swal.fire({
       title: isUpdate
@@ -755,9 +771,7 @@ export default function GeneralJournal() {
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
-      confirmButtonText: isUpdate
-        ? "Yes, update it!"
-        : "Yes Add it",
+      confirmButtonText: isUpdate ? "Yes, update it!" : "Yes Add it",
     }).then((result) => {
       if (result.isConfirmed) {
         if (
@@ -772,7 +786,7 @@ export default function GeneralJournal() {
           refVat.current &&
           refInvoice.current
         ) {
-          const newData: any = table.current.getData()
+          const newData: any = table.current.getData();
           const newInput = [
             refCode.current.value,
             refAccountName.current.value,
@@ -787,31 +801,31 @@ export default function GeneralJournal() {
             refIDNo.current,
             refIDNo.current,
             refSubAcct.current,
-          ]
+          ];
 
-          let taxtInput: any = []
-          let taxableamt = 0
+          let taxtInput: any = [];
+          let taxableamt = 0;
 
-          if (newInput[8] === 'VAT' && newInput[0] !== '1.06.02') {
-            const debit = parseFloat(newInput[4].replace(/,/g, ''))
-            const credit = parseFloat(newInput[5].replace(/,/g, ''))
+          if (newInput[8] === "VAT" && newInput[0] !== "1.06.02") {
+            const debit = parseFloat(newInput[4].replace(/,/g, ""));
+            const credit = parseFloat(newInput[5].replace(/,/g, ""));
             if (debit > 0) {
-              taxableamt = debit / 1.12
-              newInput[4] = formatNumber(taxableamt)
+              taxableamt = debit / 1.12;
+              newInput[4] = formatNumber(taxableamt);
             } else {
-              taxableamt = credit / 1.12
-              newInput[5] = formatNumber(taxableamt)
+              taxableamt = credit / 1.12;
+              newInput[5] = formatNumber(taxableamt);
             }
 
-            let inputtax = taxableamt * 0.12
-            let taxtDebit = ''
-            let taxtCredit = ''
+            let inputtax = taxableamt * 0.12;
+            let taxtDebit = "";
+            let taxtCredit = "";
             if (debit > 0) {
-              taxtDebit = formatNumber(inputtax)
-              taxtCredit = newInput[5]
+              taxtDebit = formatNumber(inputtax);
+              taxtCredit = newInput[5];
             } else {
-              taxtCredit = formatNumber(inputtax)
-              taxtDebit = newInput[4]
+              taxtCredit = formatNumber(inputtax);
+              taxtDebit = newInput[4];
             }
 
             taxtInput = [
@@ -828,37 +842,35 @@ export default function GeneralJournal() {
               refIDNo.current,
               refIDNo.current,
               refSubAcct.current,
-            ]
-
+            ];
           }
           if (isUpdate) {
-            newData[getSelectedRow] = newInput
-            table.current.setSelectedRow(null)
+            newData[getSelectedRow] = newInput;
+            table.current.setSelectedRow(null);
           } else {
-            newData[newData.length] = newInput
+            newData[newData.length] = newInput;
           }
-          table.current.setData(newData)
+          table.current.setData(newData);
           setTimeout(() => {
-            if (newInput[8] === 'VAT' && newInput[0] !== '1.06.02') {
-              const getNewData = table.current.getData()
+            if (newInput[8] === "VAT" && newInput[0] !== "1.06.02") {
+              const getNewData = table.current.getData();
               if (isUpdate) {
                 getNewData.splice(getSelectedRow + 1, 0, taxtInput);
               } else {
-                getNewData[getNewData.length] = taxtInput
+                getNewData[getNewData.length] = taxtInput;
               }
-              table.current.setData(getNewData)
+              table.current.setData(getNewData);
             }
-            resetRow()
-          }, 100)
+            resetRow();
+          }, 100);
 
           setTimeout(() => {
             if (refCode.current) {
-              refCode.current.focus()
+              refCode.current.focus();
             }
-          }, 350)
-          monitor()
+          }, 350);
+          monitor();
         }
-
       }
     });
   }
@@ -867,9 +879,8 @@ export default function GeneralJournal() {
   }
   function handleClickPrint() {
     flushSync(() => {
-      const data = table.current.getData()
+      const data = table.current.getData();
       const generalJournal: any = data.map((itm: any) => {
-
         return {
           code: itm[0],
           acctName: itm[1],
@@ -883,22 +894,24 @@ export default function GeneralJournal() {
           invoice: itm[9],
           TempID: itm[10],
           IDNo: itm[11],
-          BranchCode: itm[12]
-        }
-      })
-      console.log(generalJournal)
+          BranchCode: itm[12],
+        };
+      });
+      console.log(generalJournal);
 
       localStorage.removeItem("printString");
       localStorage.setItem("dataString", JSON.stringify(generalJournal));
       localStorage.setItem("paper-width", "8.5in");
       localStorage.setItem("paper-height", "11in");
       localStorage.setItem("module", "general-journal");
-      localStorage.setItem("state", JSON.stringify({
-        JVNo: refRefNo.current?.value,
-        JVDate: refDate.current?.value,
-        JVExp: refExplanation.current?.value
-
-      }));
+      localStorage.setItem(
+        "state",
+        JSON.stringify({
+          JVNo: refRefNo.current?.value,
+          JVDate: refDate.current?.value,
+          JVExp: refExplanation.current?.value,
+        })
+      );
       localStorage.setItem(
         "column",
         JSON.stringify([
@@ -920,111 +933,114 @@ export default function GeneralJournal() {
     window.open("/dashboard/print", "_blank");
   }
   function onCancel() {
-    resetFieldRef()
-    resetRowFieldRef()
-    resetTable()
-    resetMonitoring()
-    setMode("")
-
+    resetFieldRef();
+    resetRowFieldRef();
+    resetTable();
+    resetMonitoring();
+    setMode("");
   }
   function monitor() {
     setTimeout(() => {
-      const getData = table.current.getData()
-      const totalCredit = getData.reduce((a: any, b: any) => a + parseFloat(b[4].replace(/,/g, '')), 0)
-      const totalDebit = getData.reduce((a: any, b: any) => a + parseFloat(b[5].replace(/,/g, '')), 0)
+      const getData = table.current.getData();
+      const totalCredit = getData.reduce(
+        (a: any, b: any) => a + parseFloat(b[4].replace(/,/g, "")),
+        0
+      );
+      const totalDebit = getData.reduce(
+        (a: any, b: any) => a + parseFloat(b[5].replace(/,/g, "")),
+        0
+      );
       setMonitoring({
         totalRow: `${getData.length}`,
         totalCredit: formatNumber(totalCredit),
         totalDebit: formatNumber(totalDebit),
         balance: formatNumber(totalCredit - totalDebit),
-      })
-    }, 200)
+      });
+    }, 200);
   }
   function resetFieldRef() {
-    refetchGeneralJournalGenerator()
+    refetchGeneralJournalGenerator();
     if (refDate.current) {
-      refDate.current.value = format(new Date(), "yyyy-MM-dd")
+      refDate.current.value = format(new Date(), "yyyy-MM-dd");
     }
     if (refExplanation.current) {
-      refExplanation.current.value = ""
+      refExplanation.current.value = "";
     }
   }
   function resetRowFieldRef() {
     if (refCode.current) {
-      refCode.current.value = ''
+      refCode.current.value = "";
     }
     if (refAccountName.current) {
-      refAccountName.current.value = ''
+      refAccountName.current.value = "";
     }
     if (refSubAccount.current) {
-      refSubAccount.current.value = ''
+      refSubAccount.current.value = "";
     }
     if (refName.current) {
-      refName.current.value = ''
+      refName.current.value = "";
     }
-
 
     if (refDebit.current) {
-      refDebit.current.value = ''
+      refDebit.current.value = "";
     }
     if (refCredit.current) {
-      refCredit.current.value = ''
+      refCredit.current.value = "";
     }
     if (refTC.current) {
-      refTC.current.value = ''
+      refTC.current.value = "";
     }
     if (refRemarks.current) {
-      refRemarks.current.value = ''
+      refRemarks.current.value = "";
     }
     if (refVat.current) {
-      refVat.current.value = 'Non-VAT'
+      refVat.current.value = "Non-VAT";
     }
     if (refInvoice.current) {
-      refInvoice.current.value = ''
+      refInvoice.current.value = "";
     }
   }
   function resetTable() {
-    table.current.resetTable()
+    table.current.resetTable();
   }
   function resetMonitoring() {
     setMonitoring({
       totalRow: "0",
       totalDebit: "0.00",
       totalCredit: "0.00",
-      balance: "0.00"
-    })
+      balance: "0.00",
+    });
   }
 
   useEffect(() => {
     const handleKeyDown = (event: any) => {
-      if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+      if ((event.ctrlKey || event.metaKey) && event.key === "s") {
         event.preventDefault();
         handleOnSave();
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [handleOnSave]);
-
 
   function formatNumber(Amount: number) {
     return Amount.toLocaleString("en-US", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    })
+    });
   }
 
   async function DoRPTTransactionNILHN() {
-    setLoadingJob(true)
-    setOpenJobs(false)
+    setLoadingJob(true);
+    setOpenJobs(false);
     setTimeout(async () => {
-      let JobDate = new Date(state.jobTransactionDate)
-      let dtFrom = format(JobDate, "yyyy-MM-01-")
-      let dtTo = format(lastDayOfMonth(JobDate), "yyyy-MM-dd")
-      let iRow = 0
+      let JobDate = new Date(state.jobTransactionDate);
+      let dtFrom = format(JobDate, "yyyy-MM-01-");
+      let dtTo = format(lastDayOfMonth(JobDate), "yyyy-MM-dd");
+      let iRow = 0;
 
       const qry = `
     select 
@@ -1050,23 +1066,25 @@ export default function GeneralJournal() {
         a.DateIssued <= '${dtTo}'
       ) 
       order by a.DateIssued
-      `
-      let dgvJournal: any = []
-      const { data } = await executeQueryToClient(qry)
-      const dataArray = data.data
+      `;
+      let dgvJournal: any = [];
+      const { data } = await executeQueryToClient(qry);
+      const dataArray = data.data;
       if (dataArray.length > 0) {
-        let totalAmount = 0
-        let i = 0
+        let totalAmount = 0;
+        let i = 0;
         for (const itm of dataArray) {
           let tmpID = "";
           if (i == 0) {
-            iRow = 0
+            iRow = 0;
           } else {
-            iRow = iRow + 1
+            iRow = iRow + 1;
           }
 
-          tmpID = itm.IDNo
-          const { data: tmpNameRes } = await executeQueryToClient(`SELECT Shortname ,Sub_ShortName, Sub_Acct FROM (${ID_Entry}) id_entry WHERE IDNo = '${tmpID}'`)
+          tmpID = itm.IDNo;
+          const { data: tmpNameRes } = await executeQueryToClient(
+            `SELECT Shortname ,Sub_ShortName, Sub_Acct FROM (${ID_Entry}) id_entry WHERE IDNo = '${tmpID}'`
+          );
           dgvJournal[iRow] = [
             "1.03.01", // 0
             "Premium Receivables", // 1
@@ -1081,14 +1099,16 @@ export default function GeneralJournal() {
             itm.PolicyNo,
             itm.PolicyNo,
             tmpNameRes.data[0]?.Sub_Acct, // 8
-          ]
+          ];
 
-          totalAmount = totalAmount + parseFloat(itm.Amount.toString().replace(/,/g, ''))
-          i += 1
+          totalAmount =
+            totalAmount + parseFloat(itm.Amount.toString().replace(/,/g, ""));
+          i += 1;
         }
 
-
-        const { data: tmpNameRes } = await executeQueryToClient(`SELECT Shortname ,Sub_ShortName, Sub_Acct FROM (${ID_Entry}) id_entry WHERE IDNo = 'O-1024-00011'`)
+        const { data: tmpNameRes } = await executeQueryToClient(
+          `SELECT Shortname ,Sub_ShortName, Sub_Acct FROM (${ID_Entry}) id_entry WHERE IDNo = 'O-1024-00011'`
+        );
 
         dgvJournal[iRow + 1] = [
           "1.03.01",
@@ -1104,25 +1124,26 @@ export default function GeneralJournal() {
           "1.05.02", // 9
           "1.05.02", // 10
           tmpNameRes.data[0]?.Sub_Acct, // 12
-        ]
-        table.current.setData(dgvJournal)
-        setMode('update')
-        setOpenJobs(false)
+        ];
+        table.current.setData(dgvJournal);
+        setMode("update");
+        setOpenJobs(false);
       }
-      setLoadingJob(false)
-    }, 300)
-
-
+      setLoadingJob(false);
+    }, 300);
   }
 
   return (
     <>
       <PageHelmet title="General Journal" />
+      <TransactionAccountUpwardTableModalSearch />
+      <ClientUpwardTableModalSearch />
+      <ChartAccountUpwardTableModalSearch />
+      <SearchCollectionUpwardTableModalSearch />
       {(loadingGetSearchSelectedGeneralJournal ||
         loadingJob ||
         loadingGeneralJournalMutate ||
-        loadingVoidGeneralJournalMutate
-      ) && <Loading />}
+        loadingVoidGeneralJournalMutate) && <Loading />}
       <div
         style={{
           display: "flex",
@@ -1131,7 +1152,7 @@ export default function GeneralJournal() {
           height: "100%",
           flex: 1,
           padding: "10px",
-          background: "#F1F1F1"
+          background: "#F1F1F1",
         }}
       >
         <div
@@ -1148,40 +1169,41 @@ export default function GeneralJournal() {
               columnGap: "5px",
             }}
           >
-            {isLoadingSearchGeneralJounal ? (
-              <LoadingButton loading={isLoadingSearchGeneralJounal} />
-            ) : (
-              <TextInput
-                label={{
-                  title: "Search: ",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "50px",
-                  },
-                }}
-                input={{
-                  className: "search-input-up-on-key-down",
-                  type: "search",
-                  onKeyDown: (e) => {
-                    if (e.key === "Enter" || e.key === "NumpadEnter") {
-                      e.preventDefault();
-                      openSearchGeneralJounal(e.currentTarget.value);
-                    }
-                    if (e.key === "ArrowDown") {
-                      e.preventDefault();
-                      const datagridview = document.querySelector(
-                        ".grid-container"
-                      ) as HTMLDivElement;
-                      datagridview.focus();
-                    }
-                  },
-                  style: { width: "500px" },
-                }}
-                inputRef={inputSearchRef}
-              />
-
-            )}
+            <TextInput
+              label={{
+                title: "Search: ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "50px",
+                },
+              }}
+              input={{
+                className: "search-input-up-on-key-down",
+                type: "search",
+                onKeyDown: (e) => {
+                  if (e.key === "Enter" || e.key === "NumpadEnter") {
+                    e.preventDefault();
+                    searchCollectionCreditOpenModal(e.currentTarget.value);
+                  }
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    const datagridview = document.querySelector(
+                      ".grid-container"
+                    ) as HTMLDivElement;
+                    datagridview.focus();
+                  }
+                },
+                style: { width: "500px" },
+              }}
+              icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+              onIconClick={(e) => {
+                e.preventDefault();
+                if (inputSearchRef.current)
+                  searchCollectionCreditOpenModal(inputSearchRef.current.value);
+              }}
+              inputRef={inputSearchRef}
+            />
             {modeDefault && (
               <Button
                 sx={{
@@ -1192,7 +1214,7 @@ export default function GeneralJournal() {
                 startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
                 id="entry-header-save-button"
                 onClick={() => {
-                  setMode('add')
+                  setMode("add");
                 }}
                 color="primary"
               >
@@ -1232,7 +1254,7 @@ export default function GeneralJournal() {
                     confirmButtonText: "Yes, cancel it!",
                   }).then((result) => {
                     if (result.isConfirmed) {
-                      onCancel()
+                      onCancel();
                     }
                   });
                 }}
@@ -1304,13 +1326,16 @@ export default function GeneralJournal() {
             }}
           >
             <p style={{ margin: 0, padding: 0, color: "black" }}>
-              <span style={{ fontSize: "12px" }}>Total Rows:</span> <strong>{monitoring.totalRow}</strong>
+              <span style={{ fontSize: "12px" }}>Total Rows:</span>{" "}
+              <strong>{monitoring.totalRow}</strong>
             </p>
             <p style={{ margin: 0, padding: 0, color: "black" }}>
-              <span style={{ fontSize: "12px" }}>Total Debit:</span> <strong>{monitoring.totalDebit}</strong>
+              <span style={{ fontSize: "12px" }}>Total Debit:</span>{" "}
+              <strong>{monitoring.totalDebit}</strong>
             </p>
             <p style={{ margin: 0, padding: 0, color: "black" }}>
-              <span style={{ fontSize: "12px" }}>Total Credit:</span> <strong>{monitoring.totalCredit}</strong>
+              <span style={{ fontSize: "12px" }}>Total Credit:</span>{" "}
+              <strong>{monitoring.totalCredit}</strong>
             </p>
             <p style={{ margin: 0, padding: 0, color: "black" }}>
               <span style={{ fontSize: "12px" }}>Balance:</span>{" "}
@@ -1355,10 +1380,10 @@ export default function GeneralJournal() {
                 type: "text",
                 style: { width: "190px" },
                 onKeyDown: (e) => {
-                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                    refDate.current?.focus()
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    refDate.current?.focus();
                   }
-                }
+                },
               }}
               inputRef={refRefNo}
             />
@@ -1378,10 +1403,10 @@ export default function GeneralJournal() {
               type: "date",
               style: { width: "190px" },
               onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                  refExplanation.current?.focus()
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  refExplanation.current?.focus();
                 }
-              }
+              },
             }}
             inputRef={refDate}
           />
@@ -1399,10 +1424,10 @@ export default function GeneralJournal() {
               type: "text",
               style: { width: "600px" },
               onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                  refCode.current?.focus()
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  refCode.current?.focus();
                 }
-              }
+              },
             }}
             inputRef={refExplanation}
           />
@@ -1425,43 +1450,45 @@ export default function GeneralJournal() {
               gap: "10px",
             }}
           >
-            {isLoadingChartAccountSearch ? (
-              <LoadingButton loading={isLoadingChartAccountSearch} />
-            ) : (
-              <TextInput
-                label={{
-                  title: "Code : ",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "70px",
-                  },
-                }}
-                input={{
-                  disabled: modeDefault,
-                  type: "text",
-                  style: { width: "190px" },
-                  onKeyDown: (e) => {
-                    if (e.key === "Enter" || e.key === "NumpadEnter") {
-                      e.preventDefault();
-                      if (refCode.current) {
-                        openChartAccountSearch(refCode.current.value)
-                      }
+            <TextInput
+              label={{
+                title: "Code : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "70px",
+                },
+              }}
+              input={{
+                disabled: modeDefault,
+                type: "text",
+                style: { width: "190px" },
+                onKeyDown: (e) => {
+                  if (e.key === "Enter" || e.key === "NumpadEnter") {
+                    e.preventDefault();
+                    if (refCode.current) {
+                      chartAccountOpenModal(refCode.current.value);
                     }
                   }
-                }}
-                inputRef={refCode}
-                icon={<SupervisorAccountIcon sx={{ fontSize: "18px", color: modeDefault ? "gray" : "black" }} />}
-                onIconClick={(e) => {
-                  e.preventDefault()
-                  if (refCode.current) {
-                    openChartAccountSearch(refCode.current.value)
-                  }
-                }}
-                disableIcon={modeDefault}
-              />
-            )}
-
+                },
+              }}
+              inputRef={refCode}
+              icon={
+                <SupervisorAccountIcon
+                  sx={{
+                    fontSize: "18px",
+                    color: modeDefault ? "gray" : "black",
+                  }}
+                />
+              }
+              onIconClick={(e) => {
+                e.preventDefault();
+                if (refCode.current) {
+                  chartAccountOpenModal(refCode.current.value);
+                }
+              }}
+              disableIcon={modeDefault}
+            />
             <TextInput
               label={{
                 title: "Account Name : ",
@@ -1477,10 +1504,10 @@ export default function GeneralJournal() {
                 style: { width: "190px" },
                 readOnly: true,
                 onKeyDown: (e) => {
-                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                    refSubAccount.current?.focus()
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    refSubAccount.current?.focus();
                   }
-                }
+                },
               }}
               inputRef={refAccountName}
             />
@@ -1500,50 +1527,53 @@ export default function GeneralJournal() {
                 style: { width: "190px" },
                 readOnly: true,
                 onKeyDown: (e) => {
-                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                    refName.current?.focus()
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    refName.current?.focus();
                   }
-                }
+                },
               }}
               inputRef={refSubAccount}
             />
 
-            {isLoadingPolicyIdClientIdRefId ? (
-              <LoadingButton loading={isLoadingPolicyIdClientIdRefId} />
-            ) : (
-              <TextInput
-                label={{
-                  title: "I.D : ",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "70px",
-                  },
-                }}
-                input={{
-                  disabled: modeDefault,
-                  type: "text",
-                  style: { width: "300px" },
-                  onKeyDown: (e) => {
-                    if (e.key === "Enter" || e.key === "NumpadEnter") {
-                      e.preventDefault();
-                      if (refName.current) {
-                        openPolicyIdClientIdRefId(refName.current.value)
-                      }
+            <TextInput
+              label={{
+                title: "I.D : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "70px",
+                },
+              }}
+              input={{
+                disabled: modeDefault,
+                type: "text",
+                style: { width: "300px" },
+                onKeyDown: (e) => {
+                  if (e.key === "Enter" || e.key === "NumpadEnter") {
+                    e.preventDefault();
+                    if (refName.current) {
+                      clientOpenModal(e.currentTarget.value);
                     }
                   }
-                }}
-                inputRef={refName}
-                icon={<AccountCircleIcon sx={{ fontSize: "18px", color: modeDefault ? "gray" : "black" }} />}
-                onIconClick={(e) => {
-                  e.preventDefault()
-                  if (refName.current) {
-                    openPolicyIdClientIdRefId(refName.current.value)
-                  }
-                }}
-                disableIcon={modeDefault}
-              />
-            )}
+                },
+              }}
+              inputRef={refName}
+              icon={
+                <AccountCircleIcon
+                  sx={{
+                    fontSize: "18px",
+                    color: modeDefault ? "gray" : "black",
+                  }}
+                />
+              }
+              onIconClick={(e) => {
+                e.preventDefault();
+                if (refName.current) {
+                  clientOpenModal(refName.current.value);
+                }
+              }}
+              disableIcon={modeDefault}
+            />
           </div>
           <div
             style={{
@@ -1566,10 +1596,10 @@ export default function GeneralJournal() {
                 type: "text",
                 style: { width: "190px" },
                 onKeyDown: (e) => {
-                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                    refCredit.current?.focus()
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    refCredit.current?.focus();
                   }
-                }
+                },
               }}
               inputRef={refDebit}
             />
@@ -1587,17 +1617,14 @@ export default function GeneralJournal() {
                 type: "text",
                 style: { width: "190px" },
                 onKeyDown: (e) => {
-                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                    refTC.current?.focus()
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    refTC.current?.focus();
                   }
-                }
+                },
               }}
               inputRef={refCredit}
             />
-            {isLoadingTransactionAccount ? (
-              <LoadingButton loading={isLoadingTransactionAccount} />
-            ) : (
-              <TextInput
+          <TextInput
                 label={{
                   title: "TC : ",
                   style: {
@@ -1614,22 +1641,28 @@ export default function GeneralJournal() {
                     if (e.key === "Enter" || e.key === "NumpadEnter") {
                       e.preventDefault();
                       if (refTC.current) {
-                        openTransactionAccount(refTC.current.value)
+                        TransactionAccountOpenModal(e.currentTarget.value);
                       }
                     }
-                  }
+                  },
                 }}
                 inputRef={refTC}
-                icon={<AccountBalanceWalletIcon sx={{ fontSize: "18px", color: modeDefault ? "gray" : "black" }} />}
+                icon={
+                  <AccountBalanceWalletIcon
+                    sx={{
+                      fontSize: "18px",
+                      color: modeDefault ? "gray" : "black",
+                    }}
+                  />
+                }
                 onIconClick={(e) => {
-                  e.preventDefault()
+                  e.preventDefault();
                   if (refTC.current) {
-                    openTransactionAccount(refTC.current.value)
+                    TransactionAccountOpenModal(refTC.current.value);
                   }
                 }}
                 disableIcon={modeDefault}
               />
-            )}
             <TextInput
               label={{
                 title: "Remarks : ",
@@ -1644,20 +1677,21 @@ export default function GeneralJournal() {
                 type: "text",
                 style: { width: "300px" },
                 onKeyDown: (e) => {
-                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                    refVat.current?.focus()
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    refVat.current?.focus();
                   }
-                }
+                },
               }}
               inputRef={refRemarks}
             />
           </div>
-          <div style={{
-            display: "flex",
-            gap: "10px",
-            marginTop: "10px",
-          }}>
-
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+              marginTop: "10px",
+            }}
+          >
             <SelectInput
               label={{
                 title: "Vat Type : ",
@@ -1673,16 +1707,13 @@ export default function GeneralJournal() {
                 style: { width: "190px", height: "22px" },
                 defaultValue: "Non-VAT",
                 onKeyDown: (e) => {
-                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                    e.preventDefault()
-                    refInvoice.current?.focus()
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    e.preventDefault();
+                    refInvoice.current?.focus();
                   }
-                }
+                },
               }}
-              datasource={[
-                { key: "VAT" },
-                { key: "Non-VAT" },
-              ]}
+              datasource={[{ key: "VAT" }, { key: "Non-VAT" }]}
               values={"key"}
               display={"key"}
             />
@@ -1700,11 +1731,11 @@ export default function GeneralJournal() {
                 type: "text",
                 style: { width: "300px" },
                 onKeyDown: (e) => {
-                  if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                    e.preventDefault()
-                    handleRowSave()
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    e.preventDefault();
+                    handleRowSave();
                   }
-                }
+                },
               }}
               inputRef={refInvoice}
             />
@@ -1716,9 +1747,9 @@ export default function GeneralJournal() {
                 fontSize: "11px",
               }}
               variant="contained"
-              startIcon={<SaveIcon sx={{ fontSize: "12px", }} />}
+              startIcon={<SaveIcon sx={{ fontSize: "12px" }} />}
               onClick={() => {
-                handleRowSave()
+                handleRowSave();
               }}
               color="success"
             >
@@ -1729,61 +1760,63 @@ export default function GeneralJournal() {
         <DataGridViewReact
           ref={table}
           columns={selectedCollectionColumns}
-          height='380px'
+          height="380px"
           getSelectedItem={(rowItm: any) => {
             if (rowItm) {
-              refIDNo.current = rowItm[11]
-              refSubAcct.current = rowItm[12]
+              refIDNo.current = rowItm[11];
+              refSubAcct.current = rowItm[12];
 
               if (refCode.current) {
-                refCode.current.value = rowItm[0]
+                refCode.current.value = rowItm[0];
               }
               if (refAccountName.current) {
-                refAccountName.current.value = rowItm[1]
+                refAccountName.current.value = rowItm[1];
               }
               if (refSubAccount.current) {
-                refSubAccount.current.value = rowItm[2]
+                refSubAccount.current.value = rowItm[2];
               }
               if (refName.current) {
-                refName.current.value = rowItm[3]
+                refName.current.value = rowItm[3];
               }
               if (refDebit.current) {
-                refDebit.current.value = rowItm[4]
+                refDebit.current.value = rowItm[4];
               }
               if (refCredit.current) {
-                refCredit.current.value = rowItm[5]
+                refCredit.current.value = rowItm[5];
               }
               if (refTC.current) {
-                refTC.current.value = rowItm[6]
+                refTC.current.value = rowItm[6];
               }
               if (refRemarks.current) {
-                refRemarks.current.value = rowItm[7]
+                refRemarks.current.value = rowItm[7];
               }
               if (refVat.current) {
-                refVat.current.value = rowItm[8]
+                refVat.current.value = rowItm[8];
               }
               if (refInvoice.current) {
-                refInvoice.current.value = rowItm[9]
+                refInvoice.current.value = rowItm[9];
               }
             } else {
-              resetRow()
+              resetRow();
             }
           }}
           onKeyDown={(rowItm: any, rowIdx: any, e: any) => {
-            if (e.code === 'Delete' || e.code === 'Backspace') {
-              const isConfim = window.confirm(`Are you sure you want to delete?`)
+            if (e.code === "Delete" || e.code === "Backspace") {
+              const isConfim = window.confirm(
+                `Are you sure you want to delete?`
+              );
               if (isConfim) {
-                const debitTableData = table.current.getData()
+                const debitTableData = table.current.getData();
                 debitTableData.splice(rowIdx, 1);
-                table.current.setData(debitTableData)
+                table.current.setData(debitTableData);
 
                 setTimeout(() => {
-                  const getData = table.current.getData()
+                  const getData = table.current.getData();
 
-                  monitor()
-                }, 200)
+                  monitor();
+                }, 200);
 
-                return
+                return;
               }
             }
           }}
@@ -1902,7 +1935,9 @@ export default function GeneralJournal() {
                   ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
                 }}
               >
-                <InputLabel id="label-selection-job-type">Type of Job</InputLabel>
+                <InputLabel id="label-selection-job-type">
+                  Type of Job
+                </InputLabel>
                 <Select
                   labelId="label-selection-job-type"
                   value={state.jobType}
@@ -1950,10 +1985,9 @@ export default function GeneralJournal() {
                 color="success"
                 variant="contained"
                 onClick={() => {
-                  if (state.jobType === '4') {
-                    DoRPTTransactionNILHN()
+                  if (state.jobType === "4") {
+                    DoRPTTransactionNILHN();
                   }
-
                 }}
               >
                 Create Job
@@ -1969,13 +2003,8 @@ export default function GeneralJournal() {
             </div>
           </Box>
         </Modal>
-        {ModalChartAccountSearch}
-        {ModalPolicyIdClientIdRefId}
-        {ModalTransactionAccount}
-        {ModalSearchGeneralJounal}
       </div>
     </>
-
   );
 }
 
@@ -2034,4 +2063,4 @@ SELECT
        FROM
            entry_supplier aa) id_entry
       left join sub_account b ON id_entry.sub_account = b.Sub_Acct
- `
+ `;

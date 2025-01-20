@@ -111,7 +111,6 @@ export const DataGridViewReact = forwardRef(
       getElementBody: () => tbodyRef.current,
       getParentElement: () => parentElementRef.current,
     }));
-
     return (
       <div
         ref={parentElementRef}
@@ -270,6 +269,7 @@ export const DataGridViewReact = forwardRef(
                                 const td = document.querySelector(
                                   `.td.row-${index}`
                                 ) as HTMLTableDataCellElement;
+                                
                                 if (index < 0) {
                                   if (focusElementOnMaxTop) {
                                     focusElementOnMaxTop();
@@ -1137,7 +1137,6 @@ export const useUpwardTableModalSearchSafeMode = ({
     setShow(false);
     _dataCache = [];
   }
-
   const UpwardTableModalSearch = () => {
     const { user, myAxios } = useContext(AuthContext);
     const tableRef = useRef<any>(null);
