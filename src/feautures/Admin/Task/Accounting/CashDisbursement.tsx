@@ -57,6 +57,8 @@ const initialState = {
   jobType: "",
   search: "",
   cashMode: "",
+  position: "",
+  suffix: "",
 };
 export const reducer = (state: any, action: any) => {
   switch (action.type) {
@@ -453,48 +455,78 @@ export default function CashDisbursement() {
       });
     },
   });
-  const { mutate: mutateOnPrint, isLoading: isLoadingOnPrint } = useMutation({
-    mutationKey: "get-selected-search-general-journal",
-    mutationFn: async (variable: any) =>
-      await myAxios.post("/task/accounting/cash-disbursement/print", variable, {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      }),
-    onSuccess: (res) => {
-      const response = res as any;
-      flushSync(() => {
-        localStorage.removeItem("printString");
-        localStorage.setItem(
-          "dataString",
-          JSON.stringify(response.data.print.PrintTable)
-        );
-        localStorage.setItem("paper-width", "8.5in");
-        localStorage.setItem("paper-height", "11in");
-        localStorage.setItem("module", "cash-disbursement");
-        localStorage.setItem(
-          "state",
-          JSON.stringify(response.data.print.PrintPayeeDetails)
-        );
-        localStorage.setItem(
-          "column",
-          JSON.stringify([
-            { datakey: "Account", header: "ACCOUNT", width: "200px" },
-            { datakey: "Identity", header: "IDENTITY", width: "277px" },
-            { datakey: "Debit", header: "DEBIT", width: "100px" },
-            { datakey: "Credit", header: "CREDIT", width: "100px" },
-          ])
-        );
-        localStorage.setItem(
-          "title",
-          user?.department === "UMIS"
-            ? "UPWARD MANAGEMENT INSURANCE SERVICES\n"
-            : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.\n"
-        );
-      });
-      window.open("/dashboard/print", "_blank");
-    },
-  });
+    const { mutate: mutatePrint, isLoading: isLoadingPrint } = useMutation({
+      mutationKey: "print",
+      mutationFn: async (variables: any) => {
+        return await myAxios.post("/task/accounting/cash-disbursement/print", variables, {
+          responseType: 'arraybuffer',
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        });
+      },
+      onSuccess: (response) => {
+        console.log(response);
+  
+        const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        // window.open(pdfUrl);
+        var newTab = window.open();
+        if (newTab) {
+          newTab.document.write('<!DOCTYPE html>');
+          newTab.document.write('<html><head><title>New Tab with iframe</title></head>');
+          newTab.document.write('<body style="width:100vw;height:100vh;padding:0;margin:0;box-sizing:border-box;">');
+          newTab.document.write(`<iframe style="border:none;outline:none;padding:0;margin:0" src="${pdfUrl}" width="99%" height="99%"></iframe>`);
+          
+          newTab.document.write('</body></html>');
+          // Optional: Close the document stream after writing
+          newTab.document.close();
+        }
+      },
+    });
+
+  // const { mutate: mutatePrint, isLoading: isLoadingPrint } = useMutation({
+  //   mutationKey: "get-selected-search-general-journal",
+  //   mutationFn: async (variable: any) =>
+  //     await myAxios.post("/task/accounting/cash-disbursement/print", variable, {
+  //       headers: {
+  //         Authorization: `Bearer ${user?.accessToken}`,
+  //       },
+  //     }),
+  //   onSuccess: (res) => {
+  //     const response = res as any;
+  //     flushSync(() => {
+  //       localStorage.removeItem("printString");
+  //       localStorage.setItem(
+  //         "dataString",
+  //         JSON.stringify(response.data.print.PrintTable)
+  //       );
+  //       localStorage.setItem("paper-width", "8.5in");
+  //       localStorage.setItem("paper-height", "11in");
+  //       localStorage.setItem("module", "cash-disbursement");
+  //       localStorage.setItem(
+  //         "state",
+  //         JSON.stringify(response.data.print.PrintPayeeDetails)
+  //       );
+  //       localStorage.setItem(
+  //         "column",
+  //         JSON.stringify([
+  //           { datakey: "Account", header: "ACCOUNT", width: "200px" },
+  //           { datakey: "Identity", header: "IDENTITY", width: "277px" },
+  //           { datakey: "Debit", header: "DEBIT", width: "100px" },
+  //           { datakey: "Credit", header: "CREDIT", width: "100px" },
+  //         ])
+  //       );
+  //       localStorage.setItem(
+  //         "title",
+  //         user?.department === "UMIS"
+  //           ? "UPWARD MANAGEMENT INSURANCE SERVICES\n"
+  //           : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.\n"
+  //       );
+  //     });
+  //     window.open("/dashboard/print", "_blank");
+  //   },
+  // });
   function handleVoid() {
     codeCondfirmationAlert({
       isUpdate: false,
@@ -509,7 +541,7 @@ export default function CashDisbursement() {
     });
   }
   function handleClickPrint() {
-    mutateOnPrint({ Source_No: state.refNo });
+    mutatePrint({ Source_No: state.refNo });
   }
   function setTotals(tableData: any) {
     const credit =
@@ -572,41 +604,35 @@ export default function CashDisbursement() {
     });
     window.open("/dashboard/print", "_blank");
   }
-  function deleteRow() {
-    const tableData = tableRef.current.getData();
-    const SelectedIndex = tableRef.current?.getSelectedIndex();
-    Swal.fire({
-      title: "Are you sure?",
-      text: "Do you want Delete This Row",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        if (tableData.length === 1) {
-          tableData.splice(0, 1);
-          tableRef.current?.updateData(tableData);
-          tableRef.current?.AddRow();
-
-          return;
-        }
-        const indexToRemove = SelectedIndex;
-        if (indexToRemove > -1 && indexToRemove < tableData.length) {
-          tableData.splice(indexToRemove, 1);
-        }
-        tableRef.current?.updateData(tableData);
-        wait(100).then(() => {
-          const input = document.querySelector(
-            `.tr.row-${indexToRemove - 1} td input`
-          ) as HTMLInputElement;
-          if (input) {
-            input.click();
+  function deleteRow(rowIdx: any) {
+    const isConfim = window.confirm(`Are you sure you want to delete?`);
+    if (isConfim) {
+      const data = tableRef.current.getData();
+      data.splice(rowIdx, 1);
+      const SearchData = data.map((itm: any, idx: number) => {
+        itm.credit = parseFloat(itm[5].replace(/,/g, "")).toLocaleString(
+          "en-US",
+          {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
           }
-        });
-      }
-    });
+        );
+        itm.debit = parseFloat(itm[4].replace(/,/g, "")).toLocaleString(
+          "en-US",
+          {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }
+        );
+
+        return itm;
+      });
+      tableRef.current.setData(data);
+      setTotals(SearchData);
+      tableRef.current.setSelectedRow(null);
+      tableRef.current.resetCheckBox();
+      return;
+    }
   }
 
   const handleOnSave = useCallback(() => {
@@ -1306,7 +1332,7 @@ export default function CashDisbursement() {
               Void
             </LoadingButton>
             <LoadingButton
-              loading={isLoadingOnPrint}
+              loading={isLoadingPrint}
               disabled={cashDMode !== "update"}
               id="basic-button"
               aria-haspopup="true"
@@ -2103,31 +2129,31 @@ export default function CashDisbursement() {
               if (isConfim) {
                 const debitTableData = tableRef.current.getData();
                 debitTableData.splice(rowIdx, 1);
-                const SearchData = debitTableData.map((itm: any, idx: number) => {
-                  itm.credit = parseFloat(itm[5].replace(/,/g, "")).toLocaleString(
-                    "en-US",
-                    {
+                const SearchData = debitTableData.map(
+                  (itm: any, idx: number) => {
+                    itm.credit = parseFloat(
+                      itm[5].replace(/,/g, "")
+                    ).toLocaleString("en-US", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
-                    }
-                  );
-                  itm.debit = parseFloat(itm[4].replace(/,/g, "")).toLocaleString(
-                    "en-US",
-                    {
+                    });
+                    itm.debit = parseFloat(
+                      itm[4].replace(/,/g, "")
+                    ).toLocaleString("en-US", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
-                    }
-                  );
-          
-                  return itm
-                });
+                    });
+
+                    return itm;
+                  }
+                );
                 tableRef.current.setData(debitTableData);
                 setTotals(SearchData);
                 return;
               }
             }
           }}
-          ActionComponent={({selectedRowIndex,closeModal}:any) => {
+          ActionComponent={({ selectedRowIndex, closeModal, rowItm }: any) => {
             return (
               <div
                 style={{
@@ -2136,58 +2162,40 @@ export default function CashDisbursement() {
                   padding: "10px",
                   display: "flex",
                   flexDirection: "column",
-                  alignItems:"center",
-                  justifyContent:"center"
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
                 <Button
+                  autoFocus={rowItm[0] === "1.01.10"}
+                  disabled={rowItm[0] !== "1.01.10"}
                   variant="contained"
                   color="success"
                   sx={{
                     height: "20px",
                     width: "120px",
                     marginBottom: "5px",
-                    fontSize:"10px"
+                    fontSize: "10px",
                   }}
-                  onClick={()=>{
-                    alert(selectedRowIndex)
+                  onClick={() => {
+                    printRow(rowItm);
                   }}
                 >
                   Print
                 </Button>
                 <Button
+                  autoFocus={rowItm[0] !== "1.01.10"}
                   variant="contained"
                   color="error"
                   sx={{
                     height: "20px",
                     width: "120px",
                     marginBottom: "5px",
-                    fontSize:"10px"
+                    fontSize: "10px",
                   }}
-                  onClick={()=>{
-                    const debitTableData = tableRef.current.getData();
-                    debitTableData.splice(selectedRowIndex, 1);
-                    const SearchData = debitTableData.map((itm: any, idx: number) => {
-                      itm.credit = parseFloat(itm[5].replace(/,/g, "")).toLocaleString(
-                        "en-US",
-                        {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        }
-                      );
-                      itm.debit = parseFloat(itm[4].replace(/,/g, "")).toLocaleString(
-                        "en-US",
-                        {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        }
-                      );
-              
-                      return itm
-                    });
-                    tableRef.current.setData(debitTableData);
-                    setTotals(SearchData);
-                    closeModal()
+                  onClick={() => {
+                    deleteRow(selectedRowIndex);
+                    closeModal();
                   }}
                 >
                   Delete

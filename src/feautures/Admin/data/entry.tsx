@@ -65,6 +65,11 @@ export const employeeColumn = [
     width: 200,
   },
   {
+    field: "suffix",
+    headerName: "Suffix",
+    width: 100,
+  },
+  {
     field: "NewShortName",
     headerName: "Sub Account",
     width: 130,
@@ -97,6 +102,17 @@ export const agentColumn = [
     field: "email",
     headerName: "Email",
     width: 250,
+  },
+  {
+
+    field: "suffix",
+    headerName: "Suffix",
+    width: 200,
+  },
+  {
+    field: "position",
+    headerName: "Position",
+    width: 200,
   },
   {
     field: "mobile",

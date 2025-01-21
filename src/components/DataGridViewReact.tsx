@@ -122,7 +122,6 @@ export const DataGridViewReact = forwardRef(
       });
     };
     const handleResetCheckBoxByIndex = (_idx: any) => {
-      console.log(_idx);
       checkboxRef.current.forEach((checkbox: HTMLInputElement, idx: any) => {
         if (_idx === idx) {
           return;
@@ -142,7 +141,11 @@ export const DataGridViewReact = forwardRef(
     return (
       <>
         <ActionModal ref={actionModalRef}>
-          <ActionComponent  selectedRowIndex={selectedRowIndex} closeModal={()=>actionModalRef.current.closeDelay()} />
+          <ActionComponent  
+            selectedRowIndex={selectedRowIndex} 
+            closeModal={()=>actionModalRef.current.closeDelay()} 
+            rowItm={data[selectedRowIndex]}
+          />
         </ActionModal>
         <div
           ref={parentElementRef}

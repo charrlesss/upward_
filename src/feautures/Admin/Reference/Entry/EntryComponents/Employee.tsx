@@ -42,6 +42,7 @@ const initialState = {
   search: "",
   mode: "",
   entry_employee_id: "",
+  suffix: "",
 };
 
 export default function Employee() {
@@ -64,6 +65,7 @@ export default function Employee() {
         headers: { Authorization: `Bearer ${user?.accessToken}` },
       }),
     onSuccess: (res) => {
+      console.log(res);
       dispatch({
         type: "UPDATE_FIELD",
         field: "sub_account",
@@ -310,7 +312,7 @@ export default function Employee() {
               onChange={handleInputChange}
               InputProps={{
                 style: { height: "27px", fontSize: "14px" },
-                className: "manok"
+                className: "manok",
               }}
               onKeyDown={(e) => {
                 if (e.code === "Enter" || e.code === "NumpadEnter") {
@@ -358,7 +360,9 @@ export default function Employee() {
                   }}
                   onClick={() => {
                     refetchEmployeeId();
-                    handleInputChange({ target: { value: "add", name: "mode" } });
+                    handleInputChange({
+                      target: { value: "add", name: "mode" },
+                    });
                   }}
                 >
                   New
@@ -581,6 +585,34 @@ export default function Employee() {
                 ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
               }}
             />
+          </Box>
+          <div
+            style={{
+              display: "flex",
+              columnGap: "10px",
+              alignItems: "center",
+              marginBottom: "10px",
+            }}
+          >
+            <TextField
+              type="text"
+              name="suffix"
+              label="Suffix"
+              size="small"
+              required
+              onChange={handleInputChange}
+              disabled={state.mode === ""}
+              value={state.suffix}
+              InputProps={{
+                style: { height: "27px", fontSize: "14px" },
+              }}
+              sx={{
+                width: "100px",
+                height: "27px",
+                ".MuiFormLabel-root": { fontSize: "14px" },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              }}
+            />
             {subAccountLoading ? (
               <LoadingButton loading={subAccountLoading} />
             ) : (
@@ -615,12 +647,12 @@ export default function Employee() {
                   {[...subAccountData?.data.subAccount].map(
                     (item: {
                       Sub_Acct: string;
-                      NewShortName: string;
+                      ShortName: string;
                       Acronym: string;
                     }) => {
                       return (
                         <MenuItem key={item.Sub_Acct} value={item.Sub_Acct}>
-                          {item.NewShortName}
+                          {item.ShortName}
                         </MenuItem>
                       );
                     }
@@ -628,27 +660,26 @@ export default function Employee() {
                 </Select>
               </FormControl>
             )}
-          </Box>
-          <TextField
-            name="address"
-            label="Address"
-            minRows={10}
-            size="small"
-            fullWidth
-            style={{ margin: "10px 0px" }}
-            onChange={handleInputChange}
-            disabled={state.mode === ""}
-            value={state.address}
-            InputProps={{
-              style: { height: "27px", fontSize: "14px" },
-            }}
-            sx={{
-              flex: 1,
-              height: "27px",
-              ".MuiFormLabel-root": { fontSize: "14px" },
-              ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-            }}
-          />
+            <TextField
+              name="address"
+              label="Address"
+              minRows={10}
+              size="small"
+              fullWidth
+              onChange={handleInputChange}
+              disabled={state.mode === ""}
+              value={state.address}
+              InputProps={{
+                style: { height: "27px", fontSize: "14px" },
+              }}
+              sx={{
+                flex: 1,
+                height: "27px",
+                ".MuiFormLabel-root": { fontSize: "14px" },
+                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              }}
+            />
+          </div>
         </form>
 
         <UpwardTable
@@ -664,7 +695,6 @@ export default function Employee() {
               handleInputChange({ target: { value: "edit", name: "mode" } });
 
               setNewStateValue(dispatch, rowSelected[0]);
-
             } else {
               setNewStateValue(dispatch, initialState);
               handleInputChange({ target: { value: "", name: "mode" } });
@@ -747,6 +777,5 @@ export default function Employee() {
       </div> */}
       </div>
     </>
-
   );
 }

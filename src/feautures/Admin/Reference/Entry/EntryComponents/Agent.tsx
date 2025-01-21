@@ -49,6 +49,8 @@ const initialState = {
   entry_agent_id: "",
   search: "",
   mode: "",
+  suffix: "",
+  position: "",
 };
 
 export default function Agent() {
@@ -340,11 +342,10 @@ export default function Agent() {
                   ) as HTMLDivElement;
                   datagridview.focus();
                 }
-
               }}
               InputProps={{
                 style: { height: "27px", fontSize: "14px" },
-                className: "manok"
+                className: "manok",
               }}
               sx={{
                 width: "500px",
@@ -379,7 +380,9 @@ export default function Agent() {
                   }}
                   onClick={() => {
                     refetchAgentId();
-                    handleInputChange({ target: { value: "add", name: "mode" } });
+                    handleInputChange({
+                      target: { value: "add", name: "mode" },
+                    });
                   }}
                 >
                   New
@@ -613,6 +616,25 @@ export default function Agent() {
             </Box>
             <Box sx={{ display: "flex", gap: "10px" }}>
               <TextField
+                type="text"
+                name="suffix"
+                label="Suffix"
+                size="small"
+                required
+                onChange={handleInputChange}
+                disabled={state.mode === ""}
+                value={state.suffix}
+                InputProps={{
+                  style: { height: "27px", fontSize: "14px" },
+                }}
+                sx={{
+                  width: "100px",
+                  height: "27px",
+                  ".MuiFormLabel-root": { fontSize: "14px" },
+                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                }}
+              />
+              <TextField
                 type="email"
                 name="email"
                 label="Email"
@@ -653,28 +675,26 @@ export default function Agent() {
                 }}
                 placeholder="(+63) 000-000-0000"
               />
-              <TextField
-                name="telephone"
-                label="Telephone Number"
+               <TextField
+                type="text"
+                name="position"
+                label="Position"
                 size="small"
-                fullWidth
                 required
-                value={state.telephone}
                 onChange={handleInputChange}
                 disabled={state.mode === ""}
+                value={state.position}
                 InputProps={{
                   style: { height: "27px", fontSize: "14px" },
-                  inputComponent: TelephoneFormat as any,
                 }}
                 sx={{
-                  flex: 1,
+                  width: "300px",
                   height: "27px",
                   ".MuiFormLabel-root": { fontSize: "14px" },
                   ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
                 }}
-                placeholder="0000-0000"
               />
-
+          
               {subAccountLoading ? (
                 <LoadingButton loading={subAccountLoading} />
               ) : (
@@ -715,12 +735,12 @@ export default function Agent() {
                     {subAccountData?.data.subAccount.map(
                       (item: {
                         Sub_Acct: string;
-                        NewShortName: string;
+                        ShortName: string;
                         Acronym: string;
                       }) => {
                         return (
                           <MenuItem key={item.Sub_Acct} value={item.Sub_Acct}>
-                            {item.NewShortName}
+                            {item.ShortName}
                           </MenuItem>
                         );
                       }
@@ -730,6 +750,7 @@ export default function Agent() {
               )}
             </Box>
           </Box>
+
           <TextField
             label="Address"
             name="address"
@@ -765,7 +786,6 @@ export default function Agent() {
               handleInputChange({ target: { value: "edit", name: "mode" } });
 
               setNewStateValue(dispatch, rowSelected[0]);
-
             } else {
               setNewStateValue(dispatch, initialState);
               handleInputChange({ target: { value: "", name: "mode" } });
@@ -849,6 +869,5 @@ export default function Agent() {
       </div> */}
       </div>
     </>
-
   );
 }
