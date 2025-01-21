@@ -5,7 +5,6 @@ import {
   useEffect,
   useImperativeHandle,
   useContext,
-  useId,
 } from "react";
 import useExecuteQueryFromClient from "../lib/executeQueryFromClient";
 import SearchIcon from "@mui/icons-material/Search";
@@ -14,7 +13,6 @@ import { wait } from "../lib/wait";
 import CloseIcon from "@mui/icons-material/Close";
 import ReactDOMServer from "react-dom/server";
 import { AuthContext } from "./AuthContext";
-import { useMutation } from "react-query";
 import { Loading } from "./Loading";
 import ReactDOM from "react-dom";
 
@@ -30,10 +28,13 @@ export const DataGridViewReact = forwardRef(
       isTableSelectable: _isTableSelectable = true,
       containerStyle,
       focusElementOnMaxTop,
+      ActionComponent,
     }: any,
     ref
   ) => {
     const parentElementRef = useRef<any>(null);
+    const actionModalRef = useRef<any>(null);
+    const checkboxRef = useRef([]);
     const tbodyRef = useRef<HTMLTableSectionElement>(null);
     const [data, setData] = useState([]);
     const [column, setColumn] = useState([]);
@@ -75,6 +76,9 @@ export const DataGridViewReact = forwardRef(
       setSelectedRow: (value: any) => {
         return setSelectedRowIndex(value);
       },
+      resetCheckBox: () => {
+        return handleResetCheckBox();
+      },
       _setSelectedRow: (value: any) => {
         return setSelectedRow(value);
       },
@@ -111,253 +115,130 @@ export const DataGridViewReact = forwardRef(
       getElementBody: () => tbodyRef.current,
       getParentElement: () => parentElementRef.current,
     }));
+
+    const handleResetCheckBox = () => {
+      checkboxRef.current.forEach((checkbox: HTMLInputElement, idx: any) => {
+        if (checkbox) checkbox.checked = false;
+      });
+    };
+    const handleResetCheckBoxByIndex = (_idx: any) => {
+      console.log(_idx);
+      checkboxRef.current.forEach((checkbox: HTMLInputElement, idx: any) => {
+        if (_idx === idx) {
+          return;
+        } else {
+          if (checkbox) checkbox.checked = false;
+        }
+      });
+    };
+
+    const handleRightClick = (event: any, idx: number) => {
+      event.preventDefault(); // Prevent the default context menu from appearing
+      if ( idx === selectedRowIndex) {
+        actionModalRef.current.showModal();
+      }
+    };
+
     return (
-      <div
-        ref={parentElementRef}
-        style={{
-          width: "100%",
-          height,
-          overflow: "auto",
-          position: "relative",
-          pointerEvents: disbaleTable ? "none" : "auto",
-          border: disbaleTable ? "2px solid #8c8f8e" : "2px solid #c0c0c0",
-          boxShadow: `inset -2px -2px 0 #ffffff, 
-                        inset 2px 2px 0 #808080`,
-          ...containerStyle,
-          background: "#dcdcdc",
-        }}
-      >
+      <>
+        <ActionModal ref={actionModalRef}>
+          <ActionComponent  selectedRowIndex={selectedRowIndex} closeModal={()=>actionModalRef.current.closeDelay()} />
+        </ActionModal>
         <div
+          ref={parentElementRef}
           style={{
-            position: "absolute",
-            width: `${totalRowWidth}px`,
-            height: "auto",
+            width: "100%",
+            height,
+            overflow: "auto",
+            position: "relative",
+            pointerEvents: disbaleTable ? "none" : "auto",
+            border: disbaleTable ? "2px solid #8c8f8e" : "2px solid #c0c0c0",
+            boxShadow: `inset -2px -2px 0 #ffffff, 
+                        inset 2px 2px 0 #808080`,
+            ...containerStyle,
+            background: "#dcdcdc",
           }}
         >
-          <table
-            id="upward-cutom-table"
+          <div
             style={{
-              borderCollapse: "collapse",
-              width: "100%",
-              position: "relative",
-              background: "#dcdcdc",
+              position: "absolute",
+              width: `${totalRowWidth}px`,
+              height: "auto",
             }}
           >
-            <thead>
-              <tr>
-                <th
-                  style={{
-                    width: "30px",
-                    border: "none",
-                    position: "sticky",
-                    top: 0,
-                    zIndex: 1,
-                    background: "#f0f0f0",
-                  }}
-                ></th>
-                {column.map((colItm: any, idx: number) => {
-                  return (
-                    <th
-                      key={idx}
-                      style={{
-                        width: colItm.width,
-                        borderRight: "1px solid #e2e8f0",
-                        position: "sticky",
-                        top: 0,
-                        zIndex: 1,
-                        background: "#f0f0f0",
-                        fontSize: "12px",
-                        padding: "0px 5px",
-                        textAlign: colItm.type === "number" ? "center" : "left",
-                      }}
-                    >
-                      {colItm.label}
-                    </th>
-                  );
-                })}
-              </tr>
-            </thead>
-            <tbody ref={tbodyRef}>
-              {data?.map((rowItm: any, rowIdx: number) => {
-                return (
-                  <tr
-                    data-index={rowIdx}
-                    key={rowIdx}
-                    className={`row ${
-                      selectedRow === rowIdx || selectedRowIndex === rowIdx
-                        ? "selected"
-                        : ""
-                    }`}
-                  >
-                    <td
-                      style={{
-                        position: "relative",
-                        border: "none",
-                        cursor: "pointer",
-                        background: selectedRow === rowIdx ? "#0076d" : "",
-                        padding: 0,
-                        margin: 0,
-                      }}
-                    >
-                      <div
+            <table
+              id="upward-cutom-table"
+              style={{
+                borderCollapse: "collapse",
+                width: "100%",
+                position: "relative",
+                background: "#dcdcdc",
+              }}
+            >
+              <thead>
+                <tr>
+                  <th
+                    style={{
+                      width: "30px",
+                      border: "none",
+                      position: "sticky",
+                      top: 0,
+                      zIndex: 1,
+                      background: "#f0f0f0",
+                    }}
+                  ></th>
+                  {column.map((colItm: any, idx: number) => {
+                    return (
+                      <th
+                        key={idx}
                         style={{
-                          width: "18px",
-                          height: "18px",
-                          position: "relative",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
+                          width: colItm.width,
+                          borderRight: "1px solid #e2e8f0",
+                          position: "sticky",
+                          top: 0,
+                          zIndex: 1,
+                          background: "#f0f0f0",
+                          fontSize: "12px",
+                          padding: "0px 5px",
+                          textAlign:
+                            colItm.type === "number" ? "center" : "left",
                         }}
                       >
-                        <input
-                          style={{
-                            cursor: "pointer",
-                            margin: "0px !important",
-                            position: "absolute",
-                          }}
-                          readOnly={true}
-                          checked={selectedRowIndex === rowIdx}
-                          type="checkbox"
-                          onClick={() => {
-                            if (!isTableSelectable) {
-                              return;
-                            }
-                            setSelectedRowIndex(rowIdx);
-
-                            if (getSelectedItem) {
-                              getSelectedItem(rowItm, null, rowIdx, null);
-                            }
-                            setSelectedRow(null);
-                          }}
-                        />
-                      </div>
-                    </td>
-
-                    {column.map((colItm: any, colIdx: number) => {
-                      return (
-                        <td
-                          className={`td row-${rowIdx} col-${colIdx} `}
-                          tabIndex={0}
-                          onDoubleClick={() => {
-                            if (!isTableSelectable) {
-                              return;
-                            }
-                            if (selectedRowIndex === rowIdx) {
-                              setSelectedRowIndex(null);
-
-                              if (getSelectedItem) {
-                                getSelectedItem(null, null, rowIdx, null);
-                              }
-                            } else {
-                              setSelectedRowIndex(rowIdx);
-                              if (getSelectedItem) {
-                                getSelectedItem(rowItm, null, rowIdx, null);
-                              }
-                            }
-                            setSelectedRow(null);
-                          }}
-                          onClick={() => {
-                            setSelectedRow(rowIdx);
-                          }}
-                          onKeyDown={(e) => {
-                            if (onKeyDown) {
-                              onKeyDown(rowItm, rowIdx, e);
-                            }
-                            if (e.key === "ArrowUp") {
-                              setSelectedRow((prev: any) => {
-                                const index = Math.max(prev - 1, -1);
-                                const td = document.querySelector(
-                                  `.td.row-${index}`
-                                ) as HTMLTableDataCellElement;
-                                
-                                if (index < 0) {
-                                  if (focusElementOnMaxTop) {
-                                    focusElementOnMaxTop();
-                                  }
-                                  return;
-                                }
-                                if (td) {
-                                  td.focus();
-                                }
-                                return index;
-                              });
-                            } else if (e.key === "ArrowDown") {
-                              setSelectedRow((prev: any) => {
-                                const index = Math.min(
-                                  prev + 1,
-                                  data.length - 1
-                                );
-                                const td = document.querySelector(
-                                  `.td.row-${index}`
-                                ) as HTMLTableDataCellElement;
-                                if (td) {
-                                  td.focus();
-                                  if (index <= 15) {
-                                    parentElementRef.current.style.overflow =
-                                      "hidden";
-                                    setTimeout(() => {
-                                      parentElementRef.current.style.overflow =
-                                        "auto";
-                                    }, 100);
-                                    return index;
-                                  }
-                                }
-                                return index;
-                              });
-                            }
-                            if (
-                              e.code === "Enter" ||
-                              e.code === "NumpadEnter"
-                            ) {
-                              e.preventDefault();
-
-                              if (!isTableSelectable) {
-                                return;
-                              }
-
-                              setSelectedRowIndex(rowIdx);
-                              if (getSelectedItem) {
-                                getSelectedItem(rowItm, null, rowIdx, null);
-                              }
-                              setSelectedRow(null);
-                            }
-                          }}
-                          key={colIdx}
-                          style={{
-                            border: "none",
-                            fontSize: "12px",
-                            padding: "0px 5px",
-                            cursor: "pointer",
-                            height: "20px",
-                            userSelect: "none",
-                          }}
-                        >
-                          {
-                            <input
-                              readOnly={true}
-                              value={rowItm[colIdx]}
-                              style={{
-                                width: colItm.width,
-                                pointerEvents: "none",
-                                border: "none",
-                                background: "transparent",
-                                userSelect: "none",
-                                height: "100%",
-                                textAlign:
-                                  colItm.type === "number" ? "right" : "left",
-                              }}
-                            />
-                          }
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          <style>
-            {`
+                        {colItm.label}
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
+              <tbody ref={tbodyRef}>
+                {data?.map((rowItm: any, rowIdx: number) => {
+                  return (
+                    <RowComponent
+                      key={rowIdx}
+                      rowIdx={rowIdx}
+                      rowItm={rowItm}
+                      selectedRowIndex={selectedRowIndex}
+                      selectedRow={selectedRow}
+                      isTableSelectable={isTableSelectable}
+                      setSelectedRowIndex={setSelectedRowIndex}
+                      getSelectedItem={getSelectedItem}
+                      setSelectedRow={setSelectedRow}
+                      column={column}
+                      onKeyDown={onKeyDown}
+                      focusElementOnMaxTop={focusElementOnMaxTop}
+                      data={data}
+                      parentElementRef={parentElementRef}
+                      checkboxRef={checkboxRef}
+                      handleResetCheckBox={handleResetCheckBox}
+                      handleResetCheckBoxByIndex={handleResetCheckBoxByIndex}
+                      handleRightClick={handleRightClick}
+                    />
+                  );
+                })}
+              </tbody>
+            </table>
+            <style>
+              {`
              #upward-cutom-table tr td{
                border-right:1px solid #f1f5f9 !important;
              }
@@ -381,12 +262,371 @@ export const DataGridViewReact = forwardRef(
               }
   
               `}
-          </style>
+            </style>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 );
+
+const RowComponent = forwardRef(
+  (
+    {
+      rowIdx,
+      rowItm,
+      selectedRowIndex,
+      selectedRow,
+      isTableSelectable,
+      setSelectedRowIndex,
+      getSelectedItem,
+      setSelectedRow,
+      column,
+      onKeyDown,
+      focusElementOnMaxTop,
+      data,
+      parentElementRef,
+      checkboxRef,
+      handleResetCheckBox,
+      handleResetCheckBoxByIndex,
+      handleRightClick,
+    }: any,
+    ref
+  ) => {
+    return (
+      <tr
+        data-index={rowIdx}
+        key={rowIdx}
+        className={`row ${
+          selectedRow === rowIdx || selectedRowIndex === rowIdx
+            ? "selected"
+            : ""
+        }`}
+      >
+        <td
+          style={{
+            position: "relative",
+            border: "none",
+            cursor: "pointer",
+            background: selectedRow === rowIdx ? "#0076d" : "",
+            padding: 0,
+            margin: 0,
+          }}
+        >
+          <div
+            style={{
+              width: "18px",
+              height: "18px",
+              position: "relative",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <CheckBoxSelection
+              key={rowIdx}
+              checkboxRef={checkboxRef}
+              isTableSelectable={isTableSelectable}
+              setSelectedRowIndex={setSelectedRowIndex}
+              rowIdx={rowIdx}
+              rowItm={rowItm}
+              getSelectedItem={getSelectedItem}
+              setSelectedRow={setSelectedRow}
+              handleResetCheckBoxByIndex={handleResetCheckBoxByIndex}
+            />
+          </div>
+        </td>
+
+        {column.map((colItm: any, colIdx: number) => {
+          return (
+            <td
+              className={`td row-${rowIdx} col-${colIdx} `}
+              tabIndex={0}
+              onDoubleClick={() => {
+                if (!isTableSelectable) {
+                  return;
+                }
+                handleResetCheckBox();
+                if (selectedRowIndex === rowIdx) {
+                  setSelectedRowIndex(null);
+
+                  checkboxRef.current[rowIdx].checked = false;
+
+                  if (getSelectedItem) {
+                    getSelectedItem(null, null, rowIdx, null);
+                  }
+                } else {
+                  checkboxRef.current[rowIdx].checked = true;
+
+                  setSelectedRowIndex(rowIdx);
+                  if (getSelectedItem) {
+                    getSelectedItem(rowItm, null, rowIdx, null);
+                  }
+                }
+                setSelectedRow(null);
+              }}
+              onClick={() => {
+                setSelectedRow(rowIdx);
+              }}
+              onKeyDown={(e) => {
+                if (onKeyDown) {
+                  onKeyDown(rowItm, rowIdx, e);
+                }
+                if (e.key === "ArrowUp") {
+                  setSelectedRow((prev: any) => {
+                    const index = Math.max(prev - 1, -1);
+                    const td = document.querySelector(
+                      `.td.row-${index}`
+                    ) as HTMLTableDataCellElement;
+
+                    if (index < 0) {
+                      if (focusElementOnMaxTop) {
+                        focusElementOnMaxTop();
+                      }
+                      return;
+                    }
+                    if (td) {
+                      td.focus();
+                    }
+                    return index;
+                  });
+                } else if (e.key === "ArrowDown") {
+                  setSelectedRow((prev: any) => {
+                    const index = Math.min(prev + 1, data.length - 1);
+                    const td = document.querySelector(
+                      `.td.row-${index}`
+                    ) as HTMLTableDataCellElement;
+
+                    if (td) {
+                      td.focus();
+                      if (index <= 15) {
+                        parentElementRef.current.style.overflow = "hidden";
+                        setTimeout(() => {
+                          parentElementRef.current.style.overflow = "auto";
+                        }, 100);
+                        return index;
+                      }
+                    }
+                    return index;
+                  });
+                }
+                if (e.code === "Enter" || e.code === "NumpadEnter") {
+                  e.preventDefault();
+
+                  if (!isTableSelectable) {
+                    return;
+                  }
+
+                  setSelectedRowIndex(rowIdx);
+
+                  if (getSelectedItem) {
+                    getSelectedItem(rowItm, null, rowIdx, null);
+                  }
+                  setSelectedRow(null);
+                }
+              }}
+              key={colIdx}
+              style={{
+                border: "none",
+                fontSize: "12px",
+                padding: "0px 5px",
+                cursor: "pointer",
+                height: "20px",
+                userSelect: "none",
+              }}
+              onContextMenu={(e) => handleRightClick(e, rowIdx)}
+            >
+              {
+                <input
+                  readOnly={true}
+                  value={rowItm[colIdx]}
+                  style={{
+                    width: colItm.width,
+                    pointerEvents: "none",
+                    border: "none",
+                    background: "transparent",
+                    userSelect: "none",
+                    height: "100%",
+                    textAlign: colItm.type === "number" ? "right" : "left",
+                  }}
+                />
+              }
+            </td>
+          );
+        })}
+      </tr>
+    );
+  }
+);
+const CheckBoxSelection = forwardRef(
+  (
+    {
+      isTableSelectable,
+      setSelectedRowIndex,
+      rowIdx,
+      rowItm,
+      getSelectedItem,
+      setSelectedRow,
+      checkboxRef,
+      handleResetCheckBoxByIndex,
+    }: any,
+    ref
+  ) => {
+    return (
+      <input
+        ref={(el) => (checkboxRef.current[rowIdx] = el)}
+        style={{
+          cursor: "pointer",
+          margin: "0px !important",
+          position: "absolute",
+        }}
+        readOnly={true}
+        type="checkbox"
+        onClick={(e) => {
+          if (!isTableSelectable) {
+            return;
+          }
+          handleResetCheckBoxByIndex(rowIdx);
+          if (e.currentTarget.checked) {
+            setSelectedRowIndex(rowIdx);
+            if (getSelectedItem) {
+              getSelectedItem(rowItm, null, rowIdx, null);
+            }
+            setSelectedRow(null);
+            return;
+          } else {
+            setSelectedRowIndex(null);
+            if (getSelectedItem) {
+              getSelectedItem(null, null, rowIdx, null);
+            }
+            setSelectedRow(null);
+            return;
+          }
+        }}
+      />
+    );
+  }
+);
+
+const ActionModal = forwardRef(
+  ({ handleOnSave, handleOnClose, hasSelectedRow ,children }: any, ref) => {
+    const [showModal, setShowModal] = useState(false);
+    const [handleDelayClose, setHandleDelayClose] = useState(false);
+    const [blick, setBlick] = useState(false);
+
+    const closeDelay = () => {
+      setHandleDelayClose(true);
+      setTimeout(() => {
+        setShowModal(false);
+        setHandleDelayClose(false);
+        if (handleOnClose) handleOnClose();
+      }, 100);
+    };
+    const closeDelayRef = useRef<any>(closeDelay);
+
+    useImperativeHandle(ref, () => ({
+      showModal: () => {
+        setShowModal(true);
+      },
+      clsoeModal: () => {
+        setShowModal(false);
+      },
+      blick,
+      closeDelay,
+    }));
+
+    useEffect(() => {
+      window.addEventListener("keydown", (e: any) => {
+        if (e.key === "Escape") {
+          closeDelayRef.current();
+        }
+      });
+    }, []);
+
+    return showModal ? (
+      <>
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            background: "transparent",
+            zIndex: "88",
+          }}
+          onClick={() => {
+            setBlick(true);
+            setTimeout(() => {
+              setBlick(false);
+            }, 250);
+          }}
+        ></div>
+        <div
+          style={{
+            height: "auto",
+            width: "auto",
+            border: "1px solid #64748b",
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            transform:"translate(-50%, -75%)",
+            display: "flex",
+            flexDirection: "column",
+            zIndex: handleDelayClose ? -100 : 100,
+            opacity: handleDelayClose ? 0 : 1,
+            transition: "all 150ms",
+            boxShadow: "3px 6px 32px -7px rgba(0,0,0,0.75)",
+           
+          }}
+        >
+          <div
+            style={{
+              height: "22px",
+              background: "white",
+              display: "flex",
+              justifyContent: "space-between",
+              padding: "5px",
+              position: "relative",
+              alignItems: "center",
+
+            }}
+          >
+            <span style={{ fontSize: "13px", fontWeight: "bold" }}>Action</span>
+            <button
+              className="btn-check-exit-modal"
+              style={{
+                padding: "0 5px",
+                borderRadius: "0px",
+                background: "white",
+                color: "black",
+                height: "22px",
+                position: "absolute",
+                top: 0,
+                right: 0,
+              }}
+              onClick={() => {
+                closeDelay();
+              }}
+            >
+              <CloseIcon sx={{ fontSize: "22px" }} />
+            </button>
+          </div>
+          {children}
+          <style>
+            {`
+              .btn-check-exit-modal:hover{
+                background:red !important;
+                color:white !important;
+              }
+            `}
+          </style>
+        </div>
+      </>
+    ) : null;
+  }
+);
+
 export const DataGridViewMultiSelectionReact = forwardRef(
   (
     {
@@ -1112,7 +1352,7 @@ export const useUpwardTableModalSearchSafeMode = ({
 
     if (document.getElementById("modal-portal"))
       body.removeChild(document.getElementById("modal-portal") as HTMLElement);
-    body.appendChild(div);
+    body.insertBefore(div, body.firstChild);
 
     setShow(true);
     wait(100).then(() => {

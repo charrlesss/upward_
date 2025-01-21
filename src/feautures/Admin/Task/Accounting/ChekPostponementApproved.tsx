@@ -426,6 +426,8 @@ export default function ChekPostponementApproved() {
                         }
 
                         table.current.setSelectedRow(null)
+                        table.current.resetCheckBox()
+
                     }
                 }}
                 onKeyDown={(rowItm: any, rowIdx: any, e: any) => {
@@ -726,7 +728,6 @@ const Modal = forwardRef(({
     handleOnClose,
     getSelectedItem
 }: any, ref) => {
-    const { user, myAxios } = useContext(AuthContext)
     const [showModal, setShowModal] = useState(false)
     const [mode, setMode] = useState('')
     const [handleDelayClose, setHandleDelayClose] = useState(false)

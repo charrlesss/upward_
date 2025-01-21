@@ -565,6 +565,8 @@ export default function Collection() {
       });
       debitTable.current.setData(debitTableData);
       debitTable.current.setSelectedRow(null);
+      debitTable.current.resetCheckBox()
+      debitTable.current.resetCheckBox()
       setTotalDebit(
         debitTableData.reduce(
           (sum: any, subArray: any) =>
@@ -665,6 +667,7 @@ export default function Collection() {
         debitTableData[getSelectedRow][12] = bankRefName;
         debitTable.current.setData(debitTableData);
         debitTable.current.setSelectedRow(null);
+        debitTable.current.resetCheckBox()
         setTotalDebit(
           debitTableData.reduce(
             (sum: any, subArray: any) =>
@@ -781,6 +784,7 @@ export default function Collection() {
 
       creditTable.current.setData(creditTableData);
       creditTable.current.setSelectedRow(null);
+      creditTable.current.resetCheckBox()
       setTotalCredit(
         creditTableData.reduce(
           (sum: any, subArray: any) =>
@@ -1150,6 +1154,7 @@ export default function Collection() {
         }}
         handleOnClose={() => {
           debitTable.current.setSelectedRow(null);
+          debitTable.current.resetCheckBox()
           buttonCheckSave.current?.focus();
         }}
       />
@@ -1562,6 +1567,7 @@ export default function Collection() {
                     });
                   } else {
                     if (rowItm[7] && rowItm[7] !== "") {
+                      debitTable.current.resetCheckBox()
                       debitTable.current.setSelectedRow(null);
                       buttonCheckSave.current?.focus();
                       return alert(
@@ -1569,6 +1575,7 @@ export default function Collection() {
                       );
                     }
                     if (rowItm[8] && rowItm[8] !== "") {
+                      debitTable.current.resetCheckBox()
                       debitTable.current.setSelectedRow(null);
                       buttonCheckSave.current?.focus();
                       return alert(
@@ -1769,6 +1776,7 @@ export default function Collection() {
                     accTCRef.current = "";
                     foaIDNoRef.current = "";
                     transactionRef.current?.focus();
+                    creditTable.current.resetCheckBox()
                     creditTable.current.setSelectedRow(null);
                   });
                 }}

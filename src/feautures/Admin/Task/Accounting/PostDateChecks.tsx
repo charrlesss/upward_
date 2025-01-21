@@ -9,10 +9,8 @@ import React, {
 } from "react";
 import {
   Box,
-  Typography,
   Button,
   IconButton,
-  Modal,
   MenuItem,
   Menu,
 } from "@mui/material";
@@ -23,7 +21,6 @@ import SaveIcon from "@mui/icons-material/Save";
 import { AuthContext } from "../../../../components/AuthContext";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import CloseIcon from "@mui/icons-material/Close";
-import { flushSync } from "react-dom";
 import { LoadingButton } from "@mui/lab";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -33,9 +30,7 @@ import {
 } from "../../../../lib/confirmationAlert";
 import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
 import { DisplayFile, checkFile } from "../Claims/Claims";
-import ReactDOMServer from "react-dom/server";
 import { grey } from "@mui/material/colors";
-import { useUpwardTableModal } from "../../../../hooks/useUpwardTableModal";
 import {
   TextAreaInput,
   TextFormatedInput,
@@ -114,7 +109,6 @@ export default function PostDateChecks() {
   const [pdcMode, setPdcMode] = useState("");
 
   const { myAxios, user } = useContext(AuthContext);
-  const searchRef = useRef<HTMLInputElement>(null);
 
   // pdc form save button
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -608,6 +602,7 @@ export default function PostDateChecks() {
   function resetPDC() {
     setPdcMode("");
     tableRef.current.setSelectedRow(null);
+    tableRef.current.resetCheckBox()
     tableRef.current.setData([]);
     refetchNewRefNumber();
 
@@ -738,6 +733,8 @@ export default function PostDateChecks() {
             modalCheckRef.current.getRefs().bankCode.current;
           tableRef.current.setData(selectedRow);
           tableRef.current.setSelectedRow(null);
+          tableRef.current.resetCheckBox()
+
           setHasSelectedRow(null);
         } else {
           const newData: any = [];
@@ -803,6 +800,8 @@ export default function PostDateChecks() {
         }}
         handleOnClose={() => {
           tableRef.current.setSelectedRow(null);
+          tableRef.current.resetCheckBox()
+
           // buttonCheckSave.current?.focus();
         }}
         hasSelectedRow={hasSelectedRow}
@@ -952,6 +951,8 @@ export default function PostDateChecks() {
                       incrementCheckNo(getLastCheck_No?.Check_No);
                   }
                   tableRef.current.setSelectedRow(null);
+                  tableRef.current.resetCheckBox()
+
                   setHasSelectedRow(null);
                   modalCheckRef.current.getRefs().checknoRef.current?.focus();
                 });
@@ -1275,6 +1276,8 @@ export default function PostDateChecks() {
               ) {
                 setHasSelectedRow(null);
                 tableRef.current.setSelectedRow(null);
+                tableRef.current.resetCheckBox()
+
                 return Swal.fire({
                   position: "center",
                   icon: "warning",
@@ -1331,6 +1334,7 @@ export default function PostDateChecks() {
               ) {
                 setHasSelectedRow(null);
                 tableRef.current.setSelectedRow(null);
+                tableRef.current.resetCheckBox()
 
                 return Swal.fire({
                   position: "center",
@@ -1358,6 +1362,8 @@ export default function PostDateChecks() {
 
                     setHasSelectedRow(null);
                     tableRef.current.setSelectedRow(null);
+                    tableRef.current.resetCheckBox()
+
                   }, 100);
                 }
               });

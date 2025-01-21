@@ -26,7 +26,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import Swal from "sweetalert2";
 import { AuthContext } from "../../../../components/AuthContext";
 import { useMutation, useQuery } from "react-query";
-import useQueryModalTable from "../../../../hooks/useQueryModalTable";
 import { wait } from "../../../../lib/wait";
 import NotInterestedIcon from "@mui/icons-material/NotInterested";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -156,8 +155,6 @@ export default function GeneralJournal() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [openJobs, setOpenJobs] = useState(false);
 
-  const chartAccountSearchInput = useRef<HTMLInputElement>(null);
-  const IdsSearchInput = useRef<HTMLInputElement>(null);
   const table = useRef<any>(null);
 
   const modeAdd = mode === "add";
@@ -847,6 +844,8 @@ export default function GeneralJournal() {
           if (isUpdate) {
             newData[getSelectedRow] = newInput;
             table.current.setSelectedRow(null);
+            table.current.resetCheckBox(null)
+
           } else {
             newData[newData.length] = newInput;
           }
@@ -1075,7 +1074,7 @@ export default function GeneralJournal() {
         let i = 0;
         for (const itm of dataArray) {
           let tmpID = "";
-          if (i == 0) {
+          if (i === 0) {
             iRow = 0;
           } else {
             iRow = iRow + 1;
@@ -1811,8 +1810,6 @@ export default function GeneralJournal() {
                 table.current.setData(debitTableData);
 
                 setTimeout(() => {
-                  const getData = table.current.getData();
-
                   monitor();
                 }, 200);
 
@@ -2008,11 +2005,8 @@ export default function GeneralJournal() {
   );
 }
 
-function setNewStateValue(dispatch: any, obj: any) {
-  Object.entries(obj).forEach(([field, value]) => {
-    dispatch({ type: "UPDATE_FIELD", field, value });
-  });
-}
+
+
 const ID_Entry = `
 SELECT 
        id_entry.IDNo,

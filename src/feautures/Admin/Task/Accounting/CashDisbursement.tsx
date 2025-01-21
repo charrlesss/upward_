@@ -4,9 +4,6 @@ import {
   useState,
   useRef,
   useEffect,
-  forwardRef,
-  useImperativeHandle,
-  Fragment,
   useCallback,
 } from "react";
 import { Button } from "@mui/material";
@@ -33,7 +30,6 @@ import {
   saveCondfirmationAlert,
 } from "../../../../lib/confirmationAlert";
 import { flushSync } from "react-dom";
-import { NumericFormat } from "react-number-format";
 import PageHelmet from "../../../../components/Helmet";
 import {
   DataGridViewReact,
@@ -202,7 +198,6 @@ export default function CashDisbursement() {
   const dateRef = useRef<HTMLInputElement>(null);
   const expRef = useRef<HTMLInputElement>(null);
   const particularRef = useRef<HTMLTextAreaElement>(null);
-  const IdsSearchInput = useRef<HTMLInputElement>(null);
   const chartAccountSearchInput = useRef<HTMLInputElement>(null);
   const [cashDMode, setCashDMode] = useState("");
   const [getTotalDebit, setGetTotalDebit] = useState(0);
@@ -351,7 +346,7 @@ export default function CashDisbursement() {
 
         setTotals(SearchData);
         wait(250).then(() => {
-        refCode.current?.focus()
+          refCode.current?.focus();
         });
       });
     },
@@ -539,7 +534,7 @@ export default function CashDisbursement() {
     setGetTotalDebit(debit);
     setGetTotalCredit(credit);
   }
-  
+
   function resetAll() {
     setCashDMode("");
     setNewStateValue(dispatch, initialState);
@@ -548,7 +543,7 @@ export default function CashDisbursement() {
     setGetTotalCredit(0);
     setTotalRow(0);
     wait(100).then(() => {
-      resetRowField()
+      resetRowField();
       tableRef.current?.resetTable();
     });
   }
@@ -613,7 +608,7 @@ export default function CashDisbursement() {
       }
     });
   }
-  
+
   const handleOnSave = useCallback(() => {
     if (state.refNo === "") {
       return Swal.fire({
@@ -716,62 +711,67 @@ export default function CashDisbursement() {
     getTotalDebit,
   ]);
 
-  function resetRowField(){
-    if(refCode.current){
-      refCode.current.value = ''
+  function resetRowField() {
+    if (refCode.current) {
+      refCode.current.value = "";
     }
-    if(refAccountName.current){
-      refAccountName.current.value = ''
+    if (refAccountName.current) {
+      refAccountName.current.value = "";
     }
-    if(refSubAccount.current){
-      refSubAccount.current.value = ''
+    if (refSubAccount.current) {
+      refSubAccount.current.value = "";
     }
-    if(refName.current){
-      refName.current.value = ''
+    if (refName.current) {
+      refName.current.value = "";
     }
-    if(refDebit.current){
-      refDebit.current.value = ''
+    if (refDebit.current) {
+      refDebit.current.value = "";
     }
-    if(refCredit.current){
-      refCredit.current.value = ''
+    if (refCredit.current) {
+      refCredit.current.value = "";
     }
-    if(refCheckNo.current){
-      refCheckNo.current.value = ''
+    if (refCheckNo.current) {
+      refCheckNo.current.value = "";
     }
-    if(refCheckDate.current){
-      refCheckDate.current.value = format(new Date(), "yyyy-MM-dd")
+    if (refCheckDate.current) {
+      refCheckDate.current.value = format(new Date(), "yyyy-MM-dd");
     }
-    if(refTC.current){
-      refTC.current.value = ''
+    if (refTC.current) {
+      refTC.current.value = "";
     }
-    if(refRemarks.current){
-      refRemarks.current.value = ''
+    if (refRemarks.current) {
+      refRemarks.current.value = "";
     }
-    if(refPayTo.current){
-      refPayTo.current.value = ''
+    if (refPayTo.current) {
+      refPayTo.current.value = "";
     }
-    if(refVat.current){
-      refVat.current.value = 'Non-VAT'
+    if (refVat.current) {
+      refVat.current.value = "Non-VAT";
     }
-    if(refInvoice.current){
-      refInvoice.current.value = ''
+    if (refInvoice.current) {
+      refInvoice.current.value = "";
     }
-    
-    _refSubAccount.current = ''
-    _refName.current = ''
-    _refTC.current = ''
-    _refPayTo.current = ''
-    
+
+    _refSubAccount.current = "";
+    _refName.current = "";
+    _refTC.current = "";
+    _refPayTo.current = "";
+
+    if (refCheckNo.current) refCheckNo.current.disabled = true;
+    if (refCheckDate.current) refCheckDate.current.disabled = true;
+    if (refPayTo.current) refPayTo.current.disabled = true;
+    tableRef.current.setSelectedRow(null);
+    tableRef.current.resetCheckBox();
   }
 
   function SumbitRow() {
-    if(!refCode.current){
-      return alert('Account Code is required')
+    if (!refCode.current) {
+      return alert("Account Code is required");
     }
 
-    if ( refCode.current.value === "") {
+    if (refCode.current.value === "") {
       alert("Account Code is required");
-      refCode.current.focus()
+      refCode.current.focus();
       return false;
     } else if (
       refCode.current.value !== "" &&
@@ -779,7 +779,7 @@ export default function CashDisbursement() {
       refCheckNo.current?.value === ""
     ) {
       alert("Check No is required");
-      refCheckNo.current.focus()
+      refCheckNo.current.focus();
 
       return false;
     } else if (
@@ -788,7 +788,7 @@ export default function CashDisbursement() {
       refCheckDate.current?.value === ""
     ) {
       alert("Check Date is required");
-      refCheckDate.current.focus()
+      refCheckDate.current.focus();
       return false;
     } else if (
       refCode.current.value !== "" &&
@@ -796,164 +796,174 @@ export default function CashDisbursement() {
       refPayTo.current?.value === ""
     ) {
       alert("Pay To is required");
-      refPayTo.current.focus()
+      refPayTo.current.focus();
       return false;
     } else if (refName.current?.value === "") {
       alert("Name is required");
-      refName.current.focus()
+      refName.current.focus();
       return false;
     } else if (refDebit.current?.value === refCredit.current?.value) {
       alert(
         "Credit and Debit cannot be the same. They must have a difference."
       );
-      refCredit.current?.focus()
+      refCredit.current?.focus();
       return false;
     } else if (refTC.current?.value === "") {
       alert("TC is required");
-      refTC.current.focus()
+      refTC.current.focus();
 
       return false;
     }
-    const newData = [
-      refCode.current?.value, // code:
-      refAccountName.current?.value, // acctName:"",
-      refSubAccount.current?.value, // subAcctName:"",
-      refName.current?.value, // ClientName:"",
-      refDebit.current?.value, // debit:"",
-      refCredit.current?.value, // credit:"",
-      refCheckNo.current?.value, // checkNo:"",
-      refCheckDate.current?.value, // checkDate:"",
-      refTC.current?.value, // TC_Code:"",
-      refRemarks.current?.value, // remarks:"",
-      refPayTo.current?.value, // Payto:"",
-      refVat.current?.value, // vatType:"",
-      refInvoice.current?.value, // invoice:"",
-      _refName.current, // IDNo:"",
-      "HO", // BranchCode:"",
-      _refPayTo.current, // addres:"",
-      _refSubAccount.current, // subAcct:"",
-      _refTC.current, // TC_Desc:"",
-    ];
 
-    if (
-      refVat.current &&
-      refVat.current.value === "VAT" &&
-      
-      refCode.current.value !== "1.06.02"
-    ) {
-      if (!refCredit.current || !refDebit.current) {
-        return;
-      }
-
-      const credit = parseFloat(refCredit.current.value.replace(/,/g, ""));
-      const debit = parseFloat(refDebit.current.value.replace(/,/g, ""));
-      let taxableamt = 0;
-
-      if (debit !== 0) {
-        taxableamt = debit / 1.12;
-        newData[4] = taxableamt.toLocaleString("en-US", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        });
-      } else {
-        taxableamt = credit / 1.12;
-        newData[5] = taxableamt.toLocaleString("en-US", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        });
-      }
-    
-
-      let inputtax = taxableamt * 0.12;
-      const _newData = [
-        "1.06.02",
-        "Input Tax",
-        refSubAccount.current?.value,
-        refName.current?.value,
-        "",
-        "",
-        refCheckNo.current?.value,
-        refCheckDate.current?.value,
-        refTC.current?.value,
-        refRemarks.current?.value,
-        refPayTo.current?.value,
-        refVat.current?.value,
-        refInvoice.current?.value,
-        _refName.current,
-        "HO",
-        _refPayTo.current,
-        _refSubAccount.current,
-        _refTC.current,
-      ];
-
-
-      if (parseFloat(refDebit.current.value.replace(/,/g, "")) !== 0) {
-        _newData[4] = inputtax.toLocaleString("en-US", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        });
-        _newData[5] = newData[5];
-      } else {
-        _newData[5] = inputtax.toLocaleString("en-US", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        });
-        _newData[4] = newData[4];
-      }
-     const totalData = [...tableRef.current.getData() ,newData,_newData]
-      tableRef.current.setData(totalData);
-      const SearchData = totalData.map((itm: any) => {
-        itm[4] = parseFloat(itm[4].replace(/,/g, "")).toLocaleString(
-          "en-US",
-          {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          }
-        );
-        itm[5]  = parseFloat(itm[5].replace(/,/g, "")).toLocaleString(
-          "en-US",
-          {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          }
-        );
-
-        return itm
-      });
-      setTotals(SearchData)
-      resetRowField()
-      wait(100).then(()=>{
-        refCode.current?.focus()
-      })
-      return
-    }else{
-      const totalData  = [...tableRef.current.getData(),newData]
-      tableRef.current.setData(totalData);
-      const SearchData = totalData.map((itm: any) => {
-        itm[4] = parseFloat(itm[4].replace(/,/g, "")).toLocaleString(
-          "en-US",
-          {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          }
-        );
-        itm[5]  = parseFloat(itm[5].replace(/,/g, "")).toLocaleString(
-          "en-US",
-          {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          }
-        );
-        return itm
-      });
-      setTotals(SearchData)
-      resetRowField()
-      wait(100).then(()=>{
-        refCode.current?.focus()
-      })
-      return
+    const getSelectedItem = tableRef.current.getSelectedRow();
+    if (getSelectedItem !== null) {
+      const data = tableRef.current.getData();
+      data.splice(getSelectedItem, 1);
+      tableRef.current.setData(data);
     }
 
+    wait(100).then(() => {
+      if (!refCode.current) {
+        return alert("Account Code is required");
+      }
+
+      const newData = [
+        refCode.current?.value, // code:
+        refAccountName.current?.value, // acctName:"",
+        refSubAccount.current?.value, // subAcctName:"",
+        refName.current?.value, // ClientName:"",
+        refDebit.current?.value, // debit:"",
+        refCredit.current?.value, // credit:"",
+        refCheckNo.current?.value, // checkNo:"",
+        refCheckDate.current?.value, // checkDate:"",
+        refTC.current?.value, // TC_Code:"",
+        refRemarks.current?.value, // remarks:"",
+        refPayTo.current?.value, // Payto:"",
+        refVat.current?.value, // vatType:"",
+        refInvoice.current?.value, // invoice:"",
+        _refName.current, // IDNo:"",
+        "HO", // BranchCode:"",
+        _refPayTo.current, // addres:"",
+        _refSubAccount.current, // subAcct:"",
+        _refTC.current, // TC_Desc:"",
+      ];
+
+      if (
+        refVat.current &&
+        refVat.current.value === "VAT" &&
+        refCode.current.value !== "1.06.02"
+      ) {
+        if (!refCredit.current || !refDebit.current) {
+          return;
+        }
+
+        const credit = parseFloat(refCredit.current.value.replace(/,/g, ""));
+        const debit = parseFloat(refDebit.current.value.replace(/,/g, ""));
+        let taxableamt = 0;
+
+        if (debit !== 0) {
+          taxableamt = debit / 1.12;
+          newData[4] = taxableamt.toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          });
+        } else {
+          taxableamt = credit / 1.12;
+          newData[5] = taxableamt.toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          });
+        }
+
+        let inputtax = taxableamt * 0.12;
+        const _newData = [
+          "1.06.02",
+          "Input Tax",
+          refSubAccount.current?.value,
+          refName.current?.value,
+          "",
+          "",
+          refCheckNo.current?.value,
+          refCheckDate.current?.value,
+          refTC.current?.value,
+          refRemarks.current?.value,
+          refPayTo.current?.value,
+          refVat.current?.value,
+          refInvoice.current?.value,
+          _refName.current,
+          "HO",
+          _refPayTo.current,
+          _refSubAccount.current,
+          _refTC.current,
+        ];
+
+        if (parseFloat(refDebit.current.value.replace(/,/g, "")) !== 0) {
+          _newData[4] = inputtax.toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          });
+          _newData[5] = newData[5];
+        } else {
+          _newData[5] = inputtax.toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          });
+          _newData[4] = newData[4];
+        }
+        const totalData = [...tableRef.current.getData(), newData, _newData];
+        tableRef.current.setData(totalData);
+        const SearchData = totalData.map((itm: any) => {
+          itm[4] = parseFloat(itm[4].replace(/,/g, "")).toLocaleString(
+            "en-US",
+            {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }
+          );
+          itm[5] = parseFloat(itm[5].replace(/,/g, "")).toLocaleString(
+            "en-US",
+            {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }
+          );
+
+          return itm;
+        });
+        setTotals(SearchData);
+        resetRowField();
+        wait(100).then(() => {
+          refCode.current?.focus();
+        });
+        return;
+      } else {
+        const totalData = [...tableRef.current.getData(), newData];
+        tableRef.current.setData(totalData);
+        const SearchData = totalData.map((itm: any) => {
+          itm[4] = parseFloat(itm[4].replace(/,/g, "")).toLocaleString(
+            "en-US",
+            {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }
+          );
+          itm[5] = parseFloat(itm[5].replace(/,/g, "")).toLocaleString(
+            "en-US",
+            {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }
+          );
+          return itm;
+        });
+        setTotals(SearchData);
+        resetRowField();
+        wait(100).then(() => {
+          refCode.current?.focus();
+        });
+        return;
+      }
+    });
   }
   // chart of account Search
   const {
@@ -1137,7 +1147,7 @@ export default function CashDisbursement() {
           }
           _refPayTo.current = rowItm[7];
 
-          refVat.current?.focus()
+          refVat.current?.focus();
         });
         payToCloseModal();
       }
@@ -1158,16 +1168,12 @@ export default function CashDisbursement() {
     };
   }, [handleOnSave]);
 
-
   return (
     <>
-    {( loadingGetSearchSelectedCashDisbursement ||
-    loadingGeneralJournalGenerator) && <Loading />}
+      {(loadingGetSearchSelectedCashDisbursement ||
+        loadingGeneralJournalGenerator) && <Loading />}
       <PageHelmet title="Cash Disbursement" />
-      <ChartAccountUpwardTableModalSearch />
-      <PayToUpwardTableModalSearch />
-      <ClientUpwardTableModalSearch />
-      <TransactionAccountUpwardTableModalSearch />
+
       <div
         style={{
           background: "#F1F1F1",
@@ -1513,8 +1519,25 @@ export default function CashDisbursement() {
                 flex: 1,
               }}
             >
-              <div style={{ margin: 0, padding: 0, color: "black",display:"flex" ,alignItems:"center" }}>
-                <p style={{ fontSize: "12px", width:"80px",padding:0,margin:0}}>Total Debit:</p>
+              <div
+                style={{
+                  margin: 0,
+                  padding: 0,
+                  color: "black",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: "12px",
+                    width: "80px",
+                    padding: 0,
+                    margin: 0,
+                  }}
+                >
+                  Total Debit:
+                </p>
                 <strong>
                   {getTotalDebit.toLocaleString("en-US", {
                     minimumFractionDigits: 2,
@@ -1522,8 +1545,25 @@ export default function CashDisbursement() {
                   })}
                 </strong>
               </div>
-              <div style={{ margin: 0, padding: 0, color: "black",display:"flex" ,alignItems:"center" }}>
-                <p style={{ fontSize: "12px", width:"80px",padding:0,margin:0}}>Total Credit:</p>
+              <div
+                style={{
+                  margin: 0,
+                  padding: 0,
+                  color: "black",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: "12px",
+                    width: "80px",
+                    padding: 0,
+                    margin: 0,
+                  }}
+                >
+                  Total Credit:
+                </p>
                 <strong>
                   {getTotalCredit.toLocaleString("en-US", {
                     minimumFractionDigits: 2,
@@ -1531,8 +1571,25 @@ export default function CashDisbursement() {
                   })}
                 </strong>
               </div>
-              <div style={{ margin: 0, padding: 0, color: "black",display:"flex" ,alignItems:"center" }}>
-                <p style={{ fontSize: "12px", width:"80px",padding:0,margin:0}}>Balance:</p>
+              <div
+                style={{
+                  margin: 0,
+                  padding: 0,
+                  color: "black",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: "12px",
+                    width: "80px",
+                    padding: 0,
+                    margin: 0,
+                  }}
+                >
+                  Balance:
+                </p>
                 <strong
                   style={{
                     color: getTotalDebit - getTotalCredit > 0 ? "red" : "black",
@@ -1979,7 +2036,63 @@ export default function CashDisbursement() {
           height="280px"
           getSelectedItem={(rowItm: any) => {
             if (rowItm) {
+              if (rowItm[0] === "1.01.10") {
+                if (refCheckNo.current) {
+                  refCheckNo.current.value = rowItm[6];
+                }
+                if (refCheckDate.current) {
+                  refCheckDate.current.value = format(
+                    new Date(rowItm[7]),
+                    "yyyy-MM-dd"
+                  );
+                }
+                if (refPayTo.current) {
+                  refPayTo.current.value = rowItm[10];
+                }
+
+                if (refCheckNo.current) refCheckNo.current.disabled = false;
+                if (refCheckDate.current) refCheckDate.current.disabled = false;
+                if (refPayTo.current) refPayTo.current.disabled = false;
+              }
+
+              if (refCode.current) {
+                refCode.current.value = rowItm[0];
+              }
+              if (refAccountName.current) {
+                refAccountName.current.value = rowItm[1];
+              }
+              if (refSubAccount.current) {
+                refSubAccount.current.value = rowItm[2];
+              }
+              if (refName.current) {
+                refName.current.value = rowItm[3];
+              }
+              if (refDebit.current) {
+                refDebit.current.value = rowItm[4];
+              }
+              if (refCredit.current) {
+                refCredit.current.value = rowItm[5];
+              }
+              if (refTC.current) {
+                refTC.current.value = rowItm[8];
+              }
+              if (refRemarks.current) {
+                refRemarks.current.value = rowItm[9];
+              }
+
+              if (refVat.current) {
+                refVat.current.value = rowItm[11];
+              }
+              if (refInvoice.current) {
+                refInvoice.current.value = rowItm[12];
+              }
+
+              _refSubAccount.current = rowItm[16];
+              _refName.current = rowItm[13];
+              _refTC.current = rowItm[17] ?? "";
+              _refPayTo.current = rowItm[15];
             } else {
+              resetRowField();
             }
           }}
           onKeyDown={(rowItm: any, rowIdx: any, e: any) => {
@@ -1988,23 +2101,107 @@ export default function CashDisbursement() {
                 `Are you sure you want to delete?`
               );
               if (isConfim) {
-                // const debitTableData = table.current.getData();
-                // debitTableData.splice(rowIdx, 1);
-                // table.current.setData(debitTableData);
-
-                // setTimeout(() => {
-                //   const getData = table.current.getData();
-
-                //   monitor();
-                // }, 200);
-
+                const debitTableData = tableRef.current.getData();
+                debitTableData.splice(rowIdx, 1);
+                const SearchData = debitTableData.map((itm: any, idx: number) => {
+                  itm.credit = parseFloat(itm[5].replace(/,/g, "")).toLocaleString(
+                    "en-US",
+                    {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    }
+                  );
+                  itm.debit = parseFloat(itm[4].replace(/,/g, "")).toLocaleString(
+                    "en-US",
+                    {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    }
+                  );
+          
+                  return itm
+                });
+                tableRef.current.setData(debitTableData);
+                setTotals(SearchData);
                 return;
               }
             }
           }}
+          ActionComponent={({selectedRowIndex,closeModal}:any) => {
+            return (
+              <div
+                style={{
+                  flex: 1,
+                  background: "#F1F1F1",
+                  padding: "10px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems:"center",
+                  justifyContent:"center"
+                }}
+              >
+                <Button
+                  variant="contained"
+                  color="success"
+                  sx={{
+                    height: "20px",
+                    width: "120px",
+                    marginBottom: "5px",
+                    fontSize:"10px"
+                  }}
+                  onClick={()=>{
+                    alert(selectedRowIndex)
+                  }}
+                >
+                  Print
+                </Button>
+                <Button
+                  variant="contained"
+                  color="error"
+                  sx={{
+                    height: "20px",
+                    width: "120px",
+                    marginBottom: "5px",
+                    fontSize:"10px"
+                  }}
+                  onClick={()=>{
+                    const debitTableData = tableRef.current.getData();
+                    debitTableData.splice(selectedRowIndex, 1);
+                    const SearchData = debitTableData.map((itm: any, idx: number) => {
+                      itm.credit = parseFloat(itm[5].replace(/,/g, "")).toLocaleString(
+                        "en-US",
+                        {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }
+                      );
+                      itm.debit = parseFloat(itm[4].replace(/,/g, "")).toLocaleString(
+                        "en-US",
+                        {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }
+                      );
+              
+                      return itm
+                    });
+                    tableRef.current.setData(debitTableData);
+                    setTotals(SearchData);
+                    closeModal()
+                  }}
+                >
+                  Delete
+                </Button>
+              </div>
+            );
+          }}
         />
         {ModalSearchCashDisbursement}
       </div>
+      <ChartAccountUpwardTableModalSearch />
+      <PayToUpwardTableModalSearch />
+      <ClientUpwardTableModalSearch />
+      <TransactionAccountUpwardTableModalSearch />
     </>
   );
 }

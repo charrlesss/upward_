@@ -618,7 +618,6 @@ export default function Header() {
       });
   };
 
-  console.log("qweqwe ");
   return (
     <header>
       <nav ref={menuRef} className="menu header-ch">

@@ -1058,6 +1058,8 @@ export default function ChekPostponementRequest() {
                         }
 
                         table.current.setSelectedRow(null)
+                        table.current.resetCheckBox()
+
                     }
                 }}
                 onKeyDown={(rowItm: any, rowIdx: any, e: any) => {

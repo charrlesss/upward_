@@ -3,7 +3,6 @@ import { Button } from "@mui/material";
 import { AuthContext } from "../../../../../components/AuthContext";
 import { useMutation, useQuery } from "react-query";
 import Swal from "sweetalert2";
-import { clientColumn } from "../../../data/entry";
 import { LoadingButton } from "@mui/lab";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -27,7 +26,6 @@ import { Loading } from "../../../../../components/Loading";
 import { Autocomplete } from "../../../Task/Accounting/PettyCash";
 
 export default function Client() {
-  const table = useRef<any>(null);
   const { myAxios, user } = useContext(AuthContext);
   const [option, setOption] = useState("Individual");
   const [mode, setMode] = useState("");
@@ -149,6 +147,9 @@ export default function Client() {
       resetField();
       setMode("");
       tableRef.current.setSelectedRow(null);
+      tableRef.current.resetCheckBox();
+  
+
       mutateSearchRef.current({
         search: "",
         entry: "Client",
@@ -432,6 +433,7 @@ export default function Client() {
                     resetField();
                     setMode("");
                     tableRef.current.setSelectedRow(null);
+                    tableRef.current.resetCheckBox();
                   }
                 });
               }}
@@ -1034,6 +1036,7 @@ export default function Client() {
               });
             } else {
               tableRef.current.setSelectedRow(null);
+              tableRef.current.resetCheckBox();
               resetField();
               setMode("");
               return;
