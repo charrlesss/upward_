@@ -256,6 +256,7 @@ export default function NavigatePrint() {
 
     return word.trim();
   }
+  
   function AmountToWords(amount: number) {
     const formattedAmount = amount.toFixed(2);
     const ln = formattedAmount.length - 3;

@@ -40,6 +40,8 @@ import SupervisorAccountIcon from "@mui/icons-material/SupervisorAccount";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import { Loading } from "../../../../components/Loading";
+import SearchIcon from "@mui/icons-material/Search";
+
 
 const initialState = {
   sub_refNo: "",
@@ -254,7 +256,6 @@ export default function CashDisbursement() {
       });
     },
   });
-
   const {
     mutate: getSearchSelectedCashDisbursement,
     isLoading: loadingGetSearchSelectedCashDisbursement,
@@ -354,40 +355,6 @@ export default function CashDisbursement() {
     },
   });
   const {
-    ModalComponent: ModalSearchCashDisbursement,
-    openModal: openSearchCashDisbursement,
-    isLoading: isLoadingSearchCashDisbursement,
-    closeModal: closeSearchCashDisbursement,
-  } = useQueryModalTable({
-    link: {
-      url: "/task/accounting/cash-disbursement/search-cash-disbursement",
-      queryUrlName: "searchCashDisbursement",
-    },
-    columns: [
-      { field: "Date_Entry", headerName: "Date", width: 130 },
-      { field: "Source_No", headerName: "Ref No.", width: 250 },
-      {
-        field: "Explanation",
-        headerName: "Explanation",
-        flex: 1,
-      },
-    ],
-    queryKey: "search-cash-disbursement",
-    uniqueId: "Source_No",
-    responseDataKey: "search",
-    onSelected: (selectedRowData, data) => {
-      getSearchSelectedCashDisbursement({
-        Source_No: selectedRowData[0].Source_No,
-      });
-      setCashDMode("update");
-      closeSearchCashDisbursement();
-    },
-    onCloseFunction: (value: any) => {
-      //   dispatch({ type: "UPDATE_FIELD", field: "search", value });
-    },
-    searchRef: chartAccountSearchInput,
-  });
-  const {
     mutate: addCashDisbursementMutate,
     isLoading: loadingCashDisbursementMutate,
   } = useMutation({
@@ -455,78 +422,45 @@ export default function CashDisbursement() {
       });
     },
   });
-    const { mutate: mutatePrint, isLoading: isLoadingPrint } = useMutation({
-      mutationKey: "print",
-      mutationFn: async (variables: any) => {
-        return await myAxios.post("/task/accounting/cash-disbursement/print", variables, {
-          responseType: 'arraybuffer',
+  const { mutate: mutatePrint, isLoading: isLoadingPrint } = useMutation({
+    mutationKey: "print",
+    mutationFn: async (variables: any) => {
+      return await myAxios.post(
+        "/task/accounting/cash-disbursement/print",
+        variables,
+        {
+          responseType: "arraybuffer",
           headers: {
             Authorization: `Bearer ${user?.accessToken}`,
           },
-        });
-      },
-      onSuccess: (response) => {
-        console.log(response);
-  
-        const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
-        const pdfUrl = URL.createObjectURL(pdfBlob);
-        // window.open(pdfUrl);
-        var newTab = window.open();
-        if (newTab) {
-          newTab.document.write('<!DOCTYPE html>');
-          newTab.document.write('<html><head><title>New Tab with iframe</title></head>');
-          newTab.document.write('<body style="width:100vw;height:100vh;padding:0;margin:0;box-sizing:border-box;">');
-          newTab.document.write(`<iframe style="border:none;outline:none;padding:0;margin:0" src="${pdfUrl}" width="99%" height="99%"></iframe>`);
-          
-          newTab.document.write('</body></html>');
-          // Optional: Close the document stream after writing
-          newTab.document.close();
         }
-      },
-    });
+      );
+    },
+    onSuccess: (response) => {
+      console.log(response);
 
-  // const { mutate: mutatePrint, isLoading: isLoadingPrint } = useMutation({
-  //   mutationKey: "get-selected-search-general-journal",
-  //   mutationFn: async (variable: any) =>
-  //     await myAxios.post("/task/accounting/cash-disbursement/print", variable, {
-  //       headers: {
-  //         Authorization: `Bearer ${user?.accessToken}`,
-  //       },
-  //     }),
-  //   onSuccess: (res) => {
-  //     const response = res as any;
-  //     flushSync(() => {
-  //       localStorage.removeItem("printString");
-  //       localStorage.setItem(
-  //         "dataString",
-  //         JSON.stringify(response.data.print.PrintTable)
-  //       );
-  //       localStorage.setItem("paper-width", "8.5in");
-  //       localStorage.setItem("paper-height", "11in");
-  //       localStorage.setItem("module", "cash-disbursement");
-  //       localStorage.setItem(
-  //         "state",
-  //         JSON.stringify(response.data.print.PrintPayeeDetails)
-  //       );
-  //       localStorage.setItem(
-  //         "column",
-  //         JSON.stringify([
-  //           { datakey: "Account", header: "ACCOUNT", width: "200px" },
-  //           { datakey: "Identity", header: "IDENTITY", width: "277px" },
-  //           { datakey: "Debit", header: "DEBIT", width: "100px" },
-  //           { datakey: "Credit", header: "CREDIT", width: "100px" },
-  //         ])
-  //       );
-  //       localStorage.setItem(
-  //         "title",
-  //         user?.department === "UMIS"
-  //           ? "UPWARD MANAGEMENT INSURANCE SERVICES\n"
-  //           : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.\n"
-  //       );
-  //     });
-  //     window.open("/dashboard/print", "_blank");
-  //   },
-  // });
+      const pdfBlob = new Blob([response.data], { type: "application/pdf" });
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      // window.open(pdfUrl);
+      var newTab = window.open();
+      if (newTab) {
+        newTab.document.write("<!DOCTYPE html>");
+        newTab.document.write(
+          "<html><head><title>New Tab with iframe</title></head>"
+        );
+        newTab.document.write(
+          '<body style="width:100vw;height:100vh;padding:0;margin:0;box-sizing:border-box;">'
+        );
+        newTab.document.write(
+          `<iframe style="border:none;outline:none;padding:0;margin:0" src="${pdfUrl}" width="99%" height="99%"></iframe>`
+        );
+
+        newTab.document.write("</body></html>");
+        // Optional: Close the document stream after writing
+        newTab.document.close();
+      }
+    },
+  });
   function handleVoid() {
     codeCondfirmationAlert({
       isUpdate: false,
@@ -541,7 +475,13 @@ export default function CashDisbursement() {
     });
   }
   function handleClickPrint() {
-    mutatePrint({ Source_No: state.refNo });
+    mutatePrint({
+      check: false,
+      Source_No: state.refNo,
+      checkDate: "",
+      Payto: "",
+      credit: "",
+    });
   }
   function setTotals(tableData: any) {
     const credit =
@@ -566,7 +506,6 @@ export default function CashDisbursement() {
     setGetTotalDebit(debit);
     setGetTotalCredit(credit);
   }
-
   function resetAll() {
     setCashDMode("");
     setNewStateValue(dispatch, initialState);
@@ -578,31 +517,6 @@ export default function CashDisbursement() {
       resetRowField();
       tableRef.current?.resetTable();
     });
-  }
-  function printRow(rowItm: any) {
-    flushSync(() => {
-      localStorage.removeItem("printString");
-      localStorage.setItem("dataString", JSON.stringify([]));
-      localStorage.setItem("paper-width", "8.5in");
-      localStorage.setItem("paper-height", "11in");
-      localStorage.setItem("module", "cash-disbursement-check");
-      localStorage.setItem(
-        "state",
-        JSON.stringify({
-          checkDate: rowItm[7],
-          Payto: rowItm[10],
-          credit: rowItm[5],
-        })
-      );
-      localStorage.setItem("column", JSON.stringify([]));
-      localStorage.setItem(
-        "title",
-        user?.department === "UMIS"
-          ? "UPWARD MANAGEMENT INSURANCE SERVICES\n"
-          : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.\n"
-      );
-    });
-    window.open("/dashboard/print", "_blank");
   }
   function deleteRow(rowIdx: any) {
     const isConfim = window.confirm(`Are you sure you want to delete?`);
@@ -634,7 +548,6 @@ export default function CashDisbursement() {
       return;
     }
   }
-
   const handleOnSave = useCallback(() => {
     if (state.refNo === "") {
       return Swal.fire({
@@ -736,7 +649,6 @@ export default function CashDisbursement() {
     getTotalCredit,
     getTotalDebit,
   ]);
-
   function resetRowField() {
     if (refCode.current) {
       refCode.current.value = "";
@@ -789,7 +701,6 @@ export default function CashDisbursement() {
     tableRef.current.setSelectedRow(null);
     tableRef.current.resetCheckBox();
   }
-
   function SumbitRow() {
     if (!refCode.current) {
       return alert("Account Code is required");
@@ -991,6 +902,35 @@ export default function CashDisbursement() {
       }
     });
   }
+   // Search Cash Disbursement
+  const {
+    UpwardTableModalSearch: SearchCashDisbursementUpwardTableModalSearch,
+    openModal: searchCashDisbursementOpenModal,
+    closeModal: searchCashDisbursementCloseModal,
+  } = useUpwardTableModalSearchSafeMode({
+    size: "medium",
+    link: "/task/accounting/cash-disbursement/search-cash-disbursement",
+    column: [
+      { key: "Date_Entry", label: "Date", width: 100 },
+      { key: "Source_No", label: "Ref No.", width: 130 },
+      {
+        key: "Explanation",
+        label: "Explanation",
+        width: 350,
+      },
+    ],
+    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
+      if (rowItm) {
+        wait(100).then(() => {
+          getSearchSelectedCashDisbursement({
+            Source_No: rowItm[1],
+          });
+          setCashDMode("update");
+        });
+        searchCashDisbursementCloseModal();
+      }
+    },
+  });
   // chart of account Search
   const {
     UpwardTableModalSearch: ChartAccountUpwardTableModalSearch,
@@ -1221,9 +1161,9 @@ export default function CashDisbursement() {
               columnGap: "5px",
             }}
           >
-            {isLoadingSearchCashDisbursement ? (
+            {/* {isLoadingSearchCashDisbursement ? (
               <LoadingButton loading={isLoadingSearchCashDisbursement} />
-            ) : (
+            ) : ( */}
               <TextInput
                 label={{
                   title: "Search: ",
@@ -1239,7 +1179,7 @@ export default function CashDisbursement() {
                   onKeyDown: (e) => {
                     if (e.key === "Enter" || e.key === "NumpadEnter") {
                       e.preventDefault();
-                      openSearchCashDisbursement(e.currentTarget.value);
+                      searchCashDisbursementOpenModal(e.currentTarget.value);
                     }
                     if (e.key === "ArrowDown") {
                       e.preventDefault();
@@ -1251,9 +1191,22 @@ export default function CashDisbursement() {
                   },
                   style: { width: "500px" },
                 }}
+                icon={
+                  <SearchIcon
+                    sx={{
+                      fontSize: "18px",
+                    }}
+                  />
+                }
+                onIconClick={(e) => {
+                  e.preventDefault();
+                  if (refCode.current) {
+                    chartAccountOpenModal(refCode.current.value);
+                  }
+                }}
                 inputRef={inputSearchRef}
               />
-            )}
+            {/* )} */}
 
             {cashDMode === "" && (
               <Button
@@ -2154,62 +2107,75 @@ export default function CashDisbursement() {
             }
           }}
           ActionComponent={({ selectedRowIndex, closeModal, rowItm }: any) => {
-            return (
-              <div
-                style={{
-                  flex: 1,
-                  background: "#F1F1F1",
-                  padding: "10px",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Button
-                  autoFocus={rowItm[0] === "1.01.10"}
-                  disabled={rowItm[0] !== "1.01.10"}
-                  variant="contained"
-                  color="success"
-                  sx={{
-                    height: "20px",
-                    width: "120px",
-                    marginBottom: "5px",
-                    fontSize: "10px",
-                  }}
-                  onClick={() => {
-                    printRow(rowItm);
+            
+            if (rowItm) {
+              return (
+                <div
+                  style={{
+                    flex: 1,
+                    background: "#F1F1F1",
+                    padding: "10px",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
-                  Print
-                </Button>
-                <Button
-                  autoFocus={rowItm[0] !== "1.01.10"}
-                  variant="contained"
-                  color="error"
-                  sx={{
-                    height: "20px",
-                    width: "120px",
-                    marginBottom: "5px",
-                    fontSize: "10px",
-                  }}
-                  onClick={() => {
-                    deleteRow(selectedRowIndex);
-                    closeModal();
-                  }}
-                >
-                  Delete
-                </Button>
-              </div>
-            );
+                  <Button
+                    autoFocus={rowItm[0] === "1.01.10"}
+                    disabled={rowItm[0] !== "1.01.10"}
+                    variant="contained"
+                    color="success"
+                    sx={{
+                      height: "20px",
+                      width: "120px",
+                      marginBottom: "5px",
+                      fontSize: "10px",
+                    }}
+                    onClick={() => {
+                      // printRow(rowItm);
+                      closeModal();
+
+                      mutatePrint({
+                        check: true,
+                        Source_No: state.refNo,
+                        checkDate:rowItm[7],
+                        Payto: rowItm[10],
+                        credit: rowItm[5],
+                      });
+                    }}
+                  >
+                    Print
+                  </Button>
+                  <Button
+                    autoFocus={rowItm[0] !== "1.01.10"}
+                    variant="contained"
+                    color="error"
+                    sx={{
+                      height: "20px",
+                      width: "120px",
+                      marginBottom: "5px",
+                      fontSize: "10px",
+                    }}
+                    onClick={() => {
+                      deleteRow(selectedRowIndex);
+                      closeModal();
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              );
+            }
+            return null;
           }}
         />
-        {ModalSearchCashDisbursement}
       </div>
       <ChartAccountUpwardTableModalSearch />
       <PayToUpwardTableModalSearch />
       <ClientUpwardTableModalSearch />
       <TransactionAccountUpwardTableModalSearch />
+      <SearchCashDisbursementUpwardTableModalSearch />
     </>
   );
 }

@@ -580,12 +580,12 @@ export default function FixedAssets() {
                   {subAccountData?.data.subAccount.map(
                     (item: {
                       Sub_Acct: string;
-                      NewShortName: string;
+                      ShortName: string;
                       Acronym: string;
                     }) => {
                       return (
                         <MenuItem key={item.Sub_Acct} value={item.Sub_Acct}>
-                          {item.NewShortName}
+                          {item.ShortName}
                         </MenuItem>
                       );
                     }

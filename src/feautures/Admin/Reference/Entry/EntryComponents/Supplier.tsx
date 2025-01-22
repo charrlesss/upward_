@@ -375,7 +375,7 @@ export default function Supplier() {
               }}
               InputProps={{
                 style: { height: "27px", fontSize: "14px" },
-                className: "manok"
+                className: "manok",
               }}
               sx={{
                 width: "500px",
@@ -410,7 +410,9 @@ export default function Supplier() {
                   }}
                   onClick={() => {
                     refetchSupplierId();
-                    handleInputChange({ target: { value: "add", name: "mode" } });
+                    handleInputChange({
+                      target: { value: "add", name: "mode" },
+                    });
                   }}
                 >
                   New
@@ -674,7 +676,7 @@ export default function Supplier() {
                 )}
               </Box>
               <Box sx={{ display: "flex", gap: "15px", marginTop: "10px" }}>
-                <TextField
+                {/* <TextField
                   type="email"
                   name="email"
                   label="Email"
@@ -691,8 +693,8 @@ export default function Supplier() {
                     ".MuiFormLabel-root": { fontSize: "14px" },
                     ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
                   }}
-                />
-                <TextField
+                /> */}
+                {/* <TextField
                   name="mobile"
                   label="Mobile Number"
                   size="small"
@@ -710,10 +712,29 @@ export default function Supplier() {
                     ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
                   }}
                   placeholder="(+63) 000-000-0000"
-                />
+                /> */}
                 <TextField
+                  InputProps={{
+                    style: { height: "27px", fontSize: "14px" },
+                  }}
+                  sx={{
+                    width: "200px",
+                    height: "27px",
+                    ".MuiFormLabel-root": { fontSize: "14px" },
+                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                  }}
+                  type="text"
                   name="telephone"
-                  label="Telephone Number"
+                  label="Contact Number"
+                  size="small"
+                  value={state.telephone}
+                  onChange={handleInputChange}
+                  disabled={state.mode === ""}
+                  required
+                />
+                {/* <TextField
+                  name="telephone"
+                  label="Contact Number"
                   size="small"
                   value={state.telephone}
                   onChange={handleInputChange}
@@ -729,7 +750,7 @@ export default function Supplier() {
                     ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
                   }}
                   placeholder="0000-0000"
-                />
+                /> */}
                 {subAccountLoading ? (
                   <LoadingButton loading={subAccountLoading} />
                 ) : (
@@ -738,7 +759,7 @@ export default function Supplier() {
                     required
                     size="small"
                     sx={{
-                      flex: 1,
+                      width: "200px",
                       ".MuiFormLabel-root": {
                         fontSize: "14px",
                         background: "white",
@@ -770,12 +791,12 @@ export default function Supplier() {
                       {subAccountData?.data.subAccount.map(
                         (item: {
                           Sub_Acct: string;
-                          NewShortName: string;
+                          ShortName: string;
                           Acronym: string;
                         }) => {
                           return (
                             <MenuItem key={item.Sub_Acct} value={item.Sub_Acct}>
-                              {item.NewShortName}
+                              {item.ShortName}
                             </MenuItem>
                           );
                         }
@@ -783,26 +804,25 @@ export default function Supplier() {
                     </Select>
                   </FormControl>
                 )}
+                <TextField
+                  type="address"
+                  name="address"
+                  label="Address"
+                  size="small"
+                  value={state.address}
+                  onChange={handleInputChange}
+                  disabled={state.mode === ""}
+                  InputProps={{
+                    style: { height: "27px", fontSize: "14px" },
+                  }}
+                  sx={{
+                    flex: 1,
+                    height: "27px",
+                    ".MuiFormLabel-root": { fontSize: "14px" },
+                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                  }}
+                />
               </Box>
-              <TextField
-                type="address"
-                name="address"
-                label="Address"
-                size="small"
-                value={state.address}
-                onChange={handleInputChange}
-                disabled={state.mode === ""}
-                InputProps={{
-                  style: { height: "27px", fontSize: "14px" },
-                }}
-                sx={{
-                  marginTop: "10px",
-                  width: "100%",
-                  height: "27px",
-                  ".MuiFormLabel-root": { fontSize: "14px" },
-                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                }}
-              />
             </div>
           </Box>
         </form>
@@ -820,7 +840,6 @@ export default function Supplier() {
               handleInputChange({ target: { value: "edit", name: "mode" } });
 
               setNewStateValue(dispatch, rowSelected[0]);
-
             } else {
               setNewStateValue(dispatch, initialState);
               handleInputChange({ target: { value: "", name: "mode" } });
