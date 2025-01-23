@@ -31,7 +31,7 @@ import NotInterestedIcon from "@mui/icons-material/NotInterested";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DatePicker } from "@mui/x-date-pickers";
-import { brown, deepOrange, grey } from "@mui/material/colors";
+import { blue, brown, deepOrange, grey } from "@mui/material/colors";
 import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
@@ -472,6 +472,41 @@ export default function GeneralJournal() {
           refRemarks.current?.focus();
         });
         TransactionAccountCloseModal();
+      }
+    },
+  });
+
+ // print
+  const { mutate: mutatePrint, isLoading: isLoadingPrint } = useMutation({
+    mutationKey: "print",
+    mutationFn: async (variables: any) => {
+      return await myAxios.post("/task/accounting/general-journal/print", variables, {
+        responseType: "arraybuffer",
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      });
+    },
+    onSuccess: (response) => {
+      const pdfBlob = new Blob([response.data], { type: "application/pdf" });
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      // window.open(pdfUrl);
+      var newTab = window.open();
+      if (newTab) {
+        newTab.document.write("<!DOCTYPE html>");
+        newTab.document.write(
+          "<html><head><title>New Tab with iframe</title></head>"
+        );
+        newTab.document.write(
+          '<body style="width:100vw;height:100vh;padding:0;margin:0;box-sizing:border-box;">'
+        );
+        newTab.document.write(
+          `<iframe style="border:none;outline:none;padding:0;margin:0" src="${pdfUrl}" width="99%" height="99%"></iframe>`
+        );
+
+        newTab.document.write("</body></html>");
+        // Optional: Close the document stream after writing
+        newTab.document.close();
       }
     },
   });
@@ -1010,7 +1045,6 @@ export default function GeneralJournal() {
       balance: "0.00",
     });
   }
-
   useEffect(() => {
     const handleKeyDown = (event: any) => {
       if ((event.ctrlKey || event.metaKey) && event.key === "s") {
@@ -1024,14 +1058,12 @@ export default function GeneralJournal() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [handleOnSave]);
-
   function formatNumber(Amount: number) {
     return Amount.toLocaleString("en-US", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
   }
-
   async function DoRPTTransactionNILHN() {
     setLoadingJob(true);
     setOpenJobs(false);
@@ -1142,7 +1174,8 @@ export default function GeneralJournal() {
       {(loadingGetSearchSelectedGeneralJournal ||
         loadingJob ||
         loadingGeneralJournalMutate ||
-        loadingVoidGeneralJournalMutate) && <Loading />}
+        loadingVoidGeneralJournalMutate ||
+        isLoadingPrint) && <Loading />}
       <div
         style={{
           display: "flex",
@@ -1306,6 +1339,44 @@ export default function GeneralJournal() {
                 backgroundColor: grey[600],
                 "&:hover": {
                   backgroundColor: grey[700],
+                },
+              }}
+            >
+              Print
+            </Button>
+            <Button
+              disabled={modeDefault}
+              id="basic-button"
+              aria-haspopup="true"
+              onClick={()=>{
+                const data = table.current.getData();
+                const generalJournal: any = data.map((itm: any) => {
+                  return {
+                    code: itm[0],
+                    acctName: itm[1],
+                    subAcctName: itm[2],
+                    ClientName: itm[3],
+                    debit: itm[4],
+                    credit: itm[5],
+                    TC_Code: itm[6],
+                    remarks: itm[7],
+                    vatType: itm[8],
+                    invoice: itm[9],
+                    TempID: itm[10],
+                    IDNo: itm[11],
+                    BranchCode: itm[12],
+                  };
+                });
+
+                mutatePrint({generalJournal})
+              }}
+              sx={{
+                height: "30px",
+                fontSize: "11px",
+                color: "white",
+                backgroundColor: blue[600],
+                "&:hover": {
+                  backgroundColor: blue[700],
                 },
               }}
             >

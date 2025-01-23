@@ -479,7 +479,6 @@ export default function PostDateChecks() {
       });
     },
     onSuccess: (response) => {
-      console.log(response);
 
       const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
       const pdfUrl = URL.createObjectURL(pdfBlob);

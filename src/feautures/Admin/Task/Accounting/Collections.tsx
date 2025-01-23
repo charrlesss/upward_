@@ -459,7 +459,6 @@ export default function Collection() {
     },
   });
 
-
   const { isLoading: NewORNoLoading, refetch: refetchNewOR } = useQuery({
     queryKey: queryKeyNewORNumber,
     queryFn: async () =>
@@ -521,18 +520,36 @@ export default function Collection() {
       });
     },
   });
-  const { mutate: mutataPrint, isLoading: isLoadingPrint } = useMutation({
-    mutationKey: "on-print",
+  const { mutate: mutatePrint, isLoading: isLoadingPrint } = useMutation({
+    mutationKey: "print",
     mutationFn: async (variables: any) => {
-      return await myAxios.post("/task/accounting/on-print", variables, {
+      return await myAxios.post("/task/accounting/print-or", variables, {
+        responseType: "arraybuffer",
         headers: {
           Authorization: `Bearer ${user?.accessToken}`,
         },
       });
     },
-    onSuccess: (res) => {
-      if (res.data.success) {
-        printOR(res.data);
+    onSuccess: (response) => {
+      const pdfBlob = new Blob([response.data], { type: "application/pdf" });
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      // window.open(pdfUrl);
+      var newTab = window.open();
+      if (newTab) {
+        newTab.document.write("<!DOCTYPE html>");
+        newTab.document.write(
+          "<html><head><title>New Tab with iframe</title></head>"
+        );
+        newTab.document.write(
+          '<body style="width:100vw;height:100vh;padding:0;margin:0;box-sizing:border-box;">'
+        );
+        newTab.document.write(
+          `<iframe style="border:none;outline:none;padding:0;margin:0" src="${pdfUrl}" width="99%" height="99%"></iframe>`
+        );
+
+        newTab.document.write("</body></html>");
+        // Optional: Close the document stream after writing
+        newTab.document.close();
       }
     },
   });
@@ -565,8 +582,8 @@ export default function Collection() {
       });
       debitTable.current.setData(debitTableData);
       debitTable.current.setSelectedRow(null);
-      debitTable.current.resetCheckBox()
-      debitTable.current.resetCheckBox()
+      debitTable.current.resetCheckBox();
+      debitTable.current.resetCheckBox();
       setTotalDebit(
         debitTableData.reduce(
           (sum: any, subArray: any) =>
@@ -667,7 +684,7 @@ export default function Collection() {
         debitTableData[getSelectedRow][12] = bankRefName;
         debitTable.current.setData(debitTableData);
         debitTable.current.setSelectedRow(null);
-        debitTable.current.resetCheckBox()
+        debitTable.current.resetCheckBox();
         setTotalDebit(
           debitTableData.reduce(
             (sum: any, subArray: any) =>
@@ -784,7 +801,7 @@ export default function Collection() {
 
       creditTable.current.setData(creditTableData);
       creditTable.current.setSelectedRow(null);
-      creditTable.current.resetCheckBox()
+      creditTable.current.resetCheckBox();
       setTotalCredit(
         creditTableData.reduce(
           (sum: any, subArray: any) =>
@@ -1088,9 +1105,6 @@ export default function Collection() {
       });
     }
   }
-  function handleOnPrint() {
-    if (ornoRef.current) mutataPrint({ ORNo: ornoRef.current.value });
-  }
   function handleOnClose() {
     Swal.fire({
       title: "Are you sure?",
@@ -1107,30 +1121,8 @@ export default function Collection() {
       }
     });
   }
-  function printOR(res: any) {
-    const data = res.data.concat(res.data1);
-    console.log(res);
-    flushSync(() => {
-      localStorage.removeItem("printString");
-      localStorage.setItem("dataString", JSON.stringify(data));
-      localStorage.setItem("paper-width", "8.5in");
-      localStorage.setItem("paper-height", "11in");
-      localStorage.setItem("module", "collection");
-      if (user?.department === "UMIS") {
-        localStorage.setItem(
-          "title",
-          user?.department === "UMIS"
-            ? "UPWARD MANAGEMENT INSURANCE SERVICES"
-            : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC."
-        );
-      } else {
-        localStorage.setItem(
-          "title",
-          "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC."
-        );
-      }
-    });
-    window.open("/dashboard/print", "_blank");
+  function handleOnPrint() {
+    if (ornoRef.current) mutatePrint({ ORNo: ornoRef.current.value });
   }
 
   return (
@@ -1154,14 +1146,14 @@ export default function Collection() {
         }}
         handleOnClose={() => {
           debitTable.current.setSelectedRow(null);
-          debitTable.current.resetCheckBox()
+          debitTable.current.resetCheckBox();
           buttonCheckSave.current?.focus();
         }}
       />
 
-      {(loadingAddNew || isLoadingPrint || loadingCollectionDataSearch) && (
-        <Loading />
-      )}
+      {(loadingAddNew ||
+        isLoadingPrint ||
+        loadingCollectionDataSearch) && <Loading />}
 
       <div
         style={{
@@ -1234,6 +1226,7 @@ export default function Collection() {
           >
             <LocalPrintshopIcon />
           </IconButton>
+      
           <IconButton
             disabled={disableFields}
             aria-label="print"
@@ -1567,7 +1560,7 @@ export default function Collection() {
                     });
                   } else {
                     if (rowItm[7] && rowItm[7] !== "") {
-                      debitTable.current.resetCheckBox()
+                      debitTable.current.resetCheckBox();
                       debitTable.current.setSelectedRow(null);
                       buttonCheckSave.current?.focus();
                       return alert(
@@ -1575,7 +1568,7 @@ export default function Collection() {
                       );
                     }
                     if (rowItm[8] && rowItm[8] !== "") {
-                      debitTable.current.resetCheckBox()
+                      debitTable.current.resetCheckBox();
                       debitTable.current.setSelectedRow(null);
                       buttonCheckSave.current?.focus();
                       return alert(
@@ -1776,7 +1769,7 @@ export default function Collection() {
                     accTCRef.current = "";
                     foaIDNoRef.current = "";
                     transactionRef.current?.focus();
-                    creditTable.current.resetCheckBox()
+                    creditTable.current.resetCheckBox();
                     creditTable.current.setSelectedRow(null);
                   });
                 }}
