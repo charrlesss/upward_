@@ -28,7 +28,7 @@ export const DataGridViewReact = forwardRef(
       isTableSelectable: _isTableSelectable = true,
       containerStyle,
       focusElementOnMaxTop,
-      ActionComponent,
+      ActionComponent = ()=> <></>,
     }: any,
     ref
   ) => {
@@ -133,20 +133,23 @@ export const DataGridViewReact = forwardRef(
 
     const handleRightClick = (event: any, idx: number) => {
       event.preventDefault(); // Prevent the default context menu from appearing
-      if ( idx === selectedRowIndex) {
+      if (idx === selectedRowIndex) {
         actionModalRef.current.showModal();
       }
     };
 
     return (
       <>
-        <ActionModal ref={actionModalRef}>
-          <ActionComponent  
-            selectedRowIndex={selectedRowIndex} 
-            closeModal={()=>actionModalRef.current.closeDelay()} 
-            rowItm={data[selectedRowIndex]}
-          />
-        </ActionModal>
+        <ActionModal
+          ref={actionModalRef}
+          Component={
+            <ActionComponent
+              selectedRowIndex={selectedRowIndex}
+              closeModal={() => actionModalRef.current.closeDelay()}
+              rowItm={data[selectedRowIndex]}
+            />
+          }
+        />
         <div
           ref={parentElementRef}
           style={{
@@ -512,7 +515,7 @@ const CheckBoxSelection = forwardRef(
 );
 
 const ActionModal = forwardRef(
-  ({ handleOnSave, handleOnClose, hasSelectedRow ,children }: any, ref) => {
+  ({ handleOnSave, handleOnClose, hasSelectedRow, Component }: any, ref) => {
     const [showModal, setShowModal] = useState(false);
     const [handleDelayClose, setHandleDelayClose] = useState(false);
     const [blick, setBlick] = useState(false);
@@ -573,14 +576,13 @@ const ActionModal = forwardRef(
             position: "absolute",
             left: "50%",
             top: "50%",
-            transform:"translate(-50%, -75%)",
+            transform: "translate(-50%, -75%)",
             display: "flex",
             flexDirection: "column",
             zIndex: handleDelayClose ? -100 : 100,
             opacity: handleDelayClose ? 0 : 1,
             transition: "all 150ms",
             boxShadow: "3px 6px 32px -7px rgba(0,0,0,0.75)",
-           
           }}
         >
           <div
@@ -592,7 +594,6 @@ const ActionModal = forwardRef(
               padding: "5px",
               position: "relative",
               alignItems: "center",
-
             }}
           >
             <span style={{ fontSize: "13px", fontWeight: "bold" }}>Action</span>
@@ -615,7 +616,7 @@ const ActionModal = forwardRef(
               <CloseIcon sx={{ fontSize: "22px" }} />
             </button>
           </div>
-          {children}
+          {Component}
           <style>
             {`
               .btn-check-exit-modal:hover{
@@ -1064,7 +1065,7 @@ export const DataGridViewMultiSelectionReact = forwardRef(
               }
 
             #upward-cutom-table-multi tr.multi-selected-item td {
-                background-color: rgba(84, 84, 82, 0.2) !important;
+                background-color: rgba(232, 232, 226, 0.99) !important;
                 border-right:1px solid white !important;
                 border-bottom:1px solid white !important;
               }

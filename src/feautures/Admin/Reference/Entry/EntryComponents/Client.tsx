@@ -898,7 +898,7 @@ export default function Client() {
         }}
       >
         <DataGridViewReact
-          height="350px"
+          height="340px"
           ref={tableRef}
           rows={[]}
           columns={[

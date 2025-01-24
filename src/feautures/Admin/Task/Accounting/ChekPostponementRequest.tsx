@@ -12,6 +12,7 @@ import { wait } from "@testing-library/user-event/dist/utils";
 import { addMonths, differenceInDays, format } from "date-fns";
 import { Loading } from "../../../../components/Loading";
 import Swal from "sweetalert2";
+import PageHelmet from "../../../../components/Helmet";
 
 const columns = [
     { key: "ln", label: "#", width: 40 },
@@ -547,6 +548,7 @@ export default function ChekPostponementRequest() {
             background: "#F1F1F1",
             height: "100%"
         }}>
+                  <PageHelmet title="Check Postponement Request" />
             {(isLoadingCheckIsPending || isLoadingSave || isLoadingLoadRPCDNoDetails || isLoadingEdit) && <Loading />}
             {/* ===========  first field  =========== */}
             <div

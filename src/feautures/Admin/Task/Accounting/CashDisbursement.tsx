@@ -42,7 +42,6 @@ import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import { Loading } from "../../../../components/Loading";
 import SearchIcon from "@mui/icons-material/Search";
 
-
 const initialState = {
   sub_refNo: "",
   refNo: "",
@@ -372,12 +371,30 @@ export default function CashDisbursement() {
     onSuccess: (res) => {
       const response = res as any;
       if (response.data.success) {
-        resetAll();
         return Swal.fire({
           position: "center",
           icon: "success",
           title: response.data.message,
           timer: 1500,
+        }).then(() => {
+            Swal.fire({
+              text: "Do you want to print it?",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Yes, print it!",
+            }).then((result) => {
+              if (result.isConfirmed) {
+                mutatePrint({
+                  check: false,
+                  Source_No: state.refNo,
+                });
+
+                wait(100).then(() => {
+                  resetAll();
+                });
+              }
+            });
         });
       }
       return Swal.fire({
@@ -902,7 +919,7 @@ export default function CashDisbursement() {
       }
     });
   }
-   // Search Cash Disbursement
+  // Search Cash Disbursement
   const {
     UpwardTableModalSearch: SearchCashDisbursementUpwardTableModalSearch,
     openModal: searchCashDisbursementOpenModal,
@@ -1164,48 +1181,48 @@ export default function CashDisbursement() {
             {/* {isLoadingSearchCashDisbursement ? (
               <LoadingButton loading={isLoadingSearchCashDisbursement} />
             ) : ( */}
-              <TextInput
-                label={{
-                  title: "Search: ",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "50px",
-                  },
-                }}
-                input={{
-                  className: "search-input-up-on-key-down",
-                  type: "search",
-                  onKeyDown: (e) => {
-                    if (e.key === "Enter" || e.key === "NumpadEnter") {
-                      e.preventDefault();
-                      searchCashDisbursementOpenModal(e.currentTarget.value);
-                    }
-                    if (e.key === "ArrowDown") {
-                      e.preventDefault();
-                      const datagridview = document.querySelector(
-                        ".grid-container"
-                      ) as HTMLDivElement;
-                      datagridview.focus();
-                    }
-                  },
-                  style: { width: "500px" },
-                }}
-                icon={
-                  <SearchIcon
-                    sx={{
-                      fontSize: "18px",
-                    }}
-                  />
-                }
-                onIconClick={(e) => {
-                  e.preventDefault();
-                  if (refCode.current) {
-                    chartAccountOpenModal(refCode.current.value);
+            <TextInput
+              label={{
+                title: "Search: ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "50px",
+                },
+              }}
+              input={{
+                className: "search-input-up-on-key-down",
+                type: "search",
+                onKeyDown: (e) => {
+                  if (e.key === "Enter" || e.key === "NumpadEnter") {
+                    e.preventDefault();
+                    searchCashDisbursementOpenModal(e.currentTarget.value);
                   }
-                }}
-                inputRef={inputSearchRef}
-              />
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    const datagridview = document.querySelector(
+                      ".grid-container"
+                    ) as HTMLDivElement;
+                    datagridview.focus();
+                  }
+                },
+                style: { width: "500px" },
+              }}
+              icon={
+                <SearchIcon
+                  sx={{
+                    fontSize: "18px",
+                  }}
+                />
+              }
+              onIconClick={(e) => {
+                e.preventDefault();
+                if (refCode.current) {
+                  chartAccountOpenModal(refCode.current.value);
+                }
+              }}
+              inputRef={inputSearchRef}
+            />
             {/* )} */}
 
             {cashDMode === "" && (
@@ -2107,7 +2124,6 @@ export default function CashDisbursement() {
             }
           }}
           ActionComponent={({ selectedRowIndex, closeModal, rowItm }: any) => {
-            
             if (rowItm) {
               return (
                 <div
@@ -2139,7 +2155,7 @@ export default function CashDisbursement() {
                       mutatePrint({
                         check: true,
                         Source_No: state.refNo,
-                        checkDate:rowItm[7],
+                        checkDate: rowItm[7],
                         Payto: rowItm[10],
                         credit: rowItm[5],
                       });

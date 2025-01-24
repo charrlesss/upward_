@@ -36,6 +36,7 @@ import {
 import { useUpwardTableModalSearchSafeMode } from "../../../../../../../components/DataGridViewReact";
 import { Loading } from "../../../../../../../components/Loading";
 import { wait } from "../../../../../../../lib/wait";
+import PageHelmet from "../../../../../../../components/Helmet";
 
 export default function VehiclePolicy() {
   const { user, myAxios } = useContext(AuthContext);
@@ -71,6 +72,8 @@ export default function VehiclePolicy() {
         flexDirection: "column",
       }}
     >
+      <PageHelmet title="Vehicle Policy" />
+
       {policy === "COM" ? (
         <COMPolicy
           user={user}
@@ -311,7 +314,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
               confirmButtonColor: "#3085d6",
               cancelButtonColor: "#d33",
               confirmButtonText: "Yes, cencel it!",
-              cancelButtonText:"No"
+              cancelButtonText: "No",
             }).then((result) => {
               if (result.isConfirmed) {
                 if (policyType === "COM") {
@@ -544,7 +547,7 @@ const COMRegular = forwardRef(
         }
       },
     });
-    
+
     const {
       UpwardTableModalSearch: AgentUpwardTableModalSearch,
       openModal: agentOpenModal,
@@ -2376,10 +2379,10 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
               confirmButtonColor: "#3085d6",
               cancelButtonColor: "#d33",
               confirmButtonText: "Yes, cencel it!",
-              cancelButtonText:"No"
+              cancelButtonText: "No",
             }).then((result) => {
               if (result.isConfirmed) {
-                  regularPolicyRef.current?.resetFields();
+                regularPolicyRef.current?.resetFields();
                 setMode("");
               }
             });

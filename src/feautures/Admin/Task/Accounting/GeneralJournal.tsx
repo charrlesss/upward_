@@ -139,8 +139,6 @@ export default function GeneralJournal() {
   const refTC = useRef<HTMLInputElement>(null);
   const refRemarks = useRef<HTMLInputElement>(null);
 
-
-
   const refVat = useRef<HTMLSelectElement>(null);
   const refInvoice = useRef<HTMLInputElement>(null);
 
@@ -234,7 +232,31 @@ export default function GeneralJournal() {
             confirmButtonText: "Yes, print it!",
           }).then((result) => {
             if (result.isConfirmed) {
-              handleClickPrint();
+              const data = table.current.getData();
+              const generalJournal: any = data.map((itm: any) => {
+                return {
+                  code: itm[0],
+                  acctName: itm[1],
+                  subAcctName: itm[2],
+                  ClientName: itm[3],
+                  debit: itm[4],
+                  credit: itm[5],
+                  TC_Code: itm[6],
+                  remarks: itm[7],
+                  vatType: itm[8],
+                  invoice: itm[9],
+                  TempID: itm[10],
+                  IDNo: itm[11],
+                  BranchCode: itm[12],
+                };
+              });
+
+              mutatePrint({
+                JVNo: refRefNo.current?.value,
+                JVDate: refDate.current?.value,
+                JVExp: refExplanation.current?.value,
+                generalJournal,
+              });
             }
             wait(100).then(() => {
               resetFieldRef();
@@ -476,16 +498,20 @@ export default function GeneralJournal() {
     },
   });
 
- // print
+  // print
   const { mutate: mutatePrint, isLoading: isLoadingPrint } = useMutation({
     mutationKey: "print",
     mutationFn: async (variables: any) => {
-      return await myAxios.post("/task/accounting/general-journal/print", variables, {
-        responseType: "arraybuffer",
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      });
+      return await myAxios.post(
+        "/task/accounting/general-journal/print",
+        variables,
+        {
+          responseType: "arraybuffer",
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }
+      );
     },
     onSuccess: (response) => {
       const pdfBlob = new Blob([response.data], { type: "application/pdf" });
@@ -879,8 +905,7 @@ export default function GeneralJournal() {
           if (isUpdate) {
             newData[getSelectedRow] = newInput;
             table.current.setSelectedRow(null);
-            table.current.resetCheckBox(null)
-
+            table.current.resetCheckBox(null);
           } else {
             newData[newData.length] = newInput;
           }
@@ -911,61 +936,7 @@ export default function GeneralJournal() {
   function handleJobs() {
     setOpenJobs((d) => !d);
   }
-  function handleClickPrint() {
-    flushSync(() => {
-      const data = table.current.getData();
-      const generalJournal: any = data.map((itm: any) => {
-        return {
-          code: itm[0],
-          acctName: itm[1],
-          subAcctName: itm[2],
-          ClientName: itm[3],
-          debit: itm[4],
-          credit: itm[5],
-          TC_Code: itm[6],
-          remarks: itm[7],
-          vatType: itm[8],
-          invoice: itm[9],
-          TempID: itm[10],
-          IDNo: itm[11],
-          BranchCode: itm[12],
-        };
-      });
-      console.log(generalJournal);
-
-      localStorage.removeItem("printString");
-      localStorage.setItem("dataString", JSON.stringify(generalJournal));
-      localStorage.setItem("paper-width", "8.5in");
-      localStorage.setItem("paper-height", "11in");
-      localStorage.setItem("module", "general-journal");
-      localStorage.setItem(
-        "state",
-        JSON.stringify({
-          JVNo: refRefNo.current?.value,
-          JVDate: refDate.current?.value,
-          JVExp: refExplanation.current?.value,
-        })
-      );
-      localStorage.setItem(
-        "column",
-        JSON.stringify([
-          { datakey: "code", header: "ACCT #", width: "70px" },
-          { datakey: "acctName", header: "ACCOUNT TITLE", width: "130px" },
-          { datakey: "IDNo", header: "ID NO.", width: "110px" },
-          { datakey: "ClientName", header: "IDENTITY", width: "200px" },
-          { datakey: "debit", header: "DEBIT", width: "75px" },
-          { datakey: "credit", header: "CREDIT", width: "75px" },
-        ])
-      );
-      localStorage.setItem(
-        "title",
-        user?.department === "UMIS"
-          ? "UPWARD MANAGEMENT INSURANCE SERVICES\n"
-          : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.\n"
-      );
-    });
-    window.open("/dashboard/print", "_blank");
-  }
+ 
   function onCancel() {
     resetFieldRef();
     resetRowFieldRef();
@@ -1327,28 +1298,12 @@ export default function GeneralJournal() {
             >
               Jobs
             </LoadingButton>
+     
             <Button
               disabled={modeDefault}
               id="basic-button"
               aria-haspopup="true"
-              onClick={handleClickPrint}
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-                color: "white",
-                backgroundColor: grey[600],
-                "&:hover": {
-                  backgroundColor: grey[700],
-                },
-              }}
-            >
-              Print
-            </Button>
-            <Button
-              disabled={modeDefault}
-              id="basic-button"
-              aria-haspopup="true"
-              onClick={()=>{
+              onClick={() => {
                 const data = table.current.getData();
                 const generalJournal: any = data.map((itm: any) => {
                   return {
@@ -1368,15 +1323,20 @@ export default function GeneralJournal() {
                   };
                 });
 
-                mutatePrint({generalJournal})
+                mutatePrint({
+                  JVNo: refRefNo.current?.value,
+                  JVDate: refDate.current?.value,
+                  JVExp: refExplanation.current?.value,
+                  generalJournal,
+                });
               }}
               sx={{
                 height: "30px",
                 fontSize: "11px",
                 color: "white",
-                backgroundColor: blue[600],
+                backgroundColor: grey[600],
                 "&:hover": {
-                  backgroundColor: blue[700],
+                  backgroundColor: grey[700],
                 },
               }}
             >
@@ -1694,45 +1654,45 @@ export default function GeneralJournal() {
               }}
               inputRef={refCredit}
             />
-          <TextInput
-                label={{
-                  title: "TC : ",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "100px",
-                  },
-                }}
-                input={{
-                  disabled: modeDefault,
-                  type: "text",
-                  style: { width: "190px" },
-                  onKeyDown: (e) => {
-                    if (e.key === "Enter" || e.key === "NumpadEnter") {
-                      e.preventDefault();
-                      if (refTC.current) {
-                        TransactionAccountOpenModal(e.currentTarget.value);
-                      }
+            <TextInput
+              label={{
+                title: "TC : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
+              }}
+              input={{
+                disabled: modeDefault,
+                type: "text",
+                style: { width: "190px" },
+                onKeyDown: (e) => {
+                  if (e.key === "Enter" || e.key === "NumpadEnter") {
+                    e.preventDefault();
+                    if (refTC.current) {
+                      TransactionAccountOpenModal(e.currentTarget.value);
                     }
-                  },
-                }}
-                inputRef={refTC}
-                icon={
-                  <AccountBalanceWalletIcon
-                    sx={{
-                      fontSize: "18px",
-                      color: modeDefault ? "gray" : "black",
-                    }}
-                  />
-                }
-                onIconClick={(e) => {
-                  e.preventDefault();
-                  if (refTC.current) {
-                    TransactionAccountOpenModal(refTC.current.value);
                   }
-                }}
-                disableIcon={modeDefault}
-              />
+                },
+              }}
+              inputRef={refTC}
+              icon={
+                <AccountBalanceWalletIcon
+                  sx={{
+                    fontSize: "18px",
+                    color: modeDefault ? "gray" : "black",
+                  }}
+                />
+              }
+              onIconClick={(e) => {
+                e.preventDefault();
+                if (refTC.current) {
+                  TransactionAccountOpenModal(refTC.current.value);
+                }
+              }}
+              disableIcon={modeDefault}
+            />
             <TextInput
               label={{
                 title: "Remarks : ",
@@ -2075,8 +2035,6 @@ export default function GeneralJournal() {
     </>
   );
 }
-
-
 
 const ID_Entry = `
 SELECT 

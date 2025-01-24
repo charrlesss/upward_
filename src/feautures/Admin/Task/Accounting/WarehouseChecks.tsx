@@ -17,6 +17,7 @@ import { useMutation, useQuery } from "react-query";
 import { AuthContext } from "../../../../components/AuthContext";
 import { Loading } from "../../../../components/Loading";
 import { wait } from "@testing-library/user-event/dist/utils";
+import PageHelmet from "../../../../components/Helmet";
 
 const warehouseColumn = [
   { key: "PNo", label: "PN No.", width: 150 },
@@ -433,6 +434,7 @@ export default function WarehouseChecks() {
       padding: "10px",
       flex: 1,
     }}>
+        <PageHelmet title="Treasury" />
       <UpwardTableModalSearchPNNo />
       <UpwardTableModalSearchData />
       <UpwardTableModalSearchBank />

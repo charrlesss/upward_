@@ -728,13 +728,7 @@ export default function Deposit() {
                   e.preventDefault();
                   depositOpenModal(inputSearchRef.current?.value);
                 }
-                if (e.key === "ArrowDown") {
-                  e.preventDefault();
-                  const datagridview = document.querySelector(
-                    ".grid-container"
-                  ) as HTMLDivElement;
-                  datagridview.focus();
-                }
+         
               },
               style: { width: "500px" },
             }}
