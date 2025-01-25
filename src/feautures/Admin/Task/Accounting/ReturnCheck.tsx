@@ -1,5 +1,5 @@
 import { Button } from "@mui/material";
-import { TextInput } from "../../../../components/UpwardFields";
+import { SelectInput, TextInput } from "../../../../components/UpwardFields";
 import { LoadingButton } from "@mui/lab";
 import { wait } from "../../../../lib/wait";
 import Swal from "sweetalert2";
@@ -14,6 +14,7 @@ import {
   useImperativeHandle,
   useContext,
   useEffect,
+  useId,
 } from "react";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import { format } from "date-fns";
@@ -24,6 +25,7 @@ import {
 import { useMutation } from "react-query";
 import { AuthContext } from "../../../../components/AuthContext";
 import { Loading } from "../../../../components/Loading";
+import { ContentContainer } from "./Collections";
 
 export default function ReturnCheck() {
   const [mode, setMode] = useState("");
@@ -72,7 +74,6 @@ export default function ReturnCheck() {
                   e.preventDefault();
                   // depositOpenModal(inputSearchRef.current?.value);
                 }
-           
               },
               style: { width: "500px" },
             }}
@@ -147,6 +148,7 @@ export default function ReturnCheck() {
             flexDirection: "column",
             rowGap: "10px",
             border: "1px solid #64748b",
+            marginBottom: "10px",
           }}
         >
           <div
@@ -219,10 +221,13 @@ export default function ReturnCheck() {
 }
 
 const TabPage = forwardRef((props: any, ref) => {
-  const [activeTab, setActiveTab] = useState(0); // Track the active tab index
+  const [activeTab, setActiveTab] = useState(0);
+  const [buttonPosition, setButtonPosition] = useState<any>({});
+  const buttonsRef = useRef<Array<HTMLButtonElement | null>>([]);
   const refSelectCheck = useRef<any>(null);
   const refSelectedCheckToBeReturned = useRef<any>(null);
   const refAccountingEntry = useRef<any>(null);
+
   const tabs = [
     {
       id: 0,
@@ -240,6 +245,10 @@ const TabPage = forwardRef((props: any, ref) => {
       content: <AccountingEntry ref={refAccountingEntry} />,
     },
   ];
+
+  useEffect(() => {
+    setButtonPosition(buttonsRef.current[0]?.getBoundingClientRect());
+  }, []);
 
   useImperativeHandle(ref, () => ({
     test: () => {
@@ -259,22 +268,45 @@ const TabPage = forwardRef((props: any, ref) => {
     >
       {/* Tab Buttons */}
       <div style={{ display: "flex" }}>
-        {tabs.map((tab) => (
+        {tabs.map((tab, index) => (
           <button
+            ref={(el) => (buttonsRef.current[index] = el)}
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={(el) => {
+              setActiveTab(tab.id);
+              setButtonPosition(el.currentTarget.getBoundingClientRect());
+            }}
             style={{
               width: "auto",
               fontSize: "11px",
               padding: "10px",
               cursor: "pointer",
-              backgroundColor: activeTab === tab.id ? "#007BFF" : "#f9f9f9",
-              color: activeTab === tab.id ? "#fff" : "#000",
+              backgroundColor: activeTab === tab.id ? "white" : "transparent",
+              color: activeTab === tab.id ? "#0074cc" : "#000",
               border: "none",
-              borderRight: tab.id === 0 ? "none" : "1px solid #64748b",
-              borderLeft: tab.id === 2 ? "none" : "1px solid #64748b",
-              borderBottom:
-                activeTab === tab.id ? "2px solid #007BFF" : "2px solid #ccc",
+              borderRight:
+                activeTab === tab.id
+                  ? tab.id === 0
+                    ? "none"
+                    : "1px solid #0074cc"
+                  : tab.id === 0
+                  ? "none"
+                  : "1px solid #64748b",
+              borderLeft:
+                activeTab === tab.id
+                  ? tab.id === 2
+                    ? "none"
+                    : "1px solid #0074cc"
+                  : tab.id === 2
+                  ? "none"
+                  : "1px solid #64748b",
+              borderTop:
+                activeTab === tab.id
+                  ? "1px solid #0074cc"
+                  : "1px solid #64748b",
+
+              // borderBottom:
+              //   activeTab === tab.id ? "2px solid #007BFF" : "2px solid #ccc",
               textTransform: "uppercase",
               fontWeight: "bold",
             }}
@@ -288,11 +320,32 @@ const TabPage = forwardRef((props: any, ref) => {
       <div
         style={{
           padding: "7px",
-          borderTop: "none",
           flex: 1,
           display: "flex",
+          // borderTop: "2px solid #007BFF",
+          position: "relative",
         }}
       >
+        <div
+          style={{
+            position: "absolute",
+            top: "-2px",
+            left: 0,
+            width: `${(buttonPosition?.left as number) - 5 || 0}px`,
+            height: "1px",
+            background: "#64748b",
+          }}
+        ></div>
+        <div
+          style={{
+            position: "absolute",
+            top: "-2px",
+            right: 0,
+            left: `${(buttonPosition?.right as number) - 5 || 0}px`,
+            height: "1px",
+            background: "#64748b",
+          }}
+        ></div>
         {tabs.map((tab) => (
           <div
             key={tab.id}
@@ -344,6 +397,8 @@ const SelectCheck = forwardRef((props: any, ref) => {
     },
   }));
 
+
+
   return (
     <div
       style={{
@@ -374,8 +429,8 @@ const SelectCheck = forwardRef((props: any, ref) => {
               });
             }
           },
-          onChange:(e)=>{
-            if(e.target.value === ''){
+          onChange: (e) => {
+            if (e.target.value === "") {
               mutateCheckSelectedRef.current({
                 search: "",
               });
@@ -455,9 +510,16 @@ const SelectCheck = forwardRef((props: any, ref) => {
           getSelectedItem={(rowItm: any) => {
             if (rowItm) {
               wait(100).then(() => {
-                console.log(rowItm)
-                modalReturnCheckEntriesRef.current.showModal()
-                modalReturnCheckEntriesRef.current.setcheckNo(rowItm[2])
+                modalReturnCheckEntriesRef.current.showModal();
+                modalReturnCheckEntriesRef.current.setRefs({
+                  checkNo: rowItm[2],
+                  amount: rowItm[4],
+                });
+                modalReturnCheckEntriesRef.current.mutateEntries({
+                  ORNo: rowItm[6],
+                  Account_No: rowItm[8],
+                });
+                modalReturnCheckEntriesRef.current.selectItem(rowItm);
               });
             } else {
               wait(100).then(() => {});
@@ -475,14 +537,16 @@ const SelectCheck = forwardRef((props: any, ref) => {
           }}
         />
       </div>
-      <ModalReturnCheckEntries 
-      ref={modalReturnCheckEntriesRef}
-      handleOnSave={()=>{
+      <ModalReturnCheckEntries
+        ref={modalReturnCheckEntriesRef}
+        handleConfirm={(e:any,itm:Array<any>) => {
+          console.log(itm)
+        }}
+        handleCancel ={(e:any) => {
+          table.current.setSelectedRow(null)
+          table.current.resetCheckBox()
 
-      }}
-      handleOnClose={()=>{
-        
-      }}
+        }}
       />
     </div>
   );
@@ -690,22 +754,82 @@ const AccountingEntry = forwardRef((props: any, ref) => {
   );
 });
 
-
 const ModalReturnCheckEntries = forwardRef(
-  ({ handleOnSave, handleOnClose, hasSelectedRow }: any, ref) => {
+  ({ handleConfirm, handleCancel, hasSelectedRow }: any, ref) => {
+    const { user, myAxios } = useContext(AuthContext);
+    const table = useRef<any>(null);
     const [showModal, setShowModal] = useState(false);
     const [handleDelayClose, setHandleDelayClose] = useState(false);
+    const [selectedItem, setSelectedItem] = useState([]);
     const [blick, setBlick] = useState(false);
-    const [checkNo, setcheckNo] = useState('');
+    const [checkNo, setcheckNo] = useState("");
+    // return details
+    const refReturnReason = useRef<HTMLSelectElement>(null);
+    const refDateReturned = useRef<HTMLInputElement>(null);
+
+    // credit entry
+    const refAccountName = useRef<HTMLInputElement>(null);
+    const refAmount = useRef<HTMLInputElement>(null);
+    const refAccountId = useRef<HTMLInputElement>(null);
+    const refSubAccount = useRef<HTMLInputElement>(null);
+
+    const refAccountID = useRef("");
+    const refAcronym = useRef("");
+
+    const { isLoading: isLoadingEntries, mutate: mutateEntries } = useMutation({
+      mutationKey: "load-details",
+      mutationFn: async (variable: any) =>
+        await myAxios.post(
+          `/task/accounting//return-check/load-entries`,
+          variable,
+          {
+            headers: {
+              Authorization: `Bearer ${user?.accessToken}`,
+            },
+          }
+        ),
+      onSuccess(res) {
+        const dt1 = res.data.dt1;
+        const dt2 = res.data.dt2;
+        if (dt1.length > 0) {
+          if (refAccountId.current) {
+            refAccountId.current.value = dt1[0].IDNo;
+          }
+          if (refAccountName.current) {
+            refAccountName.current.value = dt1[0].Short;
+          }
+          if (refSubAccount.current) {
+            refSubAccount.current.value = "Head Office";
+          }
+          refAcronym.current = 'HO'
+          refAccountID.current = dt1[0].Account_ID;
+        }
+        if (dt2.length > 0) {
+          const data = dt2.map((itm:any)=>{
+            return {
+              CRCode:itm.CRCode,
+              CRTitle:itm.CRTitle,
+              Credit:itm.Credit,
+              CRLoanID:itm.CRLoanID,
+              CRLoanName:itm.CRLoanName,
+              SAcctCode:"HO",
+              SAcctName:"Head Office",
+            }
+          })
+          table.current.setDataFormated(data)
+        }
+      },
+    });
 
     const closeDelay = () => {
       setHandleDelayClose(true);
       setTimeout(() => {
         setShowModal(false);
         setHandleDelayClose(false);
-        handleOnClose();
+        handleCancel();
       }, 100);
     };
+
     useImperativeHandle(ref, () => ({
       showModal: () => {
         setShowModal(true);
@@ -714,20 +838,30 @@ const ModalReturnCheckEntries = forwardRef(
         setShowModal(false);
       },
       getRefs: () => {
-        const refs = {
-      
-        };
+        const refs = {};
         return refs;
       },
-      setcheckNo:(_checkNo:string)=>{
-        setcheckNo(_checkNo)
+      selectItem:(itm:any)=>{
+        setSelectedItem(itm)
+      },
+      setRefs: (props: any) => {
+        setcheckNo(props.checkNo);
+        wait(100).then(() => {
+          if (refAmount.current) refAmount.current.value = props.amount;
+          if (refReturnReason.current) refReturnReason.current.value = "DAIF";
+        });
+      },
+      mutateEntries: (variables: string) => {
+        mutateEntries(variables);
       },
       closeDelay,
     }));
 
+ 
 
     return showModal ? (
       <>
+        {isLoadingEntries && <Loading />}
         <div
           style={{
             position: "fixed",
@@ -747,12 +881,12 @@ const ModalReturnCheckEntries = forwardRef(
         ></div>
         <div
           style={{
-            height: blick ? "202px" : "200px",
+            height: blick ? "402px" : "400px",
             width: blick ? "60.3%" : "60%",
             border: "1px solid #64748b",
             position: "absolute",
             left: "50%",
-            top: "50%",
+            top: "35%",
             transform: "translate(-50%, -75%)",
             display: "flex",
             flexDirection: "column",
@@ -801,9 +935,426 @@ const ModalReturnCheckEntries = forwardRef(
               background: "#F1F1F1",
               padding: "5px",
               display: "flex",
+              flexDirection: "column",
             }}
           >
-        
+            <div
+              style={{
+                display: "flex",
+                columnGap: "5px",
+                height: "auto",
+              }}
+            >
+              <div
+                style={{
+                  height: "auto",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "10px",
+                  rowGap: "20px",
+                }}
+              >
+                <div
+                  style={{
+                    height: "auto",
+                    padding: "10px",
+                    display: "flex",
+                    width: "100%",
+                    border: "1px solid #64748b",
+                    position: "relative",
+                  }}
+                >
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: "-15px",
+                      left: "20px",
+                      background: "#F1F1F1",
+                      padding: "0 5px",
+                      fontSize: "14px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Return Detail
+                  </span>
+                  <div
+                    style={{
+                      display: "flex",
+                      columnGap: "50px",
+                    }}
+                  >
+                    <SelectInput
+                      containerStyle={{ width: "100%" }}
+                      label={{
+                        title: "Return Reason : ",
+                        style: {
+                          fontSize: "12px",
+                          fontWeight: "bold",
+                          width: "100px",
+                        },
+                      }}
+                      selectRef={refReturnReason}
+                      select={{
+                        style: { flex: 1, height: "22px" },
+                       defaultValue:""
+                      }}
+                      datasource={[
+                        { key: "DAIF", value: "DAIF" },
+                        { key: "DAUD", value: "DAUD" },
+                        { key: "Account Closed", value: "Account Closed" },
+                        { key: "SPO", value: "SPO" },
+                      ]}
+                      values={"value"}
+                      display={"key"}
+                    />
+                    {/* <TextInput
+                      label={{
+                        title: "Return Reason : ",
+                        style: {
+                          fontSize: "12px",
+                          fontWeight: "bold",
+                          width: "100px",
+                        },
+                      }}
+                      input={{
+                        className: "ref_no",
+                        type: "text",
+                        style: { width: "200px" },
+                      }}
+                      inputRef={refReturnReason}
+                    /> */}
+                    <TextInput
+                      label={{
+                        title: "Return Date : ",
+                        style: {
+                          fontSize: "12px",
+                          fontWeight: "bold",
+                          width: "100px",
+                        },
+                      }}
+                      input={{
+                        defaultValue: format(new Date(), "yyyy-MM-dd"),
+                        className: "date",
+                        type: "date",
+                        style: { width: "200px" },
+                      }}
+                      inputRef={refDateReturned}
+                    />
+                  </div>
+                </div>
+                <div
+                  style={{
+                    height: "auto",
+                    padding: "10px",
+                    display: "flex",
+                    width: "100%",
+                    border: "1px solid #64748b",
+                    position: "relative",
+                  }}
+                >
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: "-15px",
+                      left: "20px",
+                      background: "#F1F1F1",
+                      padding: "0 5px",
+                      fontSize: "14px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Credit Entry
+                  </span>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      rowGap: "10px",
+                      height: "auto",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        columnGap: "50px",
+                      }}
+                    >
+                      <TextInput
+                        label={{
+                          title: "Account Name : ",
+                          style: {
+                            fontSize: "12px",
+                            fontWeight: "bold",
+                            width: "100px",
+                          },
+                        }}
+                        input={{
+                          readOnly: true,
+                          className: "ref_no",
+                          type: "text",
+                          style: { width: "200px" },
+                        }}
+                        inputRef={refAccountName}
+                      />
+                      <TextInput
+                        label={{
+                          title: "Account ID : ",
+                          style: {
+                            fontSize: "12px",
+                            fontWeight: "bold",
+                            width: "100px",
+                          },
+                        }}
+                        input={{
+                          readOnly: true,
+                          className: "account-id",
+                          type: "text",
+                          style: { width: "200px" },
+                        }}
+                        inputRef={refAccountId}
+                      />
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        columnGap: "50px",
+                      }}
+                    >
+                      <TextInput
+                        label={{
+                          title: "Amount : ",
+                          style: {
+                            fontSize: "12px",
+                            fontWeight: "bold",
+                            width: "100px",
+                          },
+                        }}
+                        input={{
+                          readOnly: true,
+                          className: "ref_no",
+                          type: "text",
+                          style: { width: "200px" },
+                        }}
+                        inputRef={refAmount}
+                      />
+                      <TextInput
+                        label={{
+                          title: "Sub Account : ",
+                          style: {
+                            fontSize: "12px",
+                            fontWeight: "bold",
+                            width: "100px",
+                          },
+                        }}
+                        input={{
+                          readOnly: true,
+                          className: "sub-account",
+                          type: "text",
+                          style: { width: "200px" },
+                        }}
+                        inputRef={refSubAccount}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                style={{
+                  width: "100px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  rowGap: "20px",
+                  height: "auto",
+                }}
+              >
+                <BlinkingButton
+                  style={{
+                    width: "80px",
+                    height: "50px",
+                    border: "1px solid #153002",
+                    fontSize: "12px",
+                    padding: 0,
+                    margin: 0,
+                    boxSizing: "border-box",
+                    background: "#8fbc8b",
+                    color: "black",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    fontFamily: "arial",
+                    cursor: "pointer",
+                    position: "relative",
+                  }}
+                  onClick={(e:any) => {
+                    // alert('Accept')
+                    handleConfirm(e ,selectedItem)
+                    closeDelay()
+                  }}
+                >
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: "2px",
+                    }}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="22px"
+                      height="22px"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <path
+                        d="M8.5 12.5L10.5 14.5L15.5 9.5"
+                        stroke="white"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M7 3.33782C8.47087 2.48697 10.1786 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 10.1786 2.48697 8.47087 3.33782 7"
+                        stroke="#a5e15b"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </span>
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: "25px",
+                    }}
+                  >
+                    Accept
+                  </span>
+                </BlinkingButton>
+                <BlinkingButton
+                  style={{
+                    width: "80px",
+                    height: "50px",
+                    border: "1px solid #153002",
+                    fontSize: "12px",
+                    padding: 0,
+                    margin: 0,
+                    boxSizing: "border-box",
+                    background: "#8fbc8b",
+                    color: "black",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    fontFamily: "arial",
+                    cursor: "pointer",
+                    position: "relative",
+                  }}
+                  onClick={(e:any) => {
+                    handleCancel(e)
+                    closeDelay()
+                  }}
+                >
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: "2px",
+                    }}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="red"
+                      width="21px"
+                      height="21px"
+                      viewBox="0 0 36 36"
+                      version="1.1"
+                      preserveAspectRatio="xMidYMid meet"
+                    >
+                      <title>ban-line</title>
+                      <path
+                        className="clr-i-outline clr-i-outline-path-1"
+                        d="M18,2A16,16,0,1,0,34,18,16,16,0,0,0,18,2ZM4,18A13.93,13.93,0,0,1,7.43,8.85L27.15,28.57A14,14,0,0,1,4,18Zm24.57,9.15L8.85,7.43A14,14,0,0,1,28.57,27.15Z"
+                      />
+                      <rect
+                        x="0"
+                        y="0"
+                        width="36"
+                        height="36"
+                        fillOpacity="0"
+                      />
+                    </svg>
+                  </span>
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: "25px",
+                    }}
+                  >
+                    Cancel
+                  </span>
+                </BlinkingButton>
+              </div>
+            </div>
+            <div
+              style={{
+                flex: 1,
+              }}
+            >
+              <DataGridViewReact
+                ref={table}
+                columns={[
+                  { key: "CRCode", label: "Code", width: 90 },
+                  { key: "CRTitle", label: "Account Name", width: 200 },
+                  {
+                    key: "Credit",
+                    label: "Amount",
+                    width: 110,
+                  },
+                  {
+                    key: "CRLoanID",
+                    label: "ID No",
+                    width: 200,
+                  },
+                  {
+                    key: "CRLoanName",
+                    label: "Identity",
+                    width: 200,
+                  },
+                  {
+                    key: "SAcctCode",
+                    label: "Sub Account",
+                    width: 100,
+                  },
+                  {
+                    key: "SAcctName",
+                    label: "Sub Account Name",
+                    width: 200,
+                  },
+                ]}
+                rows={[]}
+                containerStyle={{
+                  height: "200px",
+                  flex: 1,
+                }}
+                getSelectedItem={(rowItm: any) => {
+                  if (rowItm) {
+                    wait(100).then(() => {});
+                  } else {
+                    wait(100).then(() => {});
+                  }
+                }}
+                onKeyDown={(rowItm: any, rowIdx: any, e: any) => {
+                  if (e.code === "Delete" || e.code === "Backspace") {
+                    const isConfim = window.confirm(
+                      `Are you sure you want to delete?`
+                    );
+                    if (isConfim) {
+                      return;
+                    }
+                  }
+                }}
+              />
+            </div>
           </div>
           <style>
             {`
@@ -818,6 +1369,65 @@ const ModalReturnCheckEntries = forwardRef(
     ) : null;
   }
 );
+
+const BlinkingButton = ({ onClick, style, children }: any) => {
+  const id = useId();
+  const [isBlinking, setIsBlinking] = useState(false);
+
+  const handleClick = (e: any) => {
+    setIsBlinking(true); // Start blinking
+    setTimeout(() => setIsBlinking(false), 200); // Stop blinking after 1 second
+    onClick(e);
+  };
+
+  return (
+    <>
+      <button
+        className={`${id} ${isBlinking ? "blinking" : ""}`}
+        onClick={handleClick}
+        style={style}
+      >
+        {children}
+      </button>
+      <style>
+        {`
+        .${id} {
+          padding: 10px 20px;
+          font-size: 16px;
+          background-color: #007bff;
+          color: white;
+          border: ${isBlinking ? "2px solid #153002 !important" : "none "};
+          border-radius: 5px;
+          cursor: pointer;
+          transition: background-color 0.3s ease;
+
+        }
+
+        .${id}:hover {
+          background-color: #0056b3;
+        }
+
+        /* Blink animation */
+        @keyframes blink {
+          0% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.5;
+          }
+          100% {
+            opacity: 1;
+          }
+        }
+
+        .blinking {
+          animation: blink 0.5s linear infinite;
+        }
+                `}
+      </style>
+    </>
+  );
+};
 
 // import React, {
 //   useReducer,

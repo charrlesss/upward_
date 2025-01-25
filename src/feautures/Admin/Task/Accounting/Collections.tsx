@@ -2058,7 +2058,7 @@ export default function Collection() {
   );
 }
 
-const ContentContainer = ({
+export const ContentContainer = ({
   firstContent,
   secondContent,
   title,
