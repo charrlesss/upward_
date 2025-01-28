@@ -7,13 +7,7 @@ import React, {
   useImperativeHandle,
   forwardRef,
 } from "react";
-import {
-  Box,
-  Button,
-  IconButton,
-  MenuItem,
-  Menu,
-} from "@mui/material";
+import { Box, Button, IconButton, MenuItem, Menu } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { useMutation, useQuery } from "react-query";
 import Swal from "sweetalert2";
@@ -472,25 +466,30 @@ export default function PostDateChecks() {
     mutationKey: "print",
     mutationFn: async (variables: any) => {
       return await myAxios.post("/task/accounting/print", variables, {
-        responseType: 'arraybuffer',
+        responseType: "arraybuffer",
         headers: {
           Authorization: `Bearer ${user?.accessToken}`,
         },
       });
     },
     onSuccess: (response) => {
-
-      const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
+      const pdfBlob = new Blob([response.data], { type: "application/pdf" });
       const pdfUrl = URL.createObjectURL(pdfBlob);
       // window.open(pdfUrl);
       var newTab = window.open();
       if (newTab) {
-        newTab.document.write('<!DOCTYPE html>');
-        newTab.document.write('<html><head><title>New Tab with iframe</title></head>');
-        newTab.document.write('<body style="width:100vw;height:100vh;padding:0;margin:0;box-sizing:border-box;">');
-        newTab.document.write(`<iframe style="border:none;outline:none;padding:0;margin:0" src="${pdfUrl}" width="99%" height="99%"></iframe>`);
-        
-        newTab.document.write('</body></html>');
+        newTab.document.write("<!DOCTYPE html>");
+        newTab.document.write(
+          "<html><head><title>New Tab with iframe</title></head>"
+        );
+        newTab.document.write(
+          '<body style="width:100vw;height:100vh;padding:0;margin:0;box-sizing:border-box;">'
+        );
+        newTab.document.write(
+          `<iframe style="border:none;outline:none;padding:0;margin:0" src="${pdfUrl}" width="99%" height="99%"></iframe>`
+        );
+
+        newTab.document.write("</body></html>");
         // Optional: Close the document stream after writing
         newTab.document.close();
       }
@@ -590,7 +589,7 @@ export default function PostDateChecks() {
   function resetPDC() {
     setPdcMode("");
     tableRef.current.setSelectedRow(null);
-    tableRef.current.resetCheckBox()
+    tableRef.current.resetCheckBox();
     tableRef.current.setData([]);
     refetchNewRefNumber();
 
@@ -699,6 +698,7 @@ export default function PostDateChecks() {
       ) {
         if (selectedIndex !== null) {
           const selectedRow = tableRef.current.getData();
+
           selectedRow[selectedIndex][0] =
             modalCheckRef.current.getRefs().checknoRef.current.value;
           selectedRow[selectedIndex][1] =
@@ -719,46 +719,72 @@ export default function PostDateChecks() {
             modalCheckRef.current.getRefs()._checkOR.current;
           selectedRow[selectedIndex][9] =
             modalCheckRef.current.getRefs().bankCode.current;
+
           tableRef.current.setData(selectedRow);
           tableRef.current.setSelectedRow(null);
-          tableRef.current.resetCheckBox()
-
+          tableRef.current.resetCheckBox();
           setHasSelectedRow(null);
+          return;
         } else {
-          const newData: any = [];
-          for (
-            let i = 0;
-            i <
+          const checkCount =
             parseInt(
               modalCheckRef.current.getRefs()._checkcountRef.current.value
-            );
-            i++
-          ) {
-            const data: any = {
-              Check_No: incrementStringNumbers(
+            ) <= 0
+              ? 1
+              : parseInt(
+                  modalCheckRef.current.getRefs()._checkcountRef.current.value
+                );
+          const newData: any = [];
+          for (let i = 0; i < checkCount; i++) {
+            // const data: any = {
+            //   Check_No: incrementStringNumbers(
+            //     modalCheckRef.current.getRefs().checknoRef.current.value,
+            //     i
+            //   ),
+            //   Check_Date: incrementDate(
+            //     modalCheckRef.current.getRefs().checkdateRef.current.value,
+            //     i
+            //   ),
+            //   Check_Amnt:
+            //     modalCheckRef.current.getRefs().amountRef.current.value,
+            //   BankName: modalCheckRef.current.getRefs().bankRef.current.value,
+            //   BankCode: modalCheckRef.current.getRefs().bankCode.current,
+            //   Branch: modalCheckRef.current.getRefs().branchRef.current.value,
+            //   Check_Remarks:
+            //     modalCheckRef.current.getRefs().remarksRef.current.value,
+            //   Deposit_Slip:
+            //     modalCheckRef.current.getRefs()._slipCodeRef.current,
+            //   DateDeposit: modalCheckRef.current.getRefs()._slipDateRef.current,
+            //   OR_No: modalCheckRef.current.getRefs()._checkOR.current,
+            // };
+            newData.push([
+              incrementStringNumbers(
                 modalCheckRef.current.getRefs().checknoRef.current.value,
                 i
               ),
-              Check_Date: incrementDate(
+              incrementDate(
                 modalCheckRef.current.getRefs().checkdateRef.current.value,
                 i
               ),
-              Check_Amnt:
-                modalCheckRef.current.getRefs().amountRef.current.value,
-              BankName: modalCheckRef.current.getRefs().bankRef.current.value,
-              BankCode: modalCheckRef.current.getRefs().bankCode.current,
-              Branch: modalCheckRef.current.getRefs().branchRef.current.value,
-              Check_Remarks:
-                modalCheckRef.current.getRefs().remarksRef.current.value,
-              Deposit_Slip:
-                modalCheckRef.current.getRefs()._slipCodeRef.current,
-              DateDeposit: modalCheckRef.current.getRefs()._slipDateRef.current,
-              OR_No: modalCheckRef.current.getRefs()._checkOR.current,
-            };
-            newData.push(data);
+              modalCheckRef.current.getRefs().amountRef.current.value,
+              modalCheckRef.current.getRefs().bankRef.current.value,
+              modalCheckRef.current.getRefs().branchRef.current.value,
+              modalCheckRef.current.getRefs().remarksRef.current.value,
+              modalCheckRef.current.getRefs()._slipCodeRef.current,
+              modalCheckRef.current.getRefs()._slipDateRef.current,
+              modalCheckRef.current.getRefs()._checkOR.current,
+              modalCheckRef.current.getRefs().bankCode.current,
+
+            ]);
           }
-          tableRef.current.setDataFormated(newData);
+          
+          tableRef.current.setData([
+            ...tableRef.current.getData(),
+            ...newData,
+          ]);
         }
+
+     
       }
     }
   }
@@ -788,7 +814,7 @@ export default function PostDateChecks() {
         }}
         handleOnClose={() => {
           tableRef.current.setSelectedRow(null);
-          tableRef.current.resetCheckBox()
+          tableRef.current.resetCheckBox();
 
           // buttonCheckSave.current?.focus();
         }}
@@ -810,7 +836,6 @@ export default function PostDateChecks() {
           backgroundColor: "#F1F1F1",
         }}
       >
-
         <Box
           sx={(theme) => ({
             display: "flex",
@@ -939,7 +964,7 @@ export default function PostDateChecks() {
                       incrementCheckNo(getLastCheck_No?.Check_No);
                   }
                   tableRef.current.setSelectedRow(null);
-                  tableRef.current.resetCheckBox()
+                  tableRef.current.resetCheckBox();
 
                   setHasSelectedRow(null);
                   modalCheckRef.current.getRefs().checknoRef.current?.focus();
@@ -1264,7 +1289,7 @@ export default function PostDateChecks() {
               ) {
                 setHasSelectedRow(null);
                 tableRef.current.setSelectedRow(null);
-                tableRef.current.resetCheckBox()
+                tableRef.current.resetCheckBox();
 
                 return Swal.fire({
                   position: "center",
@@ -1277,6 +1302,7 @@ export default function PostDateChecks() {
               setHasSelectedRow(RowIndex);
               modalCheckRef.current?.showModal();
               wait(100).then(() => {
+                console.log(rowSelected);
                 if (
                   modalCheckRef.current.getRefs().checknoRef.current &&
                   modalCheckRef.current.getRefs().bankRef.current &&
@@ -1322,7 +1348,7 @@ export default function PostDateChecks() {
               ) {
                 setHasSelectedRow(null);
                 tableRef.current.setSelectedRow(null);
-                tableRef.current.resetCheckBox()
+                tableRef.current.resetCheckBox();
 
                 return Swal.fire({
                   position: "center",
@@ -1350,8 +1376,7 @@ export default function PostDateChecks() {
 
                     setHasSelectedRow(null);
                     tableRef.current.setSelectedRow(null);
-                    tableRef.current.resetCheckBox()
-
+                    tableRef.current.resetCheckBox();
                   }, 100);
                 }
               });
@@ -1858,7 +1883,8 @@ const ModalCheck = forwardRef(
                     },
                   }}
                   input={{
-                    defaultValue: "0",
+                    min: 1,
+                    defaultValue: "1",
                     type: "number",
                     style: { width: "200px", textAlign: "right" },
                     onKeyDown: (e) => {
