@@ -13,9 +13,166 @@ import { useUpwardTableModalSearchSafeMode } from "../../../../components/DataGr
 import { wait } from "../../../../lib/wait";
 import { Loading } from "../../../../components/Loading";
 
+const buttons = [
+  { label: "Chart of Accounts", id: 0 },
+  { label: "Schedule of Account", id: 1 },
+  { label: "Subsidiary Ledger", id: 2 },
+  { label: "Trial Balance", id: 3 },
+  { label: "Income Statement -Long", id: 4 },
+  { label: "Balance Sheet -Long", id: 5 },
+  { label: "General edger", id: 6 },
+  { label: "Abstract of Collections", id: 7 },
+  { label: "Deposited Collections", id: 8 },
+  { label: "Returned Checks", id: 9 },
+  { label: "Post Dated Checks Registry", id: 10 },
+  { label: "Petty Cash Fund Disbursement", id: 11 },
+  { label: "Cash Disbursement Book - CDB", id: 12 },
+  { label: "General Journal Book - GJB", id: 13 },
+  { label: "Production Book - PB", id: 14 },
+  { label: "VAT Book - VB", id: 15 },
+  { label: "Aging Account", id: 16 },
+  { label: "Cancel Accounts", id: 17 },
+  { label: "Fully Paid Accounts", id: 18 },
+  { label: "Summary of Expenses", id: 19 },
+  { label: "List of Purchase", id: 20 },
+  { label: "Checklist on Month-End Accrual", id: 21 },
+];
+
 export default function AccountingReport() {
+  const [buttonSelected, setButtonSelected] = useState(1);
+
+  return (
+    <>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flex: 1,
+          height: "100vh",
+          backgroundColor: "#F1F1F1",
+        }}
+      >
+        <div
+          style={{
+            border: "1px solid #94a3b8",
+            width: "600px",
+            height: "450px",
+            display: "flex",
+            flexDirection: "column",
+            rowGap: "10px",
+            padding: "20px",
+            boxShadow: "0px 0px 5px -1px rgba(0,0,0,0.75)",
+          }}
+        >
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              columnGap: "10px",
+            }}
+          >
+            <div
+              style={{
+                width: "250px",
+                background: "white",
+                display: "flex",
+                flexDirection: "column",
+                rowGap: "2px",
+                position: "relative",
+              }}
+            >
+              <span
+                style={{
+                  width: "100%",
+                  textAlign: "center",
+                  fontSize: "12px",
+                  padding: "5px",
+                }}
+              >
+                *** ACCOUNTING ****
+              </span>
+              <div
+                style={{
+                  position: "relative",
+                  width: "100%",
+                  height: "380px",
+                  overflow: "auto",
+                }}
+              >
+                <div
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    position: "absolute",
+                  }}
+                >
+                  {buttons.map((itm, idx) => {
+                    return (
+                      <>
+                        {itm.id === 1 && <div style={{ height: "15px" }}></div>}
+                        {itm.id === 5 && <div style={{ height: "15px" }}></div>}
+                        {itm.id === 9 && <div style={{ height: "15px" }}></div>}
+                        {itm.id === 10 && (
+                          <div style={{ height: "15px" }}></div>
+                        )}
+                        {itm.id === 15 && (
+                          <div style={{ height: "15px" }}></div>
+                        )}
+                        {itm.id === 19 && (
+                          <div style={{ height: "15px" }}></div>
+                        )}
+                        {itm.id === 21 && (
+                          <div style={{ height: "15px" }}></div>
+                        )}
+                        <button
+                          key={idx}
+                          style={{
+                            fontSize: "12px",
+                            border: "none",
+                            background:
+                              buttonSelected === itm.id
+                                ? "#0076d7"
+                                : "transparent",
+                            color:
+                              buttonSelected === itm.id ? "white" : "black",
+                            width: "100%",
+                            textAlign: "left",
+                            cursor: "pointer",
+                          }}
+                          onClick={() => {
+                            setButtonSelected(itm.id);
+                          }}
+                        >
+                          {itm.label}
+                        </button>
+                      </>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+            {buttonSelected === 1 && <FormScheduleAccount />}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function FormScheduleAccount() {
   const { user, myAxios } = useContext(AuthContext);
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(
+    generateTitle({
+      report: "All Accounts",
+      subsiText: "ALL",
+      insuarnceIndex: 0,
+      insurance: "ALL",
+      dateValue: format(new Date(), "MMMM dd, yyyy"),
+      account: "",
+      accountTitle: "",
+    })
+  );
   const [subsi, setSubsi] = useState("I.D No.");
   const [report, setReport] = useState("All Accounts");
   const titleRef = useRef<HTMLTextAreaElement>(null);
@@ -56,20 +213,24 @@ export default function AccountingReport() {
           if (_accountRef.current) {
             _accountRef.current.value = rowItm[1];
           }
-          generateTitle({
-            subsiInsurance: _subsiRef.current?.value,
-            _account: rowItm[1],
-            account: rowItm[0],
-            subsi: subsiRef.current?.selectedIndex,
-            subsiText: subsiTextRef.current?.value,
-            dateValue:dateRef.current?.value,
-            report: report,
-          });
+
+          setTitle(
+            generateTitle({
+              report,
+              subsiText: subsiTextRef.current?.value || "",
+              insuarnceIndex: _subsiRef.current?.selectedIndex,
+              insurance: _subsiRef.current?.value,
+              dateValue: dateRef.current?.value,
+              account: rowItm[0],
+              accountTitle: rowItm[1],
+            })
+          );
         });
         chartAccountCloseModal();
       }
     },
   });
+
   const { isLoading: isLoadingInsurance, mutate: mutateInsurance } =
     useMutation({
       mutationKey: "insurance",
@@ -92,414 +253,447 @@ export default function AccountingReport() {
         }
       },
     });
-
+  const { isLoading: isLoadingGenerateReport, mutate: mutateGenerateReport } =
+    useMutation({
+      mutationKey: "generate-report",
+      mutationFn: async (variable: any) =>
+        await myAxios.post(
+          `/reports/accounting/report/generate-report-schedule-of-account`,
+          variable,
+          {
+            headers: {
+              Authorization: `Bearer ${user?.accessToken}`,
+            },
+          }
+        ),
+      onSuccess(res) {},
+    });
   function generateTitle({
-    subsiInsurance,
-    _account,
-    account,
-    subsi,
-    subsiText,
-    dateValue,
     report,
+    subsiText,
+    insuarnceIndex,
+    insurance,
+    dateValue,
+    account,
+    accountTitle,
   }: any) {
-    wait(100).then(() => {
-      if (report === "GL Account (Detailed)") {
-        let txtReportTitleText = `UPWARD MANAGEMENT INSURANCE SERVICES\n ${subsiInsurance || subsiInsurance === "" || subsiInsurance === "ALL"? "": `(${subsiInsurance})\n`} Schedule of ${_account} ${subsi === 2 ? ` - ${subsiText}` : "" } (${account})\n${format(new Date(dateValue), "MM dd, yyyy")}`;
-        setTitle(txtReportTitleText);
-        return;
-      }
-      if (report === "All Accounts") {
-        let txtReportTitleText = `UPWARD MANAGEMENT INSURANCE SERVICES\n ${subsiInsurance || subsiInsurance === "" || subsiInsurance === "ALL" ? "": `(${subsiInsurance})\n`}Schedule of Accounts\n${format(new Date(dateValue), "MM dd, yyyy")}`;
-        setTitle(txtReportTitleText);
-        return;
-      }
+    if (report === "GL Account (Detailed)") {
+      let txtReportTitleText = `UPWARD MANAGEMENT INSURANCE SERVICES\n ${
+        subsiText === "" || subsiText === "ALL" ? "" : `(${subsiText})\n`
+      }Schedule of ${accountTitle} ${` - ${
+        insurance ? insurance : ""
+      }`} (${account})\n${format(new Date(dateValue), "MMMM dd, yyyy")}`;
+      // setTitle(txtReportTitleText);
+      return txtReportTitleText;
+    }
+    if (report === "All Accounts") {
+      let txtReportTitleText = `UPWARD MANAGEMENT INSURANCE SERVICES\n ${
+        subsiText === "" || subsiText === "ALL" ? "" : `(${subsiText})\n`
+      }Schedule of Accounts\n${format(new Date(dateValue), "MMMM dd, yyyy")}`;
+      // setTitle(txtReportTitleText);
+      return txtReportTitleText;
+    }
+  }
+
+  function generateReport() {
+    mutateGenerateReport({
+      title,
+      account: accountRef.current?.value,
+      accountName: _accountRef.current?.value,
+      subsi: _subsiRef.current?.value,
+      subsiText: subsiTextRef.current?.value,
+      subsiInsruance: _subsiRef.current?.value,
+      date: dateRef.current?.value,
+      sort: sortRef.current?.value,
+      order: orderRef.current?.value,
     });
   }
-  function generateReport() {}
+
   return (
     <>
-      {isLoadingInsurance && <Loading />}
+      {(isLoadingInsurance || isLoadingGenerateReport) && <Loading />}
       <div
         style={{
           display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
           flex: 1,
-          height: "100vh",
-          backgroundColor: "#F1F1F1",
+          flexDirection: "column",
+          padding: "5px",
+          rowGap: "7px",
         }}
       >
+        <TextAreaInput
+          containerStyle={{
+            marginBottom: "10px",
+          }}
+          label={{
+            title: "Title : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "100px",
+              display: "none",
+            },
+          }}
+          textarea={{
+            rows: 7,
+            style: { flex: 1 },
+            value: title,
+            onChange: (e) => {
+              setTitle(e.currentTarget.value);
+            },
+          }}
+          _inputRef={titleRef}
+        />
+        <SelectInput
+          label={{
+            title: "Report :",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "90px",
+            },
+          }}
+          selectRef={reportRef}
+          select={{
+            value: report,
+            style: { width: "calc(100% - 90px)", height: "22px" },
+            defaultValue: "All Accounts",
+            onKeyDown: (e) => {
+              if (e.code === "NumpadEnter" || e.code === "Enter") {
+                e.preventDefault();
+              }
+            },
+            onChange: (e) => {
+              setReport(e.currentTarget.value);
+
+              setTitle(
+                generateTitle({
+                  report: e.currentTarget.value,
+                  subsiText: subsiTextRef.current?.value || "",
+                  insuarnceIndex: _subsiRef.current?.selectedIndex,
+                  insurance: _subsiRef.current?.value,
+                  dateValue: dateRef.current?.value,
+                  account: accountRef.current?.value,
+                  accountTitle: _accountRef.current?.value,
+                })
+              );
+            },
+          }}
+          datasource={[
+            { key: "GL Account (Detailed)" },
+            { key: "All Accounts" },
+          ]}
+          values={"key"}
+          display={"key"}
+        />
+        <TextInput
+          label={{
+            title: "Account : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "90px",
+            },
+          }}
+          input={{
+            disabled: report === "All Accounts",
+            className: "search-input-up-on-key-down",
+            type: "text",
+            value: "7.10.06",
+            onKeyDown: (e) => {
+              if (e.key === "Enter" || e.key === "NumpadEnter") {
+                e.preventDefault();
+                chartAccountOpenModal(e.currentTarget.value);
+              }
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+              }
+            },
+            style: { width: "calc(100% - 90px)" },
+          }}
+          icon={
+            <SearchIcon
+              sx={{
+                fontSize: "18px",
+              }}
+            />
+          }
+          disableIcon={report === "All Accounts"}
+          onIconClick={(e) => {
+            e.preventDefault();
+            if (accountRef.current) {
+              chartAccountOpenModal(accountRef.current.value);
+            }
+          }}
+          inputRef={accountRef}
+        />
+        <TextInput
+          label={{
+            title: "",
+            style: {
+              display: "none",
+            },
+          }}
+          input={{
+            disabled: report === "All Accounts",
+            readOnly: true,
+            defaultValue: "Communications Expense",
+            type: "text",
+            onKeyDown: (e) => {
+              if (e.key === "Enter" || e.key === "NumpadEnter") {
+                e.preventDefault();
+                // searchCashDisbursementOpenModal(e.currentTarget.value);
+              }
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+              }
+            },
+            style: { width: "100%" },
+          }}
+          inputRef={_accountRef}
+        />
+
         <div
           style={{
-            border: "1px solid #94a3b8",
-            width: "600px",
-            height: "450px",
             display: "flex",
-            flexDirection: "column",
-            rowGap: "10px",
-            padding: "20px",
-            boxShadow: "0px 0px 5px -1px rgba(0,0,0,0.75)",
+            columnGap: "6px",
+            alignItems: "center",
           }}
         >
-          <div
-            style={{
-              flex: 1,
-              display: "flex",
+          <SelectInput
+            label={{
+              title: "Subsidiary :",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "90px",
+              },
             }}
-          >
-            <div style={{ width: "250px", border: "1px solid red" }}></div>
-            <div
-              style={{
-                display: "flex",
-                flex: 1,
-                flexDirection: "column",
-                padding: "5px",
-                rowGap: "7px",
-              }}
-            >
-              <TextAreaInput
-                containerStyle={{
-                  marginBottom: "10px",
-                }}
-                label={{
-                  title: "Title : ",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "100px",
-                    display: "none",
-                  },
-                }}
-                textarea={{
-                  rows: 7,
-                  style: { flex: 1 },
-                  value: title,
-                  onChange: (e) => {
-                    setTitle(e.currentTarget.value);
-                  },
-                }}
-                _inputRef={titleRef}
-              />
-              <SelectInput
-                label={{
-                  title: "Report :",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "90px",
-                  },
-                }}
-                selectRef={reportRef}
-                select={{
-                  value: report,
-                  style: { width: "calc(100% - 90px)", height: "22px" },
-                  defaultValue: "All Accounts",
-                  onKeyDown: (e) => {
-                    if (e.code === "NumpadEnter" || e.code === "Enter") {
-                      e.preventDefault();
-                    }
-                  },
-                  onChange: (e) => {
-                    setReport(e.currentTarget.value);
-                    generateTitle({
-                      subsiInsurance: _subsiRef.current?.value,
-                      _account: _accountRef.current?.value,
-                      account: accountRef.current?.value,
-                      subsi: subsiRef.current?.selectedIndex,
-                      subsiText: subsiTextRef.current?.value,
-                      dateValue: dateRef.current?.value,
-                      report: e.currentTarget.value,
-                    });
-                  },
-                }}
-                datasource={[
-                  { key: "GL Account (Detailed)" },
-                  { key: "All Accounts" },
-                ]}
-                values={"key"}
-                display={"key"}
-              />
-              <TextInput
-                label={{
-                  title: "Account : ",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "90px",
-                  },
-                }}
-                input={{
-                  disabled: report === "All Accounts",
-                  className: "search-input-up-on-key-down",
-                  type: "text",
-                  value:"7.10.06",
-                  onKeyDown: (e) => {
-                    if (e.key === "Enter" || e.key === "NumpadEnter") {
-                      e.preventDefault();
-                      chartAccountOpenModal(e.currentTarget.value);
-                    }
-                    if (e.key === "ArrowDown") {
-                      e.preventDefault();
-                    }
-                  },
-                  style: { width: "calc(100% - 90px)" },
-                }}
-                icon={
-                  <SearchIcon
-                    sx={{
-                      fontSize: "18px",
-                    }}
-                  />
-                }
-                disableIcon={report === "All Accounts"}
-                onIconClick={(e) => {
+            selectRef={subsiRef}
+            containerStyle={{ flex: 2 }}
+            select={{
+              style: { flex: 1, height: "22px" },
+              value: subsi,
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
                   e.preventDefault();
-                  if (accountRef.current) {
-                    chartAccountOpenModal(accountRef.current.value);
-                  }
-                }}
-                inputRef={accountRef}
-              />
-              <TextInput
-                label={{
-                  title: "",
-                  style: {
-                    display: "none",
-                  },
-                }}
-                input={{
-                  defaultValue:"Communications Expense",
-                  type: "text",
-                  onKeyDown: (e) => {
-                    if (e.key === "Enter" || e.key === "NumpadEnter") {
-                      e.preventDefault();
-                      // searchCashDisbursementOpenModal(e.currentTarget.value);
-                    }
-                    if (e.key === "ArrowDown") {
-                      e.preventDefault();
-                    }
-                  },
-                  style: { width: "100%" },
-                }}
-                inputRef={_accountRef}
-              />
+                }
+              },
+              onChange: (e) => {
+                if (e.currentTarget.selectedIndex === 2) {
+                  mutateInsurance({});
+                }
 
-              <div
-                style={{
-                  display: "flex",
-                  columnGap: "6px",
-                  alignItems: "center",
-                }}
-              >
-                <SelectInput
-                  label={{
-                    title: "Subsidiary :",
-                    style: {
-                      fontSize: "12px",
-                      fontWeight: "bold",
-                      width: "90px",
-                    },
-                  }}
-                  selectRef={subsiRef}
-                  containerStyle={{ flex: 2 }}
-                  select={{
-                    style: { flex: 1, height: "22px" },
-                    value: subsi,
-                    onKeyDown: (e) => {
-                      if (e.code === "NumpadEnter" || e.code === "Enter") {
-                        e.preventDefault();
-                      }
-                    },
-                    onChange: (e) => {
-                      if (e.currentTarget.selectedIndex === 2) {
-                        mutateInsurance({});
-                      }
-                      setSubsi(e.target.value);
-                    },
-                  }}
-                  datasource={[
-                    { key: "Sub Acct" },
-                    { key: "I.D No." },
-                    { key: "Insurance" },
-                  ]}
-                  values={"key"}
-                  display={"key"}
-                />
-                {subsi !== "Insurance" ? (
-                  <TextInput
-                    containerStyle={{
-                      flex: 1,
-                    }}
-                    label={{
-                      title: "",
-                      style: {
-                        display: "none",
-                      },
-                    }}
-                    input={{
-                      type: "text",
-                      readOnly: true,
-                      defaultValue: "ALL",
-                      onKeyDown: (e) => {
-                        if (e.key === "Enter" || e.key === "NumpadEnter") {
-                          e.preventDefault();
-                          // searchCashDisbursementOpenModal(e.currentTarget.value);
-                        }
-                        if (e.key === "ArrowDown") {
-                          e.preventDefault();
-                        }
-                      },
-                      style: { width: "100px" },
-                    }}
-                    inputRef={subsiTextRef}
-                  />
-                ) : (
-                  <SelectInput
-                    label={{
-                      title: "",
-                      style: {
-                        display: "none",
-                      },
-                    }}
-                    ref={__subsiRef}
-                    selectRef={_subsiRef}
-                    containerStyle={{
-                      flex: 1,
-                    }}
-                    select={{
-                      style: { flex: 1, height: "22px" },
-                      defaultValue: "ALL",
-                      onKeyDown: (e) => {
-                        if (e.code === "NumpadEnter" || e.code === "Enter") {
-                          e.preventDefault();
-                        }
-                      },
-                      onChange: (e) => {
-                        generateTitle({
-                          subsiInsurance: e.currentTarget.value,
-                          _account: _accountRef.current?.value,
-                          account: accountRef.current?.value,
-                          subsi: subsiRef.current?.selectedIndex,
-                          subsiText: subsiTextRef.current?.value,
-                          dateValue: dateRef.current?.value,
-                          report: report,
-                        });
-                      },
-                    }}
-                    datasource={[]}
-                    values={"AccountCode"}
-                    display={"AccountCode"}
-                  />
-                )}
-              </div>
-              <TextInput
-                label={{
-                  title: "Date : ",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "90px",
-                  },
-                }}
-                input={{
-                  type: "date",
-                  defaultValue: format(new Date(), "yyyy-MM-dd"),
-                  onKeyDown: (e) => {
-                    if (e.key === "Enter" || e.key === "NumpadEnter") {
-                      e.preventDefault();
-                      // searchCashDisbursementOpenModal(e.currentTarget.value);
-                    }
-                    if (e.key === "ArrowDown") {
-                      e.preventDefault();
-                    }
-                  },
-                  onChange: (e) => {
+                setTitle(
+                  generateTitle({
+                    report,
+                    subsiText: subsiTextRef.current?.value || "",
+                    insuarnceIndex: _subsiRef.current?.selectedIndex,
+                    insurance: _subsiRef.current?.value,
+                    dateValue: dateRef.current?.value,
+                    account: accountRef.current?.value,
+                    accountTitle: _accountRef.current?.value,
+                  })
+                );
+                setSubsi(e.target.value);
+              },
+            }}
+            datasource={[
+              { key: "Sub Acct" },
+              { key: "I.D No." },
+              { key: "Insurance" },
+            ]}
+            values={"key"}
+            display={"key"}
+          />
+          {subsi !== "Insurance" ? (
+            <TextInput
+              containerStyle={{
+                flex: 1,
+              }}
+              label={{
+                title: "",
+                style: {
+                  display: "none",
+                },
+              }}
+              input={{
+                type: "text",
+                defaultValue: "ALL",
+                onKeyDown: (e) => {
+                  if (e.key === "Enter" || e.key === "NumpadEnter") {
+                    e.preventDefault();
+                    // searchCashDisbursementOpenModal(e.currentTarget.value);
+                  }
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                  }
+                },
+                onChange: (e) => {
+                  setTitle(
                     generateTitle({
-                      subsiInsurance: _subsiRef.current?.value,
-                      _account: _accountRef.current?.value,
+                      report,
+                      subsiText: e.currentTarget.value || "",
+                      insuarnceIndex: _subsiRef.current?.selectedIndex,
+                      insurance: _subsiRef.current?.value,
+                      dateValue: dateRef.current?.value,
                       account: accountRef.current?.value,
-                      subsi: subsiRef.current?.selectedIndex,
-                      subsiText: subsiTextRef.current?.value,
-                      dateValue: e.currentTarget.value,
-                      report: report,
-                    });
-                  },
-                  style: { width: "calc(100% - 90px)" },
-                }}
-                inputRef={dateRef}
-              />
-              <fieldset
-                style={{
-                  border: "1px solid #cbd5e1",
-                  borderRadius: "5px",
-                  position: "relative",
-                  width: "100%",
-                  height: "auto",
-                  margin: "10px 0px",
-                  padding: "15px",
-                  display: "flex",
-                  rowGap: "10px",
-                  flexDirection: "column",
-                }}
-              >
-                <SelectInput
-                  label={{
-                    title: "Sort :",
-                    style: {
-                      fontSize: "12px",
-                      fontWeight: "bold",
-                      width: "90px",
-                    },
-                  }}
-                  selectRef={sortRef}
-                  select={{
-                    style: { width: "calc(100% - 90px)", height: "22px" },
-                    defaultValue: "All Accounts",
-                    onKeyDown: (e) => {
-                      if (e.code === "NumpadEnter" || e.code === "Enter") {
-                        e.preventDefault();
-                      }
-                    },
-                  }}
-                  datasource={[{ key: "Name" }, { key: "Sub Account/I.D No." }]}
-                  values={"key"}
-                  display={"key"}
-                />
-                <SelectInput
-                  label={{
-                    title: "Order :",
-                    style: {
-                      fontSize: "12px",
-                      fontWeight: "bold",
-                      width: "90px",
-                    },
-                  }}
-                  selectRef={orderRef}
-                  select={{
-                    style: { width: "calc(100% - 90px)", height: "22px" },
-                    defaultValue: "All Accounts",
-                    onKeyDown: (e) => {
-                      if (e.code === "NumpadEnter" || e.code === "Enter") {
-                        e.preventDefault();
-                      }
-                    },
-                  }}
-                  datasource={[{ key: "Ascending" }, { key: "Descending" }]}
-                  values={"key"}
-                  display={"key"}
-                />
-              </fieldset>
-              <Button
-                onClick={generateReport}
-                color="success"
-                variant="contained"
-                sx={{ height: "22px", fontSize: "12px", width: "100%" }}
-              >
-                Generate Report
-              </Button>
-            </div>
-          </div>
+                      accountTitle: _accountRef.current?.value,
+                    })
+                  );
+                },
+                style: { width: "100px" },
+              }}
+              inputRef={subsiTextRef}
+            />
+          ) : (
+            <SelectInput
+              label={{
+                title: "",
+                style: {
+                  display: "none",
+                },
+              }}
+              ref={__subsiRef}
+              selectRef={_subsiRef}
+              containerStyle={{
+                flex: 1,
+              }}
+              select={{
+                style: { flex: 1, height: "22px" },
+                defaultValue: "ALL",
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    e.preventDefault();
+                  }
+                },
+                onChange: (e) => {
+                  setTitle(
+                    generateTitle({
+                      report,
+                      subsiText: subsiTextRef.current?.value || "",
+                      insuarnceIndex: e.currentTarget.selectedIndex,
+                      insurance: e.currentTarget.value,
+                      dateValue: dateRef.current?.value,
+                      account: accountRef.current?.value,
+                      accountTitle: _accountRef.current?.value,
+                    })
+                  );
+                },
+              }}
+              datasource={[]}
+              values={"AccountCode"}
+              display={"AccountCode"}
+            />
+          )}
         </div>
+        <TextInput
+          label={{
+            title: "Date : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "90px",
+            },
+          }}
+          input={{
+            type: "date",
+            defaultValue: format(new Date(), "yyyy-MM-dd"),
+            onKeyDown: (e) => {
+              if (e.key === "Enter" || e.key === "NumpadEnter") {
+                e.preventDefault();
+                // searchCashDisbursementOpenModal(e.currentTarget.value);
+              }
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+              }
+            },
+            onChange: (e) => {
+              setTitle(
+                generateTitle({
+                  report,
+                  subsiText: subsiTextRef.current?.value || "",
+                  insuarnceIndex: _subsiRef.current?.selectedIndex,
+                  insurance: _subsiRef.current?.value,
+                  dateValue: e.currentTarget.value,
+                  account: accountRef.current?.value,
+                  accountTitle: _accountRef.current?.value,
+                })
+              );
+            },
+            style: { width: "calc(100% - 90px)" },
+          }}
+          inputRef={dateRef}
+        />
+        <fieldset
+          style={{
+            border: "1px solid #cbd5e1",
+            borderRadius: "5px",
+            position: "relative",
+            width: "100%",
+            height: "auto",
+            margin: "10px 0px",
+            padding: "15px",
+            display: "flex",
+            rowGap: "10px",
+            flexDirection: "column",
+          }}
+        >
+          <SelectInput
+            label={{
+              title: "Sort :",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "90px",
+              },
+            }}
+            selectRef={sortRef}
+            select={{
+              style: { width: "calc(100% - 90px)", height: "22px" },
+              defaultValue: "All Accounts",
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  e.preventDefault();
+                }
+              },
+            }}
+            datasource={[{ key: "Name" }, { key: "Sub Account/I.D No." }]}
+            values={"key"}
+            display={"key"}
+          />
+          <SelectInput
+            label={{
+              title: "Order :",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "90px",
+              },
+            }}
+            selectRef={orderRef}
+            select={{
+              style: { width: "calc(100% - 90px)", height: "22px" },
+              defaultValue: "All Accounts",
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  e.preventDefault();
+                }
+              },
+            }}
+            datasource={[{ key: "Ascending" }, { key: "Descending" }]}
+            values={"key"}
+            display={"key"}
+          />
+        </fieldset>
+        <Button
+          onClick={generateReport}
+          color="success"
+          variant="contained"
+          sx={{ height: "22px", fontSize: "12px", width: "100%" }}
+        >
+          Generate Report
+        </Button>
       </div>
       <ChartAccountUpwardTableModalSearch />
     </>
