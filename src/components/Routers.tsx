@@ -10,67 +10,14 @@ const MasterAdminDashboard = lazy(
 
 const NavigatePrint = lazy(() => import("../feautures/Admin/Navigate-Print"));
 const Claims = lazy(() => import("../feautures/Admin/Task/Claims/Claims"));
-const ClaimsReport = lazy(
-  () => import("../feautures/Admin/Reports/Claims/claims")
-);
+
 const RenewalTemplate = lazy(
   () => import("../feautures/Admin/Template/renewal-template")
 );
-const ScheduleAccount = lazy(
-  () => import("../feautures/Admin/Reports/Accounting/ScheduleAccount")
+const AccountingReport = lazy(
+  () => import("../feautures/Admin/Reports/Accounting/AccountingReport")
 );
-const SubsidiaryLedger = lazy(
-  () => import("../feautures/Admin/Reports/Accounting/SubsidiaryLedger")
-);
-const TrialBalance = lazy(
-  () => import("../feautures/Admin/Reports/Accounting/TrialBalance")
-);
-const IncomeStatementLong = lazy(
-  () => import("../feautures/Admin/Reports/Accounting/IncomeStatementLong")
-);
-const BalanceSheetLong = lazy(
-  () => import("../feautures/Admin/Reports/Accounting/BalanceSheetLong")
-);
-const GeneralLedger = lazy(
-  () => import("../feautures/Admin/Reports/Accounting/GeneralLedger")
-);
-const AbstractCollections = lazy(
-  () => import("../feautures/Admin/Reports/Accounting/AbstractCollections")
-);
-const DepositedCollections = lazy(
-  () => import("../feautures/Admin/Reports/Accounting/DepositedCollections")
-);
-const ReturnedChecks = lazy(
-  () => import("../feautures/Admin/Reports/Accounting/ReturnedChecks")
-);
-const PostDatedChecksRegistry = lazy(
-  () => import("../feautures/Admin/Reports/Accounting/PostDatedChecksRegistry")
-);
-const PettyCashFundDisbursement = lazy(
-  () =>
-    import("../feautures/Admin/Reports/Accounting/PettyCashFundDisbursement")
-);
-const CashDisbursementBook = lazy(
-  () => import("../feautures/Admin/Reports/Accounting/CashDisbursementBook")
-);
-const GeneralJournalBook = lazy(
-  () => import("../feautures/Admin/Reports/Accounting/GeneralJournalBook")
-);
-const ProductionBook = lazy(
-  () => import("../feautures/Admin/Reports/Accounting/ProductionBook")
-);
-const VATBook = lazy(
-  () => import("../feautures/Admin/Reports/Accounting/VATBook")
-);
-const AgingAccounts = lazy(
-  () => import("../feautures/Admin/Reports/Accounting/AgingAccounts")
-);
-const CancelledAccounts = lazy(
-  () => import("../feautures/Admin/Reports/Accounting/CancelledAccounts")
-);
-const FullyPaidAccounts = lazy(
-  () => import("../feautures/Admin/Reports/Accounting/FullyPaidAccounts")
-);
+
 const ProductionReport = lazy(
   () => import("../feautures/Admin/Reports/Production/ProductionReport")
 );
@@ -570,80 +517,8 @@ export default function Routers() {
             element={<RenewalNoticeReport />}
           />
           <Route
-            path="/dashboard/reports/accounting/schedule-account"
-            element={<ScheduleAccount />}
-          />
-          <Route
-            path="/dashboard/reports/accounting/subsidiary-ledger"
-            element={<SubsidiaryLedger />}
-          />
-          <Route
-            path="/dashboard/reports/accounting/trial-balance"
-            element={<TrialBalance />}
-          />
-          <Route
-            path="/dashboard/reports/accounting/income-statement-long"
-            element={<IncomeStatementLong />}
-          />
-          <Route
-            path="/dashboard/reports/accounting/balance-sheet-long"
-            element={<BalanceSheetLong />}
-          />
-          <Route
-            path="/dashboard/reports/accounting/general-ledger"
-            element={<GeneralLedger />}
-          />
-          <Route
-            path="/dashboard/reports/accounting/abstract-collections"
-            element={<AbstractCollections />}
-          />
-          <Route
-            path="/dashboard/reports/accounting/deposited-collections"
-            element={<DepositedCollections />}
-          />
-          <Route
-            path="/dashboard/reports/accounting/returned-checks"
-            element={<ReturnedChecks />}
-          />
-          <Route
-            path="/dashboard/reports/accounting/post-dated-checks-registry"
-            element={<PostDatedChecksRegistry />}
-          />
-          <Route
-            path="/dashboard/reports/accounting/petty-cash-fund-disbursement"
-            element={<PettyCashFundDisbursement />}
-          />
-          <Route
-            path="/dashboard/reports/accounting/cash-disbursement-book"
-            element={<CashDisbursementBook />}
-          />
-          <Route
-            path="/dashboard/reports/accounting/general-journal-book"
-            element={<GeneralJournalBook />}
-          />
-          <Route
-            path="/dashboard/reports/accounting/production-book"
-            element={<ProductionBook />}
-          />
-          <Route
-            path="/dashboard/reports/accounting/vat-book"
-            element={<VATBook />}
-          />
-          <Route
-            path="/dashboard/reports/accounting/aging-accounts"
-            element={<AgingAccounts />}
-          />
-          <Route
-            path="/dashboard/reports/accounting/cancelled-accounts"
-            element={<CancelledAccounts />}
-          />
-          <Route
-            path="/dashboard/reports/accounting/fully-paid-accounts"
-            element={<FullyPaidAccounts />}
-          />
-          <Route
-            path="/dashboard/reports/claims/claims-report"
-            element={<ClaimsReport />}
+            path="/dashboard/reports/accounting/accounting-reports"
+            element={<AccountingReport />}
           />
         </Route>
         <Route path="/dashboard" element={<RenderPage />}>

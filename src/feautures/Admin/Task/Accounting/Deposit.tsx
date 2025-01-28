@@ -145,6 +145,10 @@ const DepositContext = createContext<any>({
 });
 
 export default function Deposit() {
+  const [activeTab, setActiveTab] = useState(0);
+  const [buttonPosition, setButtonPosition] = useState<any>({});
+  const buttonsRef = useRef<Array<HTMLButtonElement | null>>([]);
+
   const cashTable = useRef<any>(null);
   const checkTable = useRef<any>(null);
   const selectedTable = useRef<any>(null);
@@ -670,22 +674,49 @@ export default function Deposit() {
       if (rowItm) {
         wait(100).then(() => {
           if (refBankAcctCode.current)
-            refBankAcctCode.current.value = rowItm[1] ; // selectedRowData[0]?.Account_No;
-          if(refBankAcctName.current)
-            refBankAcctName.current.value = rowItm[2] ; // selectedRowData[0]?.Account_Name;
+            refBankAcctCode.current.value = rowItm[1]; // selectedRowData[0]?.Account_No;
+          if (refBankAcctName.current)
+            refBankAcctName.current.value = rowItm[2]; // selectedRowData[0]?.Account_Name;
 
-          refBankAcctCodeTag.current = rowItm[3];// selectedRowData[0]?.IDNo;
-          refBankAcctNameTag.current = rowItm[4] // selectedRowData[0]?.Desc;
-          refAcctID.current = rowItm[5] //selectedRowData[0]?.Account_ID;
-          refAcctName.current = rowItm[6] //selectedRowData[0]?.Short;
-          refShortName.current = rowItm[7] //selectedRowData[0]?.client_name;
-          refClassification.current = rowItm[8] //selectedRowData[0]?.Sub_Acct;
-          refSubAccount.current = rowItm[9] //selectedRowData[0]?.ShortName;
+          refBankAcctCodeTag.current = rowItm[3]; // selectedRowData[0]?.IDNo;
+          refBankAcctNameTag.current = rowItm[4]; // selectedRowData[0]?.Desc;
+          refAcctID.current = rowItm[5]; //selectedRowData[0]?.Account_ID;
+          refAcctName.current = rowItm[6]; //selectedRowData[0]?.Short;
+          refShortName.current = rowItm[7]; //selectedRowData[0]?.client_name;
+          refClassification.current = rowItm[8]; //selectedRowData[0]?.Sub_Acct;
+          refSubAccount.current = rowItm[9]; //selectedRowData[0]?.ShortName;
         });
         bankCloseModal();
       }
     },
   });
+
+  useEffect(() => {
+    setButtonPosition(buttonsRef.current[0]?.getBoundingClientRect());
+  }, []);
+  
+  const tabs = [
+    {
+      id: 0,
+      label: "Cash Collection",
+      content: <CashCollection />,
+    },
+    {
+      id: 1,
+      label: "Check Collection",
+      content: <CheckCollection />,
+    },
+    {
+      id: 2,
+      label: "Selected Collection",
+      content: <SelectedCollection />,
+    },
+    {
+      id: 3,
+      label: "Collection for Deposit",
+      content: <CollectionForDeposit />,
+    },
+  ];
 
   return (
     <>
@@ -728,7 +759,6 @@ export default function Deposit() {
                   e.preventDefault();
                   depositOpenModal(inputSearchRef.current?.value);
                 }
-         
               },
               style: { width: "500px" },
             }}
@@ -933,7 +963,55 @@ export default function Deposit() {
           ></button>
         </form>
         <br />
-        <div>
+        <div style={{ display: "flex" }}>
+          {tabs.map((tab, index) => (
+            <button
+              ref={(el) => (buttonsRef.current[index] = el)}
+              key={tab.id}
+              onClick={(el) => {
+                setActiveTab(tab.id);
+                setButtonPosition(el.currentTarget.getBoundingClientRect());
+              }}
+              style={{
+                width: "auto",
+                fontSize: "11px",
+                padding: "10px",
+                cursor: "pointer",
+                backgroundColor: activeTab === tab.id ? "white" : "transparent",
+                color: activeTab === tab.id ? "#0074cc" : "#000",
+                border: "none",
+                borderRight:
+                  activeTab === tab.id
+                    ? tab.id === 0
+                      ? "none"
+                      : "1px solid #0074cc"
+                    : tab.id === 0
+                    ? "none"
+                    : "1px solid #64748b",
+                borderLeft:
+                  activeTab === tab.id
+                    ? tab.id === 2
+                      ? "none"
+                      : "1px solid #0074cc"
+                    : tab.id === 2
+                    ? "none"
+                    : "1px solid #64748b",
+                borderTop:
+                  activeTab === tab.id
+                    ? "1px solid #0074cc"
+                    : "1px solid #64748b",
+
+                // borderBottom:
+                //   activeTab === tab.id ? "2px solid #007BFF" : "2px solid #ccc",
+                textTransform: "uppercase",
+                fontWeight: "bold",
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        {/* <div>
           <div style={{ display: "flex" }}>
             {buttons.map((item, idx) => {
               return (
@@ -993,7 +1071,7 @@ export default function Deposit() {
               );
             })}
           </div>
-        </div>
+        </div> */}
         <DepositContext.Provider
           value={{
             cashCollection,
@@ -1027,6 +1105,49 @@ export default function Deposit() {
         >
           <div
             style={{
+              padding: "7px",
+              flex: 1,
+              display: "flex",
+              // borderTop: "2px solid #007BFF",
+              position: "relative",
+              flexDirection: "column",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                top: "-2px",
+                left: 0,
+                width: `${(buttonPosition?.left as number) - 5 || 0}px`,
+                height: "1px",
+                background: "#64748b",
+              }}
+            ></div>
+            <div
+              style={{
+                position: "absolute",
+                top: "-2px",
+                right: 0,
+                left: `${(buttonPosition?.right as number) - 5 || 0}px`,
+                height: "1px",
+                background: "#64748b",
+              }}
+            ></div>
+            {tabs.map((tab) => (
+              <div
+                key={tab.id}
+                style={{
+                  display: activeTab === tab.id ? "flex" : "none", // Show only the active tab
+                  flex: 1,
+                  flexDirection: "column",
+                }}
+              >
+                {tab.content}
+              </div>
+            ))}
+          </div>
+          {/* <div
+            style={{
               display: "flex",
               flexDirection: "column",
               flex: 1,
@@ -1045,7 +1166,7 @@ export default function Deposit() {
             <div style={{ display: currentStepIndex === 3 ? "block" : "none" }}>
               <CollectionForDeposit />
             </div>
-          </div>
+          </div> */}
         </DepositContext.Provider>
 
         {(loadingSearchByDepositSlip ||
@@ -1084,13 +1205,7 @@ export default function Deposit() {
     </>
   );
 }
-function slideAnimation(activeButton: number, idx: number) {
-  if (activeButton === idx) {
-    return "translateX(100%)";
-  } else {
-    return "translateX(0%)";
-  }
-}
+
 function CashCollection() {
   const { cashCollection, setSelectedRows, cashTable, disabledFields } =
     useContext(DepositContext);
@@ -1770,14 +1885,15 @@ const DepositTable = forwardRef(
         <div
           ref={parentElementRef}
           style={{
-            width,
+            width: "100%",
             height,
             overflow: "auto",
             position: "relative",
             pointerEvents: disbaleTable ? "none" : "auto",
             border: disbaleTable ? "2px solid #8c8f8e" : "2px solid #c0c0c0",
             boxShadow: `inset -2px -2px 0 #ffffff, 
-                        inset 2px 2px 0 #808080`,
+                      inset 2px 2px 0 #808080`,
+            background: "#dcdcdc",
           }}
         >
           <div
@@ -1796,16 +1912,20 @@ const DepositTable = forwardRef(
               }}
             >
               <thead>
-                <tr>
+                <tr
+                  style={{
+                    background: "#f0f0f0",
+                  }}
+                >
                   <th
-                    style={{
-                      width: "30px",
-                      border: "none",
-                      position: "sticky",
-                      top: 0,
-                      zIndex: 1,
-                      background: "#f0f0f0",
-                    }}
+                   style={{
+                    width: "30px",
+                    border: "none",
+                    position: "sticky",
+                    top: 0,
+                    zIndex: 1,
+                    background: "#f0f0f0",
+                  }}
                   ></th>
                   {column.map((colItm: any, idx: number) => {
                     return (

@@ -296,6 +296,10 @@ export default function Header() {
           },
         ],
       },
+      {
+        name: "Accounting Report",
+        path: "/dashboard/reports/accounting/accounting-reports",
+      },
     ];
     if (user?.userAccess === "PRODUCTION_ACCOUNTING") {
       return setMenuData([
@@ -406,6 +410,10 @@ export default function Header() {
             },
           ],
         },
+        {
+          name: "Accounting Report",
+          path: "/dashboard/reports/accounting/accounting-reports",
+        },
       ]);
     } else if (user?.userAccess === "ACCOUNTING") {
       return setMenuData([
@@ -490,6 +498,15 @@ export default function Header() {
             {
               name: "Check Postponement Approved",
               path: "/dashboard/task/accounting/check-postponement-approved",
+            },
+          ],
+        },
+        {
+          name: "Accounting Report",
+          subLinks: [
+            {
+              name: "Accounting Report",
+              path: "/dashboard/reports/accounting/accounting-reports",
             },
           ],
         },
@@ -674,7 +691,7 @@ export default function Header() {
               }}
               onClick={openReport}
             >
-              Accounting Report
+              Accounting Report Deskop App
             </span>
           </li>}
         </ul>

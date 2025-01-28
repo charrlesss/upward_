@@ -16,7 +16,6 @@ import { AuthContext } from "../../../../components/AuthContext";
 import { wait } from "../../../../lib/wait";
 import LoadingButton from "@mui/lab/LoadingButton";
 import useQueryModalTable from "../../../../hooks/useQueryModalTable";
-import { flushSync } from "react-dom";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import {
   codeCondfirmationAlert,
