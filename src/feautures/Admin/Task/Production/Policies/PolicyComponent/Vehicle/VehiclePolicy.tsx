@@ -15,7 +15,7 @@ import {
   useImperativeHandle,
 } from "react";
 import { Button, IconButton } from "@mui/material";
-import { green, grey, red } from "@mui/material/colors";
+import { blue, green, grey, red } from "@mui/material/colors";
 import { AuthContext } from "../../../../../../../components/AuthContext";
 import {
   SelectInput,
@@ -160,10 +160,18 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
         regularPolicyRef.current.loadPolicy(rowItm);
         policySearchCloseModal();
         setMode("edit");
+        if (policyType === "REG") {
+          wait(100).then(() => {
+            regularPolicyRef.current.disableField(false);
+          });
+        } else {
+          wait(100).then(() => {
+            temporaryPolicyRef.current.disableField(false);
+          });
+        }
       }
     },
   });
-
   const {
     UpwardTableModalSearch: PolicySearchTempUpwardTableModalSearch,
     openModal: policySearcTempOpenModal,
@@ -190,9 +198,30 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
         temporaryPolicyRef.current.loadPolicy(rowItm);
         policySearchTempCloseModal();
         setMode("edit");
+
+        if (policyType === "REG") {
+          wait(100).then(() => {
+            regularPolicyRef.current.disableField(false);
+          });
+        } else {
+          wait(100).then(() => {
+            temporaryPolicyRef.current.disableField(false);
+          });
+        }
       }
     },
   });
+  useEffect(() => {
+    if (policyType === "REG") {
+      wait(100).then(() => {
+        regularPolicyRef.current.disableField(true);
+      });
+    } else {
+      wait(100).then(() => {
+        temporaryPolicyRef.current.disableField(true);
+      });
+    }
+  }, [policyType]);
 
   return (
     <>
@@ -285,24 +314,53 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           }}
           inputRef={searchRef}
         />
-        <IconButton
+        <Button
+          sx={{
+            height: "23px",
+            fontSize: "11px",
+          }}
           disabled={mode === "add" || mode === "edit"}
           size="small"
           color="primary"
           onClick={() => {
             setMode("add");
+            if (policyType === "REG") {
+              wait(100).then(() => {
+                regularPolicyRef.current.disableField(false);
+              });
+            } else {
+              wait(100).then(() => {
+                temporaryPolicyRef.current.disableField(false);
+              });
+            }
+          }}
+          variant="contained"
+          startIcon={<AddBoxIcon />}
+        >
+          New
+        </Button>
+        <Button
+          variant="contained"
+          color="success"
+          startIcon={<SaveAsIcon />}
+          disabled={mode === ""}
+          size="small"
+          onClick={handleSave}
+          sx={{
+            height: "23px",
+            fontSize: "11px",
           }}
         >
-          <AddBoxIcon />
-        </IconButton>
-        <IconButton disabled={mode === ""} size="small" onClick={handleSave}>
-          <SaveAsIcon
-            sx={{
-              fill: mode === "" ? grey[500] : green[800],
-            }}
-          />
-        </IconButton>
-        <IconButton
+          Save
+        </Button>
+        <Button
+          sx={{
+            height: "23px",
+            fontSize: "11px",
+          }}
+          variant="contained"
+          color="error"
+          startIcon={<CloseIcon />}
           disabled={mode === ""}
           size="small"
           onClick={() => {
@@ -317,54 +375,92 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
               cancelButtonText: "No",
             }).then((result) => {
               if (result.isConfirmed) {
-                if (policyType === "COM") {
+                if (policyType === "REG") {
+                  regularPolicyRef.current.disableField(true);
                   regularPolicyRef.current?.resetFields();
                 }
                 if (policyType === "TEMP") {
-                  temporaryPolicyRef.current?.resetFields();
+                  wait(100).then(() => {
+                    temporaryPolicyRef.current.disableField(true);
+                  });
+                  temporaryPolicyRef.current.disableField(true);
                 }
                 setMode("");
               }
             });
           }}
         >
-          <CloseIcon
-            color="error"
-            sx={{
-              fill: mode === "" ? grey[500] : red[800],
-            }}
-          />
-        </IconButton>
-      </div>
-      <div style={{ display: "flex", columnGap: "7px", marginBottom: "6px" }}>
+          Cancel
+        </Button>
         <div
-          style={{ display: "flex", columnGap: "5px", alignItems: "center" }}
+          style={{
+            display: "flex",
+            columnGap: "5px",
+            alignItems: "center",
+            marginLeft: "10px",
+            borderLeft: "1px solid black",
+            paddingLeft: "20px",
+          }}
         >
           <Button
-            disabled={policyType === "REG"}
+            // disabled={policyType === "REG"}
             sx={{
               height: "23px",
               fontSize: "11px",
+              background: policyType === "REG" ? blue[700] : grey[700],
+              "&:hover": {
+                background: policyType === "REG" ? blue[800] : grey[800],
+              },
             }}
             variant="contained"
             color={policyType === "REG" ? "secondary" : "info"}
             onClick={() => {
-              setPolicyType("REG");
-              window.localStorage.setItem("__policy_type__", "REG");
+              Swal.fire({
+                title: "Are you sure?",
+                text: "You won't be able to revert this!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, Change  to Regualr!",
+                cancelButtonText: "No",
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  setPolicyType("REG");
+                  window.localStorage.setItem("__policy_type__", "REG");
+                }
+              });
             }}
           >
             REGULAR
           </Button>
           <Button
-            disabled={policyType === "TEMP"}
+            // disabled={policyType === "TEMP"}
             sx={{
               height: "23px",
               fontSize: "11px",
               marginLeft: "5px",
+              background: policyType === "TEMP" ? blue[700] : grey[700],
+              "&:hover": {
+                background: policyType === "TEMP" ? blue[800] : grey[800],
+              },
             }}
             onClick={() => {
-              setPolicyType("TEMP");
-              window.localStorage.setItem("__policy_type__", "TEMP");
+              Swal.fire({
+                title: "Are you sure?",
+                text: "You won't be able to revert this!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, Change  to Temporary!",
+                cancelButtonText: "No",
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  setPolicyType("TEMP");
+                  window.localStorage.setItem("__policy_type__", "TEMP");
+                }
+              });
             }}
             variant="contained"
             color={policyType === "TEMP" ? "secondary" : "info"}
@@ -372,16 +468,17 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
             TEMPORAY
           </Button>
         </div>
-        <div>|</div>
+      </div>
+      <div style={{ display: "flex", columnGap: "7px", marginBottom: "6px" }}>
         <div style={{ display: "flex", columnGap: "2px" }}>
           <Button
-            disabled={selectedPage === 0}
+            // disabled={selectedPage === 0}
             sx={{
               height: "23px",
               fontSize: "11px",
-              background: selectedPage === 0 ? grey[500] : grey[700],
+              background: selectedPage === 0 ? blue[700] : grey[700],
               "&:hover": {
-                background: grey[800],
+                background: selectedPage === 0 ? blue[800] : grey[800],
               },
             }}
             variant="contained"
@@ -392,13 +489,13 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
             Policy Information
           </Button>
           <Button
-            disabled={selectedPage === 1}
+            // disabled={selectedPage === 1}
             sx={{
               height: "23px",
               fontSize: "11px",
-              background: selectedPage === 1 ? grey[500] : grey[700],
+              background: selectedPage === 1 ? blue[700] : grey[700],
               "&:hover": {
-                background: grey[800],
+                background: selectedPage === 1 ? blue[800] : grey[800],
               },
             }}
             onClick={() => {
@@ -409,13 +506,14 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
             Policy Type Details
           </Button>
           <Button
-            disabled={selectedPage === 2}
+            // disabled={selectedPage === 2}
             sx={{
               height: "23px",
               fontSize: "11px",
-              background: selectedPage === 2 ? grey[500] : grey[700],
+
+              background: selectedPage === 2 ? blue[700] : grey[700],
               "&:hover": {
-                background: grey[800],
+                background: selectedPage === 2 ? blue[800] : grey[800],
               },
             }}
             onClick={() => {
@@ -462,6 +560,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           selectedPage={selectedPage}
           policyType={policyType}
           mode={mode}
+          policy={policy}
         />
       ) : (
         <COMTemporary
@@ -471,6 +570,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           selectedPage={selectedPage}
           policyType={policyType}
           mode={mode}
+          policy={policy}
         />
       )}
     </>
@@ -485,6 +585,7 @@ const COMRegular = forwardRef(
       setMode,
       searchPolicyNo,
       mode,
+      policy,
     }: any,
     ref
   ) => {
@@ -659,9 +760,16 @@ const COMRegular = forwardRef(
         if (response.data.success) {
           const dt = response.data.data1;
           const dtVP = response.data.data2;
-          console.log(dtVP);
+          const dtVP1 = response.data.data3;
           if (dt.length <= 0 || dtVP.length <= 0) {
             return alert("Unable to load data!");
+          }
+
+          if (dtVP1.length > 0) {
+            if (_policyInformationRef.current.getRefs().rateCostRef.current) {
+              _policyInformationRef.current.getRefs().rateCostRef.current =
+                dtVP1[0].Cost;
+            }
           }
           if (dt.length > 0) {
             if (subAccountRef.current) {
@@ -747,7 +855,7 @@ const COMRegular = forwardRef(
             }
             if (_policyInformationRef.current.getRefs().orNoRef.current) {
               _policyInformationRef.current.getRefs().orNoRef.current.value =
-                dtVP[0].CoverNo;
+                dtVP[0].ORNo;
             }
             if (_policyInformationRef.current.getRefs().dateFromRef.current) {
               _policyInformationRef.current.getRefs().dateFromRef.current.value =
@@ -958,6 +1066,11 @@ const COMRegular = forwardRef(
           _policyInformationRef.current.resetRefs();
           _policyTypeDetailsRef.current.resetRefs();
           _policyPremiumRef.current.resetRefs();
+
+          _policyInformationRef.current.refEnableDisable(true);
+          _policyTypeDetailsRef.current.refEnableDisable(true);
+          _policyPremiumRef.current.refEnableDisable(true);
+
           if (subAccountRef.current) {
             subAccountRef.current.value = "HO";
           }
@@ -994,6 +1107,11 @@ const COMRegular = forwardRef(
           _policyInformationRef.current.resetRefs();
           _policyTypeDetailsRef.current.resetRefs();
           _policyPremiumRef.current.resetRefs();
+
+          _policyInformationRef.current.refEnableDisable(true);
+          _policyTypeDetailsRef.current.refEnableDisable(true);
+          _policyPremiumRef.current.refEnableDisable(true);
+
           if (subAccountRef.current) {
             subAccountRef.current.value = "HO";
           }
@@ -1074,19 +1192,24 @@ const COMRegular = forwardRef(
           _policyPremiumRef,
         };
       },
+      disableField: (disable: boolean) => {
+        _policyInformationRef.current.refEnableDisable(disable);
+        _policyTypeDetailsRef.current.refEnableDisable(disable);
+        _policyPremiumRef.current.refEnableDisable(disable);
+      },
     }));
 
     useEffect(() => {
       mutatateAccountRef.current({
-        policy: window.localStorage.getItem("__policy__"),
+        policy,
       });
       mutatateMortgageeRef.current({
-        policy: window.localStorage.getItem("__policy__"),
+        policy,
       });
       mutatateDenominationRef.current({
-        policy: window.localStorage.getItem("__policy__"),
+        policy,
       });
-    }, []);
+    }, [policy, policyType]);
 
     function computation() {
       const insuredValue = parseFloat(
@@ -1302,6 +1425,8 @@ const COMRegular = forwardRef(
               });
             }}
             searchPolicyNo={searchPolicyNo}
+            policy={policy}
+            policyType={policyType}
           />
         </div>
         <div
@@ -1314,6 +1439,8 @@ const COMRegular = forwardRef(
           <PolicyTypeDetails
             disabled={mode === ""}
             ref={_policyTypeDetailsRef}
+            policy={policy}
+            policyType={policyType}
           />
         </div>
         <div
@@ -1329,6 +1456,8 @@ const COMRegular = forwardRef(
             onComputation={() => {
               computation();
             }}
+            policy={policy}
+            policyType={policyType}
           />
         </div>
       </div>
@@ -1341,7 +1470,6 @@ const COMTemporary = forwardRef(
     const _policyInformationRef = useRef<any>(null);
     const _policyTypeDetailsRef = useRef<any>(null);
     const _policyPremiumRef = useRef<any>(null);
-
     const {
       UpwardTableModalSearch: ClientUpwardTableModalSearch,
       openModal: clientOpenModal,
@@ -1478,11 +1606,9 @@ const COMTemporary = forwardRef(
           });
         },
       });
-
     const mutatateAccountRef = useRef(mutatateAccount);
     const mutatateMortgageeRef = useRef(mutatateMortgagee);
     const mutatateDenominationRef = useRef(mutatateDenomination);
-
     const { mutate: mutatateSave, isLoading: isLoadingSave } = useMutation({
       mutationKey: "save",
       mutationFn: (variables: any) => {
@@ -1497,6 +1623,11 @@ const COMTemporary = forwardRef(
           _policyInformationRef.current.resetRefs();
           _policyTypeDetailsRef.current.resetRefs();
           _policyPremiumRef.current.resetRefs();
+
+          _policyInformationRef.current.refEnableDisable(true);
+          _policyTypeDetailsRef.current.refEnableDisable(true);
+          _policyPremiumRef.current.refEnableDisable(true);
+
           if (subAccountRef.current) {
             subAccountRef.current.value = "HO";
           }
@@ -1533,6 +1664,11 @@ const COMTemporary = forwardRef(
           _policyInformationRef.current.resetRefs();
           _policyTypeDetailsRef.current.resetRefs();
           _policyPremiumRef.current.resetRefs();
+
+          _policyInformationRef.current.refEnableDisable(true);
+          _policyTypeDetailsRef.current.refEnableDisable(true);
+          _policyPremiumRef.current.refEnableDisable(true);
+
           if (subAccountRef.current) {
             subAccountRef.current.value = "HO";
           }
@@ -1581,6 +1717,8 @@ const COMTemporary = forwardRef(
             return alert("Unable to load data!");
           }
           if (dt.length > 0) {
+            console.log(dt);
+
             if (subAccountRef.current) {
               subAccountRef.current.value = dt[0].SubAcct;
             }
@@ -1664,7 +1802,7 @@ const COMTemporary = forwardRef(
             }
             if (_policyInformationRef.current.getRefs().orNoRef.current) {
               _policyInformationRef.current.getRefs().orNoRef.current.value =
-                dtVP[0].CoverNo;
+                dtVP[0].ORNo;
             }
             if (_policyInformationRef.current.getRefs().dateFromRef.current) {
               _policyInformationRef.current.getRefs().dateFromRef.current.value =
@@ -1881,7 +2019,6 @@ const COMTemporary = forwardRef(
         });
       },
     });
-
     useImperativeHandle(ref, () => ({
       handleOnSave: (mode: string) => {
         if (mode === "edit") {
@@ -1933,8 +2070,12 @@ const COMTemporary = forwardRef(
         }
         setMode("");
       },
+      disableField: (disable: boolean) => {
+        _policyInformationRef.current.refEnableDisable(disable);
+        _policyTypeDetailsRef.current.refEnableDisable(disable);
+        _policyPremiumRef.current.refEnableDisable(disable);
+      },
     }));
-
     useEffect(() => {
       mutatateAccountRef.current({
         policy: window.localStorage.getItem("__policy__"),
@@ -1946,7 +2087,6 @@ const COMTemporary = forwardRef(
         policy: window.localStorage.getItem("__policy__"),
       });
     }, []);
-
     function computation() {
       const insuredValue = parseFloat(
         _policyTypeDetailsRef.current
@@ -2192,7 +2332,6 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
   const regularPolicyRef = useRef<any>(null);
   const subAccountRef = useRef<HTMLSelectElement>(null);
   const subAccountRef_ = useRef<any>(null);
-
   function handleSave() {
     regularPolicyRef.current.handleOnSave(mode);
   }
@@ -2279,7 +2418,6 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
       }
     },
   });
-
   return (
     <>
       <PolicyNoUpwardTableModalSearch />
@@ -2350,24 +2488,54 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           }}
           inputRef={searchRef}
         />
-        <IconButton
+        <Button
+          sx={{
+            height: "23px",
+            fontSize: "11px",
+          }}
           disabled={mode === "add" || mode === "edit"}
           size="small"
           color="primary"
           onClick={() => {
             setMode("add");
+            wait(100).then(() => {
+              regularPolicyRef.current.disableField(false);
+            });
+          }}
+          variant="contained"
+          startIcon={<AddBoxIcon />}
+        >
+          New
+        </Button>
+        <Button
+          variant="contained"
+          color="success"
+          startIcon={<SaveAsIcon />}
+          disabled={mode === ""}
+          size="small"
+          onClick={handleSave}
+          sx={{
+            height: "23px",
+            fontSize: "11px",
           }}
         >
-          <AddBoxIcon />
-        </IconButton>
-        <IconButton disabled={mode === ""} size="small" onClick={handleSave}>
-          <SaveAsIcon
-            sx={{
-              fill: mode === "" ? grey[500] : green[800],
-            }}
-          />
-        </IconButton>
-        <IconButton
+          Save
+        </Button>
+        <Button
+          sx={{
+            height: "23px",
+            fontSize: "11px",
+          }}
+          variant="contained"
+          color="error"
+          startIcon={
+            <CloseIcon
+            // color="error"
+            // // sx={{
+            // //   fill: red[500],
+            // // }}
+            />
+          }
           disabled={mode === ""}
           size="small"
           onClick={() => {
@@ -2382,19 +2550,16 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
               cancelButtonText: "No",
             }).then((result) => {
               if (result.isConfirmed) {
+                regularPolicyRef.current.disableField(true);
                 regularPolicyRef.current?.resetFields();
+
                 setMode("");
               }
             });
           }}
         >
-          <CloseIcon
-            color="error"
-            sx={{
-              fill: mode === "" ? grey[500] : red[800],
-            }}
-          />
-        </IconButton>
+          Cancel
+        </Button>
       </div>
       <div style={{ display: "flex", columnGap: "7px", marginBottom: "6px" }}>
         {policy === "COM" && (
@@ -2441,13 +2606,12 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
         )}
         <div style={{ display: "flex", columnGap: "2px" }}>
           <Button
-            disabled={selectedPage === 0}
             sx={{
               height: "23px",
               fontSize: "11px",
-              background: selectedPage === 0 ? grey[500] : grey[700],
+              background: selectedPage === 0 ? blue[700] : grey[700],
               "&:hover": {
-                background: grey[800],
+                background: selectedPage === 0 ? blue[800] : grey[800],
               },
             }}
             variant="contained"
@@ -2458,13 +2622,12 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
             Policy Information
           </Button>
           <Button
-            disabled={selectedPage === 1}
             sx={{
               height: "23px",
               fontSize: "11px",
-              background: selectedPage === 1 ? grey[500] : grey[700],
+              background: selectedPage === 1 ? blue[700] : grey[700],
               "&:hover": {
-                background: grey[800],
+                background: selectedPage === 1 ? blue[800] : grey[800],
               },
             }}
             onClick={() => {
@@ -2475,13 +2638,12 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
             Policy Type Details
           </Button>
           <Button
-            disabled={selectedPage === 2}
             sx={{
               height: "23px",
               fontSize: "11px",
-              background: selectedPage === 2 ? grey[500] : grey[700],
+              background: selectedPage === 2 ? blue[700] : grey[700],
               "&:hover": {
-                background: grey[800],
+                background: selectedPage === 2 ? blue[800] : grey[800],
               },
             }}
             onClick={() => {
@@ -2530,13 +2692,14 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           policyNoOpenModal(input);
         }}
         mode={mode}
+        policy={policy}
       />
     </>
   );
 }
 const PolicyInformation = forwardRef((props: any, ref) => {
-  const policy = window.localStorage.getItem("__policy__");
-  const policy_type = window.localStorage.getItem("__policy_type__");
+  const policy = props.policy;
+  const policy_type = props.policyType;
 
   // Insurer Information
   const clientIDRef = useRef<HTMLInputElement>(null);
@@ -2711,6 +2874,85 @@ const PolicyInformation = forwardRef((props: any, ref) => {
 
       if (unladenWeightRef.current) {
         unladenWeightRef.current.value = "";
+      }
+    },
+    refEnableDisable: (disabled: boolean) => {
+      if (clientIDRef.current) {
+        clientIDRef.current.disabled = disabled;
+      }
+      if (clientNameRef.current) {
+        clientNameRef.current.disabled = disabled;
+      }
+      if (clientAddressRef.current) {
+        clientAddressRef.current.disabled = disabled;
+      }
+      if (agentIdRef.current) {
+        agentIdRef.current.disabled = disabled;
+      }
+      if (agentNameRef.current) {
+        agentNameRef.current.disabled = disabled;
+      }
+      if (agentCommisionRef.current) {
+        agentCommisionRef.current.disabled = disabled;
+      }
+      if (saleOfficerRef.current) {
+        saleOfficerRef.current.disabled = disabled;
+      }
+      if (rateCostRef.current) {
+        rateCostRef.current.disabled = disabled;
+      }
+      if (accountRef.current) {
+        accountRef.current.disabled = disabled;
+      }
+
+      if (policyNoRef.current) {
+        policyNoRef.current.disabled = disabled;
+      }
+      if (corNoRef.current) {
+        corNoRef.current.disabled = disabled;
+      }
+      if (orNoRef.current) {
+        orNoRef.current.disabled = disabled;
+      }
+      if (dateFromRef.current) {
+        dateFromRef.current.disabled = disabled;
+      }
+      if (dateToRef.current) {
+        dateToRef.current.disabled = disabled;
+      }
+
+      if (dateIssuedRef.current) {
+        dateIssuedRef.current.disabled = disabled;
+      }
+      if (modelRef.current) {
+        modelRef.current.disabled = disabled;
+      }
+      if (plateNoRef.current) {
+        plateNoRef.current.disabled = disabled;
+      }
+      if (makeRef.current) {
+        makeRef.current.disabled = disabled;
+      }
+      if (chassisNoRef.current) {
+        chassisNoRef.current.disabled = disabled;
+      }
+      if (typeOfBodyRef.current) {
+        typeOfBodyRef.current.disabled = disabled;
+      }
+      if (motorNoRef.current) {
+        motorNoRef.current.disabled = disabled;
+      }
+      if (colorRef.current) {
+        colorRef.current.disabled = disabled;
+      }
+      if (authorizedCapacityRef.current) {
+        authorizedCapacityRef.current.disabled = disabled;
+      }
+      if (bltFileNoRef.current) {
+        bltFileNoRef.current.disabled = disabled;
+      }
+      if (unladenWeightRef.current) {
+        unladenWeightRef.current.disabled = disabled;
       }
     },
   }));
@@ -3515,7 +3757,8 @@ const PolicyInformation = forwardRef((props: any, ref) => {
   );
 });
 const PolicyTypeDetails = forwardRef((props: any, ref) => {
-  const policy = window.localStorage.getItem("__policy__");
+  const policy = props.policy;
+
   const premiumPaidRef = useRef<HTMLInputElement>(null);
   const estimatedValueSchedVehicleRef = useRef<HTMLInputElement>(null);
   const airconRef = useRef<HTMLInputElement>(null);
@@ -3631,6 +3874,60 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
       }
       if (rbCompreRef.current) {
         rbCompreRef.current.checked = policy === "COM";
+      }
+    },
+    refEnableDisable: (disabled: boolean) => {
+      if (policy === "TPL") {
+        if (premiumPaidRef.current) {
+          premiumPaidRef.current.disabled = disabled;
+        }
+      } else {
+        if (typeRef.current) {
+          typeRef.current.disabled = disabled;
+        }
+        if (estimatedValueSchedVehicleRef.current) {
+          estimatedValueSchedVehicleRef.current.disabled = disabled;
+        }
+        if (airconRef.current) {
+          airconRef.current.disabled = disabled;
+        }
+        if (stereoRef.current) {
+          stereoRef.current.disabled = disabled;
+        }
+        if (magwheelsRef.current) {
+          magwheelsRef.current.disabled = disabled;
+        }
+        if (othersSpecifyRef.current) {
+          othersSpecifyRef.current.disabled = disabled;
+        }
+
+        if (DeductibleRef.current) {
+          DeductibleRef.current.disabled = disabled;
+        }
+        if (towingRef.current) {
+          towingRef.current.disabled = disabled;
+        }
+        if (authorizedRepairLimitRef.current) {
+          authorizedRepairLimitRef.current.disabled = disabled;
+        }
+        if (bodyInjuryRef.current) {
+          bodyInjuryRef.current.disabled = disabled;
+        }
+        if (propertyDamageRef.current) {
+          propertyDamageRef.current.disabled = disabled;
+        }
+        if (personalAccidentRef.current) {
+          personalAccidentRef.current.disabled = disabled;
+        }
+        if (dinomination.current) {
+          dinomination.current.disabled = disabled;
+        }
+        if (rbTPLRef.current) {
+          rbTPLRef.current.disabled = disabled;
+        }
+        if (rbCompreRef.current) {
+          rbCompreRef.current.disabled = disabled;
+        }
       }
     },
   }));
@@ -4467,6 +4764,72 @@ const PolicyPremium = forwardRef((props: any, ref) => {
 
       if (totalDueRef.current) {
         totalDueRef.current.value = "0.00";
+      }
+    },
+    refEnableDisable: (disabled: boolean) => {
+      if (mortgageecheckRef.current) {
+        mortgageecheckRef.current.disabled = disabled;
+      }
+      if (mortgageeSelect.current) {
+        mortgageeSelect.current.disabled = disabled;
+      }
+      if (formIndorsementRef.current) {
+        formIndorsementRef.current.disabled = disabled;
+      }
+      if (remarksRef.current) {
+        remarksRef.current.disabled = disabled;
+      }
+      if (sectionI_IIRef.current) {
+        sectionI_IIRef.current.disabled = disabled;
+      }
+      if (sectionIIIRef.current) {
+        sectionIIIRef.current.disabled = disabled;
+      }
+      if (ownDamageRef.current) {
+        ownDamageRef.current.disabled = disabled;
+      }
+      if (theftRef.current) {
+        theftRef.current.disabled = disabled;
+      }
+
+      if (sectionIVARef.current) {
+        sectionIVARef.current.disabled = disabled;
+      }
+
+      if (sectionIVBRef.current) {
+        sectionIVBRef.current.disabled = disabled;
+      }
+      if (othersRef.current) {
+        othersRef.current.disabled = disabled;
+      }
+
+      if (aogRef.current) {
+        aogRef.current.disabled = disabled;
+      }
+      if (_aogRef.current) {
+        _aogRef.current.disabled = disabled;
+      }
+      if (totalPremiumRef.current) {
+        totalPremiumRef.current.disabled = disabled;
+      }
+      if (vatRef.current) {
+        vatRef.current.disabled = disabled;
+      }
+      if (docstampRef.current) {
+        docstampRef.current.disabled = disabled;
+      }
+      if (localGovTaxRef.current) {
+        localGovTaxRef.current.disabled = disabled;
+      }
+      if (_localGovTaxRef.current) {
+        _localGovTaxRef.current.disabled = disabled;
+      }
+      if (stradComRef.current) {
+        stradComRef.current.disabled = disabled;
+      }
+
+      if (totalDueRef.current) {
+        totalDueRef.current.disabled = disabled;
       }
     },
   }));

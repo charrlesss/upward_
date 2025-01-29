@@ -766,7 +766,7 @@ export default function Client() {
               { value: "" },
               { value: "Camfin Lending Inc." },
               { value: "Cash Management Fiannce Inc." },
-              { value: "Credit Masters and Lending Investors COrp." },
+              { value: "Credit Masters and Lending Investors Corp." },
             ]}
             values={"value"}
             display={"value"}

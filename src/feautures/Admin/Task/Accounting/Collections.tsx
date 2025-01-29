@@ -41,6 +41,7 @@ import {
   useUpwardTableModalSearchSafeMode,
 } from "../../../../components/DataGridViewReact";
 import { Loading } from "../../../../components/Loading";
+import { formatNumber } from "./ReturnCheck";
 
 export const debitColumn = [
   { key: "Payment", label: "Payment", flex: 1, width: 170 },
@@ -365,8 +366,8 @@ export default function Collection() {
   } = useMutation({
     mutationKey: "get-collection-data-search",
     mutationFn: async (variables: any) =>
-      await myAxios.get(
-        `/task/accounting/get-collection-data-search?ORNo=${variables.ORNo}`,
+      await myAxios.post(
+        `/task/accounting/get-collection-data-search`,variables,
         {
           headers: {
             "Content-Type": "application/json",
@@ -401,7 +402,7 @@ export default function Collection() {
           const isCash = dataCollection[i].Payment === "Cash";
           debit.push({
             Payment: dataCollection[i].Payment,
-            Amount: dataCollection[i].Debit,
+            Amount: formatNumber(parseFloat(dataCollection[i].Debit.toString().replace(/,/g,''))),
             Check_No: isCash ? "" : dataCollection[i].Check_No,
             Check_Date: isCash
               ? ""
@@ -425,7 +426,7 @@ export default function Collection() {
           credit.push({
             temp_id: `${i}`,
             transaction: dataCollection[i].Purpose,
-            amount: dataCollection[i].Credit,
+            amount:formatNumber(parseFloat(dataCollection[i].Credit.toString().replace(/,/g,''))),
             Remarks: dataCollection[i].CRRemarks,
             Code: dataCollection[i].CRCode,
             Title: dataCollection[i].CRTitle,
