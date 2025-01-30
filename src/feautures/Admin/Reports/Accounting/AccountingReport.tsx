@@ -253,21 +253,7 @@ function FormScheduleAccount() {
         }
       },
     });
-  const { isLoading: isLoadingGenerateReport, mutate: mutateGenerateReport } =
-    useMutation({
-      mutationKey: "generate-report",
-      mutationFn: async (variable: any) =>
-        await myAxios.post(
-          `/reports/accounting/report/generate-report-schedule-of-account`,
-          variable,
-          {
-            headers: {
-              Authorization: `Bearer ${user?.accessToken}`,
-            },
-          }
-        ),
-      onSuccess(res) {},
-    });
+
   function generateTitle({
     report,
     subsiText,
@@ -277,8 +263,9 @@ function FormScheduleAccount() {
     account,
     accountTitle,
   }: any) {
+    const _title = user?.department === 'UMIS' ? "UPWARD MANAGEMENT INSURANCE SERVICES" : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC."
     if (report === "GL Account (Detailed)") {
-      let txtReportTitleText = `UPWARD MANAGEMENT INSURANCE SERVICES\n ${
+      let txtReportTitleText = `${_title}\n ${
         subsiText === "" || subsiText === "ALL" ? "" : `(${subsiText})\n`
       }Schedule of ${accountTitle} ${` - ${
         insurance ? insurance : ""
@@ -287,7 +274,7 @@ function FormScheduleAccount() {
       return txtReportTitleText;
     }
     if (report === "All Accounts") {
-      let txtReportTitleText = `UPWARD MANAGEMENT INSURANCE SERVICES\n ${
+      let txtReportTitleText = `${_title}\n ${
         subsiText === "" || subsiText === "ALL" ? "" : `(${subsiText})\n`
       }Schedule of Accounts\n${format(new Date(dateValue), "MMMM dd, yyyy")}`;
       // setTitle(txtReportTitleText);
@@ -298,16 +285,57 @@ function FormScheduleAccount() {
   function generateReport() {
     mutateGenerateReport({
       title,
+      report:reportRef.current?.value,
       account: accountRef.current?.value,
       accountName: _accountRef.current?.value,
-      subsi: _subsiRef.current?.value,
+      subsi: subsiRef.current?.selectedIndex ,
       subsiText: subsiTextRef.current?.value,
-      subsiInsruance: _subsiRef.current?.value,
+      insurance: _subsiRef.current?.value || "",
       date: dateRef.current?.value,
-      sort: sortRef.current?.value,
-      order: orderRef.current?.value,
+      sort: sortRef.current?.selectedIndex,
+      order: sortRef.current?.selectedIndex,
     });
   }
+
+  const { mutate: mutateGenerateReport, isLoading: isLoadingGenerateReport } = useMutation({
+    mutationKey: "generate-report",
+    mutationFn: async (variables: any) => {
+      return await myAxios.post(
+        "/reports/accounting/report/generate-report-schedule-of-account",
+        variables,
+        {
+          responseType: "arraybuffer",
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }
+      );
+    },
+    onSuccess: (response) => {
+      console.log(response);
+
+      const pdfBlob = new Blob([response.data], { type: "application/pdf" });
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      // window.open(pdfUrl);
+      var newTab = window.open();
+      if (newTab) {
+        newTab.document.write("<!DOCTYPE html>");
+        newTab.document.write(
+          "<html><head><title>New Tab with iframe</title></head>"
+        );
+        newTab.document.write(
+          '<body style="width:100vw;height:100vh;padding:0;margin:0;box-sizing:border-box;">'
+        );
+        newTab.document.write(
+          `<iframe style="border:none;outline:none;padding:0;margin:0" src="${pdfUrl}" width="99%" height="99%"></iframe>`
+        );
+
+        newTab.document.write("</body></html>");
+        // Optional: Close the document stream after writing
+        newTab.document.close();
+      }
+    },
+  });
 
   return (
     <>

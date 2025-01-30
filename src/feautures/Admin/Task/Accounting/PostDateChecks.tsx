@@ -677,11 +677,14 @@ export default function PostDateChecks() {
         modalCheckRef.current.getRefs().checkdateRef.current.focus();
         return;
       } else if (
-        parseFloat(
-          modalCheckRef.current
-            .getRefs()
-            .amountRef.current.value.replace(/,/g, "")
-        ) <= 0
+        isNaN(
+          parseFloat(
+            modalCheckRef.current
+              .getRefs()
+              .amountRef.current?.value.toString()
+              .replace(/,/g, "")
+          )
+        )
       ) {
         alert("amount must be greater than 0!");
         modalCheckRef.current.getRefs().amountRef.current.focus();
@@ -703,8 +706,14 @@ export default function PostDateChecks() {
             modalCheckRef.current.getRefs().checknoRef.current.value;
           selectedRow[selectedIndex][1] =
             modalCheckRef.current.getRefs().checkdateRef.current.value;
-          selectedRow[selectedIndex][2] =
-            modalCheckRef.current.getRefs().amountRef.current.value;
+          selectedRow[selectedIndex][2] = formatNumber(
+            parseNumber(
+              modalCheckRef.current
+                .getRefs()
+                .amountRef.current?.value.toString()
+                .replace(/,/g, "")
+            )
+          );
           selectedRow[selectedIndex][3] =
             modalCheckRef.current.getRefs().bankRef.current.value;
           selectedRow[selectedIndex][4] =
@@ -736,27 +745,6 @@ export default function PostDateChecks() {
                 );
           const newData: any = [];
           for (let i = 0; i < checkCount; i++) {
-            // const data: any = {
-            //   Check_No: incrementStringNumbers(
-            //     modalCheckRef.current.getRefs().checknoRef.current.value,
-            //     i
-            //   ),
-            //   Check_Date: incrementDate(
-            //     modalCheckRef.current.getRefs().checkdateRef.current.value,
-            //     i
-            //   ),
-            //   Check_Amnt:
-            //     modalCheckRef.current.getRefs().amountRef.current.value,
-            //   BankName: modalCheckRef.current.getRefs().bankRef.current.value,
-            //   BankCode: modalCheckRef.current.getRefs().bankCode.current,
-            //   Branch: modalCheckRef.current.getRefs().branchRef.current.value,
-            //   Check_Remarks:
-            //     modalCheckRef.current.getRefs().remarksRef.current.value,
-            //   Deposit_Slip:
-            //     modalCheckRef.current.getRefs()._slipCodeRef.current,
-            //   DateDeposit: modalCheckRef.current.getRefs()._slipDateRef.current,
-            //   OR_No: modalCheckRef.current.getRefs()._checkOR.current,
-            // };
             newData.push([
               incrementStringNumbers(
                 modalCheckRef.current.getRefs().checknoRef.current.value,
@@ -766,7 +754,14 @@ export default function PostDateChecks() {
                 modalCheckRef.current.getRefs().checkdateRef.current.value,
                 i
               ),
-              modalCheckRef.current.getRefs().amountRef.current.value,
+              formatNumber(
+                parseNumber(
+                  modalCheckRef.current
+                    .getRefs()
+                    .amountRef.current?.value.toString()
+                    .replace(/,/g, "")
+                )
+              ),
               modalCheckRef.current.getRefs().bankRef.current.value,
               modalCheckRef.current.getRefs().branchRef.current.value,
               modalCheckRef.current.getRefs().remarksRef.current.value,
@@ -774,17 +769,11 @@ export default function PostDateChecks() {
               modalCheckRef.current.getRefs()._slipDateRef.current,
               modalCheckRef.current.getRefs()._checkOR.current,
               modalCheckRef.current.getRefs().bankCode.current,
-
             ]);
           }
-          
-          tableRef.current.setData([
-            ...tableRef.current.getData(),
-            ...newData,
-          ]);
-        }
 
-     
+          tableRef.current.setData([...tableRef.current.getData(), ...newData]);
+        }
       }
     }
   }
@@ -1280,6 +1269,7 @@ export default function PostDateChecks() {
           ref={tableRef}
           rows={[]}
           columns={pdcColumn}
+          showSequence={true}
           getSelectedItem={(rowSelected: any, _: any, RowIndex: any) => {
             if (rowSelected) {
               if (
@@ -1859,7 +1849,8 @@ const ModalCheck = forwardRef(
                   },
                 }}
                 input={{
-                  defaultValue: "0.00",
+                  placeholder: "0.00",
+                  defaultValue: "",
                   type: "text",
                   style: { width: "200px" },
                   onKeyDown: (e) => {
@@ -1965,4 +1956,8 @@ export function incrementCheckNo(Check_No: string) {
   }
 
   return "001";
+}
+
+function parseNumber(value: any) {
+  return isNaN(value) || value === "" ? 0 : Number(value);
 }

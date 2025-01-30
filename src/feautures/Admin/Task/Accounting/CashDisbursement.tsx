@@ -1218,7 +1218,7 @@ export default function CashDisbursement() {
               onIconClick={(e) => {
                 e.preventDefault();
                 if (refCode.current) {
-                  chartAccountOpenModal(refCode.current.value);
+                  searchCashDisbursementOpenModal(refCode.current.value);
                 }
               }}
               inputRef={inputSearchRef}

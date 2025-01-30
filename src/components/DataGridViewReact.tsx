@@ -28,7 +28,8 @@ export const DataGridViewReact = forwardRef(
       isTableSelectable: _isTableSelectable = true,
       containerStyle,
       focusElementOnMaxTop,
-      ActionComponent = ()=> <></>,
+      ActionComponent = () => <></>,
+      showSequence = false,
     }: any,
     ref
   ) => {
@@ -193,6 +194,23 @@ export const DataGridViewReact = forwardRef(
                       background: "#f0f0f0",
                     }}
                   ></th>
+                  {showSequence && (
+                    <th
+                      style={{
+                        width: "50px",
+                        borderRight: "1px solid #e2e8f0",
+                        position: "sticky",
+                        top: 0,
+                        zIndex: 1,
+                        background: "#f0f0f0",
+                        fontSize: "12px",
+                        padding: "0px 5px",
+                        textAlign: "center",
+                      }}
+                    >
+                      SEQ
+                    </th>
+                  )}
                   {column.map((colItm: any, idx: number) => {
                     return (
                       <th
@@ -238,6 +256,7 @@ export const DataGridViewReact = forwardRef(
                       handleResetCheckBox={handleResetCheckBox}
                       handleResetCheckBoxByIndex={handleResetCheckBoxByIndex}
                       handleRightClick={handleRightClick}
+                      showSequence={showSequence}
                     />
                   );
                 })}
@@ -296,6 +315,7 @@ const RowComponent = forwardRef(
       handleResetCheckBox,
       handleResetCheckBoxByIndex,
       handleRightClick,
+      showSequence,
     }: any,
     ref
   ) => {
@@ -342,6 +362,33 @@ const RowComponent = forwardRef(
             />
           </div>
         </td>
+
+        {showSequence && (
+          <td
+            style={{
+              position: "relative",
+              border: "none",
+              cursor: "pointer",
+              background: selectedRow === rowIdx ? "#0076d" : "",
+              padding: 0,
+              margin: 0,
+            }}
+          >
+            <input
+              readOnly={true}
+              defaultValue={`${ String(rowIdx + 1).padStart(2, "0")}`}
+              style={{
+                width: "50px",
+                pointerEvents: "none",
+                border: "none",
+                background: "transparent",
+                userSelect: "none",
+                height: "100%",
+                textAlign: "center",
+              }}
+            />
+          </td>
+        )}
 
         {column.map((colItm: any, colIdx: number) => {
           return (

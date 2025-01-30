@@ -328,9 +328,12 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
               wait(100).then(() => {
                 regularPolicyRef.current.disableField(false);
               });
-            } else {
+            }
+
+            if (policyType === "TEMP") {
               wait(100).then(() => {
                 temporaryPolicyRef.current.disableField(false);
+                temporaryPolicyRef.current.refetchID()
               });
             }
           }}
@@ -1465,7 +1468,7 @@ const COMRegular = forwardRef(
   }
 );
 const COMTemporary = forwardRef(
-  ({ selectedPage, policyType, subAccountRef, setMode }: any, ref) => {
+  ({ selectedPage, policyType, subAccountRef, setMode, policy }: any, ref) => {
     const { user, myAxios } = useContext(AuthContext);
     const _policyInformationRef = useRef<any>(null);
     const _policyTypeDetailsRef = useRef<any>(null);
@@ -1567,6 +1570,18 @@ const COMTemporary = forwardRef(
             _policyInformationRef.current
               .getRefs()
               ._accountRef.current.setDataSource(response.data?.data);
+
+            wait(100).then(() => {
+              if (_policyInformationRef.current.getRefs().accountRef.current) {
+                _policyInformationRef.current.getRefs().accountRef.current.value =
+                  "Alpha";
+              }
+
+              mutatateDenomination({
+                policy: window.localStorage.getItem("__policy__"),
+                account: "Alpha",
+              });
+            });
           });
         },
       });
@@ -1624,9 +1639,15 @@ const COMTemporary = forwardRef(
           _policyTypeDetailsRef.current.resetRefs();
           _policyPremiumRef.current.resetRefs();
 
-          _policyInformationRef.current.refEnableDisable(true);
-          _policyTypeDetailsRef.current.refEnableDisable(true);
-          _policyPremiumRef.current.refEnableDisable(true);
+          _policyInformationRef.current.refEnableDisable(
+            true,
+            user?.department
+          );
+          _policyTypeDetailsRef.current.refEnableDisable(
+            true,
+            user?.department
+          );
+          _policyPremiumRef.current.refEnableDisable(true, user?.department);
 
           if (subAccountRef.current) {
             subAccountRef.current.value = "HO";
@@ -1665,9 +1686,15 @@ const COMTemporary = forwardRef(
           _policyTypeDetailsRef.current.resetRefs();
           _policyPremiumRef.current.resetRefs();
 
-          _policyInformationRef.current.refEnableDisable(true);
-          _policyTypeDetailsRef.current.refEnableDisable(true);
-          _policyPremiumRef.current.refEnableDisable(true);
+          _policyInformationRef.current.refEnableDisable(
+            true,
+            user?.department
+          );
+          _policyTypeDetailsRef.current.refEnableDisable(
+            true,
+            user?.department
+          );
+          _policyPremiumRef.current.refEnableDisable(true, user?.department);
 
           if (subAccountRef.current) {
             subAccountRef.current.value = "HO";
@@ -2071,10 +2098,19 @@ const COMTemporary = forwardRef(
         setMode("");
       },
       disableField: (disable: boolean) => {
-        _policyInformationRef.current.refEnableDisable(disable);
-        _policyTypeDetailsRef.current.refEnableDisable(disable);
-        _policyPremiumRef.current.refEnableDisable(disable);
+        _policyInformationRef.current.refEnableDisable(
+          disable,
+          user?.department
+        );
+        _policyTypeDetailsRef.current.refEnableDisable(
+          disable,
+          user?.department
+        );
+        _policyPremiumRef.current.refEnableDisable(disable, user?.department);
       },
+      refetchID:()=>{
+        refetchTempID()
+      }
     }));
     useEffect(() => {
       mutatateAccountRef.current({
@@ -2293,6 +2329,8 @@ const COMTemporary = forwardRef(
                 account: e.target.value,
               });
             }}
+            policyType={policyType}
+            policy={policy}
           />
         </div>
         <div
@@ -2302,7 +2340,11 @@ const COMTemporary = forwardRef(
             height: "100%",
           }}
         >
-          <PolicyTypeDetails ref={_policyTypeDetailsRef} />
+          <PolicyTypeDetails
+            ref={_policyTypeDetailsRef}
+            policyType={policyType}
+            policy={policy}
+          />
         </div>
         <div
           style={{
@@ -2316,6 +2358,8 @@ const COMTemporary = forwardRef(
             onComputation={() => {
               computation();
             }}
+            policyType={policyType}
+            policy={policy}
           />
         </div>
       </div>
@@ -2876,7 +2920,10 @@ const PolicyInformation = forwardRef((props: any, ref) => {
         unladenWeightRef.current.value = "";
       }
     },
-    refEnableDisable: (disabled: boolean) => {
+    refEnableDisable: (disabled: boolean, department: string) => {
+      if (accountRef.current) {
+        accountRef.current.disabled = disabled;
+      }
       if (clientIDRef.current) {
         clientIDRef.current.disabled = disabled;
       }
@@ -2900,9 +2947,6 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       }
       if (rateCostRef.current) {
         rateCostRef.current.disabled = disabled;
-      }
-      if (accountRef.current) {
-        accountRef.current.disabled = disabled;
       }
 
       if (policyNoRef.current) {
@@ -3758,6 +3802,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
 });
 const PolicyTypeDetails = forwardRef((props: any, ref) => {
   const policy = props.policy;
+  const policy_type = props.policyType;
 
   const premiumPaidRef = useRef<HTMLInputElement>(null);
   const estimatedValueSchedVehicleRef = useRef<HTMLInputElement>(null);
@@ -3795,9 +3840,9 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
         DeductibleRef: DeductibleRef.current?.value,
         towingRef: towingRef.current?.value,
         authorizedRepairLimitRef: authorizedRepairLimitRef.current?.value,
-        bodyInjuryRef: bodyInjuryRef.current?.value,
-        propertyDamageRef: propertyDamageRef.current?.value,
-        personalAccidentRef: personalAccidentRef.current?.value,
+        bodyInjuryRef: parseNumber(bodyInjuryRef.current?.value),
+        propertyDamageRef: parseNumber(propertyDamageRef.current?.value),
+        personalAccidentRef: parseNumber(personalAccidentRef.current?.value),
         dinomination: dinomination.current?.value,
         rbTPLRef: rbTPLRef.current?.value,
         rbCompreRef: rbCompreRef.current?.value,
@@ -3876,64 +3921,60 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
         rbCompreRef.current.checked = policy === "COM";
       }
     },
-    refEnableDisable: (disabled: boolean) => {
-      if (policy === "TPL") {
-        if (premiumPaidRef.current) {
-          premiumPaidRef.current.disabled = disabled;
-        }
-      } else {
-        if (typeRef.current) {
-          typeRef.current.disabled = disabled;
-        }
-        if (estimatedValueSchedVehicleRef.current) {
-          estimatedValueSchedVehicleRef.current.disabled = disabled;
-        }
-        if (airconRef.current) {
-          airconRef.current.disabled = disabled;
-        }
-        if (stereoRef.current) {
-          stereoRef.current.disabled = disabled;
-        }
-        if (magwheelsRef.current) {
-          magwheelsRef.current.disabled = disabled;
-        }
-        if (othersSpecifyRef.current) {
-          othersSpecifyRef.current.disabled = disabled;
-        }
+    refEnableDisable: (disabled: boolean, department: string) => {
+      if (dinomination.current) {
+        dinomination.current.disabled = disabled;
+      }
+      if (typeRef.current) {
+        typeRef.current.disabled = disabled;
+      }
+      if (typeRef.current) {
+        typeRef.current.disabled = disabled;
+      }
+      if (estimatedValueSchedVehicleRef.current) {
+        estimatedValueSchedVehicleRef.current.disabled = disabled;
+      }
+      if (airconRef.current) {
+        airconRef.current.disabled = disabled;
+      }
+      if (stereoRef.current) {
+        stereoRef.current.disabled = disabled;
+      }
+      if (magwheelsRef.current) {
+        magwheelsRef.current.disabled = disabled;
+      }
+      if (othersSpecifyRef.current) {
+        othersSpecifyRef.current.disabled = disabled;
+      }
 
-        if (DeductibleRef.current) {
-          DeductibleRef.current.disabled = disabled;
-        }
-        if (towingRef.current) {
-          towingRef.current.disabled = disabled;
-        }
-        if (authorizedRepairLimitRef.current) {
-          authorizedRepairLimitRef.current.disabled = disabled;
-        }
-        if (bodyInjuryRef.current) {
-          bodyInjuryRef.current.disabled = disabled;
-        }
-        if (propertyDamageRef.current) {
-          propertyDamageRef.current.disabled = disabled;
-        }
-        if (personalAccidentRef.current) {
-          personalAccidentRef.current.disabled = disabled;
-        }
-        if (dinomination.current) {
-          dinomination.current.disabled = disabled;
-        }
-        if (rbTPLRef.current) {
-          rbTPLRef.current.disabled = disabled;
-        }
-        if (rbCompreRef.current) {
-          rbCompreRef.current.disabled = disabled;
-        }
+      if (DeductibleRef.current) {
+        DeductibleRef.current.disabled = disabled;
+      }
+      if (towingRef.current) {
+        towingRef.current.disabled = disabled;
+      }
+      if (authorizedRepairLimitRef.current) {
+        authorizedRepairLimitRef.current.disabled = disabled;
+      }
+      if (bodyInjuryRef.current) {
+        bodyInjuryRef.current.disabled = disabled;
+      }
+      if (propertyDamageRef.current) {
+        propertyDamageRef.current.disabled = disabled;
+      }
+      if (personalAccidentRef.current) {
+        personalAccidentRef.current.disabled = disabled;
+      }
+
+      if (rbTPLRef.current) {
+        rbTPLRef.current.disabled = disabled;
+      }
+      if (rbCompreRef.current) {
+        rbCompreRef.current.disabled = disabled;
       }
     },
   }));
-
-  const isDisableTPL = policy !== "COM";
-
+  console.log(policy);
   return (
     <div
       style={{
@@ -3956,19 +3997,20 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
           boxSizing: "border-box",
         }}
       >
-        <div style={{ width: "100%", display: "flex", alignItems: "center" }}>
-          <input
-            disabled={!isDisableTPL || props.disabled}
-            type="checkbox"
-            id="tpl"
-            defaultChecked={policy === "TPL"}
-          />
+        <div
+          style={{
+            width: "100%",
+            display: policy === "TPL" ? "flex" : "none",
+            alignItems: "center",
+          }}
+        >
+          <input type="checkbox" id="tpl" defaultChecked={true} />
           <label
             htmlFor="tpl"
             style={{
               fontSize: "12px",
               cursor: "pointer",
-              fontWeight: !isDisableTPL ? "300" : "bold",
+              fontWeight: "bold",
             }}
           >
             THIRD PARTY LIABILITY
@@ -3978,7 +4020,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
         <div
           style={{
             height: "auto",
-            display: "flex",
+            display: policy === "TPL" ? "flex" : "none",
             border: "1px solid #9ca3af",
             padding: "10px",
             columnGap: "20px",
@@ -4010,7 +4052,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
             }}
             selectRef={typeRef}
             select={{
-              disabled: !isDisableTPL || props.disabled,
+              // disabled: !isDisableTPL || props.disabled,
               style: { flex: 1, height: "22px" },
               defaultValue: "",
               onChange: (e) => {},
@@ -4050,7 +4092,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
               flex: 1,
             }}
             input={{
-              disabled: !isDisableTPL || props.disabled,
+              // disabled: !isDisableTPL || props.disabled,
               defaultValue: "0.00",
               type: "text",
               style: { width: "100%" },
@@ -4064,7 +4106,13 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
           />
         </div>
 
-        <div style={{ width: "100%", display: "flex", alignItems: "center" }}>
+        <div
+          style={{
+            width: "100%",
+            display: policy === "COM" ? "flex" : "none",
+            alignItems: "center",
+          }}
+        >
           <input
             type="checkbox"
             id="compre"
@@ -4080,7 +4128,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
         <div
           style={{
             flex: 1,
-            display: "flex",
+            display: policy === "COM" ? "flex" : "none",
             flexDirection: "column",
             alignItems: "flex-end",
             justifyContent: "flex-start",
@@ -4139,7 +4187,6 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
                 width: "100%",
               }}
               input={{
-                disabled: isDisableTPL || props.disabled,
                 defaultValue: "0.00",
                 type: "text",
                 style: { width: "calc(100% - 260px)" },
@@ -4164,8 +4211,6 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
                 width: "100%",
               }}
               input={{
-                disabled: isDisableTPL || props.disabled,
-
                 defaultValue: "0.00",
                 type: "text",
                 style: { width: "calc(100% - 260px)" },
@@ -4190,8 +4235,6 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
                 width: "100%",
               }}
               input={{
-                disabled: isDisableTPL || props.disabled,
-
                 defaultValue: "0.00",
                 type: "text",
                 style: { width: "calc(100% - 260px)" },
@@ -4216,8 +4259,6 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
                 width: "100%",
               }}
               input={{
-                disabled: isDisableTPL || props.disabled,
-
                 defaultValue: "0.00",
                 type: "text",
                 style: { width: "calc(100% - 260px)" },
@@ -4252,8 +4293,6 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
                 },
               }}
               input={{
-                disabled: isDisableTPL || props.disabled,
-
                 type: "text",
                 style: { width: "calc(100% - 120px)" },
                 onKeyDown: (e) => {
@@ -4275,8 +4314,6 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
                 width: "53%",
               }}
               input={{
-                disabled: isDisableTPL || props.disabled,
-
                 defaultValue: "0.00",
                 type: "text",
                 style: { width: "100%" },
@@ -4310,7 +4347,6 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
               }}
               selectRef={typeRef}
               select={{
-                disabled: isDisableTPL || props.disabled,
                 style: { flex: 1, height: "22px" },
                 defaultValue: "",
                 onChange: (e) => {},
@@ -4367,7 +4403,6 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
                   flex: 1,
                 }}
                 input={{
-                  disabled: isDisableTPL || props.disabled,
                   defaultValue: "0.00",
                   type: "text",
                   style: { width: "calc(100% - 150px)" },
@@ -4392,7 +4427,6 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
                   flex: 1,
                 }}
                 input={{
-                  disabled: isDisableTPL || props.disabled,
                   defaultValue: "0.00",
                   type: "text",
                   style: { width: "calc(100% - 150px)" },
@@ -4433,7 +4467,6 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
                   flex: 1,
                 }}
                 input={{
-                  disabled: isDisableTPL || props.disabled,
                   defaultValue: "0.00",
                   type: "text",
                   style: { width: "calc(100% - 150px)" },
@@ -4457,7 +4490,6 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
               }}
             >
               <AutocompleteNumber
-                disableInput={isDisableTPL || props.disabled}
                 containerStyle={{
                   width: "100%",
                 }}
@@ -4502,7 +4534,6 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
                 }}
               />
               <AutocompleteNumber
-                disableInput={isDisableTPL || props.disabled}
                 containerStyle={{
                   width: "100%",
                 }}
@@ -4527,7 +4558,6 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
                 ]}
                 inputRef={propertyDamageRef}
                 input={{
-                  disabled: isDisableTPL || props.disabled,
                   style: {
                     width: "100%",
                     flex: 1,
@@ -4548,7 +4578,6 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
                 }}
               />
               <AutocompleteNumber
-                disableInput={isDisableTPL || props.disabled}
                 containerStyle={{
                   width: "100%",
                 }}
@@ -4573,7 +4602,6 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
                 ]}
                 inputRef={personalAccidentRef}
                 input={{
-                  disabled: isDisableTPL || props.disabled,
                   style: {
                     width: "100%",
                     flex: 1,
@@ -4626,6 +4654,8 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
   );
 });
 const PolicyPremium = forwardRef((props: any, ref) => {
+  const policy = props.policy;
+
   const mortgageecheckRef = useRef<HTMLInputElement>(null);
   const mortgageeSelect_ = useRef<any>(null);
   const mortgageeSelect = useRef<HTMLSelectElement>(null);
@@ -5086,6 +5116,7 @@ const PolicyPremium = forwardRef((props: any, ref) => {
             }}
             containerStyle={{
               width: "100%",
+              display: policy === "COM" ? "none" : "flex",
             }}
             input={{
               disabled: props.disabled,
@@ -5554,6 +5585,10 @@ export const CustomButton = styled.button`
     background:white;
   },
 `;
+
+function parseNumber(value: any) {
+  return isNaN(value) || value === "" ? "0.00" : Number(value);
+}
 function formatNumber(Amount: number) {
   return Amount.toLocaleString("en-US", {
     minimumFractionDigits: 2,
