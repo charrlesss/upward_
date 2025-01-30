@@ -51,6 +51,17 @@ export default function Header() {
         { name: "Mortgagee", path: "/dashboard/reference/mortgagee" },
       ],
     },
+
+    {
+      name: "Production",
+      subLinks: [
+        { name: "Policy", path: "/dashboard/task/production/policy/" },
+        {
+          name: "Statement of Account",
+          path: "/dashboard/task/production/statement-of-account",
+        },
+      ],
+    },
     {
       name: "Accounting",
       subLinks: [
@@ -100,16 +111,6 @@ export default function Header() {
         {
           name: "Check Postponement Approved",
           path: "/dashboard/task/accounting/check-postponement-approved",
-        },
-      ],
-    },
-    {
-      name: "Production",
-      subLinks: [
-        { name: "Policy", path: "/dashboard/task/production/policy/" },
-        {
-          name: "Statement of Account",
-          path: "/dashboard/task/production/statement-of-account",
         },
       ],
     },
@@ -227,6 +228,16 @@ export default function Header() {
         ],
       },
       {
+        name: "Production",
+        subLinks: [
+          { name: "Policy", path: "/dashboard/task/production/policy/" },
+          {
+            name: "Statement of Account",
+            path: "/dashboard/task/production/statement-of-account",
+          },
+        ],
+      },
+      {
         name: "Accounting",
         subLinks: [
           {
@@ -270,16 +281,6 @@ export default function Header() {
           {
             name: "Check Postponement Approved",
             path: "/dashboard/task/accounting/check-postponement-approved",
-          },
-        ],
-      },
-      {
-        name: "Production",
-        subLinks: [
-          { name: "Policy", path: "/dashboard/task/production/policy/" },
-          {
-            name: "Statement of Account",
-            path: "/dashboard/task/production/statement-of-account",
           },
         ],
       },
@@ -337,6 +338,17 @@ export default function Header() {
             { name: "Mortgagee", path: "/dashboard/reference/mortgagee" },
           ],
         },
+
+        {
+          name: "Production",
+          subLinks: [
+            { name: "Policy", path: "/dashboard/task/production/policy/" },
+            {
+              name: "Statement of Account",
+              path: "/dashboard/task/production/statement-of-account",
+            },
+          ],
+        },
         {
           name: "Accounting",
           subLinks: [
@@ -384,16 +396,6 @@ export default function Header() {
             {
               name: "Check Postponement Approved",
               path: "/dashboard/task/accounting/check-postponement-approved",
-            },
-          ],
-        },
-        {
-          name: "Production",
-          subLinks: [
-            { name: "Policy", path: "/dashboard/task/production/policy/" },
-            {
-              name: "Statement of Account",
-              path: "/dashboard/task/production/statement-of-account",
             },
           ],
         },
@@ -682,18 +684,21 @@ export default function Header() {
               )}
             </li>
           ))}
-        {( user?.userAccess !== "PRODUCTION" && user?.userAccess !== "CLAIMS") && <li>
-            <span
-              style={{
-                cursor: "pointer",
-                fontSize: "14px",
-                fontWeight: "bold",
-              }}
-              onClick={openReport}
-            >
-              Accounting Report Deskop App
-            </span>
-          </li>}
+          {user?.userAccess !== "PRODUCTION" &&
+            user?.userAccess !== "CLAIMS" && (
+              <li>
+                <span
+                  style={{
+                    cursor: "pointer",
+                    fontSize: "14px",
+                    fontWeight: "bold",
+                  }}
+                  onClick={openReport}
+                >
+                  Accounting Report Deskop App
+                </span>
+              </li>
+            )}
         </ul>
       </nav>
 
