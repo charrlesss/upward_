@@ -70,6 +70,11 @@ export default function LandingPage() {
         timer: 800,
       }).then(() => {
         setUser(res.data.user);
+        if(res.data.user.userAccess === 'ACCOUNTING_CHECKS'){
+          return navigate("/dashboard/task/accounting/warehouse-checks");
+        }
+
+
         if (res.data.user.is_master_admin) {
           navigate("/master-admin-dashboard");
         } else {
@@ -145,7 +150,6 @@ export default function LandingPage() {
         </div>
         <div style={{ display: "flex", alignItems: "center", columnGap: "10px", marginTop: "10px" }}>
           <input name="showpass" id="showpass" type="checkbox" style={{ padding: "0", margin: 0 }} onChange={(e) => {
-            console.log(e.currentTarget.checked)
             setShowPassword(e.currentTarget?.checked)
           }} />
           <label htmlFor="showpass" style={{ fontSize: "10px", cursor: "pointer", padding: "0", margin: 0 }}>SHOW PASSWORD</label>

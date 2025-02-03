@@ -417,6 +417,34 @@ const PRODUCTION_ACCOUNTING_REFERENCE = [
 ];
 const PRODUCTION_ACCOUNTING_TASK = [...PRODUCTION_TASK, ...ACCOUNTING_TASK];
 
+const ACCOUNTING_CHECKS_TASK = [
+  <Route
+    key="/dashboard/task/accounting/warehouse-checks"
+    path="/dashboard/task/accounting/warehouse-checks"
+    element={<Warehouse />}
+  />,
+  <Route
+    key="/dashboard/task/accounting/check-pullout-request"
+    path="/dashboard/task/accounting/check-pullout-request"
+    element={<CheckPulloutRequest />}
+  />,
+  <Route
+    key="/dashboard/task/accounting/check-pullout-approved"
+    path="/dashboard/task/accounting/check-pullout-approved"
+    element={<CheckPulloutApproved />}
+  />,
+  <Route
+    key="/dashboard/task/accounting/check-postponement-request"
+    path="/dashboard/task/accounting/check-postponement-request"
+    element={<ChekPostponementRequest />}
+  />,
+  <Route
+    key="/dashboard/task/accounting/check-postponement-approved"
+    path="/dashboard/task/accounting/check-postponement-approved"
+    element={<ChekPostponementApproved />}
+  />,
+];
+
 export default function Routers() {
   const { user } = useContext(AuthContext);
   const REF_ROUTE: {
@@ -439,34 +467,36 @@ export default function Routers() {
     CLAIMS_TASK: Array<JSX.Element>;
     ADMIN_TASK: Array<JSX.Element>;
     PRODUCTION_ACCOUNTING_TASK: Array<JSX.Element>;
+    ACCOUNTING_CHECKS_TASK: Array<JSX.Element>;
   } = {
     PRODUCTION_TASK,
     ACCOUNTING_TASK,
     CLAIMS_TASK,
     ADMIN_TASK,
     PRODUCTION_ACCOUNTING_TASK,
+    ACCOUNTING_CHECKS_TASK,
   };
 
   const reference =
     REF_ROUTE[
-    `${user?.userAccess as string}_REFERENCE` as
-    | "PRODUCTION_REFERENCE"
-    | "ACCOUNTING_REFERENCE"
-    | "CLAIMS_REFERENCE"
-    | "ADMIN_REFERENCE"
-    | "PRODUCTION_ACCOUNTING_REFERENCE"
+      `${user?.userAccess as string}_REFERENCE` as
+        | "PRODUCTION_REFERENCE"
+        | "ACCOUNTING_REFERENCE"
+        | "CLAIMS_REFERENCE"
+        | "ADMIN_REFERENCE"
+        | "PRODUCTION_ACCOUNTING_REFERENCE"
     ];
 
   const task =
     TASK_ROUTE[
-    `${user?.userAccess as string}_TASK` as
-    | "PRODUCTION_TASK"
-    | "ACCOUNTING_TASK"
-    | "CLAIMS_TASK"
-    | "ADMIN_TASK"
-    | "PRODUCTION_ACCOUNTING_TASK"
+      `${user?.userAccess as string}_TASK` as
+        | "PRODUCTION_TASK"
+        | "ACCOUNTING_TASK"
+        | "CLAIMS_TASK"
+        | "ADMIN_TASK"
+        | "PRODUCTION_ACCOUNTING_TASK"
+        | "ACCOUNTING_CHECKS_TASK"
     ];
-
   if (user && (user?.is_master_admin as boolean)) {
     return (
       <Routes>
@@ -488,7 +518,7 @@ export default function Routers() {
           <Route path="/dashboard" element={<Dashboard />} />
 
           {/* Reference */}
-          {reference.length > 0 &&
+          {reference?.length > 0 &&
             reference.map((Route) => {
               return Route;
             })}

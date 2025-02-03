@@ -513,6 +513,43 @@ export default function Header() {
           ],
         },
       ]);
+    } else if (user?.userAccess === "ACCOUNTING_CHECKS") {
+      return setMenuData([
+        {
+          name: "Accounting",
+          subLinks: [
+            {
+              name: "Treasury",
+              path: "/dashboard/task/accounting/warehouse-checks",
+            },
+            {
+              name: "Check Pullout Request",
+              path: "/dashboard/task/accounting/check-pullout-request",
+            },
+            {
+              name: "Check Pullout Approved",
+              path: "/dashboard/task/accounting/check-pullout-approved",
+            },
+            {
+              name: "Check Postponement Request",
+              path: "/dashboard/task/accounting/check-postponement-request",
+            },
+            {
+              name: "Check Postponement Approved",
+              path: "/dashboard/task/accounting/check-postponement-approved",
+            },
+          ],
+        },
+        {
+          name: "Accounting Report",
+          subLinks: [
+            {
+              name: "Accounting Report",
+              path: "/dashboard/reports/accounting/accounting-reports",
+            },
+          ],
+        },
+      ]);
     } else if (user?.userAccess === "PRODUCTION") {
       return setMenuData([
         {
@@ -588,6 +625,8 @@ export default function Header() {
       setMenuData(_menuData);
     }
   }, [user?.userAccess]);
+
+  console.log(user?.userAccess);
   // Add event listener to handle clicks outside the menu
   useEffect(() => {
     const handleClickOutside = (e: any) => {
@@ -684,21 +723,23 @@ export default function Header() {
               )}
             </li>
           ))}
-          {user?.userAccess !== "PRODUCTION" &&
-            user?.userAccess !== "CLAIMS" && (
-              <li>
-                <span
-                  style={{
-                    cursor: "pointer",
-                    fontSize: "14px",
-                    fontWeight: "bold",
-                  }}
-                  onClick={openReport}
-                >
-                  Accounting Report Deskop App
-                </span>
-              </li>
-            )}
+          {user?.username === "gina"
+            ? user?.userAccess !== "PRODUCTION" &&
+              user?.userAccess !== "CLAIMS" && (
+                <li>
+                  <span
+                    style={{
+                      cursor: "pointer",
+                      fontSize: "14px",
+                      fontWeight: "bold",
+                    }}
+                    onClick={openReport}
+                  >
+                    Accounting Report Deskop App
+                  </span>
+                </li>
+              )
+            : null}
         </ul>
       </nav>
 
