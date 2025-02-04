@@ -237,8 +237,13 @@ export default function PostDateChecks() {
           }
           return newObjContainer;
         }
-
-        tableRef.current.setDataFormated(response.data.getSearchPDCCheck);
+        const data = response.data.getSearchPDCCheck.map((itm: any) => {
+          itm.Check_Amnt = formatNumber(
+            parseFloat(itm.Check_Amnt.toString().replace(/,/g, ""))
+          );
+          return itm;
+        });
+        tableRef.current.setDataFormated(data);
 
         if (refNoRef.current) {
           refNoRef.current.value = response.data.getSearchPDCCheck[0].Ref_No;
@@ -1292,7 +1297,6 @@ export default function PostDateChecks() {
               setHasSelectedRow(RowIndex);
               modalCheckRef.current?.showModal();
               wait(100).then(() => {
-                console.log(rowSelected);
                 if (
                   modalCheckRef.current.getRefs().checknoRef.current &&
                   modalCheckRef.current.getRefs().bankRef.current &&

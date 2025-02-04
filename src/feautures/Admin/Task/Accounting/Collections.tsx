@@ -155,11 +155,12 @@ export default function Collection() {
                Check_No AS Check_No, 
                date_FORMAT(Check_Date,'%b. %d, %Y') AS Check_Date,
               FORMAT(CAST(REPLACE(Check_Amnt, ',', '') AS DECIMAL(10,2)), 2) AS Amount,
-              CONCAT(Bank, '/', Branch) AS Bank_Branch
+              CONCAT(Bank.Bank, '/', Branch) AS Bank_Branch
             FROM PDC 
+            left join Bank  on Bank.Bank_Code = PDC.Bank
             WHERE (
               Check_No LIKE '%${search}%' 
-              OR Bank  LIKE '%${search}%' 
+              OR PDC.Bank  LIKE '%${search}%' 
               OR Branch LIKE '%${search}%') 
               AND (PNo = '${pnClientRef.current.value}' ) 
               AND (ORNum IS NULL OR ORNum = '')
@@ -176,14 +177,16 @@ export default function Collection() {
               Check_No, 
               Check_Date, 
               Check_Amnt, 
-              PDC.Bank, 
-              Bank.Bank AS BName, 
+              Bank.Bank as Bank, 
+              CONCAT(Bank.Bank, '/', Branch)  AS BName, 
               Branch, 
               Remarks 
             FROM PDC 
             LEFT JOIN Bank ON PDC.Bank = Bank.Bank_Code
             WHERE PNo = '${pnClientRef.current.value}' AND Check_No = '${rowItm[0]}'`);
+
             const checkDetails = dt?.data.data[0];
+
             wait(100).then(() => {
               if (modalCheckRef.current) {
                 if (modalCheckRef.current.checknoRef.current) {
@@ -678,7 +681,7 @@ export default function Collection() {
         });
         debitTableData[getSelectedRow][2] = checkno;
         debitTableData[getSelectedRow][3] = checkdate;
-        debitTableData[getSelectedRow][4] = branch;
+        debitTableData[getSelectedRow][4] = `${bank}/${branch}`;
         debitTableData[getSelectedRow][9] = remarks;
         debitTableData[getSelectedRow][11] = bank;
         debitTableData[getSelectedRow][12] = bankRefName;
@@ -704,7 +707,7 @@ export default function Collection() {
           }),
           Check_No: checkno,
           Check_Date: checkdate,
-          Bank_Branch: branch,
+          Bank_Branch: `${bank}/${branch}`,
           Acct_Code: dd.data?.data[0].Acct_Code,
           Acct_Title: dd.data?.data[0].Acct_Title,
           Deposit_Slip: "",
@@ -1551,8 +1554,9 @@ export default function Collection() {
                 height: "auto",
                 flex: 1,
               }}
-              getSelectedItem={(rowItm: any) => {
+              getSelectedItem={async (rowItm: any) => {
                 if (rowItm) {
+                  console.log(rowItm)
                   if (rowItm[0] === "Cash") {
                     wait(100).then(() => {
                       if (amountDebitRef.current)
@@ -1576,10 +1580,9 @@ export default function Collection() {
                       );
                     }
                     const strBank = rowItm[4].split("/");
-                    const BankName = executeQueryToClient(
+                    const BankName = await executeQueryToClient(
                       `select * from bank where Bank_Code = '${strBank[0]}'`
                     );
-
                     modalCheckRef.current?.showModal();
 
                     wait(100).then(() => {
@@ -1594,7 +1597,7 @@ export default function Collection() {
                         }
                         if (modalCheckRef.current.branchRef.current) {
                           modalCheckRef.current.branchRef.current.value =
-                            rowItm[4];
+                          strBank[1];
                         }
                         if (modalCheckRef.current.remarksRef.current) {
                           modalCheckRef.current.remarksRef.current.value =
@@ -1609,7 +1612,7 @@ export default function Collection() {
                             rowItm[1];
                         }
                         if (modalCheckRef.current.bankRefName.current) {
-                          modalCheckRef.current.bankRefName.current = BankName;
+                          modalCheckRef.current.bankRefName.current = BankName.data.data[0].Bank;
                         }
                       }
                     });

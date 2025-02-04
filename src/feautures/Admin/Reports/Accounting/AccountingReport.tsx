@@ -12,6 +12,7 @@ import { AuthContext } from "../../../../components/AuthContext";
 import { useUpwardTableModalSearchSafeMode } from "../../../../components/DataGridViewReact";
 import { wait } from "../../../../lib/wait";
 import { Loading } from "../../../../components/Loading";
+import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 
 const buttons = [
   { label: "Chart of Accounts", id: 0 },
@@ -65,7 +66,7 @@ export default function AccountingReport() {
         <div
           style={{
             border: "1px solid #94a3b8",
-            width: "600px",
+            width: "700px",
             height: "450px",
             display: "flex",
             flexDirection: "column",
@@ -649,14 +650,18 @@ function FormScheduleAccount() {
                 e.preventDefault();
               }
             },
-            onChange: (e) => {
+            onBlur: (e) => {
+              const newDate = isValidDateString(e.currentTarget.value)
+                ? e.currentTarget.value
+                : new Date();
+
               setTitle(
                 generateTitle({
                   report,
                   subsiText: subsiTextRef.current?.value || "",
                   insuarnceIndex: _subsiRef.current?.selectedIndex,
                   insurance: _subsiRef.current?.value,
-                  dateValue: e.currentTarget.value,
+                  dateValue: newDate,
                   account: accountRef.current?.value,
                   accountTitle: _accountRef.current?.value,
                 })
@@ -744,16 +749,14 @@ function FormSubsidiaryLedger() {
   const { user, myAxios } = useContext(AuthContext);
   const [title, setTitle] = useState(
     generateTitle({
-      report: "All Accounts",
-      subsiText: "ALL",
-      insuarnceIndex: 0,
-      insurance: "ALL",
-      dateValue: format(new Date(), "MMMM dd, yyyy"),
-      account: "",
-      accountTitle: "",
+      subsi: 0,
+      accountName: "Premium Receivables",
+      account: "1.03.01",
+      dateFrom: new Date(),
+      dateTo: new Date(),
     })
   );
-  const [subsi, setSubsi] = useState("I.D No.");
+  const [subsi, setSubsi] = useState("ALL");
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const reportRef = useRef<HTMLSelectElement>(null);
   const accountRef = useRef<HTMLInputElement>(null);
@@ -766,9 +769,15 @@ function FormSubsidiaryLedger() {
 
   const dateFromRef = useRef<HTMLInputElement>(null);
   const dateToRef = useRef<HTMLInputElement>(null);
-  
+
   const formatRef = useRef<HTMLSelectElement>(null);
   const fieldRef = useRef<HTMLSelectElement>(null);
+
+  const idNoRef = useRef<HTMLInputElement>(null);
+  const nameRef = useRef("");
+
+  const subAcctRef = useRef<HTMLInputElement>(null);
+  const shortNameRef = useRef("");
 
   const {
     UpwardTableModalSearch: ChartAccountUpwardTableModalSearch,
@@ -795,8 +804,97 @@ function FormSubsidiaryLedger() {
             _accountRef.current.value = rowItm[1];
           }
 
+          setTitle(
+            generateTitle({
+              subsi: 0,
+              accountName: rowItm[1],
+              account: rowItm[0],
+              subsiName: rowItm[1],
+              subsiId: rowItm[0],
+              dateFrom: new Date(dateFromRef.current?.value as any),
+              dateTo: new Date(dateToRef.current?.value as any),
+            })
+          );
         });
         chartAccountCloseModal();
+      }
+    },
+  });
+  const {
+    UpwardTableModalSearch: ClientUpwardTableModalSearch,
+    openModal: clientOpenModal,
+    closeModal: clientCloseModal,
+  } = useUpwardTableModalSearchSafeMode({
+    link: "/task/accounting/search-pdc-policy-id",
+    column: [
+      { key: "Type", label: "Type", width: 60 },
+      { key: "IDNo", label: "ID No.", width: 100 },
+      {
+        key: "Name",
+        label: "Name",
+        width: 350,
+      },
+      {
+        key: "client_id",
+        label: "client_id",
+        width: 0,
+        hide: true,
+      },
+    ],
+    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
+      if (rowItm) {
+        wait(100).then(() => {
+          if (idNoRef.current) {
+            idNoRef.current.value = rowItm[1];
+          }
+          nameRef.current = rowItm[2];
+          setTitle(
+            generateTitle({
+              subsi: 1,
+              accountName: _accountRef.current?.value,
+              account: accountRef.current?.value,
+              subsiName: rowItm[2],
+              subsiId: rowItm[1],
+              dateFrom: new Date(dateFromRef.current?.value as any),
+              dateTo: new Date(dateToRef.current?.value as any),
+            })
+          );
+        });
+        clientCloseModal();
+      }
+    },
+  });
+  const {
+    UpwardTableModalSearch: SubAccountUpwardTableModalSearch,
+    openModal: subAccountOpenModal,
+    closeModal: subAccountCloseModal,
+  } = useUpwardTableModalSearchSafeMode({
+    link: "/reports/accounting/report/sub-account-search",
+    column: [
+      { key: "Acronym", label: "Acronym", width: 80 },
+      { key: "ShortName", label: "ShortName", width: 200 },
+    ],
+    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
+      if (rowItm) {
+        wait(100).then(() => {
+          if (subAcctRef.current) {
+            subAcctRef.current.value = rowItm[0];
+          }
+          shortNameRef.current = rowItm[1];
+
+          setTitle(
+            generateTitle({
+              subsi: 2,
+              accountName: _accountRef.current?.value,
+              account: accountRef.current?.value,
+              subsiName: rowItm[1],
+              subsiId: rowItm[0],
+              dateFrom: new Date(dateFromRef.current?.value as any),
+              dateTo: new Date(dateToRef.current?.value as any),
+            })
+          );
+        });
+        subAccountCloseModal();
       }
     },
   });
@@ -825,48 +923,55 @@ function FormSubsidiaryLedger() {
     });
 
   function generateTitle({
-    report,
-    subsiText,
-    insuarnceIndex,
-    insurance,
-    dateValue,
+    subsi,
+    accountName,
     account,
-    accountTitle,
+    subsiName,
+    subsiId,
+    dateFrom,
+    dateTo,
   }: any) {
     const _title =
       user?.department === "UMIS"
         ? "UPWARD MANAGEMENT INSURANCE SERVICES"
         : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.";
-    if (report === "GL Account (Detailed)") {
-      let txtReportTitleText = `${_title}\n ${
-        subsiText === "" || subsiText === "ALL" ? "" : `(${subsiText})\n`
-      }Schedule of ${accountTitle} ${` - ${
-        insurance ? insurance : ""
-      }`} (${account})\n${format(new Date(dateValue), "MMMM dd, yyyy")}`;
-      // setTitle(txtReportTitleText);
-      return txtReportTitleText;
+    let Subsi = "\n";
+
+    if (subsi === 1) {
+      Subsi += `ID No. : ${subsiName} (${subsiId})`;
+    } else if (subsi === 2) {
+      Subsi += `Sub Account : ${subsiName} (${subsiId})`;
     }
-    if (report === "All Accounts") {
-      let txtReportTitleText = `${_title}\n ${
-        subsiText === "" || subsiText === "ALL" ? "" : `(${subsiText})\n`
-      }Schedule of Accounts\n${format(new Date(dateValue), "MMMM dd, yyyy")}`;
-      // setTitle(txtReportTitleText);
-      return txtReportTitleText;
-    }
+
+    let txtReportTitleText = `${_title}
+Subsidiary Ledger\n\n
+Account: ${accountName} (${account})${subsi === 0 ? "" : Subsi}
+For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
+      new Date(dateTo),
+      "MMMM dd, yyyy"
+    )}
+`;
+    // setTitle(txtReportTitleText);
+    return txtReportTitleText;
   }
 
   function generateReport() {
+    let subsi_options: any = "";
+
+    if (subsi === "ID #") {
+      subsi_options = idNoRef.current?.value;
+    } else if (subsi === "Sub-Acct #") {
+      subsi_options = subAcctRef.current?.value;
+    }
+
     mutateGenerateReport({
       title,
-      report: reportRef.current?.value,
+      dateFrom: dateFromRef.current?.value,
+      dateTo: dateToRef.current?.value,
       account: accountRef.current?.value,
-      accountName: _accountRef.current?.value,
-      subsi: subsiRef.current?.selectedIndex,
-      subsiText: subsiTextRef.current?.value,
-      insurance: _subsiRef.current?.value || "",
-      date: dateFromRef.current?.value,
-      sort: formatRef.current?.selectedIndex,
-      order: formatRef.current?.selectedIndex,
+      mField: fieldRef.current?.value,
+      subsi,
+      subsi_options,
     });
   }
 
@@ -875,7 +980,7 @@ function FormSubsidiaryLedger() {
       mutationKey: "generate-report",
       mutationFn: async (variables: any) => {
         return await myAxios.post(
-          "/reports/accounting/report/generate-report-schedule-of-account",
+          "/reports/accounting/report/generate-report-subsidiary-ledger",
           variables,
           {
             responseType: "arraybuffer",
@@ -886,7 +991,7 @@ function FormSubsidiaryLedger() {
         );
       },
       onSuccess: (response) => {
-        console.log(response);
+        // console.log(response);
 
         const pdfBlob = new Blob([response.data], { type: "application/pdf" });
         const pdfUrl = URL.createObjectURL(pdfBlob);
@@ -946,7 +1051,6 @@ function FormSubsidiaryLedger() {
           }}
           _inputRef={titleRef}
         />
-
         <TextInput
           label={{
             title: "Account : ",
@@ -959,7 +1063,7 @@ function FormSubsidiaryLedger() {
           input={{
             className: "search-input-up-on-key-down",
             type: "text",
-            value: "7.10.06",
+            value: "1.03.01",
             onKeyDown: (e) => {
               if (e.key === "Enter" || e.key === "NumpadEnter") {
                 e.preventDefault();
@@ -995,7 +1099,7 @@ function FormSubsidiaryLedger() {
           }}
           input={{
             readOnly: true,
-            defaultValue: "Communications Expense",
+            defaultValue: "Premium Receivables",
             type: "text",
             onKeyDown: (e) => {
               if (e.key === "Enter" || e.key === "NumpadEnter") {
@@ -1028,7 +1132,7 @@ function FormSubsidiaryLedger() {
               },
             }}
             selectRef={subsiRef}
-            containerStyle={{ flex: 2 }}
+            containerStyle={{ flex: 1 }}
             select={{
               style: { flex: 1, height: "22px" },
               value: subsi,
@@ -1042,7 +1146,6 @@ function FormSubsidiaryLedger() {
                   mutateInsurance({});
                 }
 
-               
                 setSubsi(e.target.value);
               },
             }}
@@ -1054,7 +1157,7 @@ function FormSubsidiaryLedger() {
             values={"key"}
             display={"key"}
           />
-          {subsi !== "Insurance" ? (
+          {subsi === "ALL" && (
             <TextInput
               containerStyle={{
                 flex: 1,
@@ -1066,8 +1169,10 @@ function FormSubsidiaryLedger() {
                 },
               }}
               input={{
+                disabled: true,
+                readOnly: true,
                 type: "text",
-                defaultValue: "ALL",
+                defaultValue: "",
                 onKeyDown: (e) => {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
@@ -1077,41 +1182,85 @@ function FormSubsidiaryLedger() {
                     e.preventDefault();
                   }
                 },
-                onChange: (e) => {
-           
-                },
-                style: { width: "100px" },
+                onChange: (e) => {},
+                style: { width: "100%" },
               }}
               inputRef={subsiTextRef}
             />
-          ) : (
-            <SelectInput
+          )}
+          {subsi === "ID #" && (
+            <TextInput
+              label={{
+                title: "PN/Client ID : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                  display: "none",
+                },
+              }}
+              containerStyle={{ flex: 1 }}
+              input={{
+                type: "text",
+                style: { width: "100%", height: "22px" },
+                onKeyDown: (e) => {
+                  if (e.key === "Enter" || e.key === "NumpadEnter") {
+                    e.preventDefault();
+                    clientOpenModal(e.currentTarget.value);
+                  }
+                },
+              }}
+              inputRef={idNoRef}
+              icon={
+                <PersonSearchIcon
+                  sx={{
+                    fontSize: "18px",
+                    color: "black",
+                  }}
+                />
+              }
+              onIconClick={(e) => {
+                e.preventDefault();
+                if (idNoRef.current) {
+                  clientOpenModal(idNoRef.current.value);
+                }
+              }}
+            />
+          )}
+          {subsi === "Sub-Acct #" && (
+            <TextInput
               label={{
                 title: "",
                 style: {
                   display: "none",
                 },
               }}
-              ref={__subsiRef}
-              selectRef={_subsiRef}
-              containerStyle={{
-                flex: 1,
-              }}
-              select={{
-                style: { flex: 1, height: "22px" },
-                defaultValue: "ALL",
+              containerStyle={{ flex: 1 }}
+              input={{
+                type: "text",
+                style: { width: "100%", height: "22px" },
                 onKeyDown: (e) => {
-                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
+                    subAccountOpenModal(e.currentTarget.value);
                   }
                 },
-                onChange: (e) => {
-         
-                },
               }}
-              datasource={[]}
-              values={"AccountCode"}
-              display={"AccountCode"}
+              inputRef={subAcctRef}
+              icon={
+                <PersonSearchIcon
+                  sx={{
+                    fontSize: "18px",
+                    color: "black",
+                  }}
+                />
+              }
+              onIconClick={(e) => {
+                e.preventDefault();
+                if (subAcctRef.current) {
+                  subAccountOpenModal(subAcctRef.current.value);
+                }
+              }}
             />
           )}
         </div>
@@ -1136,17 +1285,47 @@ function FormSubsidiaryLedger() {
                 e.preventDefault();
               }
             },
-            onChange: (e) => {
-              setTitle(
-                generateTitle({
-                  subsiText: subsiTextRef.current?.value || "",
-                  insuarnceIndex: _subsiRef.current?.selectedIndex,
-                  insurance: _subsiRef.current?.value,
-                  dateValue: e.currentTarget.value,
-                  account: accountRef.current?.value,
-                  accountTitle: _accountRef.current?.value,
-                })
-              );
+            onBlur: (e) => {
+              const newDateFrom = isValidDateString(e.currentTarget.value)
+                ? e.currentTarget.value
+                : new Date();
+              if (subsi === "ID #") {
+                setTitle(
+                  generateTitle({
+                    subsi: 1,
+                    accountName: accountRef.current?.value,
+                    account: _accountRef.current?.value,
+                    subsiName: nameRef.current,
+                    subsiId: idNoRef.current?.value,
+                    dateFrom: new Date(newDateFrom),
+                    dateTo: new Date(dateToRef.current?.value as any),
+                  })
+                );
+              } else if (subsi === "ID #") {
+                setTitle(
+                  generateTitle({
+                    subsi: 2,
+                    accountName: accountRef.current?.value,
+                    account: _accountRef.current?.value,
+                    subsiName: shortNameRef.current,
+                    subsiId: subAcctRef.current?.value,
+                    dateFrom: new Date(newDateFrom),
+                    dateTo: new Date(dateToRef.current?.value as any),
+                  })
+                );
+              } else {
+                setTitle(
+                  generateTitle({
+                    subsi: 0,
+                    accountName: accountRef.current?.value,
+                    account: _accountRef.current?.value,
+                    subsiName: "",
+                    subsiId: "",
+                    dateFrom: new Date(newDateFrom),
+                    dateTo: new Date(dateToRef.current?.value as any),
+                  })
+                );
+              }
             },
             style: { width: "calc(100% - 90px)" },
           }}
@@ -1173,17 +1352,47 @@ function FormSubsidiaryLedger() {
                 e.preventDefault();
               }
             },
-            onChange: (e) => {
-              setTitle(
-                generateTitle({
-                  subsiText: subsiTextRef.current?.value || "",
-                  insuarnceIndex: _subsiRef.current?.selectedIndex,
-                  insurance: _subsiRef.current?.value,
-                  dateValue: e.currentTarget.value,
-                  account: accountRef.current?.value,
-                  accountTitle: _accountRef.current?.value,
-                })
-              );
+            onBlur: (e) => {
+              const newDateTo = isValidDateString(e.currentTarget.value)
+                ? e.currentTarget.value
+                : new Date();
+              if (subsi === "ID #") {
+                setTitle(
+                  generateTitle({
+                    subsi: 1,
+                    accountName: _accountRef.current?.value,
+                    account: accountRef.current?.value,
+                    subsiName: nameRef.current,
+                    subsiId: idNoRef.current?.value,
+                    dateFrom: new Date(dateFromRef.current?.value as any),
+                    dateTo: new Date(newDateTo),
+                  })
+                );
+              } else if (subsi === "ID #") {
+                setTitle(
+                  generateTitle({
+                    subsi: 2,
+                    accountName: _accountRef.current?.value,
+                    account: accountRef.current?.value,
+                    subsiName: shortNameRef.current,
+                    subsiId: subAcctRef.current?.value,
+                    dateFrom: new Date(dateFromRef.current?.value as any),
+                    dateTo: new Date(newDateTo),
+                  })
+                );
+              } else {
+                setTitle(
+                  generateTitle({
+                    subsi: 0,
+                    accountName: accountRef.current?.value,
+                    account: _accountRef.current?.value,
+                    subsiName: "",
+                    subsiId: "",
+                    dateFrom: new Date(dateFromRef.current?.value as any),
+                    dateTo: new Date(newDateTo),
+                  })
+                );
+              }
             },
             style: { width: "calc(100% - 90px)" },
           }}
@@ -1267,6 +1476,8 @@ function FormSubsidiaryLedger() {
         </Button>
       </div>
       <ChartAccountUpwardTableModalSearch />
+      <ClientUpwardTableModalSearch />
+      <SubAccountUpwardTableModalSearch />
     </>
   );
 }
@@ -1666,4 +1877,7 @@ function FormPostDatedCheckRegistry() {
       </div>
     </>
   );
+}
+function isValidDateString(dateString: string) {
+  return !isNaN(Date.parse(dateString));
 }

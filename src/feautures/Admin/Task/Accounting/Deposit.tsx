@@ -49,24 +49,7 @@ const defaultCashBreakDown = [
   { value1: ".05", value2: "", value3: "0.00" },
   { value1: ".01", value2: "", value3: "0.00" },
 ];
-const buttons = [
-  {
-    title: "Cash Collection",
-    index: 0,
-  },
-  {
-    title: "Check Collection",
-    index: 1,
-  },
-  {
-    title: "Selected Collection",
-    index: 2,
-  },
-  {
-    title: "Collection for Deposit",
-    index: 3,
-  },
-];
+
 const cashColumns = [
   {
     key: "OR_No",
@@ -154,7 +137,6 @@ export default function Deposit() {
   const selectedTable = useRef<any>(null);
   const collectionCheckTable = useRef<any>(null);
 
-  const depositSearch = useRef<HTMLInputElement>(null);
   const inputSearchRef = useRef<HTMLInputElement>(null);
   const refSlipCode = useRef<HTMLInputElement>(null);
   const refDateDepo = useRef<HTMLInputElement>(null);
@@ -173,7 +155,7 @@ export default function Deposit() {
   const refShortName = useRef("");
 
   const { myAxios, user } = useContext(AuthContext);
-  const { currentStepIndex, goTo } = useMultipleComponent([0, 1, 2, 3]);
+  const {  goTo } = useMultipleComponent([0, 1, 2, 3]);
   const [cashCollection, setCashCollection] = useState<any>([]);
   const [checkCollection, setCheckCollection] = useState<any>([]);
   const [selectedRows, setSelectedRows] = useState<any>([]);
@@ -533,6 +515,13 @@ export default function Deposit() {
       SubAccount: refSubAccount.current,
       ShortName: refShortName.current,
     };
+
+    console.log({
+      ...state,
+      selectedCollection: JSON.stringify(selectedRows),
+      tableRowsInputValue: JSON.stringify(tableRowsInputValue),
+    })
+
     if (depositMode === "edit") {
       codeCondfirmationAlert({
         isUpdate: true,
