@@ -1065,6 +1065,7 @@ export default function PostDateChecks() {
                         },
                       }}
                       input={{
+                        readOnly:true,
                         disabled: isDisableField,
                         type: "text",
                         style: { width: "300px" },

@@ -333,7 +333,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
             if (policyType === "TEMP") {
               wait(100).then(() => {
                 temporaryPolicyRef.current.disableField(false);
-                temporaryPolicyRef.current.refetchID()
+                temporaryPolicyRef.current.refetchID();
               });
             }
           }}
@@ -431,6 +431,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
                 if (result.isConfirmed) {
                   setPolicyType("REG");
                   window.localStorage.setItem("__policy_type__", "REG");
+                  setMode("");
                 }
               });
             }}
@@ -462,6 +463,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
                 if (result.isConfirmed) {
                   setPolicyType("TEMP");
                   window.localStorage.setItem("__policy_type__", "TEMP");
+                  setMode("");
                 }
               });
             }}
@@ -764,7 +766,11 @@ const COMRegular = forwardRef(
           const dt = response.data.data1;
           const dtVP = response.data.data2;
           const dtVP1 = response.data.data3;
-          if (dt.length <= 0 || dtVP.length <= 0) {
+          if (dt.length <= 0) {
+            return alert("Unable to load data!");
+          }
+
+          if (policy === "COM" && dtVP.length <= 0) {
             return alert("Unable to load data!");
           }
 
@@ -1099,13 +1105,18 @@ const COMRegular = forwardRef(
     const { mutate: mutatateUpdate, isLoading: isLoadingUpdate } = useMutation({
       mutationKey: "update",
       mutationFn: (variables: any) => {
-        return myAxios.post("/task/production/com-update-regular", variables, {
+        const link =
+          policy === "COM"
+            ? "/task/production/com-update-regular"
+            : "/task/production/com-update-regular-tpl";
+        return myAxios.post(link, variables, {
           headers: {
             Authorization: `Bearer ${user?.accessToken}`,
           },
         });
       },
       onSuccess(response) {
+        console.log(response);
         if (response.data.success) {
           _policyInformationRef.current.resetRefs();
           _policyTypeDetailsRef.current.resetRefs();
@@ -1140,6 +1151,14 @@ const COMRegular = forwardRef(
 
     useImperativeHandle(ref, () => ({
       handleOnSave: (mode: string) => {
+        if (
+          _policyInformationRef.current.requiredField() ||
+          _policyTypeDetailsRef.current.requiredField() ||
+          _policyPremiumRef.current.requiredField()
+        ) {
+          return;
+        }
+
         if (mode === "edit") {
           codeCondfirmationAlert({
             isUpdate: true,
@@ -1674,7 +1693,11 @@ const COMTemporary = forwardRef(
     const { mutate: mutatateUpdate, isLoading: isLoadingUpdate } = useMutation({
       mutationKey: "update",
       mutationFn: (variables: any) => {
-        return myAxios.post("/task/production/com-update-regular", variables, {
+        const link =
+          policy === "COM"
+            ? "/task/production/com-update-regular"
+            : "/task/production/com-update-regular-tpl";
+        return myAxios.post(link, variables, {
           headers: {
             Authorization: `Bearer ${user?.accessToken}`,
           },
@@ -2048,6 +2071,14 @@ const COMTemporary = forwardRef(
     });
     useImperativeHandle(ref, () => ({
       handleOnSave: (mode: string) => {
+        if (
+          _policyInformationRef.current.requiredField() ||
+          _policyTypeDetailsRef.current.requiredField() ||
+          _policyPremiumRef.current.requiredField()
+        ) {
+          return;
+        }
+
         if (mode === "edit") {
           codeCondfirmationAlert({
             isUpdate: true,
@@ -2108,9 +2139,9 @@ const COMTemporary = forwardRef(
         );
         _policyPremiumRef.current.refEnableDisable(disable, user?.department);
       },
-      refetchID:()=>{
-        refetchTempID()
-      }
+      refetchID: () => {
+        refetchTempID();
+      },
     }));
     useEffect(() => {
       mutatateAccountRef.current({
@@ -2448,10 +2479,18 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
             ._policyInformationRef.current.getRefs().policyNoRef.current.value =
             rowItm[0];
         }
-        regularPolicyRef.current
-          .getRefs()
-          ._policyInformationRef.current.getRefs().rateCostRef.current =
-          rowItm[1];
+
+        if (
+          regularPolicyRef.current
+            .getRefs()
+            ._policyInformationRef.current.getRefs().rateCostRef.current
+        ) {
+          regularPolicyRef.current
+            .getRefs()
+            ._policyInformationRef.current.getRefs().rateCostRef.current.value =
+            rowItm[1];
+        }
+
         policyNoCloseModal();
         wait(100).then(() => {
           regularPolicyRef.current
@@ -2997,6 +3036,23 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       }
       if (unladenWeightRef.current) {
         unladenWeightRef.current.disabled = disabled;
+      }
+    },
+    requiredField: () => {
+      if (clientIDRef.current?.value === "") {
+        clientIDRef.current.focus();
+        alert("Client Details is Required!");
+        return true;
+      } else if (policyNoRef.current?.value === "") {
+        policyNoRef.current.focus();
+        alert("Policy No is Required!");
+        return true;
+      } else if (accountRef.current?.value === "") {
+        accountRef.current.focus();
+        alert("Account No is Required!");
+        return true;
+      } else {
+        return false;
       }
     },
   }));
@@ -3973,8 +4029,58 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
         rbCompreRef.current.disabled = disabled;
       }
     },
+    requiredField: () => {
+      if (policy === "TPL") {
+        if (premiumPaidRef.current?.value === "0.00") {
+          premiumPaidRef.current.focus();
+          alert("Premium Paid is Required!");
+          return true;
+        } else if (dinomination.current?.value === "") {
+          dinomination.current.focus();
+          alert("Dinomination is Required!");
+          return true;
+        } else {
+          return false;
+        }
+      } else {
+        if (DeductibleRef.current?.value === "0.00") {
+          DeductibleRef.current.focus();
+          alert("Deductible  is Required!");
+          return true;
+        } else if (towingRef.current?.value === "0.00") {
+          towingRef.current.focus();
+          alert("Towing Required!");
+          return true;
+        } else if (authorizedRepairLimitRef.current?.value === "0.00") {
+          authorizedRepairLimitRef.current.focus();
+          alert("Authorized Repair Limit Required!");
+          return true;
+        } else if (bodyInjuryRef.current?.value === "0.00") {
+          bodyInjuryRef.current.focus();
+          alert("Bodily Injury Required!");
+          return true;
+        } else if (propertyDamageRef.current?.value === "0.00") {
+          propertyDamageRef.current.focus();
+          alert("Property Damage Required!");
+          return true;
+        } else if (personalAccidentRef.current?.value === "0.00") {
+          personalAccidentRef.current.focus();
+          alert("Personal Accident Required!");
+          return true;
+        } else if (estimatedValueSchedVehicleRef.current?.value === "0.00") {
+          estimatedValueSchedVehicleRef.current.focus();
+          alert("Estimated Value of Schedule Vehicle Required!");
+          return true;
+        } else if (dinomination.current?.value === "") {
+          dinomination.current.focus();
+          alert("Dinomination is Required!");
+          return true;
+        } else {
+          return false;
+        }
+      }
+    },
   }));
-  console.log(policy);
   return (
     <div
       style={{
@@ -4514,6 +4620,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
                 ]}
                 inputRef={bodyInjuryRef}
                 input={{
+                  defaultValue: "0.00",
                   style: {
                     width: "100%",
                     flex: 1,
@@ -4558,6 +4665,8 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
                 ]}
                 inputRef={propertyDamageRef}
                 input={{
+                  defaultValue: "0.00",
+
                   style: {
                     width: "100%",
                     flex: 1,
@@ -4602,6 +4711,8 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
                 ]}
                 inputRef={personalAccidentRef}
                 input={{
+                  defaultValue: "0.00",
+
                   style: {
                     width: "100%",
                     flex: 1,
@@ -4861,6 +4972,14 @@ const PolicyPremium = forwardRef((props: any, ref) => {
       if (totalDueRef.current) {
         totalDueRef.current.disabled = disabled;
       }
+    },
+    requiredField: () => {
+      if (totalDueRef.current?.value === "0.00") {
+        totalDueRef.current.focus();
+        alert("Total Due is Required!");
+        return true;
+      }
+      return false;
     },
   }));
 

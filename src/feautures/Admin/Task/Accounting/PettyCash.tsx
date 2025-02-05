@@ -1457,6 +1457,7 @@ export const AutocompleteNumber = forwardRef(
           containerStyle={containerStyle}
           label={label}
           input={{
+   
             ...input,
             disabled: disableInput,
             type: "text",
