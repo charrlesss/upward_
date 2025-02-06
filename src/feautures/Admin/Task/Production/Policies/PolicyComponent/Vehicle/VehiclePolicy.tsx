@@ -470,7 +470,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
             variant="contained"
             color={policyType === "TEMP" ? "secondary" : "info"}
           >
-            TEMPORAY
+            TEMPORARY
           </Button>
         </div>
       </div>
@@ -3367,7 +3367,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
                 width: "90%",
               }}
               label={{
-                title: "Policy No:",
+                title: "Policy No: ",
                 style: {
                   fontSize: "12px",
                   fontWeight: "bold",
@@ -3883,6 +3883,9 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
 
   useImperativeHandle(ref, () => ({
     getRefsValue: () => {
+      console.log(parseNumber(bodyInjuryRef.current?.value));
+      console.log(propertyDamageRef.current?.value);
+      console.log(personalAccidentRef.current?.value);
       return {
         premiumPaidRef: premiumPaidRef.current?.value,
         estimatedValueSchedVehicleRef:
@@ -3896,9 +3899,9 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
         DeductibleRef: DeductibleRef.current?.value,
         towingRef: towingRef.current?.value,
         authorizedRepairLimitRef: authorizedRepairLimitRef.current?.value,
-        bodyInjuryRef: parseNumber(bodyInjuryRef.current?.value),
-        propertyDamageRef: parseNumber(propertyDamageRef.current?.value),
-        personalAccidentRef: parseNumber(personalAccidentRef.current?.value),
+        bodyInjuryRef: bodyInjuryRef.current?.value,
+        propertyDamageRef: propertyDamageRef.current?.value,
+        personalAccidentRef: personalAccidentRef.current?.value,
         dinomination: dinomination.current?.value,
         rbTPLRef: rbTPLRef.current?.value,
         rbCompreRef: rbCompreRef.current?.value,
@@ -4037,7 +4040,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
           return true;
         } else if (dinomination.current?.value === "") {
           dinomination.current.focus();
-          alert("Dinomination is Required!");
+          alert("Denomination is Required!");
           return true;
         } else {
           return false;
@@ -4073,7 +4076,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
           return true;
         } else if (dinomination.current?.value === "") {
           dinomination.current.focus();
-          alert("Dinomination is Required!");
+          alert("Dnomination is Required!");
           return true;
         } else {
           return false;
@@ -4272,13 +4275,30 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
                   e.currentTarget.value.replace(/,/g, "")
                 );
                 if (isNaN(insuredValue)) insuredValue = 0;
+                let deductible = 0;
 
-                const deductible = insuredValue * 0.01;
+                if (process.env.REACT_APP_DEPARTMENT === "UMIS") {
+                  deductible = insuredValue * 0.01;
+                } else {
+                  deductible = insuredValue * 0.0125;
+                }
+
                 if (DeductibleRef.current) {
                   DeductibleRef.current.value = deductible.toLocaleString(
                     undefined,
                     { minimumFractionDigits: 2, maximumFractionDigits: 2 }
                   );
+                  if (towingRef.current) {
+                    let tow = parseFloat(
+                      towingRef.current.value.toString().replace(/,/g, "")
+                    );
+
+                    if (authorizedRepairLimitRef.current) {
+                      authorizedRepairLimitRef.current.value = formatNumber(
+                        tow + deductible
+                      );
+                    }
+                  }
                 }
               }}
               label={{
@@ -4533,7 +4553,10 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
                   flex: 1,
                 }}
                 input={{
-                  defaultValue: "0.00",
+                  defaultValue:
+                    process.env.REACT_APP_DEPARTMENT === "UMIS"
+                      ? "0.00"
+                      : "1,000.00",
                   type: "text",
                   style: { width: "calc(100% - 150px)" },
                   onKeyDown: (e) => {
@@ -4739,7 +4762,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
           <SelectInput
             ref={_dinomination}
             label={{
-              title: "Donomination :",
+              title: "Denomination :",
               style: {
                 fontSize: "12px",
                 fontWeight: "bold",
@@ -5706,7 +5729,9 @@ export const CustomButton = styled.button`
 `;
 
 function parseNumber(value: any) {
-  return isNaN(value) || value === "" ? "0.00" : Number(value);
+  return isNaN(value) || value === ""
+    ? "0.00"
+    : value.toString().replace(/,/g, "");
 }
 function formatNumber(Amount: number) {
   return Amount.toLocaleString("en-US", {

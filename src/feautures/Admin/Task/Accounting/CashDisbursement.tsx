@@ -388,6 +388,10 @@ export default function CashDisbursement() {
                 mutatePrint({
                   check: false,
                   Source_No: state.refNo,
+                  reportTitle:
+                  process.env.REACT_APP_DEPARTMENT === "UMIS"
+                    ? "UPWARD MANAGEMENT INSURANCE SERVICES"
+                    : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
                 });
 
                 wait(100).then(() => {
@@ -498,6 +502,10 @@ export default function CashDisbursement() {
       checkDate: "",
       Payto: "",
       credit: "",
+      reportTitle:
+      process.env.REACT_APP_DEPARTMENT === "UMIS"
+        ? "UPWARD MANAGEMENT INSURANCE SERVICES"
+        : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
     });
   }
   function setTotals(tableData: any) {
@@ -2158,6 +2166,10 @@ export default function CashDisbursement() {
                         checkDate: rowItm[7],
                         Payto: rowItm[10],
                         credit: rowItm[5],
+                        reportTitle:
+                        process.env.REACT_APP_DEPARTMENT === "UMIS"
+                          ? "UPWARD MANAGEMENT INSURANCE SERVICES"
+                          : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
                       });
                     }}
                   >

@@ -516,6 +516,10 @@ export default function PostDateChecks() {
       printOption: "receipt",
       pdcTableData,
       state,
+      reportTitle:
+        process.env.REACT_APP_DEPARTMENT === "UMIS"
+          ? "UPWARD MANAGEMENT INSURANCE SERVICES"
+          : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
     });
   };
   const clickPDCLabeling = () => {
@@ -528,6 +532,10 @@ export default function PostDateChecks() {
       printOption: "labeling",
       pdcTableData: [],
       state,
+      reportTitle:
+      process.env.REACT_APP_DEPARTMENT === "UMIS"
+        ? "UPWARD MANAGEMENT INSURANCE SERVICES"
+        : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
     });
     // let printString = () => {
     //   return (
@@ -1065,7 +1073,7 @@ export default function PostDateChecks() {
                         },
                       }}
                       input={{
-                        readOnly:true,
+                        readOnly: true,
                         disabled: isDisableField,
                         type: "text",
                         style: { width: "300px" },

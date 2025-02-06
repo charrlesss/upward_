@@ -256,6 +256,10 @@ export default function GeneralJournal() {
                 JVDate: refDate.current?.value,
                 JVExp: refExplanation.current?.value,
                 generalJournal,
+                reportTitle:
+                process.env.REACT_APP_DEPARTMENT === "UMIS"
+                  ? "UPWARD MANAGEMENT INSURANCE SERVICES"
+                  : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
               });
             }
             wait(100).then(() => {
@@ -1328,6 +1332,10 @@ export default function GeneralJournal() {
                   JVDate: refDate.current?.value,
                   JVExp: refExplanation.current?.value,
                   generalJournal,
+                  reportTitle:
+                  process.env.REACT_APP_DEPARTMENT === "UMIS"
+                    ? "UPWARD MANAGEMENT INSURANCE SERVICES"
+                    : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
                 });
               }}
               sx={{

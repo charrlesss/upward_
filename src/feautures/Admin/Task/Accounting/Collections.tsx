@@ -370,7 +370,8 @@ export default function Collection() {
     mutationKey: "get-collection-data-search",
     mutationFn: async (variables: any) =>
       await myAxios.post(
-        `/task/accounting/get-collection-data-search`,variables,
+        `/task/accounting/get-collection-data-search`,
+        variables,
         {
           headers: {
             "Content-Type": "application/json",
@@ -405,7 +406,9 @@ export default function Collection() {
           const isCash = dataCollection[i].Payment === "Cash";
           debit.push({
             Payment: dataCollection[i].Payment,
-            Amount: formatNumber(parseFloat(dataCollection[i].Debit.toString().replace(/,/g,''))),
+            Amount: formatNumber(
+              parseFloat(dataCollection[i].Debit.toString().replace(/,/g, ""))
+            ),
             Check_No: isCash ? "" : dataCollection[i].Check_No,
             Check_Date: isCash
               ? ""
@@ -429,7 +432,9 @@ export default function Collection() {
           credit.push({
             temp_id: `${i}`,
             transaction: dataCollection[i].Purpose,
-            amount:formatNumber(parseFloat(dataCollection[i].Credit.toString().replace(/,/g,''))),
+            amount: formatNumber(
+              parseFloat(dataCollection[i].Credit.toString().replace(/,/g, ""))
+            ),
             Remarks: dataCollection[i].CRRemarks,
             Code: dataCollection[i].CRCode,
             Title: dataCollection[i].CRTitle,
@@ -1125,7 +1130,14 @@ export default function Collection() {
     });
   }
   function handleOnPrint() {
-    if (ornoRef.current) mutatePrint({ ORNo: ornoRef.current.value });
+    if (ornoRef.current)
+      mutatePrint({
+        ORNo: ornoRef.current.value,
+        reportTitle:
+          process.env.REACT_APP_DEPARTMENT === "UMIS"
+            ? "UPWARD MANAGEMENT INSURANCE SERVICES"
+            : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
+      });
   }
 
   return (
@@ -1154,9 +1166,9 @@ export default function Collection() {
         }}
       />
 
-      {(loadingAddNew ||
-        isLoadingPrint ||
-        loadingCollectionDataSearch) && <Loading />}
+      {(loadingAddNew || isLoadingPrint || loadingCollectionDataSearch) && (
+        <Loading />
+      )}
 
       <div
         style={{
@@ -1229,7 +1241,7 @@ export default function Collection() {
           >
             <LocalPrintshopIcon />
           </IconButton>
-      
+
           <IconButton
             disabled={disableFields}
             aria-label="print"
@@ -1556,7 +1568,7 @@ export default function Collection() {
               }}
               getSelectedItem={async (rowItm: any) => {
                 if (rowItm) {
-                  console.log(rowItm)
+                  console.log(rowItm);
                   if (rowItm[0] === "Cash") {
                     wait(100).then(() => {
                       if (amountDebitRef.current)
@@ -1597,7 +1609,7 @@ export default function Collection() {
                         }
                         if (modalCheckRef.current.branchRef.current) {
                           modalCheckRef.current.branchRef.current.value =
-                          strBank[1];
+                            strBank[1];
                         }
                         if (modalCheckRef.current.remarksRef.current) {
                           modalCheckRef.current.remarksRef.current.value =
@@ -1612,7 +1624,8 @@ export default function Collection() {
                             rowItm[1];
                         }
                         if (modalCheckRef.current.bankRefName.current) {
-                          modalCheckRef.current.bankRefName.current = BankName.data.data[0].Bank;
+                          modalCheckRef.current.bankRefName.current =
+                            BankName.data.data[0].Bank;
                         }
                       }
                     });
@@ -1836,7 +1849,7 @@ export default function Collection() {
                 width: "100%",
               }}
               label={{
-                title: "Usage : ",
+                title: "FAO : ",
                 style: {
                   fontSize: "12px",
                   fontWeight: "bold",

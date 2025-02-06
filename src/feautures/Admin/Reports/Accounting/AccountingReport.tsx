@@ -165,9 +165,9 @@ export default function AccountingReport() {
             </div>
             {buttonSelected === 1 && <FormScheduleAccount />}
             {buttonSelected === 2 && <FormSubsidiaryLedger />}
-            {buttonSelected === 3 && <FormFSReport link={'/reports/accounting/report/generate-report-trial-balance'} />}
-            {buttonSelected === 4 && <FormFSReport link={'/reports/accounting/report/generate-report-income-statement'}/>}
-            {buttonSelected === 5 && <FormFSReport link={''}/>}
+            {buttonSelected === 3 && <FormFSReport link={'/reports/accounting/report/generate-report-trial-balance'} reportTitle={"Trial Balance"} />}
+            {buttonSelected === 4 && <FormFSReport link={'/reports/accounting/report/generate-report-income-statement'} reportTitle={"Income Statement - Long"}/>}
+            {buttonSelected === 5 && <FormFSReport link={'/reports/accounting/report/generate-report-balance-sheet'} reportTitle={"Balance Sheet"}/>}
             {buttonSelected === 6 && <FormFSReport link={''}/>}
             {buttonSelected === 10 && <FormPostDatedCheckRegistry />}
           </div>
@@ -1884,7 +1884,7 @@ function FormPostDatedCheckRegistry() {
     </>
   );
 }
-function FormFSReport({ link }: any) {
+function FormFSReport({ link ,reportTitle}: any) {
   const { myAxios, user } = useContext(AuthContext);
   const [title, setTitle] = useState(
     generateTitle({
@@ -1946,7 +1946,7 @@ function FormFSReport({ link }: any) {
 
     return `${_title} ${
       subAccount.toUpperCase() === "ALL" ? "" : `(${subAccount})`
-    }\n${report} Trial Balance ${
+    }\n${report} ${reportTitle} ${
       cmbformat === "Summary" ? "(Per Revenue Center)" : ""
     }\n${format(new Date(date), "MMMM dd, yyyy")}`;
   }
