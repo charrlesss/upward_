@@ -13,6 +13,7 @@ import { useUpwardTableModalSearchSafeMode } from "../../../../components/DataGr
 import { wait } from "../../../../lib/wait";
 import { Loading } from "../../../../components/Loading";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
+import { useNavigate } from "react-router-dom";
 
 const buttons = [
   { label: "Chart of Accounts", id: 0 },
@@ -122,12 +123,14 @@ export default function AccountingReport() {
                     return (
                       <>
                         {itm.id === 1 && <div style={{ height: "15px" }}></div>}
-                        {itm.id === 5 && <div style={{ height: "15px" }}></div>}
-                        {itm.id === 9 && <div style={{ height: "15px" }}></div>}
+                        {itm.id === 7 && <div style={{ height: "15px" }}></div>}
                         {itm.id === 10 && (
                           <div style={{ height: "15px" }}></div>
                         )}
-                        {itm.id === 15 && (
+                        {itm.id === 11 && (
+                          <div style={{ height: "15px" }}></div>
+                        )}
+                        {itm.id === 16 && (
                           <div style={{ height: "15px" }}></div>
                         )}
                         {itm.id === 19 && (
@@ -165,10 +168,46 @@ export default function AccountingReport() {
             </div>
             {buttonSelected === 1 && <FormScheduleAccount />}
             {buttonSelected === 2 && <FormSubsidiaryLedger />}
-            {buttonSelected === 3 && <FormFSReport link={'/reports/accounting/report/generate-report-trial-balance'} reportTitle={"Trial Balance"} />}
-            {buttonSelected === 4 && <FormFSReport link={'/reports/accounting/report/generate-report-income-statement'} reportTitle={"Income Statement - Long"}/>}
-            {buttonSelected === 5 && <FormFSReport link={'/reports/accounting/report/generate-report-balance-sheet'} reportTitle={"Balance Sheet"}/>}
-            {buttonSelected === 6 && <FormFSReport link={''}/>}
+            {buttonSelected === 3 && (
+              <FormFSReport
+                link={
+                  "/reports/accounting/report/generate-report-trial-balance"
+                }
+                reportTitle={"Trial Balance"}
+              />
+            )}
+            {buttonSelected === 4 && (
+              <FormFSReport
+                link={
+                  "/reports/accounting/report/generate-report-income-statement"
+                }
+                reportTitle={"Income Statement - Long"}
+              />
+            )}
+            {buttonSelected === 5 && (
+              <FormFSReport
+                link={
+                  "/reports/accounting/report/generate-report-balance-sheet"
+                }
+                reportTitle={"Balance Sheet"}
+              />
+            )}
+            {buttonSelected === 6 && (
+              <FormFSReport
+                link={
+                  "/reports/accounting/report/generate-report-general-ledger"
+                }
+                reportTitle={"General Ledger"}
+              />
+            )}
+            {buttonSelected === 7 && (
+              <FormAbsDepoReturned
+                link={
+                  "/reports/accounting/report/generate-report-abstract-collection"
+                }
+                reportTitle={"General Ledger"}
+              />
+            )}
             {buttonSelected === 10 && <FormPostDatedCheckRegistry />}
           </div>
         </div>
@@ -242,6 +281,8 @@ function FormScheduleAccount() {
               accountTitle: rowItm[1],
             })
           );
+
+          subsiRef.current?.focus()
         });
         chartAccountCloseModal();
       }
@@ -281,7 +322,7 @@ function FormScheduleAccount() {
     accountTitle,
   }: any) {
     const _title =
-      user?.department === "UMIS"
+      process.env.REACT_APP_DEPARTMENT === "UMIS"
         ? "UPWARD MANAGEMENT INSURANCE SERVICES"
         : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.";
     if (report === "GL Account (Detailed)") {
@@ -333,28 +374,12 @@ function FormScheduleAccount() {
         );
       },
       onSuccess: (response) => {
-        console.log(response);
-
         const pdfBlob = new Blob([response.data], { type: "application/pdf" });
         const pdfUrl = URL.createObjectURL(pdfBlob);
-        // window.open(pdfUrl);
-        var newTab = window.open();
-        if (newTab) {
-          newTab.document.write("<!DOCTYPE html>");
-          newTab.document.write(
-            "<html><head><title>New Tab with iframe</title></head>"
-          );
-          newTab.document.write(
-            '<body style="width:100vw;height:100vh;padding:0;margin:0;box-sizing:border-box;">'
-          );
-          newTab.document.write(
-            `<iframe style="border:none;outline:none;padding:0;margin:0" src="${pdfUrl}" width="99%" height="99%"></iframe>`
-          );
-
-          newTab.document.write("</body></html>");
-          // Optional: Close the document stream after writing
-          newTab.document.close();
-        }
+        window.open(
+          `/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+          "_blank"
+        );
       },
     });
 
@@ -820,7 +845,10 @@ function FormSubsidiaryLedger() {
               dateTo: new Date(dateToRef.current?.value as any),
             })
           );
+
+          subsiRef.current?.focus()
         });
+
         chartAccountCloseModal();
       }
     },
@@ -937,7 +965,7 @@ function FormSubsidiaryLedger() {
     dateTo,
   }: any) {
     const _title =
-      user?.department === "UMIS"
+      process.env.REACT_APP_DEPARTMENT === "UMIS"
         ? "UPWARD MANAGEMENT INSURANCE SERVICES"
         : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.";
     let Subsi = "\n";
@@ -997,28 +1025,12 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
         );
       },
       onSuccess: (response) => {
-        // console.log(response);
-
         const pdfBlob = new Blob([response.data], { type: "application/pdf" });
         const pdfUrl = URL.createObjectURL(pdfBlob);
-        // window.open(pdfUrl);
-        var newTab = window.open();
-        if (newTab) {
-          newTab.document.write("<!DOCTYPE html>");
-          newTab.document.write(
-            "<html><head><title>New Tab with iframe</title></head>"
-          );
-          newTab.document.write(
-            '<body style="width:100vw;height:100vh;padding:0;margin:0;box-sizing:border-box;">'
-          );
-          newTab.document.write(
-            `<iframe style="border:none;outline:none;padding:0;margin:0" src="${pdfUrl}" width="99%" height="99%"></iframe>`
-          );
-
-          newTab.document.write("</body></html>");
-          // Optional: Close the document stream after writing
-          newTab.document.close();
-        }
+        window.open(
+          `/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+          "_blank"
+        );
       },
     });
 
@@ -1069,7 +1081,7 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
           input={{
             className: "search-input-up-on-key-down",
             type: "text",
-            value: "1.03.01",
+            defaultValue: "1.03.01",
             onKeyDown: (e) => {
               if (e.key === "Enter" || e.key === "NumpadEnter") {
                 e.preventDefault();
@@ -1487,6 +1499,619 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
     </>
   );
 }
+function FormFSReport({ link, reportTitle }: any) {
+  const { myAxios, user } = useContext(AuthContext);
+  const [title, setTitle] = useState(
+    generateTitle({
+      cmbformat: "Default",
+      report: "Monthly",
+      subAccount: "ALL",
+      date: new Date(),
+    })
+  );
+
+  const titleRef = useRef<HTMLTextAreaElement>(null);
+  const formatRef = useRef<HTMLSelectElement>(null);
+  const reportRef = useRef<HTMLSelectElement>(null);
+  const subAccountRef = useRef<HTMLSelectElement>(null);
+  const _subAccountRef = useRef<any>(null);
+  const nominalAccountRef = useRef<HTMLSelectElement>(null);
+  const dateRef = useRef<HTMLInputElement>(null);
+
+  const { mutate: mutateGenerateReport, isLoading: isLoadingGenerateReport } =
+    useMutation({
+      mutationKey: "generate-report",
+      mutationFn: async (variables: any) => {
+        return await myAxios.post(link, variables, {
+          responseType: "arraybuffer",
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        });
+      },
+      onSuccess: (response) => {
+        const pdfBlob = new Blob([response.data], { type: "application/pdf" });
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        window.open(
+          `/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+          "_blank"
+        );
+      },
+    });
+
+  function generateTitle({ report, cmbformat, subAccount, date }: any) {
+    const _title =
+      process.env.REACT_APP_DEPARTMENT === "UMIS"
+        ? "UPWARD MANAGEMENT INSURANCE SERVICES"
+        : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.";
+
+    return `${_title} ${
+      subAccount.toUpperCase() === "ALL" ? "" : `(${subAccount})`
+    }\n${report} ${reportTitle} ${
+      cmbformat === "Summary" ? "(Per Revenue Center)" : ""
+    }\n${format(new Date(date), "MMMM dd, yyyy")}`;
+  }
+
+  function generateReport() {
+    mutateGenerateReport({
+      cmbformat: formatRef.current?.value,
+      report: reportRef.current?.value,
+      subAccount: subAccountRef.current?.value,
+      nominalAccountRef: nominalAccountRef.current?.value,
+      date: dateRef.current?.value,
+      title,
+    });
+  }
+
+  const { isLoading: isLaodingSubAccount, mutate: mutateSubAccount } =
+    useMutation({
+      mutationKey: "sub-account",
+      mutationFn: async (variable: any) =>
+        await myAxios.post(`/reports/accounting/report/sub-account`, variable, {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }),
+      onSuccess(res) {
+        if (res.data.success) {
+          _subAccountRef.current.setDataSource(res.data.data);
+        }
+      },
+    });
+
+  const mutateSubAccountRef = useRef(mutateSubAccount);
+
+  useEffect(() => {
+    mutateSubAccountRef.current({});
+  }, []);
+
+  return (
+    <>
+      {(isLaodingSubAccount || isLoadingGenerateReport) && <Loading />}
+      <div
+        style={{
+          display: "flex",
+          flex: 1,
+          flexDirection: "column",
+          padding: "5px",
+          rowGap: "10px",
+        }}
+      >
+        <TextAreaInput
+          containerStyle={{
+            marginBottom: "10px",
+          }}
+          label={{
+            title: "Title : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "100px",
+              display: "none",
+            },
+          }}
+          textarea={{
+            rows: 7,
+            style: { flex: 1 },
+            value: title,
+            onChange: (e) => {
+              setTitle(e.currentTarget.value);
+            },
+          }}
+          _inputRef={titleRef}
+        />
+        <SelectInput
+          label={{
+            title: "Format :",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "120px",
+            },
+          }}
+          selectRef={formatRef}
+          select={{
+            style: { width: "calc(100% - 120px)", height: "22px" },
+            defaultValue: "Default",
+            onKeyDown: (e) => {
+              if (e.code === "NumpadEnter" || e.code === "Enter") {
+                e.preventDefault();
+              }
+            },
+            onChange: (e) => {
+              setTitle(
+                generateTitle({
+                  cmbformat: e.currentTarget.value,
+                  report: reportRef.current?.value,
+                  subAccount: subAccountRef.current?.value,
+                  date: new Date(dateRef.current?.value as any),
+                })
+              );
+            },
+          }}
+          datasource={[{ key: "Default" }, { key: "Summary" }]}
+          values={"key"}
+          display={"key"}
+        />
+        <SelectInput
+          label={{
+            title: "Report :",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "120px",
+            },
+          }}
+          selectRef={reportRef}
+          select={{
+            style: { width: "calc(100% - 120px)", height: "22px" },
+            defaultValue: "Monthly",
+            onKeyDown: (e) => {
+              if (e.code === "NumpadEnter" || e.code === "Enter") {
+                e.preventDefault();
+              }
+            },
+            onChange: (e) => {
+              setTitle(
+                generateTitle({
+                  cmbformat: formatRef.current?.value,
+                  report: e.currentTarget.value,
+                  subAccount: subAccountRef.current?.value,
+                  date: new Date(dateRef.current?.value as any),
+                })
+              );
+            },
+          }}
+          datasource={[{ key: "Daily" }, { key: "Monthly" }]}
+          values={"key"}
+          display={"key"}
+        />
+        <SelectInput
+          ref={_subAccountRef}
+          label={{
+            title: "Sub Account :",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "120px",
+            },
+          }}
+          selectRef={subAccountRef}
+          select={{
+            style: { width: "calc(100% - 120px)", height: "22px" },
+            defaultValue: "HO",
+            onKeyDown: (e) => {
+              if (e.code === "NumpadEnter" || e.code === "Enter") {
+                e.preventDefault();
+              }
+            },
+            onChange: (e) => {
+              setTitle(
+                generateTitle({
+                  cmbformat: formatRef.current?.value,
+                  report: reportRef.current?.value,
+                  subAccount: e.currentTarget.value,
+                  date: new Date(dateRef.current?.value as any),
+                })
+              );
+            },
+          }}
+          datasource={[]}
+          values={"Acronym"}
+          display={"Acronym"}
+        />
+        <SelectInput
+          label={{
+            title: "Nominal Account :",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "120px",
+            },
+          }}
+          selectRef={nominalAccountRef}
+          select={{
+            style: { width: "calc(100% - 120px)", height: "22px" },
+            defaultValue: "Pre Closing",
+            onKeyDown: (e) => {
+              if (e.code === "NumpadEnter" || e.code === "Enter") {
+                e.preventDefault();
+              }
+            },
+          }}
+          datasource={[{ key: "Pre Closing" }, { key: "Post Closing" }]}
+          values={"key"}
+          display={"key"}
+        />
+        <TextInput
+          label={{
+            title: "Date : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "120px",
+            },
+          }}
+          input={{
+            type: "date",
+            defaultValue: format(new Date(), "yyyy-MM-dd"),
+            onKeyDown: (e) => {
+              if (e.key === "Enter" || e.key === "NumpadEnter") {
+                e.preventDefault();
+                // searchCashDisbursementOpenModal(e.currentTarget.value);
+              }
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+              }
+            },
+            onChange: (e) => {
+              setTitle(
+                generateTitle({
+                  cmbformat: formatRef.current?.value,
+                  report: reportRef.current?.value,
+                  subAccount: subAccountRef.current?.value,
+                  date: new Date(dateRef.current?.value as any),
+                })
+              );
+            },
+            onBlur: (e) => {},
+            style: { width: "calc(100% - 120px)" },
+          }}
+          inputRef={dateRef}
+        />
+
+        <Button
+          onClick={generateReport}
+          color="success"
+          variant="contained"
+          sx={{ height: "22px", fontSize: "12px", width: "100%" }}
+        >
+          Generate Report
+        </Button>
+      </div>
+    </>
+  );
+}
+function FormAbsDepoReturned({ link, reportTitle }: any) {
+  const { user, myAxios } = useContext(AuthContext);
+  const [title, setTitle] = useState(
+    generateTitle({
+      report: "Monthly",
+      subAccount: "ALL",
+      date: new Date(),
+    })
+  );
+  const titleRef = useRef<HTMLTextAreaElement>(null);
+  const formatRef = useRef<HTMLSelectElement>(null);
+  const reportRef = useRef<HTMLSelectElement>(null);
+  const branchRef = useRef<HTMLSelectElement>(null);
+  const _branchRef = useRef<any>(null);
+  const dateRef = useRef<HTMLInputElement>(null);
+  const sortRef = useRef<HTMLSelectElement>(null);
+  const orderRef = useRef<HTMLSelectElement>(null);
+
+  const { mutate: mutateGenerateReport, isLoading: isLoadingGenerateReport } =
+    useMutation({
+      mutationKey: "generate-report",
+      mutationFn: async (variables: any) => {
+        return await myAxios.post(
+          link,
+          variables,
+          {
+            responseType: "arraybuffer",
+            headers: {
+              Authorization: `Bearer ${user?.accessToken}`,
+            },
+          }
+        );
+      },
+      onSuccess: (response) => {
+        const pdfBlob = new Blob([response.data], { type: "application/pdf" });
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        window.open(
+          `/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+          "_blank"
+        );
+      },
+    });
+
+  const { isLoading: isLaodingSubAccount, mutate: mutateSubAccount } =
+    useMutation({
+      mutationKey: "sub-account",
+      mutationFn: async (variable: any) =>
+        await myAxios.post(`/reports/accounting/report/sub-account`, variable, {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }),
+      onSuccess(res) {
+        if (res.data.success) {
+          _branchRef.current.setDataSource(res.data.data);
+        }
+      },
+    });
+
+  function generateTitle({ report, subAccount, date }: any) {
+    const _title =
+      process.env.REACT_APP_DEPARTMENT === "UMIS"
+        ? "UPWARD MANAGEMENT INSURANCE SERVICES"
+        : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.";
+
+    return `${_title} ${
+      subAccount.toUpperCase() === "ALL" ? "" : `(${subAccount})`
+    }\n${report} ${reportTitle}\n${format(new Date(date), "MMMM dd, yyyy")}`;
+  }
+
+  function generateReport() {
+    mutateGenerateReport({
+      title:titleRef.current?.value,
+      cmbFormat:formatRef.current?.value,
+      report:reportRef.current?.value,
+      subAccount:branchRef.current?.value,
+      date:dateRef.current?.value,
+      sort:sortRef.current?.value,
+      order:orderRef.current?.value
+    })
+  }
+
+  const mutateSubAccountRef = useRef<any>(mutateSubAccount);
+
+  useEffect(() => {
+    mutateSubAccountRef.current({});
+  }, []);
+
+  return (
+    <>
+      {(isLaodingSubAccount || isLoadingGenerateReport) && <Loading />}
+      <div
+        style={{
+          display: "flex",
+          flex: 1,
+          flexDirection: "column",
+          padding: "5px",
+          rowGap: "10px",
+        }}
+      >
+        <TextAreaInput
+          containerStyle={{
+            marginBottom: "10px",
+          }}
+          label={{
+            title: "Title : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "100px",
+              display: "none",
+            },
+          }}
+          textarea={{
+            rows: 7,
+            style: { flex: 1 },
+            value: title,
+            onChange: (e) => {
+              setTitle(e.currentTarget.value);
+            },
+          }}
+          _inputRef={titleRef}
+        />
+        <SelectInput
+          label={{
+            title: "Format :",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "90px",
+            },
+          }}
+          selectRef={formatRef}
+          select={{
+            style: { width: "calc(100% - 90px)", height: "22px" },
+            defaultValue: "Format - 2",
+            onKeyDown: (e) => {
+              if (e.code === "NumpadEnter" || e.code === "Enter") {
+                e.preventDefault();
+              }
+            },
+            onChange: (e) => {},
+          }}
+          datasource={[{ key: "Format - 1" }]}
+          values={"key"}
+          display={"key"}
+        />
+        <SelectInput
+          label={{
+            title: "Report :",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "90px",
+            },
+          }}
+          selectRef={reportRef}
+          select={{
+            style: { width: "calc(100% - 90px)", height: "22px" },
+            defaultValue: "Monthly",
+            onKeyDown: (e) => {
+              if (e.code === "NumpadEnter" || e.code === "Enter") {
+                e.preventDefault();
+              }
+            },
+            onChange: (e) => {
+              setTitle(
+                generateTitle({
+                  report: e.currentTarget.value,
+                  subAccount: branchRef.current?.value,
+                  date: new Date(dateRef.current?.value as any),
+                })
+              );
+            },
+          }}
+          datasource={[{ key: "Daily" }, { key: "Monthly" }]}
+          values={"key"}
+          display={"key"}
+        />
+        <SelectInput
+          label={{
+            title: "Branch :",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "90px",
+            },
+          }}
+          ref={_branchRef}
+          selectRef={branchRef}
+          select={{
+            style: { width: "calc(100% - 90px)", height: "22px" },
+            defaultValue: "ALL",
+            onKeyDown: (e) => {
+              if (e.code === "NumpadEnter" || e.code === "Enter") {
+                e.preventDefault();
+              }
+            },
+            onChange: (e) => {
+              setTitle(
+                generateTitle({
+                  report: reportRef.current?.value,
+                  subAccount: branchRef.current?.value,
+                  date: new Date(dateRef.current?.value as any),
+                })
+              );
+            },
+          }}
+          datasource={[]}
+          values={"Acronym"}
+          display={"Acronym"}
+        />
+        <TextInput
+          label={{
+            title: "Date :",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "90px",
+            },
+          }}
+          containerStyle={{ width: "100%" }}
+          input={{
+            defaultValue: format(new Date(), "yyyy-MM-dd"),
+            type: "date",
+            onKeyDown: (e) => {
+              if (e.key === "Enter" || e.key === "NumpadEnter") {
+                e.preventDefault();
+                // searchCashDisbursementOpenModal(e.currentTarget.value);
+              }
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+              }
+            },
+            onChange: (e) => {
+              setTitle(
+                generateTitle({
+                  report: reportRef.current?.value,
+                  subAccount: branchRef.current?.value,
+                  date: new Date(e.currentTarget.value),
+                })
+              );
+            },
+            style: { width: "calc(100% - 90px)" },
+          }}
+          inputRef={dateRef}
+        />
+        <fieldset
+          style={{
+            border: "1px solid #cbd5e1",
+            borderRadius: "5px",
+            position: "relative",
+            width: "100%",
+            height: "auto",
+            margin: "10px 0px",
+            padding: "15px",
+            display: "flex",
+            rowGap: "10px",
+            flexDirection: "column",
+          }}
+        >
+          <SelectInput
+            label={{
+              title: "Sort :",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "90px",
+              },
+            }}
+            selectRef={sortRef}
+            select={{
+              style: { width: "calc(100% - 90px)", height: "22px" },
+              defaultValue: "All Accounts",
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  e.preventDefault();
+                }
+              },
+            }}
+            datasource={[{ key: "Reference No" }]}
+            values={"key"}
+            display={"key"}
+          />
+          <SelectInput
+            label={{
+              title: "Order :",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "90px",
+              },
+            }}
+            selectRef={orderRef}
+            select={{
+              style: { width: "calc(100% - 90px)", height: "22px" },
+              defaultValue: "All Accounts",
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  e.preventDefault();
+                }
+              },
+            }}
+            datasource={[{ key: "Ascending" }, { key: "Descending" }]}
+            values={"key"}
+            display={"key"}
+          />
+        </fieldset>
+        <Button
+          onClick={generateReport}
+          color="success"
+          variant="contained"
+          sx={{ height: "22px", fontSize: "12px", width: "100%" }}
+        >
+          Generate Report
+        </Button>
+      </div>
+    </>
+  );
+}
 function FormPostDatedCheckRegistry() {
   const { user, myAxios } = useContext(AuthContext);
   const [title, setTitle] = useState("");
@@ -1535,24 +2160,10 @@ function FormPostDatedCheckRegistry() {
       onSuccess: (response) => {
         const pdfBlob = new Blob([response.data], { type: "application/pdf" });
         const pdfUrl = URL.createObjectURL(pdfBlob);
-        // window.open(pdfUrl);
-        var newTab = window.open();
-        if (newTab) {
-          newTab.document.write("<!DOCTYPE html>");
-          newTab.document.write(
-            "<html><head><title>New Tab with iframe</title></head>"
-          );
-          newTab.document.write(
-            '<body style="width:100vw;height:100vh;padding:0;margin:0;box-sizing:border-box;">'
-          );
-          newTab.document.write(
-            `<iframe style="border:none;outline:none;padding:0;margin:0" src="${pdfUrl}" width="99%" height="99%"></iframe>`
-          );
-
-          newTab.document.write("</body></html>");
-          // Optional: Close the document stream after writing
-          newTab.document.close();
-        }
+        window.open(
+          `/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+          "_blank"
+        );
       },
     });
 
@@ -1884,314 +2495,7 @@ function FormPostDatedCheckRegistry() {
     </>
   );
 }
-function FormFSReport({ link ,reportTitle}: any) {
-  const { myAxios, user } = useContext(AuthContext);
-  const [title, setTitle] = useState(
-    generateTitle({
-      cmbformat: "Default",
-      report: "Monthly",
-      subAccount: "ALL",
-      date: new Date(),
-    })
-  );
 
-  const titleRef = useRef<HTMLTextAreaElement>(null);
-  const formatRef = useRef<HTMLSelectElement>(null);
-  const reportRef = useRef<HTMLSelectElement>(null);
-  const subAccountRef = useRef<HTMLSelectElement>(null);
-  const _subAccountRef = useRef<any>(null);
-  const nominalAccountRef = useRef<HTMLSelectElement>(null);
-  const dateRef = useRef<HTMLInputElement>(null);
-
-  const { mutate: mutateGenerateReport, isLoading: isLoadingGenerateReport } =
-    useMutation({
-      mutationKey: "generate-report",
-      mutationFn: async (variables: any) => {
-        return await myAxios.post(link, variables, {
-          responseType: "arraybuffer",
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
-        });
-      },
-      onSuccess: (response) => {
-        const pdfBlob = new Blob([response.data], { type: "application/pdf" });
-        const pdfUrl = URL.createObjectURL(pdfBlob);
-        // window.open(pdfUrl);
-        var newTab = window.open();
-        if (newTab) {
-          newTab.document.write("<!DOCTYPE html>");
-          newTab.document.write(
-            "<html><head><title>New Tab with iframe</title></head>"
-          );
-          newTab.document.write(
-            '<body style="width:100vw;height:100vh;padding:0;margin:0;box-sizing:border-box;">'
-          );
-          newTab.document.write(
-            `<iframe style="border:none;outline:none;padding:0;margin:0" src="${pdfUrl}" width="99%" height="99%"></iframe>`
-          );
-
-          newTab.document.write("</body></html>");
-          // Optional: Close the document stream after writing
-          newTab.document.close();
-        }
-      },
-    });
-
-  function generateTitle({ report, cmbformat, subAccount, date }: any) {
-    const _title =
-      user?.department === "UMIS"
-        ? "UPWARD MANAGEMENT INSURANCE SERVICES"
-        : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.";
-
-    return `${_title} ${
-      subAccount.toUpperCase() === "ALL" ? "" : `(${subAccount})`
-    }\n${report} ${reportTitle} ${
-      cmbformat === "Summary" ? "(Per Revenue Center)" : ""
-    }\n${format(new Date(date), "MMMM dd, yyyy")}`;
-  }
-
-  function generateReport() {
-    mutateGenerateReport({
-      cmbformat: formatRef.current?.value,
-      report: reportRef.current?.value,
-      subAccount: subAccountRef.current?.value,
-      nominalAccountRef: nominalAccountRef.current?.value,
-      date: dateRef.current?.value,
-      title
-    });
-  }
-
-  const { isLoading: isLaodingSubAccount, mutate: mutateSubAccount } =
-    useMutation({
-      mutationKey: "sub-account",
-      mutationFn: async (variable: any) =>
-        await myAxios.post(`/reports/accounting/report/sub-account`, variable, {
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
-        }),
-      onSuccess(res) {
-        if (res.data.success) {
-          _subAccountRef.current.setDataSource(res.data.data);
-        }
-      },
-    });
-
-  const mutateSubAccountRef = useRef(mutateSubAccount);
-
-  useEffect(() => {
-    mutateSubAccountRef.current({});
-  }, []);
-
-  return (
-    <>
-      {(isLaodingSubAccount || isLoadingGenerateReport) && <Loading />}
-      <div
-        style={{
-          display: "flex",
-          flex: 1,
-          flexDirection: "column",
-          padding: "5px",
-          rowGap: "10px",
-        }}
-      >
-        <TextAreaInput
-          containerStyle={{
-            marginBottom: "10px",
-          }}
-          label={{
-            title: "Title : ",
-            style: {
-              fontSize: "12px",
-              fontWeight: "bold",
-              width: "100px",
-              display: "none",
-            },
-          }}
-          textarea={{
-            rows: 7,
-            style: { flex: 1 },
-            value: title,
-            onChange: (e) => {
-              setTitle(e.currentTarget.value);
-            },
-          }}
-          _inputRef={titleRef}
-        />
-        <SelectInput
-          label={{
-            title: "Format :",
-            style: {
-              fontSize: "12px",
-              fontWeight: "bold",
-              width: "120px",
-            },
-          }}
-          selectRef={formatRef}
-          select={{
-            style: { width: "calc(100% - 120px)", height: "22px" },
-            defaultValue: "Default",
-            onKeyDown: (e) => {
-              if (e.code === "NumpadEnter" || e.code === "Enter") {
-                e.preventDefault();
-              }
-            },
-            onChange: (e) => {
-              setTitle(
-                generateTitle({
-                  cmbformat: e.currentTarget.value,
-                  report: reportRef.current?.value,
-                  subAccount: subAccountRef.current?.value,
-                  date: new Date(dateRef.current?.value as any),
-                })
-              );
-            },
-          }}
-          datasource={[{ key: "Default" }, { key: "Summary" }]}
-          values={"key"}
-          display={"key"}
-        />
-        <SelectInput
-          label={{
-            title: "Report :",
-            style: {
-              fontSize: "12px",
-              fontWeight: "bold",
-              width: "120px",
-            },
-          }}
-          selectRef={reportRef}
-          select={{
-            style: { width: "calc(100% - 120px)", height: "22px" },
-            defaultValue: "Monthly",
-            onKeyDown: (e) => {
-              if (e.code === "NumpadEnter" || e.code === "Enter") {
-                e.preventDefault();
-              }
-            },
-            onChange: (e) => {
-              setTitle(
-                generateTitle({
-                  cmbformat: formatRef.current?.value,
-                  report: e.currentTarget.value,
-                  subAccount: subAccountRef.current?.value,
-                  date: new Date(dateRef.current?.value as any),
-                })
-              );
-            },
-          }}
-          datasource={[{ key: "Daily" }, { key: "Monthly" }]}
-          values={"key"}
-          display={"key"}
-        />
-        <SelectInput
-          ref={_subAccountRef}
-          label={{
-            title: "Sub Account :",
-            style: {
-              fontSize: "12px",
-              fontWeight: "bold",
-              width: "120px",
-            },
-          }}
-          selectRef={subAccountRef}
-          select={{
-            style: { width: "calc(100% - 120px)", height: "22px" },
-            defaultValue: "HO",
-            onKeyDown: (e) => {
-              if (e.code === "NumpadEnter" || e.code === "Enter") {
-                e.preventDefault();
-              }
-            },
-            onChange: (e) => {
-              setTitle(
-                generateTitle({
-                  cmbformat: formatRef.current?.value,
-                  report: reportRef.current?.value,
-                  subAccount: e.currentTarget.value,
-                  date: new Date(dateRef.current?.value as any),
-                })
-              );
-            },
-          }}
-          datasource={[]}
-          values={"Acronym"}
-          display={"Acronym"}
-        />
-        <SelectInput
-          label={{
-            title: "Nominal Account :",
-            style: {
-              fontSize: "12px",
-              fontWeight: "bold",
-              width: "120px",
-            },
-          }}
-          selectRef={nominalAccountRef}
-          select={{
-            style: { width: "calc(100% - 120px)", height: "22px" },
-            defaultValue: "Pre Closing",
-            onKeyDown: (e) => {
-              if (e.code === "NumpadEnter" || e.code === "Enter") {
-                e.preventDefault();
-              }
-            },
-          }}
-          datasource={[{ key: "Pre Closing" }, { key: "Post Closing" }]}
-          values={"key"}
-          display={"key"}
-        />
-        <TextInput
-          label={{
-            title: "Date : ",
-            style: {
-              fontSize: "12px",
-              fontWeight: "bold",
-              width: "120px",
-            },
-          }}
-          input={{
-            type: "date",
-            defaultValue: format(new Date(), "yyyy-MM-dd"),
-            onKeyDown: (e) => {
-              if (e.key === "Enter" || e.key === "NumpadEnter") {
-                e.preventDefault();
-                // searchCashDisbursementOpenModal(e.currentTarget.value);
-              }
-              if (e.key === "ArrowDown") {
-                e.preventDefault();
-              }
-            },
-            onChange: (e) => {
-              setTitle(
-                generateTitle({
-                  cmbformat: formatRef.current?.value,
-                  report: reportRef.current?.value,
-                  subAccount: subAccountRef.current?.value,
-                  date: new Date(dateRef.current?.value as any),
-                })
-              );
-            },
-            onBlur: (e) => {},
-            style: { width: "calc(100% - 120px)" },
-          }}
-          inputRef={dateRef}
-        />
-
-        <Button
-          onClick={generateReport}
-          color="success"
-          variant="contained"
-          sx={{ height: "22px", fontSize: "12px", width: "100%" }}
-        >
-          Generate Report
-        </Button>
-      </div>
-    </>
-  );
-}
 function isValidDateString(dateString: string) {
   return !isNaN(Date.parse(dateString));
 }
-

@@ -1286,7 +1286,9 @@ const COMRegular = forwardRef(
           .sectionIVBRef.current?.value.replace(/,/g, "") || 0
       );
       const other = parseFloat(
-        _policyPremiumRef.current.getRefs().othersRef.current?.value || 0
+        (_policyPremiumRef.current.getRefs().othersRef.current?.value || 0)
+          .toString()
+          .replace(/,/g, "")
       );
       const aog = parseFloat(
         _policyPremiumRef.current
@@ -2207,8 +2209,11 @@ const COMTemporary = forwardRef(
           .sectionIVBRef.current?.value.replace(/,/g, "") || 0
       );
       const other = parseFloat(
-        _policyPremiumRef.current.getRefs().othersRef.current?.value || 0
+        (_policyPremiumRef.current.getRefs().othersRef.current?.value || 0)
+          .toString()
+          .replace(/,/g, "")
       );
+
       const aog = parseFloat(
         _policyPremiumRef.current
           .getRefs()

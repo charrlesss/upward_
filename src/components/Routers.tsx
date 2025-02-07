@@ -7,7 +7,7 @@ import NotFoundPage from "../feautures/NotFoundPage";
 const MasterAdminDashboard = lazy(
   () => import("../feautures/MasterAdminDashboard")
 );
-
+const DisplayReport = lazy(() => import("../feautures/Admin/Reports/Report"));
 const NavigatePrint = lazy(() => import("../feautures/Admin/Navigate-Print"));
 const Claims = lazy(() => import("../feautures/Admin/Task/Claims/Claims"));
 
@@ -536,6 +536,8 @@ export default function Routers() {
         <Route path="/dashboard" element={<RenderPage />}>
           <Route path="/dashboard/print" element={<NavigatePrint />} />
         </Route>
+        <Route path="/dashboard/report" element={<DisplayReport />} />
+
         {/* Reports */}
         <Route path="/dashboard" element={<RenderPage />}>
           <Route
