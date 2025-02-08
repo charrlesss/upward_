@@ -163,290 +163,298 @@ const CGLPolicy = lazy(
     )
 );
 
-const PRODUCTION_REFERENCE = [
-  <Route
-    key="/dashboard/reference/branch"
-    path="/dashboard/reference/branch"
-    element={<Branch />}
-  />,
-  <Route
-    key="/dashboard/reference/policy-account"
-    path="/dashboard/reference/policy-account"
-    element={<PolicyAccount />}
-  />,
-  <Route
-    key="/dashboard/reference/sub-account"
-    path="/dashboard/reference/sub-account"
-    element={<SubAccount />}
-  />,
-  <Route
-    key="/dashboard/reference/id-entry"
-    path="/dashboard/reference/id-entry"
-    element={<IDEntry />}
-  />,
-  <Route
-    key="/dashboard/reference/mortgagee"
-    path="/dashboard/reference/mortgagee"
-    element={<Mortgagee />}
-  />,
-  <Route
-    key="/dashboard/reference/booklet"
-    path="/dashboard/reference/booklet"
-    element={<Booklet />}
-  />,
-  <Route
-    key="/dashboard/reference/subline"
-    path="/dashboard/reference/subline"
-    element={<Subline />}
-  />,
-  <Route
-    key="/dashboard/reference/rates"
-    path="/dashboard/reference/rates"
-    element={<Rates />}
-  />,
-  <Route
-    key="/dashboard/reference/ctpl"
-    path="/dashboard/reference/ctpl"
-    element={<CTPL />}
-  />,
-  <Route
-    key="/dashboard/reference/petty-cash-transaction"
-    path="/dashboard/reference/petty-cash-transaction"
-    element={<PettyCashTransaction />}
-  />,
-];
-const ACCOUNTING_REFERENCE = [
-  <Route
-    key="/dashboard/reference/branch"
-    path="/dashboard/reference/branch"
-    element={<Branch />}
-  />,
-  <Route
-    key="/dashboard/reference/policy-account"
-    path="/dashboard/reference/policy-account"
-    element={<PolicyAccount />}
-  />,
-  <Route
-    key="/dashboard/reference/bank"
-    path="/dashboard/reference/bank"
-    element={<Bank />}
-  />,
-  <Route
-    key="/dashboard/reference/bank-account"
-    path="/dashboard/reference/bank-account"
-    element={<BankAccount />}
-  />,
-  <Route
-    key="/dashboard/reference/chart-accounts"
-    path="/dashboard/reference/chart-accounts"
-    element={<ChartAccount />}
-  />,
-  <Route
-    key="/dashboard/reference/sub-account"
-    path="/dashboard/reference/sub-account"
-    element={<SubAccount />}
-  />,
 
-  <Route
-    key="/dashboard/reference/transaction-code"
-    path="/dashboard/reference/transaction-code"
-    element={<TransactionCode />}
-  />,
-  <Route
-    key="/dashboard/reference/id-entry"
-    path="/dashboard/reference/id-entry"
-    element={<IDEntry />}
-  />,
-  <Route
-    key="/dashboard/reference/mortgagee"
-    path="/dashboard/reference/mortgagee"
-    element={<Mortgagee />}
-  />,
-  <Route
-    key="/dashboard/reference/subline"
-    path="/dashboard/reference/subline"
-    element={<Subline />}
-  />,
-  <Route
-    key="/dashboard/reference/rates"
-    path="/dashboard/reference/rates"
-    element={<Rates />}
-  />,
-  <Route
-    key="/dashboard/reference/ctpl"
-    path="/dashboard/reference/ctpl"
-    element={<CTPL />}
-  />,
-  <Route
-    key="/dashboard/reference/petty-cash-transaction"
-    path="/dashboard/reference/petty-cash-transaction"
-    element={<PettyCashTransaction />}
-  />,
-];
-const PRODUCTION_TASK = [
-  <Route
-    key={"/dashboard/task/production/policy"}
-    path="/dashboard/task/production/policy"
-    element={<Policy />}
-  >
-    <Route
-      path="/dashboard/task/production/policy"
-      element={<VehiclePolicy />}
-    />
-    <Route path="fire" element={<FirePolicy />} />
-    <Route path="marine" element={<MarinePolicy />} />
-    <Route path="bonds" element={<BondsPolicy />} />
-    <Route path="mspr" element={<MSPRPolicy />} />
-    <Route path="pa" element={<PAPolicy />} />
-    <Route path="cgl" element={<CGLPolicy />} />
-  </Route>,
-  <Route
-    key={"/dashboard/task/production/statement-of-account"}
-    path="/dashboard/task/production/statement-of-account"
-    element={<StatementAccount />}
-  />,
-];
-const ACCOUNTING_TASK = [
-  <Route
-    key="/dashboard/task/accounting/production-id"
-    path="/dashboard/task/accounting/production-id"
-    element={<CashDisbursement />}
-  />,
-  <Route
-    key="/dashboard/task/accounting/post-date-checks"
-    path="/dashboard/task/accounting/post-date-checks"
-    element={<PostDateChecks />}
-  />,
-  <Route
-    key="/dashboard/task/accounting/collections"
-    path="/dashboard/task/accounting/collections"
-    element={<Collections />}
-  />,
-  <Route
-    key="/dashboard/task/accounting/deposit"
-    path="/dashboard/task/accounting/deposit"
-    element={<Deposit />}
-  />,
-  <Route
-    key="/dashboard/task/accounting/return-check"
-    path="/dashboard/task/accounting/return-check"
-    element={<ReturnCheck />}
-  />,
-  <Route
-    key="/dashboard/task/accounting/petty-cash"
-    path="/dashboard/task/accounting/petty-cash"
-    element={<PettyCash />}
-  />,
-  <Route
-    key="/dashboard/task/accounting/general-journal"
-    path="/dashboard/task/accounting/general-journal"
-    element={<GeneralJournal />}
-  />,
-  <Route
-    key="/dashboard/task/accounting/cash-disbursement"
-    path="/dashboard/task/accounting/cash-disbursement"
-    element={<CashDisbursement />}
-  />,
-  <Route
-    key="/dashboard/task/accounting/warehouse-checks"
-    path="/dashboard/task/accounting/warehouse-checks"
-    element={<Warehouse />}
-  />,
-  <Route
-    key="/dashboard/task/accounting/monthly-accrual"
-    path="/dashboard/task/accounting/monthly-accrual"
-    element={<MonthlyAccrual />}
-  />,
-  <Route
-    key="/dashboard/task/accounting/check-pullout"
-    path="/dashboard/task/accounting/check-pullout"
-    element={<CheckPullout />}
-  />,
-  <Route
-    key="/dashboard/task/accounting/check-pullout-request"
-    path="/dashboard/task/accounting/check-pullout-request"
-    element={<CheckPulloutRequest />}
-  />,
-  <Route
-    key="/dashboard/task/accounting/check-pullout-approved"
-    path="/dashboard/task/accounting/check-pullout-approved"
-    element={<CheckPulloutApproved />}
-  />,
-  <Route
-    key="/dashboard/task/accounting/check-postponement"
-    path="/dashboard/task/accounting/check-postponement"
-    element={<ChekPostponement />}
-  />,
-  <Route
-    key="/dashboard/task/accounting/check-postponement-request"
-    path="/dashboard/task/accounting/check-postponement-request"
-    element={<ChekPostponementRequest />}
-  />,
-  <Route
-    key="/dashboard/task/accounting/check-postponement-approved"
-    path="/dashboard/task/accounting/check-postponement-approved"
-    element={<ChekPostponementApproved />}
-  />,
-  <Route
-    key="/dashboard/task/accounting/closing-transaction"
-    path="/dashboard/task/accounting/closing-transaction"
-    element={<ClosingTransaction />}
-  />,
-  <Route
-    key="/dashboard/task/accounting/nominal-closing"
-    path="/dashboard/task/accounting/nominal-closing"
-    element={<NominalClosing />}
-  />,
-];
-
-const CLAIMS_REFERENCE: any = [];
-const CLAIMS_TASK = [
-  <Route
-    key="/dashboard/task/claims/claims-id"
-    path="/dashboard/task/claims/claims"
-    element={<Claims />}
-  />,
-];
-const ADMIN_REFERENCE = [...PRODUCTION_REFERENCE, ...ACCOUNTING_REFERENCE];
-
-const ADMIN_TASK = [...PRODUCTION_TASK, ...ACCOUNTING_TASK, ...CLAIMS_TASK];
-
-const PRODUCTION_ACCOUNTING_REFERENCE = [
-  ...PRODUCTION_REFERENCE,
-  ...ACCOUNTING_REFERENCE,
-];
-const PRODUCTION_ACCOUNTING_TASK = [...PRODUCTION_TASK, ...ACCOUNTING_TASK];
-
-const ACCOUNTING_CHECKS_TASK = [
-  <Route
-    key="/dashboard/task/accounting/warehouse-checks"
-    path="/dashboard/task/accounting/warehouse-checks"
-    element={<Warehouse />}
-  />,
-  <Route
-    key="/dashboard/task/accounting/check-pullout-request"
-    path="/dashboard/task/accounting/check-pullout-request"
-    element={<CheckPulloutRequest />}
-  />,
-  <Route
-    key="/dashboard/task/accounting/check-pullout-approved"
-    path="/dashboard/task/accounting/check-pullout-approved"
-    element={<CheckPulloutApproved />}
-  />,
-  <Route
-    key="/dashboard/task/accounting/check-postponement-request"
-    path="/dashboard/task/accounting/check-postponement-request"
-    element={<ChekPostponementRequest />}
-  />,
-  <Route
-    key="/dashboard/task/accounting/check-postponement-approved"
-    path="/dashboard/task/accounting/check-postponement-approved"
-    element={<ChekPostponementApproved />}
-  />,
-];
 
 export default function Routers() {
   const { user } = useContext(AuthContext);
+  const department = process.env.REACT_APP_DEPARTMENT
+
+
+
+  const PRODUCTION_REFERENCE = [
+    <Route
+      key={`/${department}/dashboard/reference/branch`}
+      path={`/${department}/dashboard/reference/branch`}
+      element={<Branch />}
+    />,
+    <Route
+      key={`/${department}/dashboard/reference/policy-account`}
+      path={`/${department}/dashboard/reference/policy-account`}
+      element={<PolicyAccount />}
+    />,
+    <Route
+      key={`/${department}/dashboard/reference/sub-account`}
+      path={`/${department}/dashboard/reference/sub-account`}
+      element={<SubAccount />}
+    />,
+    <Route
+      key={`/${department}/dashboard/reference/id-entry`}
+      path={`/${department}/dashboard/reference/id-entry`}
+      element={<IDEntry />}
+    />,
+    <Route
+      key={`/${department}/dashboard/reference/mortgagee`}
+      path={`/${department}/dashboard/reference/mortgagee`}
+      element={<Mortgagee />}
+    />,
+    <Route
+      key={`/${department}/dashboard/reference/booklet`}
+      path={`/${department}/dashboard/reference/booklet`}
+      element={<Booklet />}
+    />,
+    <Route
+      key={`/${department}/dashboard/reference/subline`}
+      path={`/${department}/dashboard/reference/subline`}
+      element={<Subline />}
+    />,
+    <Route
+      key={`/${department}/dashboard/reference/rates`}
+      path={`/${department}/dashboard/reference/rates`}
+      element={<Rates />}
+    />,
+    <Route
+      key={`/${department}/dashboard/reference/ctpl`}
+      path={`/${department}/dashboard/reference/ctpl`}
+      element={<CTPL />}
+    />,
+    <Route
+      key={`/${department}/dashboard/reference/petty-cash-transaction`}
+      path={`/${department}/dashboard/reference/petty-cash-transaction`}
+      element={<PettyCashTransaction />}
+    />,
+  ];
+  const ACCOUNTING_REFERENCE = [
+    <Route
+      key={`/${department}/dashboard/reference/branch`}
+      path={`/${department}/dashboard/reference/branch`}
+      element={<Branch />}
+    />,
+    <Route
+      key={`/${department}/dashboard/reference/policy-account`}
+      path={`/${department}/dashboard/reference/policy-account`}
+      element={<PolicyAccount />}
+    />,
+    <Route
+      key={`/${department}/dashboard/reference/bank`}
+      path={`/${department}/dashboard/reference/bank`}
+      element={<Bank />}
+    />,
+    <Route
+      key={`/${department}/dashboard/reference/bank-account`}
+      path={`/${department}/dashboard/reference/bank-account`}
+      element={<BankAccount />}
+    />,
+    <Route
+      key={`/${department}/dashboard/reference/chart-accounts`}
+      path={`/${department}/dashboard/reference/chart-accounts`}
+      element={<ChartAccount />}
+    />,
+    <Route
+      key={`/${department}/dashboard/reference/sub-account`}
+      path={`/${department}/dashboard/reference/sub-account`}
+      element={<SubAccount />}
+    />,
+  
+    <Route
+      key={`/${department}/dashboard/reference/transaction-code`}
+      path={`/${department}/dashboard/reference/transaction-code`}
+      element={<TransactionCode />}
+    />,
+    <Route
+      key={`/${department}/dashboard/reference/id-entry`}
+      path={`/${department}/dashboard/reference/id-entry`}
+      element={<IDEntry />}
+    />,
+    <Route
+      key={`/${department}/dashboard/reference/mortgagee`}
+      path={`/${department}/dashboard/reference/mortgagee`}
+      element={<Mortgagee />}
+    />,
+    <Route
+      key={`/${department}/dashboard/reference/subline`}
+      path={`/${department}/dashboard/reference/subline`}
+      element={<Subline />}
+    />,
+    <Route
+      key={`/${department}/dashboard/reference/rates`}
+      path={`/${department}/dashboard/reference/rates`}
+      element={<Rates />}
+    />,
+    <Route
+      key={`/${department}/dashboard/reference/ctpl`}
+      path={`/${department}/dashboard/reference/ctpl`}
+      element={<CTPL />}
+    />,
+    <Route
+      key={`/${department}/dashboard/reference/petty-cash-transaction`}
+      path={`/${department}/dashboard/reference/petty-cash-transaction`}
+      element={<PettyCashTransaction />}
+    />,
+  ];
+  const PRODUCTION_TASK = [
+    <Route
+      key={`/${department}/dashboard/task/production/policy`}
+      path={`/${department}/dashboard/task/production/policy`}
+      element={<Policy />}
+    >
+      <Route
+        path={`/${department}/dashboard/task/production/policy`}
+        element={<VehiclePolicy />}
+      />
+      <Route path="fire" element={<FirePolicy />} />
+      <Route path="marine" element={<MarinePolicy />} />
+      <Route path="bonds" element={<BondsPolicy />} />
+      <Route path="mspr" element={<MSPRPolicy />} />
+      <Route path="pa" element={<PAPolicy />} />
+      <Route path="cgl" element={<CGLPolicy />} />
+    </Route>,
+    <Route
+      key={`/${department}/dashboard/task/production/statement-of-account`}
+      path={`/${department}/dashboard/task/production/statement-of-account`}
+      element={<StatementAccount />}
+    />,
+  ];
+  const ACCOUNTING_TASK = [
+    <Route
+      key={`/${department}/dashboard/task/accounting/production-id`}
+      path={`/${department}/dashboard/task/accounting/production-id`}
+      element={<CashDisbursement />}
+    />,
+    <Route
+      key={`/${department}/dashboard/task/accounting/post-date-checks`}
+      path={`/${department}/dashboard/task/accounting/post-date-checks`}
+      element={<PostDateChecks />}
+    />,
+    <Route
+      key={`/${department}/dashboard/task/accounting/collections`}
+      path={`/${department}/dashboard/task/accounting/collections`}
+      element={<Collections />}
+    />,
+    <Route
+      key={`/${department}/dashboard/task/accounting/deposit`}
+      path={`/${department}/dashboard/task/accounting/deposit`}
+      element={<Deposit />}
+    />,
+    <Route
+      key={`/${department}/dashboard/task/accounting/return-check`}
+      path={`/${department}/dashboard/task/accounting/return-check`}
+      element={<ReturnCheck />}
+    />,
+    <Route
+      key={`/${department}/dashboard/task/accounting/petty-cash`}
+      path={`/${department}/dashboard/task/accounting/petty-cash`}
+      element={<PettyCash />}
+    />,
+    <Route
+      key={`/${department}/dashboard/task/accounting/general-journal`}
+      path={`/${department}/dashboard/task/accounting/general-journal`}
+      element={<GeneralJournal />}
+    />,
+    <Route
+      key={`/${department}/dashboard/task/accounting/cash-disbursement`}
+      path={`/${department}/dashboard/task/accounting/cash-disbursement`}
+      element={<CashDisbursement />}
+    />,
+    <Route
+      key={`/${department}/dashboard/task/accounting/warehouse-checks`}
+      path={`/${department}/dashboard/task/accounting/warehouse-checks`}
+      element={<Warehouse />}
+    />,
+    <Route
+      key={`/${department}/dashboard/task/accounting/monthly-accrual`}
+      path={`/${department}/dashboard/task/accounting/monthly-accrual`}
+      element={<MonthlyAccrual />}
+    />,
+    <Route
+      key={`/${department}/dashboard/task/accounting/check-pullout`}
+      path={`/${department}/dashboard/task/accounting/check-pullout`}
+      element={<CheckPullout />}
+    />,
+    <Route
+      key={`/${department}/dashboard/task/accounting/check-pullout-request`}
+      path={`/${department}/dashboard/task/accounting/check-pullout-request`}
+      element={<CheckPulloutRequest />}
+    />,
+    <Route
+      key={`/${department}/dashboard/task/accounting/check-pullout-approved`}
+      path={`/${department}/dashboard/task/accounting/check-pullout-approved`}
+      element={<CheckPulloutApproved />}
+    />,
+    <Route
+      key={`/${department}/dashboard/task/accounting/check-postponement`}
+      path={`/${department}/dashboard/task/accounting/check-postponement`}
+      element={<ChekPostponement />}
+    />,
+    <Route
+      key={`/${department}/dashboard/task/accounting/check-postponement-request`}
+      path={`/${department}/dashboard/task/accounting/check-postponement-request`}
+      element={<ChekPostponementRequest />}
+    />,
+    <Route
+      key={`/${department}/dashboard/task/accounting/check-postponement-approved`}
+      path={`/${department}/dashboard/task/accounting/check-postponement-approved`}
+      element={<ChekPostponementApproved />}
+    />,
+    <Route
+      key={`/${department}/dashboard/task/accounting/closing-transaction`}
+      path={`/${department}/dashboard/task/accounting/closing-transaction`}
+      element={<ClosingTransaction />}
+    />,
+    <Route
+      key={`/${department}/dashboard/task/accounting/nominal-closing`}
+      path={`/${department}/dashboard/task/accounting/nominal-closing`}
+      element={<NominalClosing />}
+    />,
+  ];
+  
+  const CLAIMS_REFERENCE: any = [];
+  const CLAIMS_TASK = [
+    <Route
+      key={`/${department}/dashboard/task/claims/claims-id`}
+      path={`/${department}/dashboard/task/claims/claims`}
+      element={<Claims />}
+    />,
+  ];
+  const ADMIN_REFERENCE = [...PRODUCTION_REFERENCE, ...ACCOUNTING_REFERENCE];
+  
+  const ADMIN_TASK = [...PRODUCTION_TASK, ...ACCOUNTING_TASK, ...CLAIMS_TASK];
+  
+  const PRODUCTION_ACCOUNTING_REFERENCE = [
+    ...PRODUCTION_REFERENCE,
+    ...ACCOUNTING_REFERENCE,
+  ];
+  const PRODUCTION_ACCOUNTING_TASK = [...PRODUCTION_TASK, ...ACCOUNTING_TASK];
+  
+  const ACCOUNTING_CHECKS_TASK = [
+    <Route
+      key={`/${department}/dashboard/task/accounting/warehouse-checks`}
+      path={`/${department}/dashboard/task/accounting/warehouse-checks`}
+      element={<Warehouse />}
+    />,
+    <Route
+      key={`/${department}/dashboard/task/accounting/check-pullout-request`}
+      path={`/${department}/dashboard/task/accounting/check-pullout-request`}
+      element={<CheckPulloutRequest />}
+    />,
+    <Route
+      key={`/${department}/dashboard/task/accounting/check-pullout-approved`}
+      path={`/${department}/dashboard/task/accounting/check-pullout-approved`}
+      element={<CheckPulloutApproved />}
+    />,
+    <Route
+      key={`/${department}/dashboard/task/accounting/check-postponement-request`}
+      path={`/${department}/dashboard/task/accounting/check-postponement-request`}
+      element={<ChekPostponementRequest />}
+    />,
+    <Route
+      key={`/${department}/dashboard/task/accounting/check-postponement-approved`}
+      path={`/${department}/dashboard/task/accounting/check-postponement-approved`}
+      element={<ChekPostponementApproved />}
+    />,
+  ];
+
+
+
   const REF_ROUTE: {
     PRODUCTION_REFERENCE: Array<JSX.Element>;
     ACCOUNTING_REFERENCE: Array<JSX.Element>;
@@ -514,8 +522,8 @@ export default function Routers() {
   if (user && (!user?.is_master_admin as boolean)) {
     return (
       <Routes>
-        <Route path="/dashboard" element={<Layout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
+        <Route path={`/${department}/dashboard`} element={<Layout />}>
+          <Route path={`/${department}/dashboard`} element={<Dashboard />} />
 
           {/* Reference */}
           {reference?.length > 0 &&
@@ -527,35 +535,35 @@ export default function Routers() {
             return Route;
           })}
           {/* Help */}
-          <Route path="/dashboard/help/content" element={<Content />} />
+          {/* <Route path="/dashboard/help/content" element={<Content />} />
           <Route path="/dashboard/help/search" element={<Search />} />
           <Route path="/dashboard/help/index" element={<Index />} />
-          <Route path="/dashboard/help/about" element={<About />} />
+          <Route path="/dashboard/help/about" element={<About />} /> */}
         </Route>
 
-        <Route path="/dashboard" element={<RenderPage />}>
-          <Route path="/dashboard/print" element={<NavigatePrint />} />
+        <Route path={`/${department}/dashboard`} element={<RenderPage />}>
+          <Route path={`/${department}/dashboard/print` }element={<NavigatePrint />} />
         </Route>
-        <Route path="/dashboard/report" element={<DisplayReport />} />
+        <Route path={`/${department}/dashboard/report`} element={<DisplayReport />} />
 
         {/* Reports */}
-        <Route path="/dashboard" element={<RenderPage />}>
+        <Route path={`/${department}/dashboard`} element={<RenderPage />}>
           <Route
-            path="/dashboard/reports/production/production-report"
+            path={`/${department}/dashboard/reports/production/production-report`}
             element={<ProductionReport />}
           />
           <Route
-            path="/dashboard/reports/production/renewal-notice"
+            path={`/${department}/dashboard/reports/production/renewal-notice`}
             element={<RenewalNoticeReport />}
           />
           <Route
-            path="/dashboard/reports/accounting/accounting-reports"
+            path={`/${department}/dashboard/reports/accounting/accounting-reports`}
             element={<AccountingReport />}
           />
         </Route>
-        <Route path="/dashboard" element={<RenderPage />}>
+        <Route path={`/${department}/dashboard`} element={<RenderPage />}>
           <Route
-            path="/dashboard/templates/renewal-template"
+            path={`/${department}/dashboard/templates/renewal-template`}
             element={<RenewalTemplate />}
           />
         </Route>
@@ -566,7 +574,7 @@ export default function Routers() {
 
   return (
     <Routes>
-      <Route path="/" element={<RenderPage withHeader={false} />}>
+      <Route path={`/${department}/login`} element={<RenderPage withHeader={false} />}>
         <Route index element={<LandingPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />

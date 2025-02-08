@@ -10,6 +10,7 @@ import Swal from "sweetalert2";
 import axios from "axios";
 
 export default function Header() {
+  const department = process.env.REACT_APP_DEPARTMENT
   const { user, setUser, myAxios } = useContext(AuthContext);
   const [openMenu, setOpenMenu] = useState(null);
   const [openUserMenu, setOpenUserMenu] = useState(false);
@@ -133,8 +134,9 @@ export default function Header() {
           showConfirmButton: false,
           timer: 800,
         }).then(() => {
+          
           setUser(null);
-          navigate("/");
+          navigate(`/${process.env.REACT_APP_DEPARTMENT}/login`);
         });
       }
     },
@@ -191,49 +193,49 @@ export default function Header() {
     const _menuData = [
       {
         name: "Dashboard",
-        path: "/dashboard",
+        path: `/${department}/dashboard`,
       },
       {
         name: "Claim",
-        path: "/dashboard/task/claims/claims",
+        path: `/${department}/dashboard/task/claims/claims`,
       },
       {
         name: "Reference",
         subLinks: [
           {
             name: "Policy Account",
-            path: "/dashboard/reference/policy-account",
+            path: `/${department}/dashboard/reference/policy-account`,
           },
-          { name: "Bank", path: "/dashboard/reference/bank" },
-          { name: "Bank Account", path: "/dashboard/reference/bank-account" },
-          { name: "Booklet", path: "/dashboard/reference/booklet" },
+          { name: "Bank", path: `/${department}/dashboard/reference/bank` },
+          { name: "Bank Account", path: `/${department}/dashboard/reference/bank-account` },
+          { name: "Booklet", path: `/${department}/dashboard/reference/booklet` },
           {
             name: "Chart of Accounts",
-            path: "/dashboard/reference/chart-accounts",
+            path: `/${department}/dashboard/reference/chart-accounts`,
           },
-          { name: "Sub Account", path: "/dashboard/reference/sub-account" },
+          { name: "Sub Account", path: `/${department}/dashboard/reference/sub-account` },
           {
             name: "Transaction Code",
-            path: "/dashboard/reference/transaction-code",
+            path: `/${department}/dashboard/reference/transaction-code`,
           },
-          { name: "ID Entry", path: "/dashboard/reference/id-entry" },
-          { name: "Subline", path: "/dashboard/reference/subline" },
-          { name: "Rates", path: "/dashboard/reference/rates" },
-          { name: "CTPL", path: "/dashboard/reference/ctpl" },
+          { name: "ID Entry", path: `/${department}/dashboard/reference/id-entry` },
+          { name: "Subline", path: `/${department}/dashboard/reference/subline` },
+          { name: "Rates", path: `/${department}/dashboard/reference/rates` },
+          { name: "CTPL", path: `/${department}/dashboard/reference/ctpl` },
           {
             name: "Petty Cash Transaction",
-            path: "/dashboard/reference/petty-cash-transaction",
+            path: `/${department}/dashboard/reference/petty-cash-transaction`,
           },
-          { name: "Mortgagee", path: "/dashboard/reference/mortgagee" },
+          { name: "Mortgagee", path: `/${department}/dashboard/reference/mortgagee` },
         ],
       },
       {
         name: "Production",
         subLinks: [
-          { name: "Policy", path: "/dashboard/task/production/policy/" },
+          { name: "Policy", path: `/${department}/dashboard/task/production/policy/` },
           {
             name: "Statement of Account",
-            path: "/dashboard/task/production/statement-of-account",
+            path: `/${department}/dashboard/task/production/statement-of-account`,
           },
         ],
       },
@@ -242,45 +244,45 @@ export default function Header() {
         subLinks: [
           {
             name: "Post Dated Checks",
-            path: "/dashboard/task/accounting/post-date-checks",
+            path: `/${department}/dashboard/task/accounting/post-date-checks`,
           },
           {
             name: "Collections",
-            path: "/dashboard/task/accounting/collections",
+            path: `/${department}/dashboard/task/accounting/collections`,
           },
-          { name: "Deposit", path: "/dashboard/task/accounting/deposit" },
+          { name: "Deposit", path: `/${department}/dashboard/task/accounting/deposit` },
           {
             name: "Return Check",
-            path: "/dashboard/task/accounting/return-check",
+            path: `/${department}/dashboard/task/accounting/return-check`,
           },
-          { name: "Petty Cash", path: "/dashboard/task/accounting/petty-cash" },
+          { name: "Petty Cash", path: `/${department}/dashboard/task/accounting/petty-cash` },
           {
             name: "General Journal",
-            path: "/dashboard/task/accounting/general-journal",
+            path: `/${department}/dashboard/task/accounting/general-journal`,
           },
           {
             name: "Cash Disbursement",
-            path: "/dashboard/task/accounting/cash-disbursement",
+            path: `/${department}/dashboard/task/accounting/cash-disbursement`,
           },
           {
             name: "Treasury",
-            path: "/dashboard/task/accounting/warehouse-checks",
+            path: `/${department}/dashboard/task/accounting/warehouse-checks`,
           },
           {
             name: "Check Pullout Request",
-            path: "/dashboard/task/accounting/check-pullout-request",
+            path: `/${department}/dashboard/task/accounting/check-pullout-request`,
           },
           {
             name: "Check Pullout Approved",
-            path: "/dashboard/task/accounting/check-pullout-approved",
+            path: `/${department}/dashboard/task/accounting/check-pullout-approved`,
           },
           {
             name: "Check Postponement Request",
-            path: "/dashboard/task/accounting/check-postponement-request",
+            path: `/${department}/dashboard/task/accounting/check-postponement-request`,
           },
           {
             name: "Check Postponement Approved",
-            path: "/dashboard/task/accounting/check-postponement-approved",
+            path: `/${department}/dashboard/task/accounting/check-postponement-approved`,
           },
         ],
       },
@@ -289,63 +291,63 @@ export default function Header() {
         subLinks: [
           {
             name: "Production Report",
-            path: "/dashboard/reports/production/production-report",
+            path: `/${department}/dashboard/reports/production/production-report`,
           },
           {
             name: "Renewal Notice",
-            path: "/dashboard/reports/production/renewal-notice",
+            path: `/${department}/dashboard/reports/production/renewal-notice`,
           },
         ],
       },
       {
         name: "Accounting Report",
-        path: "/dashboard/reports/accounting/accounting-reports",
+        path: `/${department}/dashboard/reports/accounting/accounting-reports`,
       },
     ];
     if (user?.userAccess === "PRODUCTION_ACCOUNTING") {
       return setMenuData([
         {
           name: "Dashboard",
-          path: "/dashboard",
+          path: `/${department}/dashboard`,
         },
         {
           name: "Reference",
           subLinks: [
             {
               name: "Policy Account",
-              path: "/dashboard/reference/policy-account",
+              path: `/${department}/dashboard/reference/policy-account`,
             },
-            { name: "Bank", path: "/dashboard/reference/bank" },
-            { name: "Bank Account", path: "/dashboard/reference/bank-account" },
-            { name: "Booklet", path: "/dashboard/reference/booklet" },
+            { name: "Bank", path: `/${department}/dashboard/reference/bank` },
+            { name: "Bank Account", path: `/${department}/dashboard/reference/bank-account` },
+            { name: "Booklet", path: `/${department}/dashboard/reference/booklet` },
             {
               name: "Chart of Accounts",
-              path: "/dashboard/reference/chart-accounts",
+              path: `/${department}/dashboard/reference/chart-accounts`,
             },
-            { name: "Sub Account", path: "/dashboard/reference/sub-account" },
+            { name: "Sub Account", path: `/${department}/dashboard/reference/sub-account` },
             {
               name: "Transaction Code",
-              path: "/dashboard/reference/transaction-code",
+              path: `/${department}/dashboard/reference/transaction-code`,
             },
-            { name: "ID Entry", path: "/dashboard/reference/id-entry" },
-            { name: "Subline", path: "/dashboard/reference/subline" },
-            { name: "Rates", path: "/dashboard/reference/rates" },
-            { name: "CTPL", path: "/dashboard/reference/ctpl" },
+            { name: "ID Entry", path: `/${department}/dashboard/reference/id-entry`},
+            { name: "Subline", path: `/${department}/dashboard/reference/subline` },
+            { name: "Rates", path: `/${department}/dashboard/reference/rates` },
+            { name: "CTPL", path: `/${department}/dashboard/reference/ctpl` },
             {
               name: "Petty Cash Transaction",
-              path: "/dashboard/reference/petty-cash-transaction",
+              path: `/${department}/dashboard/reference/petty-cash-transaction`,
             },
-            { name: "Mortgagee", path: "/dashboard/reference/mortgagee" },
+            { name: "Mortgagee", path: `/${department}/dashboard/reference/mortgagee` },
           ],
         },
 
         {
           name: "Production",
           subLinks: [
-            { name: "Policy", path: "/dashboard/task/production/policy/" },
+            { name: "Policy", path: `/${department}/dashboard/task/production/policy/` },
             {
               name: "Statement of Account",
-              path: "/dashboard/task/production/statement-of-account",
+              path: `/${department}/dashboard/task/production/statement-of-account`,
             },
           ],
         },
@@ -354,48 +356,48 @@ export default function Header() {
           subLinks: [
             {
               name: "Post Dated Checks",
-              path: "/dashboard/task/accounting/post-date-checks",
+              path: `/${department}/dashboard/task/accounting/post-date-checks`,
             },
             {
               name: "Collections",
-              path: "/dashboard/task/accounting/collections",
+              path: `/${department}/dashboard/task/accounting/collections`,
             },
-            { name: "Deposit", path: "/dashboard/task/accounting/deposit" },
+            { name: "Deposit", path: `/${department}/dashboard/task/accounting/deposit` },
             {
               name: "Return Check",
-              path: "/dashboard/task/accounting/return-check",
+              path: `/${department}/dashboard/task/accounting/return-check`,
             },
             {
               name: "Petty Cash",
-              path: "/dashboard/task/accounting/petty-cash",
+              path: `/${department}/dashboard/task/accounting/petty-cash`,
             },
             {
               name: "General Journal",
-              path: "/dashboard/task/accounting/general-journal",
+              path: `/${department}/dashboard/task/accounting/general-journal`,
             },
             {
               name: "Cash Disbursement",
-              path: "/dashboard/task/accounting/cash-disbursement",
+              path: `/${department}/dashboard/task/accounting/cash-disbursement`,
             },
             {
               name: "Treasury",
-              path: "/dashboard/task/accounting/warehouse-checks",
+              path: `/${department}/dashboard/task/accounting/warehouse-checks`,
             },
             {
               name: "Check Pullout Request",
-              path: "/dashboard/task/accounting/check-pullout-request",
+              path: `/${department}/dashboard/task/accounting/check-pullout-request`,
             },
             {
               name: "Check Pullout Approved",
-              path: "/dashboard/task/accounting/check-pullout-approved",
+              path: `/${department}/dashboard/task/accounting/check-pullout-approved`,
             },
             {
               name: "Check Postponement Request",
-              path: "/dashboard/task/accounting/check-postponement-request",
+              path: `/${department}/dashboard/task/accounting/check-postponement-request`,
             },
             {
               name: "Check Postponement Approved",
-              path: "/dashboard/task/accounting/check-postponement-approved",
+              path: `/${department}/dashboard/task/accounting/check-postponement-approved`,
             },
           ],
         },
@@ -404,53 +406,53 @@ export default function Header() {
           subLinks: [
             {
               name: "Production Report",
-              path: "/dashboard/reports/production/production-report",
+              path: `/${department}/dashboard/reports/production/production-report`,
             },
             {
               name: "Renewal Notice",
-              path: "/dashboard/reports/production/renewal-notice",
+              path: `/${department}/dashboard/reports/production/renewal-notice`,
             },
           ],
         },
         {
           name: "Accounting Report",
-          path: "/dashboard/reports/accounting/accounting-reports",
+          path: `/${department}/dashboard/reports/accounting/accounting-reports`,
         },
       ]);
     } else if (user?.userAccess === "ACCOUNTING") {
       return setMenuData([
         {
           name: "Dashboard",
-          path: "/dashboard",
+          path: `/${department}/dashboard`,
         },
         {
           name: "Reference",
           subLinks: [
             {
               name: "Policy Account",
-              path: "/dashboard/reference/policy-account",
+              path: `/${department}/dashboard/reference/policy-account`,
             },
-            { name: "Bank", path: "/dashboard/reference/bank" },
-            { name: "Bank Account", path: "/dashboard/reference/bank-account" },
-            { name: "Booklet", path: "/dashboard/reference/booklet" },
+            { name: "Bank", path: `/${department}/dashboard/reference/bank`},
+            { name: "Bank Account", path: `/${department}/dashboard/reference/bank-account`},
+            { name: "Booklet", path: `/${department}/dashboard/reference/booklet` },
             {
               name: "Chart of Accounts",
-              path: "/dashboard/reference/chart-accounts",
+              path: `/${department}/dashboard/reference/chart-accounts`,
             },
-            { name: "Sub Account", path: "/dashboard/reference/sub-account" },
+            { name: "Sub Account", path: `/${department}/dashboard/reference/sub-account` },
             {
               name: "Transaction Code",
-              path: "/dashboard/reference/transaction-code",
+              path: `/${department}/dashboard/reference/transaction-code`,
             },
-            { name: "ID Entry", path: "/dashboard/reference/id-entry" },
-            { name: "Subline", path: "/dashboard/reference/subline" },
-            { name: "Rates", path: "/dashboard/reference/rates" },
-            { name: "CTPL", path: "/dashboard/reference/ctpl" },
+            { name: "ID Entry", path: `/${department}/dashboard/reference/id-entry` },
+            { name: "Subline", path: `/${department}/dashboard/reference/subline` },
+            { name: "Rates", path: `/${department}/dashboard/reference/rates`},
+            { name: "CTPL", path: `/${department}/dashboard/reference/ctpl` },
             {
               name: "Petty Cash Transaction",
-              path: "/dashboard/reference/petty-cash-transaction",
+              path: `/${department}/dashboard/reference/petty-cash-transaction`,
             },
-            { name: "Mortgagee", path: "/dashboard/reference/mortgagee" },
+            { name: "Mortgagee", path: `/${department}/dashboard/reference/mortgagee` },
           ],
         },
         {
@@ -458,48 +460,48 @@ export default function Header() {
           subLinks: [
             {
               name: "Post Dated Checks",
-              path: "/dashboard/task/accounting/post-date-checks",
+              path: `/${department}/dashboard/task/accounting/post-date-checks`,
             },
             {
               name: "Collections",
-              path: "/dashboard/task/accounting/collections",
+              path: `/${department}/dashboard/task/accounting/collections`,
             },
-            { name: "Deposit", path: "/dashboard/task/accounting/deposit" },
+            { name: "Deposit", path: `/${department}/dashboard/task/accounting/deposit` },
             {
               name: "Return Check",
-              path: "/dashboard/task/accounting/return-check",
+              path: `/${department}/dashboard/task/accounting/return-check`,
             },
             {
               name: "Petty Cash",
-              path: "/dashboard/task/accounting/petty-cash",
+              path: `/${department}/dashboard/task/accounting/petty-cash`,
             },
             {
               name: "General Journal",
-              path: "/dashboard/task/accounting/general-journal",
+              path: `/${department}/dashboard/task/accounting/general-journal`,
             },
             {
               name: "Cash Disbursement",
-              path: "/dashboard/task/accounting/cash-disbursement",
+              path: `/${department}/dashboard/task/accounting/cash-disbursement`,
             },
             {
               name: "Treasury",
-              path: "/dashboard/task/accounting/warehouse-checks",
+              path: `/${department}/dashboard/task/accounting/warehouse-checks`,
             },
             {
               name: "Check Pullout Request",
-              path: "/dashboard/task/accounting/check-pullout-request",
+              path: `/${department}/dashboard/task/accounting/check-pullout-request`,
             },
             {
               name: "Check Pullout Approved",
-              path: "/dashboard/task/accounting/check-pullout-approved",
+              path: `/${department}/dashboard/task/accounting/check-pullout-approved`,
             },
             {
               name: "Check Postponement Request",
-              path: "/dashboard/task/accounting/check-postponement-request",
+              path: `/${department}/dashboard/task/accounting/check-postponement-request`,
             },
             {
               name: "Check Postponement Approved",
-              path: "/dashboard/task/accounting/check-postponement-approved",
+              path: `/${department}/dashboard/task/accounting/check-postponement-approved`,
             },
           ],
         },
@@ -508,7 +510,7 @@ export default function Header() {
           subLinks: [
             {
               name: "Accounting Report",
-              path: "/dashboard/reports/accounting/accounting-reports",
+              path: `/${department}/dashboard/reports/accounting/accounting-reports`,
             },
           ],
         },
@@ -520,23 +522,23 @@ export default function Header() {
           subLinks: [
             {
               name: "Treasury",
-              path: "/dashboard/task/accounting/warehouse-checks",
+              path: `/${department}/dashboard/task/accounting/warehouse-checks`,
             },
             {
               name: "Check Pullout Request",
-              path: "/dashboard/task/accounting/check-pullout-request",
+              path: `/${department}/dashboard/task/accounting/check-pullout-request`,
             },
             {
               name: "Check Pullout Approved",
-              path: "/dashboard/task/accounting/check-pullout-approved",
+              path: `/${department}/dashboard/task/accounting/check-pullout-approved`,
             },
             {
               name: "Check Postponement Request",
-              path: "/dashboard/task/accounting/check-postponement-request",
+              path: `/${department}/dashboard/task/accounting/check-postponement-request`,
             },
             {
               name: "Check Postponement Approved",
-              path: "/dashboard/task/accounting/check-postponement-approved",
+              path: `/${department}/dashboard/task/accounting/check-postponement-approved`,
             },
           ],
         },
@@ -545,7 +547,7 @@ export default function Header() {
           subLinks: [
             {
               name: "Accounting Report",
-              path: "/dashboard/reports/accounting/accounting-reports",
+              path: `/${department}/dashboard/reports/accounting/accounting-reports`,
             },
           ],
         },
@@ -554,45 +556,45 @@ export default function Header() {
       return setMenuData([
         {
           name: "Dashboard",
-          path: "/dashboard",
+          path: `/${department}/dashboard`,
         },
         {
           name: "Reference",
           subLinks: [
             {
               name: "Policy Account",
-              path: "/dashboard/reference/policy-account",
+              path: `/${department}/dashboard/reference/policy-account`,
             },
-            { name: "Bank", path: "/dashboard/reference/bank" },
-            { name: "Bank Account", path: "/dashboard/reference/bank-account" },
-            { name: "Booklet", path: "/dashboard/reference/booklet" },
+            { name: "Bank", path: `/${department}/dashboard/reference/bank` },
+            { name: "Bank Account", path: `/${department}/dashboard/reference/bank-account` },
+            { name: "Booklet", path: `/${department}/dashboard/reference/booklet`},
             {
               name: "Chart of Accounts",
-              path: "/dashboard/reference/chart-accounts",
+              path: `/${department}/dashboard/reference/chart-accounts`,
             },
-            { name: "Sub Account", path: "/dashboard/reference/sub-account" },
+            { name: "Sub Account", path: `/${department}/dashboard/reference/sub-account` },
             {
               name: "Transaction Code",
-              path: "/dashboard/reference/transaction-code",
+              path: `/${department}/dashboard/reference/transaction-code`,
             },
-            { name: "ID Entry", path: "/dashboard/reference/id-entry" },
-            { name: "Subline", path: "/dashboard/reference/subline" },
-            { name: "Rates", path: "/dashboard/reference/rates" },
-            { name: "CTPL", path: "/dashboard/reference/ctpl" },
+            { name: "ID Entry", path: `/${department}/dashboard/reference/id-entry` },
+            { name: "Subline", path: `/${department}/dashboard/reference/subline` },
+            { name: "Rates", path: `/${department}/dashboard/reference/rates` },
+            { name: "CTPL", path: `/${department}/dashboard/reference/ctpl` },
             {
               name: "Petty Cash Transaction",
-              path: "/dashboard/reference/petty-cash-transaction",
+              path: `/${department}/dashboard/reference/petty-cash-transaction`,
             },
-            { name: "Mortgagee", path: "/dashboard/reference/mortgagee" },
+            { name: "Mortgagee", path: `/${department}/dashboard/reference/mortgagee` },
           ],
         },
         {
           name: "Production",
           subLinks: [
-            { name: "Policy", path: "/dashboard/task/production/policy/" },
+            { name: "Policy", path: `/${department}/dashboard/task/production/policy/` },
             {
               name: "Statement of Account",
-              path: "/dashboard/task/production/statement-of-account",
+              path: `/${department}/dashboard/task/production/statement-of-account`,
             },
           ],
         },
@@ -601,11 +603,11 @@ export default function Header() {
           subLinks: [
             {
               name: "Production Report",
-              path: "/dashboard/reports/production/production-report",
+              path: `/${department}/dashboard/reports/production/production-report`,
             },
             {
               name: "Renewal Notice",
-              path: "/dashboard/reports/production/renewal-notice",
+              path: `/${department}/dashboard/reports/production/renewal-notice`,
             },
           ],
         },
@@ -614,11 +616,11 @@ export default function Header() {
       return setMenuData([
         {
           name: "Dashboard",
-          path: "/dashboard",
+          path: `/${department}/dashboard`,
         },
         {
           name: "Claim",
-          path: "/dashboard/task/claims/claims",
+          path: `/${department}/dashboard/task/claims/claims`,
         },
       ]);
     } else {

@@ -5,8 +5,8 @@ import { useMutation } from "react-query";
 import { wait } from "../lib/wait";
 import axios, { AxiosInstance } from "axios";
 import Swal from "sweetalert2";
-import "../style/landingpage.css"
-import "../style/laoding.css"
+import "../style/landingpage.css";
+import "../style/laoding.css";
 
 async function Login(
   myAxios: AxiosInstance,
@@ -70,22 +70,23 @@ export default function LandingPage() {
         timer: 800,
       }).then(() => {
         setUser(res.data.user);
-        if(res.data.user.userAccess === 'ACCOUNTING_CHECKS'){
-          return navigate("/dashboard/task/accounting/warehouse-checks");
+        if (res.data.user.userAccess === "ACCOUNTING_CHECKS") {
+          return navigate(
+            `/${process.env.REACT_APP_DEPARTMENT}/dashboard/task/accounting/warehouse-checks`
+          );
         }
-
 
         if (res.data.user.is_master_admin) {
           navigate("/master-admin-dashboard");
         } else {
-          window.localStorage.setItem('__policy__', 'COM')
-          if (res.data.user.department === 'UCSMI') {
-            window.localStorage.setItem('__policy_type__', 'TEMP')
+          window.localStorage.setItem("__policy__", "COM");
+          if (res.data.user.department === "UCSMI") {
+            window.localStorage.setItem("__policy_type__", "TEMP");
           }
-          if (res.data.user.department === 'UMIS') {
-            window.localStorage.setItem('__policy_type__', 'REG')
+          if (res.data.user.department === "UMIS") {
+            window.localStorage.setItem("__policy_type__", "REG");
           }
-          navigate("/dashboard");
+          navigate(`/${process.env.REACT_APP_DEPARTMENT}/dashboard`);
         }
       });
     },
@@ -100,8 +101,6 @@ export default function LandingPage() {
     });
   }
 
-
-
   return (
     <div className="main-landing-page">
       <form className="content" onSubmit={onSubmit}>
@@ -110,7 +109,9 @@ export default function LandingPage() {
           src={process.env.REACT_APP_IMAGE_URL + "logo.png"}
           style={{ width: "120px", height: "auto", background: "white" }}
         />
-        <h3 style={{ fontWeight: "400", marginBottom: "30px" }}>LOGIN TO UPWARD INSURANCE</h3>
+        <h3 style={{ fontWeight: "400", marginBottom: "30px" }}>
+          LOGIN TO UPWARD INSURANCE
+        </h3>
         <div className="content-field">
           <div>
             <label htmlFor="username"> USERNAME</label>
@@ -124,9 +125,14 @@ export default function LandingPage() {
                   password: false,
                   success: false,
                   message: "",
-                })}
+                })
+              }
             />
-            {errors.username && <p className="warning-text">{errors.username && errors.message}</p>}
+            {errors.username && (
+              <p className="warning-text">
+                {errors.username && errors.message}
+              </p>
+            )}
           </div>
         </div>
         <div className="content-field" style={{ marginTop: "15px" }}>
@@ -143,21 +149,50 @@ export default function LandingPage() {
                   password: false,
                   success: false,
                   message: "",
-                })}
+                })
+              }
             />
-            {errors.password && <p className="warning-text">{errors.message}</p>}
+            {errors.password && (
+              <p className="warning-text">{errors.message}</p>
+            )}
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", columnGap: "10px", marginTop: "10px" }}>
-          <input name="showpass" id="showpass" type="checkbox" style={{ padding: "0", margin: 0 }} onChange={(e) => {
-            setShowPassword(e.currentTarget?.checked)
-          }} />
-          <label htmlFor="showpass" style={{ fontSize: "10px", cursor: "pointer", padding: "0", margin: 0 }}>SHOW PASSWORD</label>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            columnGap: "10px",
+            marginTop: "10px",
+          }}
+        >
+          <input
+            name="showpass"
+            id="showpass"
+            type="checkbox"
+            style={{ padding: "0", margin: 0 }}
+            onChange={(e) => {
+              setShowPassword(e.currentTarget?.checked);
+            }}
+          />
+          <label
+            htmlFor="showpass"
+            style={{
+              fontSize: "10px",
+              cursor: "pointer",
+              padding: "0",
+              margin: 0,
+            }}
+          >
+            SHOW PASSWORD
+          </label>
         </div>
         <button>SUBMIT</button>
       </form>
-      {isLoading && <div className="loading-component"><div className="loader"></div></div>}
+      {isLoading && (
+        <div className="loading-component">
+          <div className="loader"></div>
+        </div>
+      )}
     </div>
-  )
-  
+  );
 }

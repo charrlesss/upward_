@@ -6,7 +6,7 @@ module.exports = {
     configure: (webpackConfig) => {
       webpackConfig.output = {
         ...webpackConfig.output,
-        path: path.resolve("../upward-api/src/view"), // Change 'custom_build_folder' to your desired folder name
+        path: path.resolve("../Application",(process.env.REACT_APP_DEPARTMENT).toString().toLocaleLowerCase() || "build"), // Change 'custom_build_folder' to your desired folder name
       };
       return webpackConfig;
     },

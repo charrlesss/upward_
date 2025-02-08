@@ -41,12 +41,12 @@ const NotFoundPage = () => {
         <button
           onClick={() => {
             if (typeof data?.data === "string") {
-              return (window.location.href = "/");
+              return (window.location.href = `/${process.env.REACT_APP_DEPARTMENT}/login`);
             }
             if (user?.is_master_admin) {
               return navigate("/master-admin-dashboard");
             }
-            return navigate("/dashboard");
+            return navigate(`/${process.env.REACT_APP_DEPARTMENT}/dashboard`);
           }}
         >
           {isLoading ? "Loading" : "Click this button to continue"}
