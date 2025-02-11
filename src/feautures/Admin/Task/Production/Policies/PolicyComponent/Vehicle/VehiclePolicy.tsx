@@ -386,7 +386,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
                   wait(100).then(() => {
                     temporaryPolicyRef.current.disableField(true);
                   });
-                  temporaryPolicyRef.current.disableField(true);
+                  temporaryPolicyRef.current.resetFields(true);
                 }
                 setMode("");
               }

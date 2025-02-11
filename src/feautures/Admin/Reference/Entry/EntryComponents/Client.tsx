@@ -27,7 +27,7 @@ import { Autocomplete } from "../../../Task/Accounting/PettyCash";
 
 export default function Client() {
   const { myAxios, user } = useContext(AuthContext);
-  const [option, setOption] = useState("Individual");
+  const [option, setOption] = useState("individual");
   const [mode, setMode] = useState("");
 
   const tableRef = useRef<any>(null);
@@ -249,10 +249,10 @@ export default function Client() {
     wait(100).then(() => {
       refetchClientId();
       refetchSubAcct();
-      setOption("Individual");
+      setOption("individual");
 
       if (optionRef.current) {
-        optionRef.current.value = "Individual";
+        optionRef.current.value = "individual";
       }
       if (firstnameRef.current) {
         firstnameRef.current.value = "";
@@ -512,13 +512,13 @@ export default function Client() {
               },
             }}
             datasource={[
-              { key: "Individual", value: "Individual" },
-              { key: "Company", value: "Company" },
+              { key: "Individual", value: "individual" },
+              { key: "Company", value: "company" },
             ]}
             values={"value"}
             display={"key"}
           />
-          {option === "Individual" && (
+          {option === "individual" && (
             <>
               <TextInput
                 label={{
@@ -598,7 +598,7 @@ export default function Client() {
             </>
           )}
 
-          {option === "Company" && (
+          {option === "company" && (
             <>
               <TextAreaInput
                 label={{
@@ -991,7 +991,7 @@ export default function Client() {
                   clientIdRef.current.value = rowSelected[0];
                 }
                 if (optionRef.current) {
-                  optionRef.current.value = rowSelected[9];
+                  optionRef.current.value = rowSelected[9]?.toString().toLowerCase();
                 }
                 if (firstnameRef.current) {
                   firstnameRef.current.value = rowSelected[2];

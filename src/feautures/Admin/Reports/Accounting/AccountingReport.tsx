@@ -6,14 +6,13 @@ import {
 } from "../../../../components/UpwardFields";
 import { useContext, useEffect, useRef, useState } from "react";
 import SearchIcon from "@mui/icons-material/Search";
-import { format } from "date-fns";
+import { format, isValid, parse } from "date-fns";
 import { useMutation } from "react-query";
 import { AuthContext } from "../../../../components/AuthContext";
 import { useUpwardTableModalSearchSafeMode } from "../../../../components/DataGridViewReact";
 import { wait } from "../../../../lib/wait";
 import { Loading } from "../../../../components/Loading";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
-import { useNavigate } from "react-router-dom";
 
 const buttons = [
   { label: "Chart of Accounts", id: 0 },
@@ -205,10 +204,18 @@ export default function AccountingReport() {
                 link={
                   "/reports/accounting/report/generate-report-abstract-collection"
                 }
-                reportTitle={"General Ledger"}
+                reportTitle={"Abstract of Collections"}
               />
             )}
-            {buttonSelected === 10 && <FormPostDatedCheckRegistry />}
+               {buttonSelected === 10 && <FormPostDatedCheckRegistry />}
+             {buttonSelected === 13 && (
+              <FormAbsDepoReturned
+                link={
+                  "/reports/accounting/report/generate-report-general-journal-book-GJB"
+                }
+                reportTitle={"General Journal Book - GJB"}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -276,13 +283,15 @@ function FormScheduleAccount() {
               subsiText: subsiTextRef.current?.value || "",
               insuarnceIndex: _subsiRef.current?.selectedIndex,
               insurance: _subsiRef.current?.value,
-              dateValue: dateRef.current?.value,
+              dateValue: validateDate(dateRef.current?.value as any)
+                ? new Date(dateRef.current?.value as any)
+                : new Date(),
               account: rowItm[0],
               accountTitle: rowItm[1],
             })
           );
 
-          subsiRef.current?.focus()
+          subsiRef.current?.focus();
         });
         chartAccountCloseModal();
       }
@@ -377,7 +386,9 @@ function FormScheduleAccount() {
         const pdfBlob = new Blob([response.data], { type: "application/pdf" });
         const pdfUrl = URL.createObjectURL(pdfBlob);
         window.open(
-          `/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+          `/${
+            process.env.REACT_APP_DEPARTMENT
+          }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
           "_blank"
         );
       },
@@ -446,7 +457,9 @@ function FormScheduleAccount() {
                   subsiText: subsiTextRef.current?.value || "",
                   insuarnceIndex: _subsiRef.current?.selectedIndex,
                   insurance: _subsiRef.current?.value,
-                  dateValue: dateRef.current?.value,
+                  dateValue: validateDate(dateRef.current?.value as any)
+                    ? new Date(dateRef.current?.value as any)
+                    : new Date(),
                   account: accountRef.current?.value,
                   accountTitle: _accountRef.current?.value,
                 })
@@ -562,7 +575,9 @@ function FormScheduleAccount() {
                     subsiText: subsiTextRef.current?.value || "",
                     insuarnceIndex: _subsiRef.current?.selectedIndex,
                     insurance: _subsiRef.current?.value,
-                    dateValue: dateRef.current?.value,
+                    dateValue: validateDate(dateRef.current?.value as any)
+                      ? new Date(dateRef.current?.value as any)
+                      : new Date(),
                     account: accountRef.current?.value,
                     accountTitle: _accountRef.current?.value,
                   })
@@ -608,7 +623,9 @@ function FormScheduleAccount() {
                       subsiText: e.currentTarget.value || "",
                       insuarnceIndex: _subsiRef.current?.selectedIndex,
                       insurance: _subsiRef.current?.value,
-                      dateValue: dateRef.current?.value,
+                      dateValue: validateDate(dateRef.current?.value as any)
+                        ? new Date(dateRef.current?.value as any)
+                        : new Date(),
                       account: accountRef.current?.value,
                       accountTitle: _accountRef.current?.value,
                     })
@@ -646,7 +663,9 @@ function FormScheduleAccount() {
                       subsiText: subsiTextRef.current?.value || "",
                       insuarnceIndex: e.currentTarget.selectedIndex,
                       insurance: e.currentTarget.value,
-                      dateValue: dateRef.current?.value,
+                      dateValue: validateDate(dateRef.current?.value as any)
+                        ? new Date(dateRef.current?.value as any)
+                        : new Date(),
                       account: accountRef.current?.value,
                       accountTitle: _accountRef.current?.value,
                     })
@@ -680,18 +699,16 @@ function FormScheduleAccount() {
                 e.preventDefault();
               }
             },
-            onBlur: (e) => {
-              const newDate = isValidDateString(e.currentTarget.value)
-                ? e.currentTarget.value
-                : new Date();
-
+            onChange: (e) => {
               setTitle(
                 generateTitle({
                   report,
                   subsiText: subsiTextRef.current?.value || "",
                   insuarnceIndex: _subsiRef.current?.selectedIndex,
                   insurance: _subsiRef.current?.value,
-                  dateValue: newDate,
+                  dateValue: validateDate(e.currentTarget.value as any)
+                    ? new Date(e.currentTarget.value as any)
+                    : new Date(),
                   account: accountRef.current?.value,
                   accountTitle: _accountRef.current?.value,
                 })
@@ -832,21 +849,26 @@ function FormSubsidiaryLedger() {
           }
           if (_accountRef.current) {
             _accountRef.current.value = rowItm[1];
-          }
+          } 
+
 
           setTitle(
             generateTitle({
-              subsi: 0,
+              subsi: subsiRef.current?.selectedIndex,
               accountName: rowItm[1],
               account: rowItm[0],
-              subsiName: rowItm[1],
-              subsiId: rowItm[0],
-              dateFrom: new Date(dateFromRef.current?.value as any),
-              dateTo: new Date(dateToRef.current?.value as any),
+              subsiName: nameRef.current,
+              subsiId: idNoRef.current?.value,
+              dateFrom: validateDate(dateFromRef.current?.value as any)
+                ? new Date(dateFromRef.current?.value as any)
+                : new Date(),
+              dateTo: validateDate(dateToRef.current?.value as any)
+                ? new Date(dateToRef.current?.value as any)
+                : new Date(),
             })
           );
 
-          subsiRef.current?.focus()
+          subsiRef.current?.focus();
         });
 
         chartAccountCloseModal();
@@ -888,8 +910,12 @@ function FormSubsidiaryLedger() {
               account: accountRef.current?.value,
               subsiName: rowItm[2],
               subsiId: rowItm[1],
-              dateFrom: new Date(dateFromRef.current?.value as any),
-              dateTo: new Date(dateToRef.current?.value as any),
+              dateFrom: validateDate(dateFromRef.current?.value as any)
+                ? new Date(dateFromRef.current?.value as any)
+                : new Date(),
+              dateTo: validateDate(dateToRef.current?.value as any)
+                ? new Date(dateToRef.current?.value as any)
+                : new Date(),
             })
           );
         });
@@ -922,8 +948,12 @@ function FormSubsidiaryLedger() {
               account: accountRef.current?.value,
               subsiName: rowItm[1],
               subsiId: rowItm[0],
-              dateFrom: new Date(dateFromRef.current?.value as any),
-              dateTo: new Date(dateToRef.current?.value as any),
+              dateFrom: validateDate(dateFromRef.current?.value as any)
+                ? new Date(dateFromRef.current?.value as any)
+                : new Date(),
+              dateTo: validateDate(dateToRef.current?.value as any)
+                ? new Date(dateToRef.current?.value as any)
+                : new Date(),
             })
           );
         });
@@ -971,9 +1001,9 @@ function FormSubsidiaryLedger() {
     let Subsi = "\n";
 
     if (subsi === 1) {
-      Subsi += `ID No. : ${subsiName} (${subsiId})`;
+      Subsi += `ID No. : ${subsiName} (${subsiId || ""})`;
     } else if (subsi === 2) {
-      Subsi += `Sub Account : ${subsiName} (${subsiId})`;
+      Subsi += `Sub Account : ${subsiName} (${subsiId || ""})`;
     }
 
     let txtReportTitleText = `${_title}
@@ -1028,7 +1058,9 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
         const pdfBlob = new Blob([response.data], { type: "application/pdf" });
         const pdfUrl = URL.createObjectURL(pdfBlob);
         window.open(
-          `/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+          `/${
+            process.env.REACT_APP_DEPARTMENT
+          }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
           "_blank"
         );
       },
@@ -1165,6 +1197,22 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
                 }
 
                 setSubsi(e.target.value);
+
+                setTitle(
+                  generateTitle({
+                    subsi: subsiRef.current?.selectedIndex,
+                    accountName: _accountRef.current?.value,
+                    account: accountRef.current?.value,
+                    subsiName: nameRef.current,
+                    subsiId: idNoRef.current?.value,
+                    dateFrom: validateDate(dateFromRef.current?.value as any)
+                      ? new Date(dateFromRef.current?.value as any)
+                      : new Date(),
+                    dateTo: validateDate(dateToRef.current?.value as any)
+                      ? new Date(dateToRef.current?.value as any)
+                      : new Date(),
+                  })
+                )
               },
             }}
             datasource={[
@@ -1304,9 +1352,6 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
               }
             },
             onBlur: (e) => {
-              const newDateFrom = isValidDateString(e.currentTarget.value)
-                ? e.currentTarget.value
-                : new Date();
               if (subsi === "ID #") {
                 setTitle(
                   generateTitle({
@@ -1315,8 +1360,12 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
                     account: _accountRef.current?.value,
                     subsiName: nameRef.current,
                     subsiId: idNoRef.current?.value,
-                    dateFrom: new Date(newDateFrom),
-                    dateTo: new Date(dateToRef.current?.value as any),
+                    dateFrom: validateDate(e.currentTarget.value)
+                      ? new Date(e.currentTarget.value)
+                      : new Date(),
+                    dateTo: validateDate(dateToRef.current?.value as any)
+                      ? new Date(dateToRef.current?.value as any)
+                      : new Date(),
                   })
                 );
               } else if (subsi === "ID #") {
@@ -1327,8 +1376,12 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
                     account: _accountRef.current?.value,
                     subsiName: shortNameRef.current,
                     subsiId: subAcctRef.current?.value,
-                    dateFrom: new Date(newDateFrom),
-                    dateTo: new Date(dateToRef.current?.value as any),
+                    dateFrom: validateDate(e.currentTarget.value)
+                      ? new Date(e.currentTarget.value)
+                      : new Date(),
+                    dateTo: validateDate(dateToRef.current?.value as any)
+                      ? new Date(dateToRef.current?.value as any)
+                      : new Date(),
                   })
                 );
               } else {
@@ -1339,8 +1392,12 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
                     account: _accountRef.current?.value,
                     subsiName: "",
                     subsiId: "",
-                    dateFrom: new Date(newDateFrom),
-                    dateTo: new Date(dateToRef.current?.value as any),
+                    dateFrom: validateDate(e.currentTarget.value)
+                      ? new Date(e.currentTarget.value)
+                      : new Date(),
+                    dateTo: validateDate(dateToRef.current?.value as any)
+                      ? new Date(dateToRef.current?.value as any)
+                      : new Date(),
                   })
                 );
               }
@@ -1370,10 +1427,10 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
                 e.preventDefault();
               }
             },
-            onBlur: (e) => {
-              const newDateTo = isValidDateString(e.currentTarget.value)
-                ? e.currentTarget.value
-                : new Date();
+            onChange: (e) => {
+              // const newDateTo = isValidDateString(e.currentTarget.value)
+              //   ? e.currentTarget.value
+              //   : new Date();
               if (subsi === "ID #") {
                 setTitle(
                   generateTitle({
@@ -1382,8 +1439,12 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
                     account: accountRef.current?.value,
                     subsiName: nameRef.current,
                     subsiId: idNoRef.current?.value,
-                    dateFrom: new Date(dateFromRef.current?.value as any),
-                    dateTo: new Date(newDateTo),
+                    dateFrom: validateDate(dateFromRef.current?.value as any)
+                      ? new Date(dateFromRef.current?.value as any)
+                      : new Date(),
+                    dateTo: validateDate(e.currentTarget.value)
+                      ? new Date(e.currentTarget.value)
+                      : new Date(),
                   })
                 );
               } else if (subsi === "ID #") {
@@ -1394,8 +1455,12 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
                     account: accountRef.current?.value,
                     subsiName: shortNameRef.current,
                     subsiId: subAcctRef.current?.value,
-                    dateFrom: new Date(dateFromRef.current?.value as any),
-                    dateTo: new Date(newDateTo),
+                    dateFrom: validateDate(dateFromRef.current?.value as any)
+                      ? new Date(dateFromRef.current?.value as any)
+                      : new Date(),
+                    dateTo: validateDate(e.currentTarget.value)
+                      ? new Date(e.currentTarget.value)
+                      : new Date(),
                   })
                 );
               } else {
@@ -1406,8 +1471,12 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
                     account: _accountRef.current?.value,
                     subsiName: "",
                     subsiId: "",
-                    dateFrom: new Date(dateFromRef.current?.value as any),
-                    dateTo: new Date(newDateTo),
+                    dateFrom: validateDate(dateFromRef.current?.value as any)
+                      ? new Date(dateFromRef.current?.value as any)
+                      : new Date(),
+                    dateTo: validateDate(e.currentTarget.value)
+                      ? new Date(e.currentTarget.value)
+                      : new Date(),
                   })
                 );
               }
@@ -1533,7 +1602,9 @@ function FormFSReport({ link, reportTitle }: any) {
         const pdfBlob = new Blob([response.data], { type: "application/pdf" });
         const pdfUrl = URL.createObjectURL(pdfBlob);
         window.open(
-          `/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+          `/${
+            process.env.REACT_APP_DEPARTMENT
+          }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
           "_blank"
         );
       },
@@ -1644,7 +1715,9 @@ function FormFSReport({ link, reportTitle }: any) {
                   cmbformat: e.currentTarget.value,
                   report: reportRef.current?.value,
                   subAccount: subAccountRef.current?.value,
-                  date: new Date(dateRef.current?.value as any),
+                  date: validateDate(dateRef.current?.value as any)
+                    ? new Date(dateRef.current?.value as any)
+                    : new Date(),
                 })
               );
             },
@@ -1677,7 +1750,9 @@ function FormFSReport({ link, reportTitle }: any) {
                   cmbformat: formatRef.current?.value,
                   report: e.currentTarget.value,
                   subAccount: subAccountRef.current?.value,
-                  date: new Date(dateRef.current?.value as any),
+                  date: validateDate(dateRef.current?.value as any)
+                    ? new Date(dateRef.current?.value as any)
+                    : new Date(),
                 })
               );
             },
@@ -1711,7 +1786,9 @@ function FormFSReport({ link, reportTitle }: any) {
                   cmbformat: formatRef.current?.value,
                   report: reportRef.current?.value,
                   subAccount: e.currentTarget.value,
-                  date: new Date(dateRef.current?.value as any),
+                  date: validateDate(dateRef.current?.value as any)
+                    ? new Date(dateRef.current?.value as any)
+                    : new Date(),
                 })
               );
             },
@@ -1770,7 +1847,9 @@ function FormFSReport({ link, reportTitle }: any) {
                   cmbformat: formatRef.current?.value,
                   report: reportRef.current?.value,
                   subAccount: subAccountRef.current?.value,
-                  date: new Date(dateRef.current?.value as any),
+                  date: validateDate(e.currentTarget.value)
+                    ? new Date(e.currentTarget.value)
+                    : new Date(),
                 })
               );
             },
@@ -1814,22 +1893,20 @@ function FormAbsDepoReturned({ link, reportTitle }: any) {
     useMutation({
       mutationKey: "generate-report",
       mutationFn: async (variables: any) => {
-        return await myAxios.post(
-          link,
-          variables,
-          {
-            responseType: "arraybuffer",
-            headers: {
-              Authorization: `Bearer ${user?.accessToken}`,
-            },
-          }
-        );
+        return await myAxios.post(link, variables, {
+          responseType: "arraybuffer",
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        });
       },
       onSuccess: (response) => {
         const pdfBlob = new Blob([response.data], { type: "application/pdf" });
         const pdfUrl = URL.createObjectURL(pdfBlob);
         window.open(
-          `/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+          `/${
+            process.env.REACT_APP_DEPARTMENT
+          }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
           "_blank"
         );
       },
@@ -1852,6 +1929,7 @@ function FormAbsDepoReturned({ link, reportTitle }: any) {
     });
 
   function generateTitle({ report, subAccount, date }: any) {
+    console.log(isValid(date));
     const _title =
       process.env.REACT_APP_DEPARTMENT === "UMIS"
         ? "UPWARD MANAGEMENT INSURANCE SERVICES"
@@ -1859,19 +1937,20 @@ function FormAbsDepoReturned({ link, reportTitle }: any) {
 
     return `${_title} ${
       subAccount.toUpperCase() === "ALL" ? "" : `(${subAccount})`
-    }\n${report} ${reportTitle}\n${format(new Date(date), "MMMM dd, yyyy")}`;
+    }\n${report} ${reportTitle}\n${format(new Date(date), "MMMM dd, yyyy")}
+    `;
   }
 
   function generateReport() {
     mutateGenerateReport({
-      title:titleRef.current?.value,
-      cmbFormat:formatRef.current?.value,
-      report:reportRef.current?.value,
-      subAccount:branchRef.current?.value,
-      date:dateRef.current?.value,
-      sort:sortRef.current?.value,
-      order:orderRef.current?.value
-    })
+      title: titleRef.current?.value,
+      cmbFormat: formatRef.current?.value,
+      report: reportRef.current?.value,
+      subAccount: branchRef.current?.value,
+      date: dateRef.current?.value,
+      sort: sortRef.current?.value,
+      order: orderRef.current?.value,
+    });
   }
 
   const mutateSubAccountRef = useRef<any>(mutateSubAccount);
@@ -1962,7 +2041,9 @@ function FormAbsDepoReturned({ link, reportTitle }: any) {
                 generateTitle({
                   report: e.currentTarget.value,
                   subAccount: branchRef.current?.value,
-                  date: new Date(dateRef.current?.value as any),
+                  date: validateDate(dateRef.current?.value as any)
+                    ? new Date(dateRef.current?.value as any)
+                    : new Date(),
                 })
               );
             },
@@ -1995,7 +2076,9 @@ function FormAbsDepoReturned({ link, reportTitle }: any) {
                 generateTitle({
                   report: reportRef.current?.value,
                   subAccount: branchRef.current?.value,
-                  date: new Date(dateRef.current?.value as any),
+                  date: validateDate(dateRef.current?.value as any)
+                    ? new Date(dateRef.current?.value as any)
+                    : new Date(),
                 })
               );
             },
@@ -2031,7 +2114,9 @@ function FormAbsDepoReturned({ link, reportTitle }: any) {
                 generateTitle({
                   report: reportRef.current?.value,
                   subAccount: branchRef.current?.value,
-                  date: new Date(e.currentTarget.value),
+                  date: validateDate(e.currentTarget.value)
+                    ? new Date(e.currentTarget.value)
+                    : new Date(),
                 })
               );
             },
@@ -2161,7 +2246,9 @@ function FormPostDatedCheckRegistry() {
         const pdfBlob = new Blob([response.data], { type: "application/pdf" });
         const pdfUrl = URL.createObjectURL(pdfBlob);
         window.open(
-          `/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+          `/${
+            process.env.REACT_APP_DEPARTMENT
+          }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
           "_blank"
         );
       },
@@ -2314,8 +2401,12 @@ function FormPostDatedCheckRegistry() {
               setTitle(
                 generateTitle({
                   branch: e.currentTarget.value,
-                  dateTo: dateFromRef.current?.value,
-                  dateFrom: dateToRef.current?.value,
+                  dateFrom: validateDate(dateFromRef.current?.value as any)
+                    ? new Date(dateFromRef.current?.value as any)
+                    : new Date(),
+                  dateTo: validateDate(dateToRef.current?.value as any)
+                    ? new Date(dateToRef.current?.value as any)
+                    : new Date(),
                 })
               );
             },
@@ -2350,8 +2441,12 @@ function FormPostDatedCheckRegistry() {
               setTitle(
                 generateTitle({
                   branch: branchRef.current?.value,
-                  dateTo: dateToRef.current?.value,
-                  dateFrom: e.currentTarget.value,
+                  dateFrom: validateDate(e.currentTarget.value)
+                    ? new Date(e.currentTarget.value)
+                    : new Date(),
+                  dateTo: validateDate(dateToRef.current?.value as any)
+                    ? new Date(dateToRef.current?.value as any)
+                    : new Date(),
                 })
               );
             },
@@ -2385,8 +2480,12 @@ function FormPostDatedCheckRegistry() {
               setTitle(
                 generateTitle({
                   branch: branchRef.current?.value,
-                  dateTo: e.currentTarget.value,
-                  dateFrom: dateFromRef.current?.value,
+                  dateFrom: validateDate(dateFromRef.current?.value as any)
+                    ? new Date(dateFromRef.current?.value as any)
+                    : new Date(),
+                  dateTo: validateDate(e.currentTarget.value as any)
+                    ? new Date(e.currentTarget.value as any)
+                    : new Date(),
                 })
               );
             },
@@ -2499,3 +2598,10 @@ function FormPostDatedCheckRegistry() {
 function isValidDateString(dateString: string) {
   return !isNaN(Date.parse(dateString));
 }
+
+const validateDate = (dateStr: any, dateFormat = "yyyy-MM-dd") => {
+  const parsedDate = parse(dateStr, dateFormat, new Date());
+  const isDateValid =
+    isValid(parsedDate) && format(parsedDate, dateFormat) === dateStr;
+  return isDateValid;
+};

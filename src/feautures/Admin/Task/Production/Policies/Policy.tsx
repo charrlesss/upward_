@@ -26,31 +26,31 @@ const chipStyle = {
 const chips = [
   {
     label: "Vehicle Policy",
-    link: "/dashboard/task/production/policy/",
+    link: `/${process.env.REACT_APP_DEPARTMENT}/dashboard/task/production/policy/`,
   },
   {
     label: "Fire Policy",
-    link: "/dashboard/task/production/policy/fire",
+    link: `/${process.env.REACT_APP_DEPARTMENT}/dashboard/task/production/policy/fire`,
   },
   {
     label: "Marine Policy",
-    link: "/dashboard/task/production/policy/marine",
+    link: `/${process.env.REACT_APP_DEPARTMENT}/dashboard/task/production/policy/marine`,
   },
   {
     label: "Bonds Policy",
-    link: "/dashboard/task/production/policy/bonds",
+    link: `/${process.env.REACT_APP_DEPARTMENT}/dashboard/task/production/policy/bonds`,
   },
   {
     label: "MSPR Policy",
-    link: "/dashboard/task/production/policy/mspr",
+    link: `/${process.env.REACT_APP_DEPARTMENT}/dashboard/task/production/policy/mspr`,
   },
   {
     label: "PA Policy",
-    link: "/dashboard/task/production/policy/pa",
+    link: `/${process.env.REACT_APP_DEPARTMENT}/dashboard/task/production/policy/pa`,
   },
   {
     label: "CGL Policy",
-    link: "/dashboard/task/production/policy/cgl",
+    link: `/${process.env.REACT_APP_DEPARTMENT}/dashboard/task/production/policy/cgl`,
   },
 ];
 
