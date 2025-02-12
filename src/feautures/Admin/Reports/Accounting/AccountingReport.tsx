@@ -207,7 +207,7 @@ export default function AccountingReport() {
                 reportTitle={"Abstract of Collections"}
               />
             )}
-               {buttonSelected === 10 && <FormPostDatedCheckRegistry />}
+             {buttonSelected === 10 && <FormPostDatedCheckRegistry />}
              {buttonSelected === 13 && (
               <FormAbsDepoReturned
                 link={
@@ -2594,11 +2594,9 @@ function FormPostDatedCheckRegistry() {
     </>
   );
 }
-
 function isValidDateString(dateString: string) {
   return !isNaN(Date.parse(dateString));
 }
-
 const validateDate = (dateStr: any, dateFormat = "yyyy-MM-dd") => {
   const parsedDate = parse(dateStr, dateFormat, new Date());
   const isDateValid =

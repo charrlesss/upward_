@@ -31,7 +31,6 @@ import {
 import ForwardIcon from "@mui/icons-material/Forward";
 import { Autocomplete } from "./PettyCash";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
-import { format } from "date-fns";
 import SearchIcon from "@mui/icons-material/Search";
 import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
 import LocalPrintshopIcon from "@mui/icons-material/LocalPrintshop";
@@ -42,6 +41,8 @@ import {
 } from "../../../../components/DataGridViewReact";
 import { Loading } from "../../../../components/Loading";
 import { formatNumber } from "./ReturnCheck";
+import { format, isValid, parse } from "date-fns";
+
 
 export const debitColumn = [
   { key: "Payment", label: "Payment", flex: 1, width: 170 },
@@ -403,7 +404,9 @@ export default function Collection() {
           dataCollection[i].Payment !== null &&
           dataCollection[i].Payment.toString() !== ""
         ) {
-          const isCash = dataCollection[i].Payment === "Cash";
+          console.log(dataCollection[i])
+
+          const isCash = dataCollection[i].Payment.toLowerCase() === "cash";
           debit.push({
             Payment: dataCollection[i].Payment,
             Amount: formatNumber(
@@ -2436,6 +2439,7 @@ const ModalCheck = forwardRef(({ handleOnSave, handleOnClose }: any, ref) => {
                 },
               }}
               input={{
+                
                 type: "date",
                 style: { width: "200px" },
                 defaultValue: format(new Date(), "yyyy-MM-dd"),
@@ -2462,6 +2466,10 @@ const ModalCheck = forwardRef(({ handleOnSave, handleOnClose }: any, ref) => {
                 onKeyDown: (e) => {
                   if (e.code === "NumpadEnter" || e.code === "Enter") {
                     if (handleOnSave) {
+                      if(!validateDate(checkdateRef.current?.value)){
+                        return alert('Not Valid Date!')
+                      }
+
                       handleOnSave();
                     }
                   }
@@ -2487,6 +2495,9 @@ const ModalCheck = forwardRef(({ handleOnSave, handleOnClose }: any, ref) => {
                 }}
                 onClick={(e) => {
                   if (handleOnSave) {
+                    if(!validateDate(checkdateRef.current?.value)){
+                      return  alert('Not Valid Date!')
+                    }
                     handleOnSave();
                   }
                 }}
@@ -2522,3 +2533,10 @@ const ModalCheck = forwardRef(({ handleOnSave, handleOnClose }: any, ref) => {
     </>
   ) : null;
 });
+
+const validateDate = (dateStr: any, dateFormat = "yyyy-MM-dd") => {
+  const parsedDate = parse(dateStr, dateFormat, new Date());
+  const isDateValid =
+    isValid(parsedDate) && format(parsedDate, dateFormat) === dateStr;
+  return isDateValid;
+};
