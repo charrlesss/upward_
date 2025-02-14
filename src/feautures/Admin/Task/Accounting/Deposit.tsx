@@ -31,6 +31,7 @@ import "../../../../style/laoding.css";
 import PageHelmet from "../../../../components/Helmet";
 import SearchIcon from "@mui/icons-material/Search";
 import { useUpwardTableModalSearchSafeMode } from "../../../../components/DataGridViewReact";
+import { formatNumber } from "./ReturnCheck";
 
 const defaultCashBreakDown = [
   { value1: "1,000.00", value2: "", value3: "0.00" },
@@ -96,6 +97,114 @@ const cashColumns = [
   },
 ];
 
+const checkColumns = [
+  {
+    key: "OR_No",
+    label: "OR No.",
+    width: 170,
+  },
+  {
+    key: "OR_Date",
+    label: "OR Date",
+    width: 170,
+  },
+  {
+    key: "Check_No",
+    label: "Check No",
+    width: 170,
+  },
+  {
+    key: "Check_Date",
+    label: "Check Date",
+    width: 170,
+  },
+  {
+    key: "Amount",
+    label: "Amount",
+    width: 160,
+    align: "right",
+    type: "number",
+  },
+  {
+    key: "Bank_Branch",
+    label: "Bank/Branch",
+    width: 300,
+  },
+  {
+    key: "Client_Name",
+    label: "Client Name",
+    width: 300,
+  },
+  {
+    key: "Temp_OR",
+    hide: true,
+  },
+  {
+    key: "DRCode",
+    hide: true,
+  },
+  {
+    key: "DRRemarks",
+    hide: true,
+  },
+  {
+    key: "ID_No",
+    hide: true,
+  },
+  {
+    key: "Short",
+    hide: true,
+  },
+  {
+    key: "SlipCode",
+    hide: true,
+  },
+];
+
+const selectedCollectionColumns = [
+  { key: "Deposit", label: "Deposit", width: 170 },
+  { key: "Check_No", label: "Check No", width: 170 },
+  {
+    key: "Check_Date",
+    label: "Check Date",
+    width: 170,
+  },
+  { key: "Bank", label: "Bank/Branch", width: 200 },
+  {
+    key: "Amount",
+    label: "Amount",
+    width: 170,
+    type: "number",
+  },
+  { key: "Name", label: "Client Name", width: 400 },
+  // hide
+  { key: "DRCode", label: "DRCode", hide: true },
+  { key: "ORNo", label: "ORNo", hide: true },
+  { key: "DRRemarks", label: "DRRemarks", hide: true },
+  { key: "IDNo", label: "IDNo", hide: true },
+  { key: "TempOR", label: "TempOR", hide: true },
+  { key: "Short", label: "Short", hide: true },
+];
+
+
+const selectedCollectionForDeposit = [
+  {
+    key: "Bank",
+    label: "Bank/Branch",
+    width: 170,
+  },
+  {
+    key: "Check_No",
+    label: "Check No",
+    width: 170,
+  },
+  {
+    key: "Amount",
+    label: "Amount",
+    width: 300,
+    type: "number",
+  },
+]
 export const reducer = (state: any, action: any) => {
   switch (action.type) {
     case "UPDATE_FIELD":
@@ -155,7 +264,7 @@ export default function Deposit() {
   const refShortName = useRef("");
 
   const { myAxios, user } = useContext(AuthContext);
-  const {  goTo } = useMultipleComponent([0, 1, 2, 3]);
+  const { goTo } = useMultipleComponent([0, 1, 2, 3]);
   const [cashCollection, setCashCollection] = useState<any>([]);
   const [checkCollection, setCheckCollection] = useState<any>([]);
   const [selectedRows, setSelectedRows] = useState<any>([]);
@@ -172,6 +281,7 @@ export default function Deposit() {
 
   const [depositMode, setDepositMode] = useState("");
   const [total, setTotal] = useState("0.00");
+  const [totalCheck, setTotalCheck] = useState("0.00");
 
   const disabledFields = depositMode === "";
 
@@ -330,6 +440,7 @@ export default function Deposit() {
         const check = res.data.data.checks;
         const cash_breakdown = res.data.data.cash_breakdown;
 
+        console.log(cash_breakdown)
         setCashCollection([]);
         setCheckCollection([]);
         setSelectedRows([]);
@@ -397,9 +508,23 @@ export default function Deposit() {
                 }
               }
             });
+            wait(300).then(() => {
+              setTotalCheck(
+                formatNumber(
+                  check
+                    .filter(
+                      (d: any) => d.SlipCode === refSlipCode.current?.value
+                    )
+                    .reduce((t: any, itm: any) => {
+                      return (t += parseFloat(
+                        itm.Amount.toString().replace(/,/g, "")
+                      ));
+                    }, 0)
+                )
+              );
+            });
           }, 200);
         });
-        setDepositMode("edit");
       },
     });
 
@@ -520,7 +645,7 @@ export default function Deposit() {
       ...state,
       selectedCollection: JSON.stringify(selectedRows),
       tableRowsInputValue: JSON.stringify(tableRowsInputValue),
-    })
+    });
 
     if (depositMode === "edit") {
       codeCondfirmationAlert({
@@ -567,6 +692,7 @@ export default function Deposit() {
     checkTable.current.resetTable();
     selectedTable.current.resetTable();
     collectionCheckTable.current.resetTable();
+    setTotalCheck("0.00");
   }
   const {
     UpwardTableModalSearch: DepositUpwardTableModalSearch,
@@ -591,7 +717,7 @@ export default function Deposit() {
     ],
     getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
       if (rowItm) {
-        console.log(rowItm);
+        setDepositMode("edit");
         searchByDepositSlip({ SlipCode: rowItm[1] });
         wait(100).then(() => {
           if (refSlipCode.current) {
@@ -683,7 +809,7 @@ export default function Deposit() {
   useEffect(() => {
     setButtonPosition(buttonsRef.current[0]?.getBoundingClientRect());
   }, []);
-  
+
   const tabs = [
     {
       id: 0,
@@ -1000,67 +1126,6 @@ export default function Deposit() {
             </button>
           ))}
         </div>
-        {/* <div>
-          <div style={{ display: "flex" }}>
-            {buttons.map((item, idx) => {
-              return (
-                <button
-                  key={idx}
-                  disabled={disabledFields}
-                  style={{
-                    border: "1px solid #c0c0c0",
-                    outline: "none",
-                    backgroundColor:
-                      currentStepIndex === idx
-                        ? "#c0c0c0"
-                        : "rgba(51, 51, 51, 0.05)",
-                    borderWidth: "0",
-                    color: "black",
-                    cursor: "pointer",
-                    display: "inline-block",
-                    fontFamily: `"Haas Grot Text R Web", "Helvetica Neue", Helvetica, Arial, sans-serif`,
-                    fontSize: "14px",
-                    fontWeight: "500",
-                    lineHeight: "20px",
-                    listStyle: "none",
-                    margin: "0",
-                    padding: "10px 12px",
-                    textAlign: "center",
-                    verticalAlign: "baseline",
-                    whiteSpace: "nowrap",
-                    userSelect: "none",
-                    touchAction: "manipulation",
-                    position: "relative",
-                    overflow: "hidden",
-                    borderRadius: "0px",
-                  }}
-                  onClick={() => {
-                    if (idx === 0) {
-                      refetchCashCollection();
-                    } else if (idx === 1) {
-                      refetchCheckCollection();
-                    }
-                    goTo(idx);
-                  }}
-                >
-                  <span
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      background: "rgba(206, 214, 211, 0.18)",
-                      transition: "all 200ms",
-                      transform: slideAnimation(currentStepIndex, idx),
-                    }}
-                  ></span>
-                  {item.title}
-                </button>
-              );
-            })}
-          </div>
-        </div> */}
         <DepositContext.Provider
           value={{
             cashCollection,
@@ -1090,6 +1155,8 @@ export default function Deposit() {
             refetchCheckCollection,
             refetchCashCollection,
             disabledFields,
+            totalCheck,
+            setTotalCheck,
           }}
         >
           <div
@@ -1135,27 +1202,6 @@ export default function Deposit() {
               </div>
             ))}
           </div>
-          {/* <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              flex: 1,
-            }}
-            id="concatiner"
-          >
-            <div style={{ display: currentStepIndex === 0 ? "block" : "none" }}>
-              <CashCollection />
-            </div>
-            <div style={{ display: currentStepIndex === 1 ? "block" : "none" }}>
-              <CheckCollection />
-            </div>
-            <div style={{ display: currentStepIndex === 2 ? "block" : "none" }}>
-              <SelectedCollection />
-            </div>
-            <div style={{ display: currentStepIndex === 3 ? "block" : "none" }}>
-              <CollectionForDeposit />
-            </div>
-          </div> */}
         </DepositContext.Provider>
 
         {(loadingSearchByDepositSlip ||
@@ -1209,6 +1255,10 @@ function CashCollection() {
       }}
     >
       <DepositTable
+        containerStyle={{
+          flex: 1,
+          height:"100%",
+        }}
         disbaleTable={disabledFields}
         ref={cashTable}
         columns={cashColumns}
@@ -1252,71 +1302,12 @@ function CheckCollection() {
     checkTable,
     setCollectionForDeposit,
     disabledFields,
+    setTotalCheck,
+    selectedTable,
+    depositMode,
   } = useContext(DepositContext);
-  const checkColumns = [
-    {
-      key: "OR_No",
-      label: "OR No.",
-      width: 170,
-    },
-    {
-      key: "OR_Date",
-      label: "OR Date",
-      width: 170,
-    },
-    {
-      key: "Check_No",
-      label: "Check No",
-      width: 170,
-    },
-    {
-      key: "Check_Date",
-      label: "Check Date",
-      width: 170,
-    },
-    {
-      key: "Amount",
-      label: "Amount",
-      width: 160,
-      align: "right",
-      type: "number",
-    },
-    {
-      key: "Bank_Branch",
-      label: "Bank/Branch",
-      width: 300,
-    },
-    {
-      key: "Client_Name",
-      label: "Client Name",
-      width: 300,
-    },
-    {
-      key: "Temp_OR",
-      hide: true,
-    },
-    {
-      key: "DRCode",
-      hide: true,
-    },
-    {
-      key: "DRRemarks",
-      hide: true,
-    },
-    {
-      key: "ID_No",
-      hide: true,
-    },
-    {
-      key: "Short",
-      hide: true,
-    },
-    {
-      key: "SlipCode",
-      hide: true,
-    },
-  ];
-
+ 
+  let selectedDataTotal = 0;
   return (
     <div
       style={{
@@ -1327,6 +1318,10 @@ function CheckCollection() {
       }}
     >
       <DepositTable
+        containerStyle={{
+          flex: 1,
+          height:"100%",
+        }}
         disbaleTable={disabledFields}
         ref={checkTable}
         columns={checkColumns}
@@ -1367,6 +1362,14 @@ function CheckCollection() {
             d = [...d, newSelectedCheckForDeposit];
             return d;
           });
+          const selectedData = selectedTable.current.getData();
+          selectedDataTotal += selectedData.reduce((t: number, itm: any) => {
+            return (t += parseFloat(itm[4].toString().replace(/,/g, "")));
+          }, 0);
+          selectedDataTotal += parseFloat(
+            rowSelected[4].toString().replace(/,/g, "")
+          );
+          setTotalCheck(formatNumber(selectedDataTotal));
         }}
       />
     </div>
@@ -1382,32 +1385,10 @@ function SelectedCollection() {
     setCollectionForDeposit,
     collectionForDeposit,
     collectionCheckTable,
+    setTotalCheck,
   } = useContext(DepositContext);
 
-  const selectedCollectionColumns = [
-    { key: "Deposit", label: "Deposit", width: 170 },
-    { key: "Check_No", label: "Check No", width: 170 },
-    {
-      key: "Check_Date",
-      label: "Check Date",
-      width: 170,
-    },
-    { key: "Bank", label: "Bank/Branch", width: 200 },
-    {
-      key: "Amount",
-      label: "Amount",
-      width: 170,
-      type: "number",
-    },
-    { key: "Name", label: "Client Name", width: 400 },
-    // hide
-    { key: "DRCode", label: "DRCode", hide: true },
-    { key: "ORNo", label: "ORNo", hide: true },
-    { key: "DRRemarks", label: "DRRemarks", hide: true },
-    { key: "IDNo", label: "IDNo", hide: true },
-    { key: "TempOR", label: "TempOR", hide: true },
-    { key: "Short", label: "Short", hide: true },
-  ];
+  
 
   return (
     <div
@@ -1419,6 +1400,10 @@ function SelectedCollection() {
       }}
     >
       <DepositTableSelected
+         containerStyle={{
+          flex: 1,
+          height:"100%",
+        }}
         ref={selectedTable}
         columns={selectedCollectionColumns}
         rows={selectedRows}
@@ -1482,11 +1467,22 @@ function SelectedCollection() {
             selectedData.length === 1 &&
             selectedData[0][10] === rowSelected[10]
           ) {
+            setTotalCheck(formatNumber(0));
+
             return selectedTable.current.setData([]);
           } else {
             const newSelectedData = selectedData.filter((itm: any) => {
               return itm[10] !== rowSelected[10];
             });
+
+            setTotalCheck(
+              formatNumber(
+                newSelectedData.reduce((t: number, itm: any) => {
+                  return (t += parseFloat(itm[4].toString().replace(/,/g, "")));
+                }, 0)
+              )
+            );
+
             selectedTable.current.setData(newSelectedData);
           }
         }}
@@ -1502,6 +1498,8 @@ function CollectionForDeposit() {
     setTotal,
     TotalCashForDeposit,
     collectionCheckTable,
+    totalCheck,
+    setTotalCheck,
   } = useContext(DepositContext);
 
   useEffect(() => {
@@ -1539,27 +1537,11 @@ function CollectionForDeposit() {
       >
         <legend>Checks</legend>
         <DepositTableSelected
+        
           isTableSelectable={false}
           ref={collectionCheckTable}
           width="100%"
-          columns={[
-            {
-              key: "Bank",
-              label: "Bank/Branch",
-              width: 170,
-            },
-            {
-              key: "Check_No",
-              label: "Check No",
-              width: 170,
-            },
-            {
-              key: "Amount",
-              label: "Amount",
-              width: 300,
-              type: "number",
-            },
-          ]}
+          columns={selectedCollectionForDeposit}
           rows={collectionForDeposit}
           getSelectedItem={(
             rowItm: any,
@@ -1568,6 +1550,34 @@ function CollectionForDeposit() {
             colIdx: any
           ) => {}}
         />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            width: "100%",
+            textAlign: "right",
+            columnGap: "5px",
+            marginTop: "5px",
+          }}
+        >
+          <span style={{ fontSize: "12px", fontWeight: "bold" }}>
+            Total Check Deposit:
+          </span>
+          <input
+            style={{
+              fontWeight: "bold",
+              border: "1px solid black",
+              textAlign: "right",
+              fontSize: "13px",
+              width: "180px",
+            }}
+            value={totalCheck}
+            onChange={(e) => {
+              setTotalCheck(e.target.value);
+            }}
+            readOnly={true}
+          />
+        </div>
       </fieldset>
       <fieldset
         style={{
@@ -1696,6 +1706,7 @@ function TrComponent({ value1, value2, value3, idx }: any) {
   const [input1, setInput1] = useState(value1);
   const [input2, setInput2] = useState(value2);
   const [input3, setInput3] = useState(value3);
+
   const InputStyle: CSSProperties = {
     textAlign: "right",
     height: "18px",
@@ -1756,6 +1767,7 @@ function TrComponent({ value1, value2, value3, idx }: any) {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             });
+            
             setInput3(valueFor3);
 
             updateTableRowsInput(
@@ -1810,6 +1822,7 @@ const DepositTable = forwardRef(
       width = "calc(100vw - 40px)",
       getSelectedItem,
       disbaleTable = false,
+      containerStyle,
     }: any,
     ref
   ) => {
@@ -1820,6 +1833,13 @@ const DepositTable = forwardRef(
     const [selectedRowIndex, setSelectedRowIndex] = useState<any>(0);
 
     const totalRowWidth = column.reduce((a: any, b: any) => a + b.width, 0);
+
+
+    const [columnHeader, setColumnHeader] = useState(
+      columns.filter((itm: any) => !itm.hide)
+    );
+    const [hoveredColumn, setHoveredColumn] = useState(null);
+
 
     useEffect(() => {
       if (columns.length > 0) {
@@ -1869,6 +1889,37 @@ const DepositTable = forwardRef(
       },
     }));
 
+
+    const startResize = (index: any, e: any) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const startX = e.clientX;
+      const startWidth = columnHeader[index].width;
+
+      const doDrag = (moveEvent: any) => {
+
+        const newWidth = startWidth + (moveEvent.clientX - startX);
+        const updatedColumns = [...columnHeader];
+        updatedColumns[index].width = newWidth > 50 ? newWidth : 50; // Set minimum column width
+        setColumnHeader(updatedColumns);
+      };
+
+      const stopDrag = () => {
+        document.removeEventListener("mousemove", doDrag);
+        document.removeEventListener("mouseup", stopDrag);
+      };
+
+      document.addEventListener("mousemove", doDrag);
+      document.addEventListener("mouseup", stopDrag);
+    };
+    const handleMouseEnter = (index: any) => {
+      setHoveredColumn(index); // Set the hovered column index
+    };
+    const handleMouseLeave = () => {
+      setHoveredColumn(null); // Reset hovered column index
+    };
+
     return (
       <Fragment>
         <div
@@ -1883,6 +1934,7 @@ const DepositTable = forwardRef(
             boxShadow: `inset -2px -2px 0 #ffffff, 
                       inset 2px 2px 0 #808080`,
             background: "#dcdcdc",
+            ...containerStyle,
           }}
         >
           <div
@@ -1907,14 +1959,14 @@ const DepositTable = forwardRef(
                   }}
                 >
                   <th
-                   style={{
-                    width: "30px",
-                    border: "none",
-                    position: "sticky",
-                    top: 0,
-                    zIndex: 1,
-                    background: "#f0f0f0",
-                  }}
+                    style={{
+                      width: "30px",
+                      border: "none",
+                      position: "sticky",
+                      top: 0,
+                      zIndex: 1,
+                      background: "#f0f0f0",
+                    }}
                   ></th>
                   {column.map((colItm: any, idx: number) => {
                     return (
@@ -1933,7 +1985,28 @@ const DepositTable = forwardRef(
                             colItm.type === "number" ? "center" : "left",
                         }}
                       >
-                        {colItm.label}
+                          <div
+                          key={idx}
+                          className={` ${
+                            hoveredColumn === idx ? `highlight-column` : ""
+                          }`} // Add the class if hovered
+                          style={{ width: colItm.width, height: "20px" }}
+                        >
+                          {colItm.label}
+
+                          <div
+                            className="resize-handle"
+                            onMouseDown={(e) => startResize(idx, e)}
+                            onMouseEnter={(e) => {
+                              e.preventDefault();
+                              handleMouseEnter(idx);
+                            }} // On hover
+                            onMouseLeave={(e) => {
+                              e.preventDefault();
+                              handleMouseLeave();
+                            }} // On mouse leave
+                          />
+                        </div>
                       </th>
                     );
                   })}
@@ -2053,6 +2126,25 @@ const DepositTable = forwardRef(
             </table>
           </div>
         </div>
+        <style>
+          {`
+            .resize-handle {
+                position: absolute;
+                right: 0;
+                top: 0;
+                width: 5px;
+                height: 100%;
+                cursor: col-resize;
+                background-color: transparent;
+              }
+              .resize-handle:hover {
+                background-color: #101111;
+              }
+              .highlight-column {
+                border-right: 2px solid #007bff !important;
+              }
+          `}
+        </style>
       </Fragment>
     );
   }
@@ -2066,6 +2158,7 @@ const DepositTableSelected = forwardRef(
       getSelectedItem,
       disbaleTable = false,
       isTableSelectable = true,
+      containerStyle
     }: any,
     ref
   ) => {
@@ -2074,6 +2167,14 @@ const DepositTableSelected = forwardRef(
     const [column, setColumn] = useState([]);
     const [selectedRow, setSelectedRow] = useState<any>(0);
     const totalRowWidth = column.reduce((a: any, b: any) => a + b.width, 0);
+
+
+    const [columnHeader, setColumnHeader] = useState(
+      columns.filter((itm: any) => !itm.hide)
+    );
+    const [hoveredColumn, setHoveredColumn] = useState(null);
+
+
 
     useEffect(() => {
       if (columns.length > 0) {
@@ -2114,6 +2215,37 @@ const DepositTableSelected = forwardRef(
       },
     }));
 
+
+    const startResize = (index: any, e: any) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const startX = e.clientX;
+      const startWidth = columnHeader[index].width;
+
+      const doDrag = (moveEvent: any) => {
+
+        const newWidth = startWidth + (moveEvent.clientX - startX);
+        const updatedColumns = [...columnHeader];
+        updatedColumns[index].width = newWidth > 50 ? newWidth : 50; // Set minimum column width
+        setColumnHeader(updatedColumns);
+      };
+
+      const stopDrag = () => {
+        document.removeEventListener("mousemove", doDrag);
+        document.removeEventListener("mouseup", stopDrag);
+      };
+
+      document.addEventListener("mousemove", doDrag);
+      document.addEventListener("mouseup", stopDrag);
+    };
+    const handleMouseEnter = (index: any) => {
+      setHoveredColumn(index); // Set the hovered column index
+    };
+    const handleMouseLeave = () => {
+      setHoveredColumn(null); // Reset hovered column index
+    };
+
     return (
       <Fragment>
         <div
@@ -2128,6 +2260,7 @@ const DepositTableSelected = forwardRef(
             boxShadow: `inset -2px -2px 0 #ffffff, 
                       inset 2px 2px 0 #808080`,
             background: "#dcdcdc",
+            ...containerStyle
           }}
         >
           <div
@@ -2178,7 +2311,28 @@ const DepositTableSelected = forwardRef(
                             colItm.type === "number" ? "center" : "left",
                         }}
                       >
-                        {colItm.label}
+                        <div
+                          key={idx}
+                          className={` ${
+                            hoveredColumn === idx ? `highlight-column` : ""
+                          }`} // Add the class if hovered
+                          style={{ width: colItm.width, height: "20px" }}
+                        >
+                          {colItm.label}
+
+                          <div
+                            className="resize-handle"
+                            onMouseDown={(e) => startResize(idx, e)}
+                            onMouseEnter={(e) => {
+                              e.preventDefault();
+                              handleMouseEnter(idx);
+                            }} // On hover
+                            onMouseLeave={(e) => {
+                              e.preventDefault();
+                              handleMouseLeave();
+                            }} // On mouse leave
+                          />
+                        </div>
                       </th>
                     );
                   })}
@@ -2287,6 +2441,27 @@ const DepositTableSelected = forwardRef(
             </table>
           </div>
         </div>
+        <style>
+          {`
+              .resize-handle {
+                    position: absolute;
+                    right: 0;
+                    top: 0;
+                    width: 5px;
+                    height: 100%;
+                    cursor: col-resize;
+                    background-color: transparent;
+                  }
+
+                  .resize-handle:hover {
+                    background-color: #101111;
+                  }
+
+                  .highlight-column {
+                    border-right: 2px solid #007bff !important;
+                  }
+          `}
+        </style>
       </Fragment>
     );
   }

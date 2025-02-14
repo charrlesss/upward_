@@ -1796,6 +1796,10 @@ export default function GeneralJournal() {
           </div>
         </fieldset>
         <DataGridViewReact
+          containerStyle={{
+            flex:1,
+            height:"auto"
+          }}
           ref={table}
           columns={selectedCollectionColumns}
           height="380px"

@@ -154,6 +154,7 @@ export default function PostDateChecks() {
           },
         });
       }
+      
       delete variables.mode;
       return await myAxios.post("/task/accounting/add-pdc", variables, {
         headers: {
@@ -533,9 +534,9 @@ export default function PostDateChecks() {
       pdcTableData: [],
       state,
       reportTitle:
-      process.env.REACT_APP_DEPARTMENT === "UMIS"
-        ? "UPWARD MANAGEMENT INSURANCE SERVICES"
-        : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
+        process.env.REACT_APP_DEPARTMENT === "UMIS"
+          ? "UPWARD MANAGEMENT INSURANCE SERVICES"
+          : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
     });
     // let printString = () => {
     //   return (
@@ -833,9 +834,10 @@ export default function PostDateChecks() {
           width: "100%",
           height: "100%",
           flex: 1,
-          background: "red",
           padding: "10px",
           backgroundColor: "#F1F1F1",
+          flexDirection: "column",
+          display:"flex"
         }}
       >
         <Box
@@ -1278,7 +1280,11 @@ export default function PostDateChecks() {
             </Box>
           </Box>
         </form>
-        <DataGridViewReact
+         <DataGridViewReact
+        containerStyle={{
+          flex:1,
+          height:"auto"
+        }}
           disbaleTable={isDisableField}
           ref={tableRef}
           rows={[]}
@@ -1385,8 +1391,8 @@ export default function PostDateChecks() {
               });
             }
           }}
-        />
-
+        /> 
+       
         <div
           style={{
             display: showModal ? "flex" : "none",

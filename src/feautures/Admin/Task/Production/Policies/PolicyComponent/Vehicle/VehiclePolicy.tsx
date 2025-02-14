@@ -2070,6 +2070,7 @@ const COMTemporary = forwardRef(
           }
         });
       },
+      refetchOnWindowFocus:false
     });
     useImperativeHandle(ref, () => ({
       handleOnSave: (mode: string) => {
@@ -2082,6 +2083,7 @@ const COMTemporary = forwardRef(
         }
 
         if (mode === "edit") {
+          console.log(_policyInformationRef.current.getRefsValue())
           codeCondfirmationAlert({
             isUpdate: true,
             cb: (userCodeConfirmation) => {
@@ -2518,7 +2520,7 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           marginBottom: "15px",
         }}
       >
-        {user?.department === "UMIS" && (
+        {process.env.REACT_APP_DEPARTMENT === "UMIS" && (
           <SelectInput
             ref={_policy}
             label={{
@@ -3888,9 +3890,17 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
 
   useImperativeHandle(ref, () => ({
     getRefsValue: () => {
-      console.log(parseNumber(bodyInjuryRef.current?.value));
-      console.log(propertyDamageRef.current?.value);
-      console.log(personalAccidentRef.current?.value);
+      if(policy === 'TPL'){
+        if(bodyInjuryRef.current){
+          bodyInjuryRef.current.value = '0.00'
+        }
+        if(propertyDamageRef.current){
+          propertyDamageRef.current.value = '0.00'
+        }
+        if(personalAccidentRef.current){
+          personalAccidentRef.current.value = '0.00'
+        }
+      }
       return {
         premiumPaidRef: premiumPaidRef.current?.value,
         estimatedValueSchedVehicleRef:
@@ -5732,11 +5742,10 @@ export const CustomButton = styled.button`
     background:white;
   },
 `;
-
 function parseNumber(value: any) {
-  return isNaN(value) || value === ""
+  return isNaN(value) 
     ? "0.00"
-    : value.toString().replace(/,/g, "");
+    : value;
 }
 function formatNumber(Amount: number) {
   return Amount.toLocaleString("en-US", {

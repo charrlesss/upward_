@@ -24,7 +24,86 @@ import SearchIcon from "@mui/icons-material/Search";
 import { DataGridViewReact } from "../../../../../components/DataGridViewReact";
 import { Loading } from "../../../../../components/Loading";
 import { Autocomplete } from "../../../Task/Accounting/PettyCash";
+const clientColumn = [
+  { key: "entry_client_id", label: "ID", width: 130 },
+  { key: "company", label: "Company", width: 200 },
+  { key: "firstname", label: "First Name", width: 200 },
+  {
+    key: "lastname",
+    label: "Last Name",
+    width: 200,
+  },
+  {
+    key: "middlename",
+    label: "Middle Name",
+    width: 200,
+  },
+  {
+    key: "suffix",
+    label: "Suffix",
+    width: 130,
+  },
+  {
+    key: "mobile",
+    label: "Mobile",
+    width: 200,
+  },
 
+  {
+    key: "auth_representative",
+    label: "Authorize Representative",
+    width: 200,
+  },
+  {
+    key: "NewShortName",
+    label: "Sub Account",
+    width: 130,
+  },
+  {
+    key: "option",
+    label: "Option",
+    width: 130,
+  },
+  {
+    key: "tin",
+    label: "TIN",
+    width: 130,
+  },
+
+  {
+    key: "createdAt",
+    label: "Created At",
+    width: 130,
+  },
+  {
+    key: "address",
+    label: "Address",
+    width: 500,
+  },
+  {
+    key: "client_mortgagee",
+    label: "Mortgagee",
+    width: 300,
+  },
+  {
+    key: "client_branch",
+    label: "Branch",
+    width: 300,
+  },
+  {
+    key: "sub_account",
+    label: "sub_account",
+    width: 300,
+    hidde: true,
+  },
+  {
+    key: "ShortName",
+    label: "ShortName",
+    width: 300,
+    hidde: true,
+  },
+
+]
 export default function Client() {
   const { myAxios, user } = useContext(AuthContext);
   const [option, setOption] = useState("individual");
@@ -901,91 +980,11 @@ export default function Client() {
           height="340px"
           ref={tableRef}
           rows={[]}
-          columns={[
-            { key: "entry_client_id", label: "ID", width: 130 },
-            { key: "company", label: "Company", width: 200 },
-            { key: "firstname", label: "First Name", width: 200 },
-            {
-              key: "lastname",
-              label: "Last Name",
-              width: 200,
-            },
-            {
-              key: "middlename",
-              label: "Middle Name",
-              width: 200,
-            },
-            {
-              key: "suffix",
-              label: "Suffix",
-              width: 130,
-            },
-            {
-              key: "mobile",
-              label: "Mobile",
-              width: 200,
-            },
-
-            {
-              key: "auth_representative",
-              label: "Authorize Representative",
-              width: 200,
-            },
-            {
-              key: "NewShortName",
-              label: "Sub Account",
-              width: 130,
-            },
-            {
-              key: "option",
-              label: "Option",
-              width: 130,
-            },
-            {
-              key: "tin",
-              label: "TIN",
-              width: 130,
-            },
-
-            {
-              key: "createdAt",
-              label: "Created At",
-              width: 130,
-            },
-            {
-              key: "address",
-              label: "Address",
-              width: 500,
-            },
-            {
-              key: "client_mortgagee",
-              label: "Mortgagee",
-              width: 300,
-            },
-            {
-              key: "client_branch",
-              label: "Branch",
-              width: 300,
-            },
-            {
-              key: "sub_account",
-              label: "sub_account",
-              width: 300,
-              hidde: true,
-            },
-            {
-              key: "ShortName",
-              label: "ShortName",
-              width: 300,
-              hidde: true,
-            },
-          
-          ]}
+          columns={clientColumn}
           getSelectedItem={(rowSelected: any, _: any, RowIndex: any) => {
             if (rowSelected) {
-              console.log(rowSelected)
               setMode("edit");
-              setOption(rowSelected[9]);
+              setOption(rowSelected[9].toLowerCase());
               wait(100).then(() => {
                 if (clientIdRef.current) {
                   clientIdRef.current.value = rowSelected[0];

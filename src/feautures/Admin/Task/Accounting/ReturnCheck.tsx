@@ -29,7 +29,6 @@ import {
 } from "../../../../lib/confirmationAlert";
 
 export default function ReturnCheck() {
-
   const { user, myAxios } = useContext(AuthContext);
   const [mode, setMode] = useState("");
   const returnCheckComponentRef = useRef<any>(null);
@@ -109,6 +108,7 @@ export default function ReturnCheck() {
           Authorization: `Bearer ${user?.accessToken}`,
         },
       }),
+    refetchOnWindowFocus: false,
     onSuccess(res) {
       wait(100).then(() => {
         if (refNoRef.current) {
@@ -136,6 +136,7 @@ export default function ReturnCheck() {
     onSuccess(res) {
       const data1 = JSON.parse(res.data.data1);
       const data2 = JSON.parse(res.data.data2);
+      console.log(data1);
       if (data1.length > 0) {
         if (refNoRef.current) {
           refNoRef.current.value = data1[0].RC_No;
@@ -150,23 +151,25 @@ export default function ReturnCheck() {
           refExp.current.value = data1[0].Explanation;
         }
         const newSelectedCheck: any = [];
+
         for (let index = 0; index < data1.length; index++) {
           newSelectedCheck.push([
-            data1[0].ORNum,
-            format(new Date(data1[0].Date_Collect), "MM/dd/yyy"),
-            data1[0].SlipCode,
-            format(new Date(data1[0].Date_Deposit), "MM/dd/yyy"),
-            data1[0].Check_No,
-            format(new Date(data1[0].Check_Date), "MM/dd/yyy"),
+            data1[index].ORNum,
+            format(new Date(data1[index].Date_Collect), "MM/dd/yyy"),
+            data1[index].SlipCode,
+            format(new Date(data1[index].Date_Deposit), "MM/dd/yyy"),
+            data1[index].Check_No,
+            format(new Date(data1[index].Check_Date), "MM/dd/yyy"),
             formatNumber(
-              parseFloat(data1[0].Amount.toString().replace(/,/g, ""))
+              parseFloat(data1[index].Amount.toString().replace(/,/g, ""))
             ),
-            data1[0].Bank,
-            data1[0].BankAccnt,
-            data1[0].Reason,
-            format(new Date(data1[0].Date_Return), "MM/dd/yyy"),
+            data1[index].Bank,
+            data1[index].BankAccnt,
+            data1[index].Reason,
+            format(new Date(data1[index].Date_Return), "MM/dd/yyy"),
           ]);
         }
+
         returnCheckComponentRef.current.refSelectedCheckToBeReturned.current.table.current.setData(
           newSelectedCheck
         );
@@ -492,7 +495,7 @@ export default function ReturnCheck() {
               }}
               input={{
                 disabled: mode === "",
-                readOnly: true,
+                // readOnly: true,
                 className: "ref_no",
                 type: "text",
                 style: { width: "200px" },
@@ -578,7 +581,12 @@ const TabPage = forwardRef(({ mode }: any, ref) => {
     {
       id: 1,
       label: "Selected Check To Be Returned",
-      content: <SelectedCheckToBeReturned ref={refSelectedCheckToBeReturned} />,
+      content: (
+        <SelectedCheckToBeReturned
+          ref={refSelectedCheckToBeReturned}
+          refAccountingEntry={refAccountingEntry}
+        />
+      ),
     },
     {
       id: 2,
@@ -738,7 +746,175 @@ const TabPage = forwardRef(({ mode }: any, ref) => {
     </div>
   );
 });
-
+const columnsSelectCheck = [
+  { key: "Deposit_Slip", label: "Deposit_Slip", width: 100 },
+  { key: "Depo_Date", label: "Depo_Date", width: 130 },
+  {
+    key: "Check_No",
+    label: "Check_No",
+    width: 200,
+  },
+  {
+    key: "Check_Date",
+    label: "Check_Date",
+    width: 200,
+  },
+  {
+    key: "Amount",
+    label: "Amount",
+    width: 200,
+  },
+  {
+    key: "Bank",
+    label: "Bank",
+    width: 200,
+  },
+  {
+    key: "Official_Receipt",
+    label: "Official_Receipt",
+    width: 100,
+  },
+  {
+    key: "Date_OR",
+    label: "Date_OR",
+    width: 100,
+  },
+  {
+    key: "BankAccount",
+    label: "BankAccount",
+    width: 0,
+    hide: true,
+  },
+  {
+    key: "_formatted_date",
+    label: "_formatted_date",
+    width: 0,
+    hide: true,
+  },
+];
+const columnsSelectedCheckToBeReturned = [
+  { key: "ORNo", label: "OR No.", width: 80 },
+  { key: "ORDate", label: "OR Date", width: 130 },
+  {
+    key: "DepoSlip",
+    label: "Depo Slip",
+    width: 130,
+  },
+  {
+    key: "DepoDate",
+    label: "Depo Date",
+    width: 130,
+  },
+  {
+    key: "CheckNo",
+    label: "Check No.",
+    width: 130,
+  },
+  {
+    key: "CheckDate",
+    label: "Check Date",
+    width: 130,
+  },
+  {
+    key: "Amount",
+    label: "Amount",
+    width: 130,
+  },
+  {
+    key: "Bank",
+    label: "Bank/Branch",
+    width: 100,
+  },
+  {
+    key: "BankAccount",
+    label: "Bank Account",
+    width: 200,
+  },
+  {
+    key: "Reason",
+    label: "Reason",
+    width: 200,
+  },
+  {
+    key: "ReturnDate",
+    label: "Return Date",
+    width: 200,
+  },
+];
+const columnsAccountingEntry = [
+  { key: "Code", label: "Code", width: 80 },
+  { key: "AccountName", label: "Account Name", width: 130 },
+  {
+    key: "Debit",
+    label: "Debit",
+    width: 130,
+  },
+  {
+    key: "Credit",
+    label: "Credit",
+    width: 130,
+  },
+  {
+    key: "IDNo",
+    label: "ID No.",
+    width: 130,
+  },
+  {
+    key: "Identity",
+    label: "Identity",
+    width: 130,
+  },
+  {
+    key: "SubAcct",
+    label: "Sub Acct",
+    width: 130,
+  },
+  {
+    key: "SubAcctName",
+    label: "Sub Acct Name",
+    width: 130,
+  },
+  {
+    key: "CheckNo",
+    label: "Check No",
+    width: 100,
+  },
+  {
+    key: "Bank",
+    label: "Bank/Branch",
+    width: 200,
+  },
+  {
+    key: "CheckDate",
+    label: "Check Date",
+    width: 100,
+  },
+  {
+    key: "CheckReturn",
+    label: "Check Return",
+    width: 100,
+  },
+  {
+    key: "CheckReason",
+    label: "Check Reason",
+    width: 200,
+  },
+  {
+    key: "PK",
+    label: "PK",
+    width: 100,
+  },
+  {
+    key: "DateDeposit",
+    label: "Date Deposit",
+    width: 100,
+  },
+  {
+    key: "DateCollection",
+    label: "Date Collection",
+    width: 100,
+  },
+];
 const SelectCheck = forwardRef(
   (
     {
@@ -847,52 +1023,7 @@ const SelectCheck = forwardRef(
           <DataGridViewReact
             disbaleTable={mode === ""}
             ref={table}
-            columns={[
-              { key: "Deposit_Slip", label: "Deposit_Slip", width: 80 },
-              { key: "Depo_Date", label: "Depo_Date", width: 130 },
-              {
-                key: "Check_No",
-                label: "Check_No",
-                width: 200,
-              },
-              {
-                key: "Check_Date",
-                label: "Check_Date",
-                width: 200,
-              },
-              {
-                key: "Amount",
-                label: "Amount",
-                width: 200,
-              },
-              {
-                key: "Bank",
-                label: "Bank",
-                width: 200,
-              },
-              {
-                key: "Official_Receipt",
-                label: "Official_Receipt",
-                width: 100,
-              },
-              {
-                key: "Date_OR",
-                label: "Date_OR",
-                width: 100,
-              },
-              {
-                key: "BankAccount",
-                label: "BankAccount",
-                width: 0,
-                hide: true,
-              },
-              {
-                key: "_formatted_date",
-                label: "_formatted_date",
-                width: 0,
-                hide: true,
-              },
-            ]}
+            columns={columnsSelectCheck}
             rows={[]}
             containerStyle={{
               height: "auto",
@@ -1075,106 +1206,84 @@ const SelectCheck = forwardRef(
     );
   }
 );
-const SelectedCheckToBeReturned = forwardRef((props: any, ref) => {
-  const table = useRef<any>(null);
+const SelectedCheckToBeReturned = forwardRef(
+  ({ refAccountingEntry }: any, ref) => {
+    const table = useRef<any>(null);
 
-  useImperativeHandle(ref, () => ({
-    test: () => {
-      alert("qweqweqweqwe2");
-    },
-    table,
-    getSelectedCheck: () => {
-      const checkList = table.current.getData();
-      if (checkList.length > 0) {
-        return checkList.map((itm: any) => {
-          return itm[4];
-        });
-      }
-      return [];
-    },
-  }));
-  return (
-    <div
-      style={{
-        display: "flex",
-        flex: 1,
-      }}
-    >
-      <DataGridViewReact
-        ref={table}
-        columns={[
-          { key: "ORNo", label: "OR No.", width: 80 },
-          { key: "ORDate", label: "OR Date", width: 130 },
-          {
-            key: "DepoSlip",
-            label: "Depo Slip",
-            width: 130,
-          },
-          {
-            key: "DepoDate",
-            label: "Depo Date",
-            width: 130,
-          },
-          {
-            key: "CheckNo",
-            label: "Check No.",
-            width: 130,
-          },
-          {
-            key: "CheckDate",
-            label: "Check Date",
-            width: 130,
-          },
-          {
-            key: "Amount",
-            label: "Amount",
-            width: 130,
-          },
-          {
-            key: "Bank",
-            label: "Bank/Branch",
-            width: 100,
-          },
-          {
-            key: "BankAccount",
-            label: "Bank Account",
-            width: 200,
-          },
-          {
-            key: "Reason",
-            label: "Reason",
-            width: 200,
-          },
-          {
-            key: "ReturnDate",
-            label: "Return Date",
-            width: 200,
-          },
-        ]}
-        rows={[]}
-        containerStyle={{
-          height: "auto",
+    useImperativeHandle(ref, () => ({
+      test: () => {
+        alert("qweqweqweqwe2");
+      },
+      table,
+      getSelectedCheck: () => {
+        const checkList = table.current.getData();
+        if (checkList.length > 0) {
+          return checkList.map((itm: any) => {
+            return itm[4];
+          });
+        }
+        return [];
+      },
+    }));
+
+    return (
+      <div
+        style={{
+          display: "flex",
           flex: 1,
         }}
-        getSelectedItem={(rowItm: any) => {
-          if (rowItm) {
-            wait(100).then(() => {});
-          } else {
-            wait(100).then(() => {});
-          }
-        }}
-        onKeyDown={(rowItm: any, rowIdx: any, e: any) => {
-          if (e.code === "Delete" || e.code === "Backspace") {
-            const isConfim = window.confirm(`Are you sure you want to delete?`);
-            if (isConfim) {
-              return;
+      >
+        <DataGridViewReact
+          ref={table}
+          columns={columnsSelectedCheckToBeReturned}
+          rows={[]}
+          containerStyle={{
+            height: "auto",
+            flex: 1,
+          }}
+          getSelectedItem={(rowItm: any) => {
+            if (rowItm) {
+              wait(100).then(() => {});
+            } else {
+              wait(100).then(() => {});
             }
-          }
-        }}
-      />
-    </div>
-  );
-});
+          }}
+          onKeyDown={(rowItm: any, rowIdx: any, e: any) => {
+            if (e.code === "Delete" || e.code === "Backspace") {
+              const isConfim = window.confirm(
+                `Are you sure you want to delete?`
+              );
+              if (isConfim) {
+                const data = table.current.getData();
+                data.splice(rowIdx, 1);
+                const accountingEntryData =
+                  refAccountingEntry.current.table.current.getData();
+                const deleteIndex = [];
+                for (
+                  let index = 0;
+                  index < accountingEntryData.length;
+                  index++
+                ) {
+                  if (rowItm[4] === accountingEntryData[index][8]) {
+                    deleteIndex.push(index);
+                  }
+                }
+
+                table.current.setData(data);
+                refAccountingEntry.current.table.current.setData(
+                  removeIndices(accountingEntryData, deleteIndex)
+                );
+
+                return;
+              }
+            }
+          }}
+        />
+      </div>
+    );
+  }
+);
+
 const AccountingEntry = forwardRef((props: any, ref) => {
   const table = useRef<any>(null);
   const debitRef = useRef<HTMLInputElement>(null);
@@ -1198,80 +1307,7 @@ const AccountingEntry = forwardRef((props: any, ref) => {
       >
         <DataGridViewReact
           ref={table}
-          columns={[
-            { key: "Code", label: "Code", width: 80 },
-            { key: "AccountName", label: "Account Name", width: 130 },
-            {
-              key: "Debit",
-              label: "Debit",
-              width: 130,
-            },
-            {
-              key: "Credit",
-              label: "Credit",
-              width: 130,
-            },
-            {
-              key: "IDNo",
-              label: "ID No.",
-              width: 130,
-            },
-            {
-              key: "Identity",
-              label: "Identity",
-              width: 130,
-            },
-            {
-              key: "SubAcct",
-              label: "Sub Acct",
-              width: 130,
-            },
-            {
-              key: "SubAcctName",
-              label: "Sub Acct Name",
-              width: 130,
-            },
-            {
-              key: "CheckNo",
-              label: "Check No",
-              width: 100,
-            },
-            {
-              key: "Bank",
-              label: "Bank/Branch",
-              width: 200,
-            },
-            {
-              key: "CheckDate",
-              label: "Check Date",
-              width: 100,
-            },
-            {
-              key: "CheckReturn",
-              label: "Check Return",
-              width: 100,
-            },
-            {
-              key: "CheckReason",
-              label: "Check Reason",
-              width: 200,
-            },
-            {
-              key: "PK",
-              label: "PK",
-              width: 100,
-            },
-            {
-              key: "DateDeposit",
-              label: "Date Deposit",
-              width: 100,
-            },
-            {
-              key: "DateCollection",
-              label: "Date Collection",
-              width: 100,
-            },
-          ]}
+          columns={columnsAccountingEntry}
           rows={[]}
           containerStyle={{
             height: "auto",
@@ -1619,6 +1655,14 @@ const ModalReturnCheckEntries = forwardRef(
                         { key: "DAUD", value: "DAUD" },
                         { key: "Account Closed", value: "Account Closed" },
                         { key: "SPO", value: "SPO" },
+                        {
+                          key: "Account under Garnishment",
+                          value: "Account under Garnishment",
+                        },
+                        {
+                          key: "Unauthorized Signature",
+                          value: "Unauthorized Signature",
+                        },
                       ]}
                       values={"value"}
                       display={"key"}
@@ -2063,4 +2107,7 @@ export function getSum(data: Array<any>, key: string): number {
     return total;
   }, 0);
 }
-
+function removeIndices(arr: any, indices: any) {
+  const toRemove = new Set(indices); // Use Set for faster lookup
+  return arr.filter((_: any, index: any) => !toRemove.has(index));
+}

@@ -257,6 +257,8 @@ function CheckPulloutRequest() {
         value: response.data.id[0].pullout_request,
       });
     },
+    refetchOnWindowFocus: false,
+
   });
 
   const { mutate: mutateSave, isLoading: isLoadingSave } = useMutation({
@@ -945,6 +947,8 @@ function CheckPulloutResponse() {
       const response = data as any;
       setRCPN(response?.data.data);
     },
+    refetchOnWindowFocus: false,
+
   });
 
   const { mutate: mutateApproved, isLoading: isLoadingApproved } = useMutation({

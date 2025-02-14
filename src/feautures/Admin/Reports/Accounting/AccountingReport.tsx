@@ -207,6 +207,14 @@ export default function AccountingReport() {
                 reportTitle={"Abstract of Collections"}
               />
             )}
+               {buttonSelected === 8 && (
+              <FormAbsDepoReturned
+                link={
+                  "/reports/accounting/report/generate-report-deposit-collection"
+                }
+                reportTitle={"Deposited of Collections"}
+              />
+            )}
              {buttonSelected === 10 && <FormPostDatedCheckRegistry />}
              {buttonSelected === 13 && (
               <FormAbsDepoReturned

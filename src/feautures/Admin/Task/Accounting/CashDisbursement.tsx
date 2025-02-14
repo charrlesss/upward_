@@ -377,28 +377,28 @@ export default function CashDisbursement() {
           title: response.data.message,
           timer: 1500,
         }).then(() => {
-            Swal.fire({
-              text: "Do you want to print it?",
-              showCancelButton: true,
-              confirmButtonColor: "#3085d6",
-              cancelButtonColor: "#d33",
-              confirmButtonText: "Yes, print it!",
-            }).then((result) => {
-              if (result.isConfirmed) {
-                mutatePrint({
-                  check: false,
-                  Source_No: state.refNo,
-                  reportTitle:
+          Swal.fire({
+            text: "Do you want to print it?",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, print it!",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              mutatePrint({
+                check: false,
+                Source_No: state.refNo,
+                reportTitle:
                   process.env.REACT_APP_DEPARTMENT === "UMIS"
                     ? "UPWARD MANAGEMENT INSURANCE SERVICES"
                     : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
-                });
+              });
 
-                wait(100).then(() => {
-                  resetAll();
-                });
-              }
-            });
+              wait(100).then(() => {
+                resetAll();
+              });
+            }
+          });
         });
       }
       return Swal.fire({
@@ -503,9 +503,9 @@ export default function CashDisbursement() {
       Payto: "",
       credit: "",
       reportTitle:
-      process.env.REACT_APP_DEPARTMENT === "UMIS"
-        ? "UPWARD MANAGEMENT INSURANCE SERVICES"
-        : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
+        process.env.REACT_APP_DEPARTMENT === "UMIS"
+          ? "UPWARD MANAGEMENT INSURANCE SERVICES"
+          : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
     });
   }
   function setTotals(tableData: any) {
@@ -1170,6 +1170,8 @@ export default function CashDisbursement() {
           background: "#F1F1F1",
           padding: "5px",
           flex: 1,
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         <div
@@ -1368,8 +1370,14 @@ export default function CashDisbursement() {
                     disabled: isDisableField,
                     type: "text",
                     style: { width: "190px" },
-                    readOnly: true,
                     value: state.refNo,
+                    onChange: (e) => {
+                      dispatch({
+                        type: "UPDATE_FIELD",
+                        field: "refNo",
+                        value: e.target.value,
+                      });
+                    },
                     name: "refNo",
                     onKeyDown: (e) => {
                       if (e.code === "NumpadEnter" || e.code === "Enter") {
@@ -2035,6 +2043,10 @@ export default function CashDisbursement() {
           </div>
         </fieldset>
         <DataGridViewReact
+          containerStyle={{
+            flex: 1,
+            height: "auto",
+          }}
           ref={tableRef}
           columns={columns}
           height="280px"
@@ -2167,9 +2179,9 @@ export default function CashDisbursement() {
                         Payto: rowItm[10],
                         credit: rowItm[5],
                         reportTitle:
-                        process.env.REACT_APP_DEPARTMENT === "UMIS"
-                          ? "UPWARD MANAGEMENT INSURANCE SERVICES"
-                          : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
+                          process.env.REACT_APP_DEPARTMENT === "UMIS"
+                            ? "UPWARD MANAGEMENT INSURANCE SERVICES"
+                            : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
                       });
                     }}
                   >

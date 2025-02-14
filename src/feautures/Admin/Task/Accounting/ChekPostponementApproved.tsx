@@ -77,6 +77,8 @@ export default function ChekPostponementApproved() {
         _RPCDNoRef.current.setDataSource(response.data.data);
       });
     },
+    refetchOnWindowFocus: false,
+
   });
   // load details
   const { isLoading: isLoadingDetails, mutate: mutateDetails } = useMutation({

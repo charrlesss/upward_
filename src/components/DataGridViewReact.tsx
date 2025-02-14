@@ -45,6 +45,11 @@ export const DataGridViewReact = forwardRef(
     const [isTableSelectable, setIsTableSelectable] =
       useState(_isTableSelectable);
 
+    const [columnHeader, setColumnHeader] = useState(
+      columns.filter((itm: any) => !itm.hide)
+    );
+    const [hoveredColumn, setHoveredColumn] = useState(null);
+
     useEffect(() => {
       if (columns.length > 0) {
         setColumn(columns.filter((itm: any) => !itm.hide));
@@ -116,7 +121,6 @@ export const DataGridViewReact = forwardRef(
       getElementBody: () => tbodyRef.current,
       getParentElement: () => parentElementRef.current,
     }));
-
     const handleResetCheckBox = () => {
       checkboxRef.current.forEach((checkbox: HTMLInputElement, idx: any) => {
         if (checkbox) checkbox.checked = false;
@@ -131,12 +135,40 @@ export const DataGridViewReact = forwardRef(
         }
       });
     };
-
     const handleRightClick = (event: any, idx: number) => {
       event.preventDefault(); // Prevent the default context menu from appearing
       if (idx === selectedRowIndex) {
         actionModalRef.current.showModal();
       }
+    };
+    const startResize = (index: any, e: any) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const startX = e.clientX;
+      const startWidth = columnHeader[index].width;
+
+      const doDrag = (moveEvent: any) => {
+
+        const newWidth = startWidth + (moveEvent.clientX - startX);
+        const updatedColumns = [...columnHeader];
+        updatedColumns[index].width = newWidth > 50 ? newWidth : 50; // Set minimum column width
+        setColumnHeader(updatedColumns);
+      };
+
+      const stopDrag = () => {
+        document.removeEventListener("mousemove", doDrag);
+        document.removeEventListener("mouseup", stopDrag);
+      };
+
+      document.addEventListener("mousemove", doDrag);
+      document.addEventListener("mouseup", stopDrag);
+    };
+    const handleMouseEnter = (index: any) => {
+      setHoveredColumn(index); // Set the hovered column index
+    };
+    const handleMouseLeave = () => {
+      setHoveredColumn(null); // Reset hovered column index
     };
 
     return (
@@ -228,7 +260,28 @@ export const DataGridViewReact = forwardRef(
                             colItm.type === "number" ? "center" : "left",
                         }}
                       >
-                        {colItm.label}
+                        <div
+                          key={idx}
+                          className={` ${
+                            hoveredColumn === idx ? `highlight-column` : ""
+                          }`} // Add the class if hovered
+                          style={{ width: colItm.width, height: "20px" }}
+                        >
+                          {colItm.label}
+
+                          <div
+                            className="resize-handle"
+                            onMouseDown={(e) => startResize(idx, e)}
+                            onMouseEnter={(e) => {
+                              e.preventDefault();
+                              handleMouseEnter(idx);
+                            }} // On hover
+                            onMouseLeave={(e) => {
+                              e.preventDefault();
+                              handleMouseLeave();
+                            }} // On mouse leave
+                          />
+                        </div>
                       </th>
                     );
                   })}
@@ -285,6 +338,24 @@ export const DataGridViewReact = forwardRef(
                #upward-cutom-table tr.selected td input {
                   color: #ffffff !important;
               }
+
+              .resize-handle {
+                    position: absolute;
+                    right: 0;
+                    top: 0;
+                    width: 5px;
+                    height: 100%;
+                    cursor: col-resize;
+                    background-color: transparent;
+                  }
+
+                  .resize-handle:hover {
+                    background-color: #101111;
+                  }
+
+                  .highlight-column {
+                    border-right: 2px solid #007bff !important;
+                  }
   
               `}
             </style>
@@ -376,7 +447,7 @@ const RowComponent = forwardRef(
           >
             <input
               readOnly={true}
-              defaultValue={`${ String(rowIdx + 1).padStart(2, "0")}`}
+              defaultValue={`${String(rowIdx + 1).padStart(2, "0")}`}
               style={{
                 width: "50px",
                 pointerEvents: "none",
@@ -706,6 +777,13 @@ export const DataGridViewMultiSelectionReact = forwardRef(
     const [isTableSelectable, setIsTableSelectable] =
       useState(_isTableSelectable);
 
+
+      const [columnHeader, setColumnHeader] = useState(
+        columns.filter((itm: any) => !itm.hide)
+      );
+      const [hoveredColumn, setHoveredColumn] = useState(null);
+      
+
     useEffect(() => {
       if (columns.length > 0) {
         setColumn(columns.filter((itm: any) => !itm.hide));
@@ -781,6 +859,36 @@ export const DataGridViewMultiSelectionReact = forwardRef(
       getParentElement: () => parentElementRef.current,
       isTableSelectable,
     }));
+
+    const startResize = (index: any, e: any) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const startX = e.clientX;
+      const startWidth = columnHeader[index].width;
+
+      const doDrag = (moveEvent: any) => {
+
+        const newWidth = startWidth + (moveEvent.clientX - startX);
+        const updatedColumns = [...columnHeader];
+        updatedColumns[index].width = newWidth > 50 ? newWidth : 50; // Set minimum column width
+        setColumnHeader(updatedColumns);
+      };
+
+      const stopDrag = () => {
+        document.removeEventListener("mousemove", doDrag);
+        document.removeEventListener("mouseup", stopDrag);
+      };
+
+      document.addEventListener("mousemove", doDrag);
+      document.addEventListener("mouseup", stopDrag);
+    };
+    const handleMouseEnter = (index: any) => {
+      setHoveredColumn(index); // Set the hovered column index
+    };
+    const handleMouseLeave = () => {
+      setHoveredColumn(null); // Reset hovered column index
+    };
 
     return (
       <div
@@ -876,7 +984,28 @@ export const DataGridViewMultiSelectionReact = forwardRef(
                         textAlign: colItm.type === "number" ? "center" : "left",
                       }}
                     >
-                      {colItm.label}
+                        <div
+                          key={idx}
+                          className={` ${
+                            hoveredColumn === idx ? `highlight-column` : ""
+                          }`} // Add the class if hovered
+                          style={{ width: colItm.width, height: "20px" }}
+                        >
+                          {colItm.label}
+
+                          <div
+                            className="resize-handle"
+                            onMouseDown={(e) => startResize(idx, e)}
+                            onMouseEnter={(e) => {
+                              e.preventDefault();
+                              handleMouseEnter(idx);
+                            }} // On hover
+                            onMouseLeave={(e) => {
+                              e.preventDefault();
+                              handleMouseLeave();
+                            }} // On mouse leave
+                          />
+                        </div>
                     </th>
                   );
                 })}
@@ -1128,6 +1257,24 @@ export const DataGridViewMultiSelectionReact = forwardRef(
               #upward-cutom-table-multi tr.multi-selected-row td input {
                   color: #ffffff !important;
               }
+                  .resize-handle {
+                    position: absolute;
+                    right: 0;
+                    top: 0;
+                    width: 5px;
+                    height: 100%;
+                    cursor: col-resize;
+                    background-color: transparent;
+                  }
+
+                  .resize-handle:hover {
+                    background-color: #101111;
+                  }
+
+                  .highlight-column {
+                    border-right: 2px solid #007bff !important;
+                  }
+  
   
               `}
           </style>

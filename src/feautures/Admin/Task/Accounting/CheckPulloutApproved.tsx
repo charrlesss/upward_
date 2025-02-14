@@ -57,6 +57,8 @@ export default function CheckPulloutApproved() {
           },
         }
       ),
+      refetchOnWindowFocus: false,
+
   });
 
   const { isLoading: isLoadingLoadDetails, mutate: mutateDetails } =

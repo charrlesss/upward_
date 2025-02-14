@@ -1042,6 +1042,10 @@ export default function PettyCash() {
         </div>
         <br />
         <DataGridViewReact
+        containerStyle={{
+          flex:1,
+          height:"auto"
+        }}
           ref={tableRef}
           width="100%"
           height="350px"

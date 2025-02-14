@@ -1024,39 +1024,44 @@ SELECT
        IDType
    FROM
        (SELECT 
-           IF(aa.option = 'individual', CONCAT(IF(aa.lastname IS NOT NULL
-                   AND TRIM(aa.lastname) <> '', CONCAT(aa.lastname, ', '), ''), aa.firstname), aa.company) AS ShortName,
+           IF(aa.option = 'individual', 
+           CONCAT(IF(aa.lastname IS NOT NULL AND TRIM(aa.lastname) <> '', CONCAT(aa.lastname, ', '), ''), aa.firstname ,' ',aa.suffix,'.'), aa.company) AS ShortName,
                aa.entry_client_id AS IDNo,
                aa.sub_account,
                'Client' as IDType
        FROM
-           entry_client aa UNION ALL SELECT 
+           entry_client aa 
+           UNION ALL SELECT 
            CONCAT(IF(aa.lastname IS NOT NULL
                    AND TRIM(aa.lastname) <> '', CONCAT(aa.lastname, ', '), ''), aa.firstname) AS ShortName,
                aa.entry_agent_id AS IDNo,
                aa.sub_account,
                'Agent' as IDType
        FROM
-           entry_agent aa UNION ALL SELECT 
+           entry_agent aa 
+           UNION ALL SELECT 
            CONCAT(IF(aa.lastname IS NOT NULL
                    AND TRIM(aa.lastname) <> '', CONCAT(aa.lastname, ', '), ''), aa.firstname) AS ShortName,
                aa.entry_employee_id AS IDNo,
                aa.sub_account,
                'Employee' as IDType
        FROM
-           entry_employee aa UNION ALL SELECT 
+           entry_employee aa 
+           UNION ALL SELECT 
            aa.fullname AS ShortName,
                aa.entry_fixed_assets_id AS IDNo,
                sub_account,
                 'Fixed Assets' as IDType
        FROM
-           entry_fixed_assets aa UNION ALL SELECT 
+           entry_fixed_assets aa 
+           UNION ALL SELECT 
            aa.description AS ShortName,
                aa.entry_others_id AS IDNo,
                aa.sub_account,
                'Others' as IDType
        FROM
-           entry_others aa UNION ALL SELECT 
+           entry_others aa 
+           UNION ALL SELECT 
            IF(aa.option = 'individual', CONCAT(IF(aa.lastname IS NOT NULL
                    AND TRIM(aa.lastname) <> '', CONCAT(aa.lastname, ', '), ''), aa.firstname), aa.company) AS ShortName,
                aa.entry_supplier_id AS IDNo,

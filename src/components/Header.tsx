@@ -628,7 +628,6 @@ export default function Header() {
     }
   }, [user?.userAccess]);
 
-  console.log(user?.userAccess);
   // Add event listener to handle clicks outside the menu
   useEffect(() => {
     const handleClickOutside = (e: any) => {

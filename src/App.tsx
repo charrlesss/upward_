@@ -25,8 +25,6 @@ function App() {
     return <LoaderCircular open={true} />;
   }
 
-
-  console.log(process.env.REACT_APP_DEPARTMENT)
   return (
     <AuthContext.Provider value={{ user, setUser, myAxios }}>
         <Routers />
