@@ -239,6 +239,8 @@ export default function PostDateChecks() {
           return newObjContainer;
         }
         const data = response.data.getSearchPDCCheck.map((itm: any) => {
+          itm.Check_Date = format(new Date(itm.Check_Date), 'MM/dd/yyyy')
+          itm.DateDeposit = itm.DateDeposit ? format(new Date(itm.DateDeposit), 'MM/dd/yyyy') : ""
           itm.Check_Amnt = formatNumber(
             parseFloat(itm.Check_Amnt.toString().replace(/,/g, ""))
           );
@@ -538,66 +540,7 @@ export default function PostDateChecks() {
           ? "UPWARD MANAGEMENT INSURANCE SERVICES"
           : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
     });
-    // let printString = () => {
-    //   return (
-    //     <div>
-    //       <p
-    //         style={{
-    //           color: "#d1d5db",
-    //           fontSize: "11px",
-    //           textAlign: "center",
-    //           padding: 0,
-    //           marginTop: "8px",
-    //           marginBottom: 0,
-    //         }}
-    //       >
-    //         UCSMI
-    //       </p>
-    //       <p
-    //         style={{
-    //           color: "#d1d5db",
-    //           fontSize: "11px",
-    //           textAlign: "center",
-    //           padding: 0,
-    //           margin: 0,
-    //         }}
-    //       >
-    //         {clientnameRef.current?.value}
-    //       </p>
-    //       <p
-    //         style={{
-    //           color: "#d1d5db",
-    //           fontSize: "11px",
-    //           textAlign: "center",
-    //           padding: 0,
-    //           margin: 0,
-    //         }}
-    //       >
-    //         {PNoRef.current}
-    //       </p>
-    //       <p
-    //         style={{
-    //           color: "#d1d5db",
-    //           fontSize: "11px",
-    //           textAlign: "center",
-    //           padding: 0,
-    //           margin: "20px",
-    //         }}
-    //       >
-    //         {refNoRef.current?.value}
-    //       </p>
-    //     </div>
-    //   );
-    // };
-
-    // flushSync(() => {
-    //   const elementString = ReactDOMServer.renderToString(printString());
-    //   localStorage.setItem("printString", elementString);
-    //   localStorage.removeItem("dataString");
-    //   localStorage.setItem("paper-width", "8.5in");
-    //   localStorage.setItem("paper-height", "11in");
-    // });
-    // window.open("/dashboard/print", "_blank");
+   
   };
 
   function resetPDC() {
@@ -630,21 +573,7 @@ export default function PostDateChecks() {
     });
   }
   function handleCheckDetailsSave() {
-    function incrementStringNumbers(str: string, increment: number) {
-      let num = parseInt(str);
-      num = num + increment;
-      return num.toString().padStart(str.length, "0");
-    }
-    function incrementDate(dateString: any, i: number) {
-      const currentDate = new Date(dateString);
-      currentDate.setMonth(currentDate.getMonth() + i);
-
-      return format(currentDate, "yyyy-MM-dd");
-    }
-    function isValidDate(dateString: string): boolean {
-      const date = new Date(dateString);
-      return date instanceof Date && !isNaN(date.getTime());
-    }
+   
 
     if (
       modalCheckRef.current.getRefs().checknoRef.current &&
@@ -654,6 +583,7 @@ export default function PostDateChecks() {
       modalCheckRef.current.getRefs().checkdateRef.current &&
       modalCheckRef.current.getRefs().amountRef.current
     ) {
+
       const tableRows = tableRef.current.getDataFormatted();
       const selectedIndex = tableRef.current.getSelectedRow();
 
@@ -716,37 +646,81 @@ export default function PostDateChecks() {
         if (selectedIndex !== null) {
           const selectedRow = tableRef.current.getData();
 
-          selectedRow[selectedIndex][0] =
-            modalCheckRef.current.getRefs().checknoRef.current.value;
-          selectedRow[selectedIndex][1] =
-            modalCheckRef.current.getRefs().checkdateRef.current.value;
-          selectedRow[selectedIndex][2] = formatNumber(
-            parseNumber(
-              modalCheckRef.current
-                .getRefs()
-                .amountRef.current?.value.toString()
-                .replace(/,/g, "")
-            )
-          );
-          selectedRow[selectedIndex][3] =
-            modalCheckRef.current.getRefs().bankRef.current.value;
-          selectedRow[selectedIndex][4] =
-            modalCheckRef.current.getRefs().branchRef.current.value;
-          selectedRow[selectedIndex][5] =
-            modalCheckRef.current.getRefs().remarksRef.current.value;
-          selectedRow[selectedIndex][6] =
-            modalCheckRef.current.getRefs()._slipCodeRef.current;
-          selectedRow[selectedIndex][7] =
-            modalCheckRef.current.getRefs()._slipDateRef.current;
-          selectedRow[selectedIndex][8] =
-            modalCheckRef.current.getRefs()._checkOR.current;
-          selectedRow[selectedIndex][9] =
-            modalCheckRef.current.getRefs().bankCode.current;
+          let isCheckFind = selectedRow.map((itm:any)=>itm[0]).includes(modalCheckRef.current.getRefs().checknoRef.current.value)
+          if(isCheckFind){
+                  selectedRow[selectedIndex][0] =
+                  modalCheckRef.current.getRefs().checknoRef.current.value;
+                selectedRow[selectedIndex][1] =
+                  format(new Date(modalCheckRef.current.getRefs().checkdateRef.current.value), 'MM/dd/yyyy');
+                selectedRow[selectedIndex][2] = formatNumber(
+                  parseNumber(
+                    modalCheckRef.current
+                      .getRefs()
+                      .amountRef.current?.value.toString()
+                      .replace(/,/g, "")
+                  )
+                );
 
-          tableRef.current.setData(selectedRow);
-          tableRef.current.setSelectedRow(null);
-          tableRef.current.resetCheckBox();
-          setHasSelectedRow(null);
+                selectedRow[selectedIndex][3] =
+                  modalCheckRef.current.getRefs().bankRef.current.value;
+                selectedRow[selectedIndex][4] =
+                  modalCheckRef.current.getRefs().branchRef.current.value;
+                selectedRow[selectedIndex][5] =
+                  modalCheckRef.current.getRefs().remarksRef.current.value;
+                selectedRow[selectedIndex][6] =
+                  modalCheckRef.current.getRefs()._slipCodeRef.current;
+                selectedRow[selectedIndex][7] =
+                  modalCheckRef.current.getRefs()._slipDateRef.current;
+                selectedRow[selectedIndex][8] =
+                  modalCheckRef.current.getRefs()._checkOR.current;
+                selectedRow[selectedIndex][9] =
+                  modalCheckRef.current.getRefs().bankCode.current;
+
+                tableRef.current.setData(selectedRow);
+                tableRef.current.setSelectedRow(null);
+                tableRef.current.resetCheckBox();
+                setHasSelectedRow(null);
+          }
+
+          const checkCount =
+            parseInt(
+              modalCheckRef.current.getRefs()._checkcountRef.current.value
+            ) <= 0
+              ? 1
+              : parseInt(
+                  modalCheckRef.current.getRefs()._checkcountRef.current.value
+                );
+          const newData: any = [];
+          for (let i = 0; i < checkCount; i++) {
+            newData.push([
+              incrementStringNumbers(
+                modalCheckRef.current.getRefs().checknoRef.current.value,
+                i
+              ),
+              incrementDate(
+                modalCheckRef.current.getRefs().checkdateRef.current.value,
+                i
+              ),
+              formatNumber(
+                parseNumber(
+                  modalCheckRef.current
+                    .getRefs()
+                    .amountRef.current?.value.toString()
+                    .replace(/,/g, "")
+                )
+              ),
+              modalCheckRef.current.getRefs().bankRef.current.value,
+              modalCheckRef.current.getRefs().branchRef.current.value,
+              modalCheckRef.current.getRefs().remarksRef.current.value,
+              modalCheckRef.current.getRefs()._slipCodeRef.current,
+              modalCheckRef.current.getRefs()._slipDateRef.current,
+              modalCheckRef.current.getRefs()._checkOR.current,
+              modalCheckRef.current.getRefs().bankCode.current,
+            ]);
+          }
+
+          tableRef.current.setData([...tableRef.current.getData(), ...newData]);
+          
           return;
         } else {
           const checkCount =
@@ -1323,7 +1297,7 @@ export default function PostDateChecks() {
                   modalCheckRef.current.getRefs().checknoRef.current.value =
                     rowSelected[0];
                   modalCheckRef.current.getRefs().checkdateRef.current.value =
-                    rowSelected[1];
+                    format(new Date(rowSelected[1]) ,'yyyy-MM-dd');
                   modalCheckRef.current.getRefs().amountRef.current.value =
                     formatNumber(parseFloat(rowSelected[2].replace(/,/g, "")));
                   modalCheckRef.current.getRefs().bankRef.current.value =
@@ -1737,7 +1711,6 @@ const ModalCheck = forwardRef(
                   },
                 }}
                 input={{
-                  disabled: hasSelectedRow !== null,
                   type: "text",
                   style: { width: "160px" },
                   onKeyDown: (e) => {
@@ -1882,7 +1855,6 @@ const ModalCheck = forwardRef(
                 }}
                 inputRef={amountRef}
               />
-              {hasSelectedRow === null && (
                 <TextInput
                   label={{
                     title: "Check Count : ",
@@ -1905,7 +1877,6 @@ const ModalCheck = forwardRef(
                   }}
                   inputRef={_checkcountRef}
                 />
-              )}
               <div
                 style={{
                   display: "flex",
@@ -1979,4 +1950,19 @@ export function incrementCheckNo(Check_No: string) {
 
 function parseNumber(value: any) {
   return isNaN(value) || value === "" ? 0 : Number(value);
+}
+function incrementStringNumbers(str: string, increment: number) {
+  let num = parseInt(str);
+  num = num + increment;
+  return num.toString().padStart(str.length, "0");
+}
+function incrementDate(dateString: any, i: number) {
+  const currentDate = new Date(dateString);
+  currentDate.setMonth(currentDate.getMonth() + i);
+
+  return format(currentDate, "MM/dd/yyyy");
+}
+function isValidDate(dateString: string): boolean {
+  const date = new Date(dateString);
+  return date instanceof Date && !isNaN(date.getTime());
 }

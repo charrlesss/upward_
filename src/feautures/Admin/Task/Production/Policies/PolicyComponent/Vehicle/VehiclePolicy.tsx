@@ -4073,19 +4073,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
           authorizedRepairLimitRef.current.focus();
           alert("Authorized Repair Limit Required!");
           return true;
-        } else if (bodyInjuryRef.current?.value === "0.00") {
-          bodyInjuryRef.current.focus();
-          alert("Bodily Injury Required!");
-          return true;
-        } else if (propertyDamageRef.current?.value === "0.00") {
-          propertyDamageRef.current.focus();
-          alert("Property Damage Required!");
-          return true;
-        } else if (personalAccidentRef.current?.value === "0.00") {
-          personalAccidentRef.current.focus();
-          alert("Personal Accident Required!");
-          return true;
-        } else if (estimatedValueSchedVehicleRef.current?.value === "0.00") {
+        }  else if (estimatedValueSchedVehicleRef.current?.value === "0.00") {
           estimatedValueSchedVehicleRef.current.focus();
           alert("Estimated Value of Schedule Vehicle Required!");
           return true;
