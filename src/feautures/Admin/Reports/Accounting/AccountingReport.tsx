@@ -47,10 +47,12 @@ export default function AccountingReport() {
   useEffect(() => {
     if (user) {
       if (user.userAccess === "ACCOUNTING_CHECKS") {
-        setButtonList([{ label: "Post Dated Checks Registry", id: 1 }]);
+        setButtonList([{ label: "Post Dated Checks Registry", id: 10 }]);
+        setButtonSelected(10)
       }
     }
   }, [user]);
+
 
   return (
     <>

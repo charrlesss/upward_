@@ -30,7 +30,7 @@ import {
   TextFormatedInput,
   TextInput,
 } from "../../../../components/UpwardFields";
-import { format } from "date-fns";
+import { format , lastDayOfMonth } from "date-fns";
 import PageHelmet from "../../../../components/Helmet";
 import { wait } from "@testing-library/user-event/dist/utils";
 import SearchIcon from "@mui/icons-material/Search";
@@ -1956,9 +1956,12 @@ function incrementStringNumbers(str: string, increment: number) {
   num = num + increment;
   return num.toString().padStart(str.length, "0");
 }
+
 function incrementDate(dateString: any, i: number) {
   const currentDate = new Date(dateString);
   currentDate.setMonth(currentDate.getMonth() + i);
+
+  
 
   return format(currentDate, "MM/dd/yyyy");
 }
