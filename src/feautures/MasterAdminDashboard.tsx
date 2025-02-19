@@ -11,10 +11,10 @@ import { wait } from "../lib/wait";
 import Swal from "sweetalert2";
 import { AuthContext } from "../components/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { Logout } from "../components/Sidebars/Logout";
 import "../style/master-admin-dashboard.css";
 import useMultipleComponent from "../hooks/useMultipleComponent";
 import { CircularProgress } from "@mui/material";
+import { AxiosInstance } from "axios";
 
 const buttons = [
   {
@@ -56,6 +56,16 @@ const reducer = (state: any, action: any) => {
       return state;
   }
 };
+
+async function Logout(myAxios:AxiosInstance ,user:any){
+  return await myAxios.get("logout", {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      });
+  
+}
+
 
 export default function MasterAdminDashboard() {
   const { currentStepIndex, step, goTo } = useMultipleComponent([

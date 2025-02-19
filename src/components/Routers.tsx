@@ -8,7 +8,6 @@ const MasterAdminDashboard = lazy(
   () => import("../feautures/MasterAdminDashboard")
 );
 const DisplayReport = lazy(() => import("../feautures/Admin/Reports/Report"));
-const NavigatePrint = lazy(() => import("../feautures/Admin/Navigate-Print"));
 const Claims = lazy(() => import("../feautures/Admin/Task/Claims/Claims"));
 
 const RenewalTemplate = lazy(
@@ -34,9 +33,7 @@ const PostDateChecks = lazy(
 const CashDisbursement = lazy(
   () => import("../feautures/Admin/Task/Accounting/CashDisbursement")
 );
-const CheckPullout = lazy(
-  () => import("../feautures/Admin/Task/Accounting/CheckPullout")
-);
+
 
 const CheckPulloutRequest = lazy(
   () => import("../feautures/Admin/Task/Accounting/CheckPulloutRequest")
@@ -63,9 +60,7 @@ const Warehouse = lazy(
 const MonthlyAccrual = lazy(
   () => import("../feautures/Admin/Task/Accounting/MonthlyAccrual")
 );
-const ChekPostponement = lazy(
-  () => import("../feautures/Admin/Task/Accounting/ChekPostponement")
-);
+
 const ChekPostponementRequest = lazy(
   () => import("../feautures/Admin/Task/Accounting/ChekPostponementRequest")
 );
@@ -365,11 +360,7 @@ export default function Routers() {
       path={`/${department}/dashboard/task/accounting/monthly-accrual`}
       element={<MonthlyAccrual />}
     />,
-    <Route
-      key={`/${department}/dashboard/task/accounting/check-pullout`}
-      path={`/${department}/dashboard/task/accounting/check-pullout`}
-      element={<CheckPullout />}
-    />,
+
     <Route
       key={`/${department}/dashboard/task/accounting/check-pullout-request`}
       path={`/${department}/dashboard/task/accounting/check-pullout-request`}
@@ -380,11 +371,7 @@ export default function Routers() {
       path={`/${department}/dashboard/task/accounting/check-pullout-approved`}
       element={<CheckPulloutApproved />}
     />,
-    <Route
-      key={`/${department}/dashboard/task/accounting/check-postponement`}
-      path={`/${department}/dashboard/task/accounting/check-postponement`}
-      element={<ChekPostponement />}
-    />,
+ 
     <Route
       key={`/${department}/dashboard/task/accounting/check-postponement-request`}
       path={`/${department}/dashboard/task/accounting/check-postponement-request`}
@@ -541,9 +528,6 @@ export default function Routers() {
           <Route path="/dashboard/help/about" element={<About />} /> */}
         </Route>
 
-        <Route path={`/${department}/dashboard`} element={<RenderPage />}>
-          <Route path={`/${department}/dashboard/print` }element={<NavigatePrint />} />
-        </Route>
         <Route path={`/${department}/dashboard/report`} element={<DisplayReport />} />
 
         {/* Reports */}

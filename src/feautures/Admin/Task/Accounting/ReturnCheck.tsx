@@ -1374,6 +1374,13 @@ const AccountingEntry = forwardRef((props: any, ref) => {
 });
 const ModalReturnCheckEntries = forwardRef(
   ({ handleConfirm, handleCancel, hasSelectedRow }: any, ref) => {
+
+    const modalRef = useRef<HTMLDivElement>(null);
+    const isMoving = useRef(false);
+    const offset = useRef({ x: 0, y: 0 });
+
+
+
     const { user, myAxios } = useContext(AuthContext);
     const table = useRef<any>(null);
     const [showModal, setShowModal] = useState(false);
@@ -1511,6 +1518,34 @@ const ModalReturnCheckEntries = forwardRef(
       },
     ];
 
+    const handleMouseDown = (e: any) => {
+      if (!modalRef.current) return;
+
+      isMoving.current = true;
+      offset.current = {
+        x: e.clientX - modalRef.current.offsetLeft,
+        y: e.clientY - modalRef.current.offsetTop,
+      };
+
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    };
+
+    // Move modal with mouse
+    const handleMouseMove = (e: any) => {
+      if (!isMoving.current || !modalRef.current) return;
+
+      modalRef.current.style.left = `${e.clientX - offset.current.x}px`;
+      modalRef.current.style.top = `${e.clientY - offset.current.y}px`;
+    };
+
+    // Stop moving when releasing mouse
+    const handleMouseUp = () => {
+      isMoving.current = false;
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+
     return showModal ? (
       <>
         {isLoadingEntries && <Loading />}
@@ -1532,6 +1567,7 @@ const ModalReturnCheckEntries = forwardRef(
           }}
         ></div>
         <div
+        ref={modalRef}
           style={{
             height: blick ? "402px" : "400px",
             width: blick ? "60.3%" : "60%",
@@ -1557,7 +1593,10 @@ const ModalReturnCheckEntries = forwardRef(
               padding: "5px",
               position: "relative",
               alignItems: "center",
+              cursor: "grab",
+
             }}
+            onMouseDown={handleMouseDown}
           >
             <span style={{ fontSize: "13px", fontWeight: "bold" }}>
               Return Detail and Accounting Entry (Check No.: {checkNo})

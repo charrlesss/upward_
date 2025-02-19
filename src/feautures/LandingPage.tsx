@@ -116,6 +116,7 @@ export default function LandingPage() {
           <div>
             <label htmlFor="username"> USERNAME</label>
             <input
+            autoFocus={true}
               name="username"
               id="username"
               className={errors.username ? "error" : ""}

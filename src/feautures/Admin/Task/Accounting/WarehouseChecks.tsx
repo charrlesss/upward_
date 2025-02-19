@@ -1,14 +1,20 @@
-import { forwardRef, useContext, useImperativeHandle, useRef, useState } from "react";
 import {
-  Button,
-  IconButton,
-} from "@mui/material";
+  forwardRef,
+  useContext,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
+import { Button, IconButton } from "@mui/material";
 import Swal from "sweetalert2";
 import { SelectInput, TextInput } from "../../../../components/UpwardFields";
-import ManageSearchIcon from '@mui/icons-material/ManageSearch';
-import SaveAsIcon from '@mui/icons-material/SaveAs';
-import AssessmentIcon from '@mui/icons-material/Assessment';
-import { DataGridViewMultiSelectionReact, useUpwardTableModalSearch } from "../../../../components/DataGridViewReact";
+import ManageSearchIcon from "@mui/icons-material/ManageSearch";
+import SaveAsIcon from "@mui/icons-material/SaveAs";
+import AssessmentIcon from "@mui/icons-material/Assessment";
+import {
+  DataGridViewMultiSelectionReact,
+  useUpwardTableModalSearch,
+} from "../../../../components/DataGridViewReact";
 import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
 import { grey } from "@mui/material/colors";
 import CloseIcon from "@mui/icons-material/Close";
@@ -29,33 +35,33 @@ const warehouseColumn = [
   },
   { key: "Name", label: "Name", width: 300 },
   { key: "CheckDate", label: "Check Date", width: 120 },
-  { key: "Check_No", label: "Check No", width: 120, },
+  { key: "Check_No", label: "Check No", width: 120 },
   { key: "Check_Amnt", label: "Check Amount", width: 120 },
   { key: "Bank", label: "Bank", width: 300 },
   { key: "PDC_Status", label: "PDC Status", width: 120 },
-]
+];
 export default function WarehouseChecks() {
-  const table = useRef<any>(null)
-  const modalCheckRef = useRef<any>(null)
-  const refPDCStatus = useRef<HTMLSelectElement>(null)
-  const refRemarks = useRef<HTMLSelectElement>(null)
-  const refSearch = useRef<HTMLSelectElement>(null)
-  const refIDS = useRef<HTMLInputElement>(null)
+  const table = useRef<any>(null);
+  const modalCheckRef = useRef<any>(null);
+  const refPDCStatus = useRef<HTMLSelectElement>(null);
+  const refRemarks = useRef<HTMLSelectElement>(null);
+  const refSearch = useRef<HTMLSelectElement>(null);
+  const refIDS = useRef<HTMLInputElement>(null);
   const [monitoring, setMonitoring] = useState({
     check: "0",
     unCheck: "0",
-    found: "0"
-  })
-  const [warehouseMode, setWarehouseMode] = useState('')
-  const { executeQueryToClient } = useExecuteQueryFromClient()
+    found: "0",
+  });
+  const [warehouseMode, setWarehouseMode] = useState("");
+  const { executeQueryToClient } = useExecuteQueryFromClient();
 
   const {
     UpwardTableModalSearch: UpwardTableModalSearchPNNo,
     openModal: openPNNo,
-    closeModal: closePNNo
+    closeModal: closePNNo,
   } = useUpwardTableModalSearch({
     customWidth: (blink: any) => {
-      return blink ? "751px" : "750px"
+      return blink ? "751px" : "750px";
     },
     column: [
       { key: "Date", label: "Date", width: 115 },
@@ -97,23 +103,23 @@ export default function WarehouseChecks() {
         )
         ORDER BY Policy.DateIssued desc
         LIMIT 500
-        `
-      return StrQry
+        `;
+      return StrQry;
     },
     getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
       if (refIDS.current) {
-        refIDS.current.value = rowItm[1]
+        refIDS.current.value = rowItm[1];
       }
-      closePNNo()
-    }
-  })
+      closePNNo();
+    },
+  });
   const {
     UpwardTableModalSearch: UpwardTableModalSearchData,
     openModal: openData,
-    closeModal: closeData
+    closeModal: closeData,
   } = useUpwardTableModalSearch({
     customWidth: (blink: any) => {
-      return blink ? "601px" : "600px"
+      return blink ? "601px" : "600px";
     },
     column: [
       { key: "IDNo", label: "I.D. No.", width: 115 },
@@ -129,7 +135,6 @@ export default function WarehouseChecks() {
       },
     ],
     query: (search: string) => {
-
       const StrQry = `
       SELECT  
         IDNo AS IDNo, 
@@ -141,24 +146,24 @@ export default function WarehouseChecks() {
       IDNo LIKE '%${search}%' OR  
       Shortname LIKE '%${search}%')
       ORDER BY Shortname
-      limit 500`
+      limit 500`;
 
-      return StrQry
+      return StrQry;
     },
     getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
       if (refIDS.current) {
-        refIDS.current.value = rowItm[0]
+        refIDS.current.value = rowItm[0];
       }
-      closeData()
-    }
-  })
+      closeData();
+    },
+  });
   const {
     UpwardTableModalSearch: UpwardTableModalSearchBank,
     openModal: openBank,
-    closeModal: closeBank
+    closeModal: closeBank,
   } = useUpwardTableModalSearch({
     customWidth: (blink: any) => {
-      return blink ? "501px" : "500px"
+      return blink ? "501px" : "500px";
     },
     column: [
       { key: "Code", label: "Code", width: 115 },
@@ -180,17 +185,21 @@ export default function WarehouseChecks() {
        Bank LIKE '%${search}%') 
        ORDER BY Bank
        limit 500 
-       `
-      return StrQry
+       `;
+      return StrQry;
     },
     getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
       if (refIDS.current) {
-        refIDS.current.value = rowItm[0]
+        refIDS.current.value = rowItm[0];
       }
-      closeBank()
-    }
-  })
-  async function LoadPDC(fldSearch: string, valSearch: string, StrWhere: string) {
+      closeBank();
+    },
+  });
+  async function LoadPDC(
+    fldSearch: string,
+    valSearch: string,
+    StrWhere: string
+  ) {
     const qry = `
       SELECT 
         PNo, 
@@ -203,26 +212,26 @@ export default function WarehouseChecks() {
         Bank, 
         PDC_Status
       FROM PDC 
-      WHERE ${fldSearch} = '${valSearch}'  AND ${StrWhere} ORDER BY Check_Date`
-    const dt = await executeQueryToClient(qry)
+      WHERE ${fldSearch} = '${valSearch}'  AND ${StrWhere} ORDER BY Check_Date`;
+    const dt = await executeQueryToClient(qry);
     if (dt.data) {
       if (dt.data.data.length > 0) {
-        table.current.resetTable([])
-        table.current.setDataFormated(dt.data.data)
-        table.current.setIsTableSelectable(true)
+        table.current.resetTable([]);
+        table.current.setDataFormated(dt.data.data);
+        table.current.setIsTableSelectable(true);
         setMonitoring({
           check: "0",
           unCheck: `${dt.data.data.length}`,
-          found: `${dt.data.data.length}`
-        })
+          found: `${dt.data.data.length}`,
+        });
       }
     }
   }
   function tsbSearch_Click() {
-    if (refIDS.current && refIDS.current.value === '') {
-      alert('Type field you want to search!')
+    if (refIDS.current && refIDS.current.value === "") {
+      alert("Type field you want to search!");
       refIDS.current?.focus();
-      return
+      return;
     }
 
     // if ((refSearch.current && refSearch.current.selectedIndex === 2 || refSearch.current?.selectedIndex === 4) && !isValidDate(refIDS.current?.value as string)) {
@@ -231,9 +240,7 @@ export default function WarehouseChecks() {
     //   return;
     // }
 
-
     if (refPDCStatus.current && refIDS.current && refSearch.current) {
-
       let strWhere = "";
       const statusOptions = ["Received", "Stored", "Stored"];
       const selectedIndex = refPDCStatus.current.selectedIndex;
@@ -248,49 +255,57 @@ export default function WarehouseChecks() {
       }
 
       const searchField = refSearch.current.value;
-      const searchValue = refIDS.current.value.trim()
+      const searchValue = refIDS.current.value.trim();
       LoadPDC(searchField, searchValue, strWhere);
     }
-
   }
   function tsbOpen_Click() {
     if (refSearch.current) {
       if (refSearch.current.selectedIndex === 1) {
-        openPNNo()
+        openPNNo();
       } else if (refSearch.current.selectedIndex === 2) {
-        openData()
+        openData();
       } else if (refSearch.current.selectedIndex === 3) {
-        openBank()
+        openBank();
       }
       if (refIDS.current) {
-        refIDS.current.value = ''
+        refIDS.current.value = "";
       }
     }
-
-
   }
   function hanldeOnSave() {
-    if (refPDCStatus.current?.selectedIndex === 2 && refRemarks.current?.selectedIndex === 0) {
-      refRemarks.current.focus()
-      return alert("Please provide remarks!")
-    } else if (monitoring.found === '0') {
-      return alert("No current record!")
-    } else if (monitoring.check === '0') {
-      return alert("Please select from list!")
+    if (
+      refPDCStatus.current?.selectedIndex === 2 &&
+      refRemarks.current?.selectedIndex === 0
+    ) {
+      refRemarks.current.focus();
+      return alert("Please provide remarks!");
+    } else if (monitoring.found === "0") {
+      return alert("No current record!");
+    } else if (monitoring.check === "0") {
+      return alert("Please select from list!");
     } else {
-      const texts = ["store in warehouse?", "endorse for deposit?", "pulled out?"]
+      const texts = [
+        "store in warehouse?",
+        "endorse for deposit?",
+        "pulled out?",
+      ];
       if (refPDCStatus.current) {
         Swal.fire({
-          title: `Do you want the check(s) to be ${texts[refPDCStatus.current.selectedIndex]}`,
+          title: `Do you want the check(s) to be ${
+            texts[refPDCStatus.current.selectedIndex]
+          }`,
           text: "",
           icon: "warning",
           showCancelButton: true,
           confirmButtonColor: "#3085d6",
           cancelButtonColor: "#d33",
-          confirmButtonText: `${capitalizeWords(texts[refPDCStatus.current.selectedIndex])}`
+          confirmButtonText: `${capitalizeWords(
+            texts[refPDCStatus.current.selectedIndex]
+          )}`,
         }).then(async (result) => {
           if (result.isConfirmed) {
-            const tableDataSelected = table.current.getSelectedRowsData()
+            const tableDataSelected = table.current.getSelectedRowsData();
             if (refPDCStatus.current) {
               if (refPDCStatus.current.selectedIndex === 2) {
                 for (const itm of tableDataSelected) {
@@ -298,29 +313,35 @@ export default function WarehouseChecks() {
                   *
                   from Pullout_Request POR 
                   left join PullOut_Request_Details PORD on por.RCPNo = pord.RCPNo 
-                  where PNNo ='${itm[0]}' and  checkNo ='${itm[5]}' and status ='APPROVED'`
-                  const dt = await executeQueryToClient(qry)
+                  where PNNo ='${itm[0]}' and  checkNo ='${itm[5]}' and status ='APPROVED'`;
+                  const dt = await executeQueryToClient(qry);
                   if (dt.data?.data.length <= 0) {
-                    alert(`PN No. : ${itm[0]} Check No.: ${itm[5]} don't have pullout approval!`)
-                    return
+                    alert(
+                      `PN No. : ${itm[0]} Check No.: ${itm[5]} don't have pullout approval!`
+                    );
+                    return;
                   }
                 }
               }
             }
 
-
-            const status1 = ["Stored", "Endorsed", "Pulled Out"]
-            const status2 = ["Date_Stored", "Date_Endorsed", "Date_Pulled_Out"]
+            const status1 = ["Stored", "Endorsed", "Pulled Out"];
+            const status2 = ["Date_Stored", "Date_Endorsed", "Date_Pulled_Out"];
 
             for (const itm of tableDataSelected) {
               if (refPDCStatus.current && refRemarks.current) {
-
                 const qry = `
                  UPDATE 
                 PDC SET 
-                  PDC_Status = '${status1[refPDCStatus.current.selectedIndex]}' ,
+                  PDC_Status = '${
+                    status1[refPDCStatus.current.selectedIndex]
+                  }' ,
                   ${status2[refPDCStatus.current.selectedIndex]} = now() 
-                  ${refPDCStatus.current.selectedIndex === 2 ? `, PDC_Remarks = '${refRemarks.current.value}'` : ""}
+                  ${
+                    refPDCStatus.current.selectedIndex === 2
+                      ? `, PDC_Remarks = '${refRemarks.current.value}'`
+                      : ""
+                  }
                 WHERE 
                   PNo = '${itm[0]}' AND 
                   IDNo = '${itm[1]}' AND 
@@ -331,25 +352,27 @@ export default function WarehouseChecks() {
                   Check_Amnt = '${itm[6]}' AND 
                   Bank = '${itm[7]}' AND 
                   PDC_Status = '${itm[8]}'
-                `
-                await executeQueryToClient(qry)
+                `;
+                await executeQueryToClient(qry);
               }
-
             }
             if (refPDCStatus.current && refRemarks.current) {
-              const dd = ["Stored In Warehouse!", "Endorsed for Deposit!", `Pulled Out As ${refRemarks.current.value}`]
+              const dd = [
+                "Stored In Warehouse!",
+                "Endorsed for Deposit!",
+                `Pulled Out As ${refRemarks.current.value}`,
+              ];
               Swal.fire({
                 text: `Successfully ${dd[refPDCStatus.current.selectedIndex]}`,
                 icon: "success",
-                timer: 1500
+                timer: 1500,
               }).then(async () => {
                 if (!table.current.isTableSelectable) {
-
-                  onClickNew()
-                  return
+                  onClickNew();
+                  return;
                 }
-                tsbSearch_Click()
-              })
+                tsbSearch_Click();
+              });
             }
           }
         });
@@ -358,38 +381,37 @@ export default function WarehouseChecks() {
   }
   function updateMonitoring() {
     setTimeout(() => {
-      const selectedRows = table.current.getSelectedRow()
-      const getData = table.current.getData()
+      const selectedRows = table.current.getSelectedRow();
+      const getData = table.current.getData();
       setMonitoring({
         check: selectedRows.length.toString(),
         unCheck: (getData.length - selectedRows.length).toString(),
-        found: getData.length.toString()
-      })
-    }, 100)
+        found: getData.length.toString(),
+      });
+    }, 100);
   }
   function onClickNew() {
     if (refPDCStatus.current) {
-      refPDCStatus.current.disabled = false
-      refPDCStatus.current.selectedIndex = 0
+      refPDCStatus.current.disabled = false;
+      refPDCStatus.current.selectedIndex = 0;
     }
 
     if (refSearch.current) {
-      refSearch.current.disabled = false
-      refSearch.current.selectedIndex = 0
-
+      refSearch.current.disabled = false;
+      refSearch.current.selectedIndex = 0;
     }
     if (refRemarks.current) {
-      refRemarks.current.disabled = true
-      refRemarks.current.selectedIndex = 0
+      refRemarks.current.disabled = true;
+      refRemarks.current.selectedIndex = 0;
     }
 
     if (refIDS.current) {
-      refIDS.current.disabled = false
-      refIDS.current.value = ''
+      refIDS.current.disabled = false;
+      refIDS.current.value = "";
     }
 
-    table.current.resetTable()
-    setWarehouseMode('add')
+    table.current.resetTable();
+    setWarehouseMode("add");
   }
   function onClickCancel() {
     Swal.fire({
@@ -399,54 +421,58 @@ export default function WarehouseChecks() {
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
-      confirmButtonText: `Yes Cancel it!`
+      confirmButtonText: `Yes Cancel it!`,
     }).then(async (result) => {
       if (result.isConfirmed) {
         if (refPDCStatus.current) {
-          refPDCStatus.current.disabled = true
-          refPDCStatus.current.selectedIndex = 0
+          refPDCStatus.current.disabled = true;
+          refPDCStatus.current.selectedIndex = 0;
         }
 
         if (refSearch.current) {
-          refSearch.current.disabled = true
-          refSearch.current.selectedIndex = 0
-
+          refSearch.current.disabled = true;
+          refSearch.current.selectedIndex = 0;
         }
         if (refRemarks.current) {
-          refRemarks.current.disabled = true
-          refRemarks.current.selectedIndex = 0
+          refRemarks.current.disabled = true;
+          refRemarks.current.selectedIndex = 0;
         }
 
         if (refIDS.current) {
-          refIDS.current.disabled = true
-          refIDS.current.value = ''
+          refIDS.current.disabled = true;
+          refIDS.current.value = "";
         }
 
-        table.current.resetTable()
-        setWarehouseMode('')
+        table.current.resetTable();
+        setWarehouseMode("");
       }
-    })
-
+    });
   }
 
   return (
-    <div style={{
-      padding: "10px",
-      flex: 1,
-    }}>
-        <PageHelmet title="Treasury" />
+    <div
+      style={{
+        padding: "10px",
+        flex: 1,
+      }}
+    >
+      <PageHelmet title="Treasury" />
       <UpwardTableModalSearchPNNo />
       <UpwardTableModalSearchData />
       <UpwardTableModalSearchBank />
-      <div style={{
-        display: "flex",
-        flexDirection: "column",
-        rowGap: "10px",
-        flex: 1,
-        width: "100%",
-        height: "100%"
-      }}>
-        <div style={{ display: "flex", columnGap: "10px", alignItems: "center" }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          rowGap: "10px",
+          flex: 1,
+          width: "100%",
+          height: "100%",
+        }}
+      >
+        <div
+          style={{ display: "flex", columnGap: "10px", alignItems: "center" }}
+        >
           <SelectInput
             label={{
               title: "PDC Status: ",
@@ -462,25 +488,25 @@ export default function WarehouseChecks() {
               style: { width: "220px", height: "22px" },
               defaultValue: "Store in Warehouse",
               onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                  e.preventDefault()
-                  refRemarks.current?.focus()
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  e.preventDefault();
+                  refRemarks.current?.focus();
                 }
               },
               onChange: (e) => {
                 if (e.target.selectedIndex !== 2) {
                   if (refRemarks.current) {
-                    refRemarks.current.selectedIndex = 0
+                    refRemarks.current.selectedIndex = 0;
                   }
                 } else {
                   if (refRemarks.current) {
-                    refRemarks.current.selectedIndex = 1
+                    refRemarks.current.selectedIndex = 1;
                   }
                 }
                 if (refRemarks.current) {
-                  refRemarks.current.disabled = e.target.selectedIndex !== 2
+                  refRemarks.current.disabled = e.target.selectedIndex !== 2;
                 }
-              }
+              },
             }}
             datasource={[
               { key: "Store in Warehouse" },
@@ -497,7 +523,7 @@ export default function WarehouseChecks() {
                 fontSize: "12px",
                 fontWeight: "bold",
                 width: "80px",
-                marginLeft: "10px"
+                marginLeft: "10px",
               },
             }}
             selectRef={refRemarks}
@@ -506,11 +532,11 @@ export default function WarehouseChecks() {
               style: { width: "190px", height: "22px" },
               defaultValue: "",
               onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                  e.preventDefault()
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  e.preventDefault();
                   //  refInvoice.current?.focus()
                 }
-              }
+              },
             }}
             datasource={[
               { key: "" },
@@ -525,18 +551,20 @@ export default function WarehouseChecks() {
             display={"key"}
           />
           <Button
-            disabled={warehouseMode === 'add'}
+            disabled={warehouseMode === "add"}
             sx={{
               height: "23px",
               fontSize: "11px",
-              marginLeft: "10px"
+              marginLeft: "10px",
             }}
             variant="contained"
             color="info"
             onClick={onClickNew}
-          >New</Button>
+          >
+            New
+          </Button>
           <Button
-            disabled={warehouseMode !== 'add'}
+            disabled={warehouseMode !== "add"}
             sx={{
               height: "23px",
               fontSize: "11px",
@@ -544,15 +572,19 @@ export default function WarehouseChecks() {
             variant="contained"
             color="error"
             onClick={onClickCancel}
-          >Cancel</Button>
+          >
+            Cancel
+          </Button>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           <div style={{ display: "flex", columnGap: "10px" }}>
-            <div style={{
-              display: "flex",
-              columnGap: "3px",
-              alignItems: "center"
-            }}>
+            <div
+              style={{
+                display: "flex",
+                columnGap: "3px",
+                alignItems: "center",
+              }}
+            >
               <SelectInput
                 label={{
                   title: "Search: ",
@@ -568,8 +600,8 @@ export default function WarehouseChecks() {
                   style: { width: "190px", height: "22px" },
                   defaultValue: "",
                   onKeyDown: (e) => {
-                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                      e.preventDefault()
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      e.preventDefault();
                     }
                   },
                 }}
@@ -591,7 +623,7 @@ export default function WarehouseChecks() {
                 label={{
                   title: "",
                   style: {
-                    display: "none"
+                    display: "none",
                   },
                 }}
                 input={{
@@ -599,10 +631,10 @@ export default function WarehouseChecks() {
                   type: "text",
                   style: { width: "235px", height: "22px" },
                   onKeyDown: (e) => {
-                    if (e.code === "NumpadEnter" || e.code === 'Enter') {
-                      tsbSearch_Click()
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      tsbSearch_Click();
                     }
-                  }
+                  },
                 }}
                 inputRef={refIDS}
               />
@@ -610,7 +642,14 @@ export default function WarehouseChecks() {
                 <ManageSearchIcon />
               </IconButton>
             </div>
-            <div style={{ display: "flex", columnGap: "8px", borderLeft: "1px solid #64748b", paddingLeft: "10px" }}>
+            <div
+              style={{
+                display: "flex",
+                columnGap: "8px",
+                borderLeft: "1px solid #64748b",
+                paddingLeft: "10px",
+              }}
+            >
               <IconButton size="small" onClick={hanldeOnSave}>
                 <SaveAsIcon color="success" />
               </IconButton>
@@ -628,16 +667,18 @@ export default function WarehouseChecks() {
                 bgcolor: grey[600],
                 "&:hover": {
                   bgcolor: grey[700],
-                }
+                },
               }}
               variant="contained"
               onClick={() => {
-                modalCheckRef.current?.showModal()
+                modalCheckRef.current?.showModal();
                 wait(100).then(() => {
-                  modalCheckRef.current?.mutate()
-                })
+                  modalCheckRef.current?.mutate();
+                });
               }}
-            >Check for pull-out</Button>
+            >
+              Check for pull-out
+            </Button>
           </div>
         </div>
         <div style={{ flex: 1 }}>
@@ -646,37 +687,62 @@ export default function WarehouseChecks() {
             columns={warehouseColumn}
             containerStyle={{
               flex: 1,
-              height: "calc(100% - 30px)"
+              height: "calc(100% - 30px)",
             }}
             getSelectedItem={(rowItm: any, rowIdx: any) => {
-              updateMonitoring()
+              updateMonitoring();
             }}
             onCheckAll={() => {
-              const getData = table.current.getData()
-              table.current.setSelectedRow(getData.map((itm: any, idx: any) => idx))
-              updateMonitoring()
+              const getData = table.current.getData();
+              table.current.setSelectedRow(
+                getData.map((itm: any, idx: any) => idx)
+              );
+              updateMonitoring();
             }}
             onUnCheckAll={() => {
-              updateMonitoring()
-              table.current.setSelectedRow([])
+              updateMonitoring();
+              table.current.setSelectedRow([]);
             }}
           />
-          <div style={{
-            height: "30px",
-            display: "flex",
-            justifyContent: "space-between",
-            padding: "0 50px",
-            alignItems: "center"
-          }}>
-            <div style={{ display: "flex", columnGap: "10px", fontSize: "13px", fontWeight: "bold" }}>
+          <div
+            style={{
+              height: "30px",
+              display: "flex",
+              justifyContent: "space-between",
+              padding: "0 50px",
+              alignItems: "center",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                columnGap: "10px",
+                fontSize: "13px",
+                fontWeight: "bold",
+              }}
+            >
               <span>Check:</span>
               <span>{monitoring.check}</span>
             </div>
-            <div style={{ display: "flex", columnGap: "10px", fontSize: "13px", fontWeight: "bold" }}>
+            <div
+              style={{
+                display: "flex",
+                columnGap: "10px",
+                fontSize: "13px",
+                fontWeight: "bold",
+              }}
+            >
               <span>Uncheck:</span>
               <span>{monitoring.unCheck}</span>
             </div>
-            <div style={{ display: "flex", columnGap: "10px", fontSize: "13px", fontWeight: "bold" }}>
+            <div
+              style={{
+                display: "flex",
+                columnGap: "10px",
+                fontSize: "13px",
+                fontWeight: "bold",
+              }}
+            >
               <span>Record Found:</span>
               <span>{monitoring.found}</span>
             </div>
@@ -686,22 +752,30 @@ export default function WarehouseChecks() {
       <ModalCheck
         ref={modalCheckRef}
         handleOnSave={() => {
-          const refs = modalCheckRef.current.getRefs()
-
+          const refs = modalCheckRef.current.getRefs();
         }}
-        handleOnClose={() => {
-
-        }}
+        handleOnClose={() => {}}
         getSelectedItem={async (rowItm: any) => {
           if (rowItm) {
-            if (refPDCStatus.current && refPDCStatus.current.value !== 'Pull Out') {
-              return alert('Status should be for pull-out!')
+            if (
+              refPDCStatus.current &&
+              refPDCStatus.current.value !== "Pull Out"
+            ) {
+              return alert("Status should be for pull-out!");
             }
-            if (refRemarks.current && (refRemarks.current.value === null || refRemarks.current.value === '')) {
-              return alert('No remarks selected!')
+            if (
+              refRemarks.current &&
+              (refRemarks.current.value === null ||
+                refRemarks.current.value === "")
+            ) {
+              return alert("No remarks selected!");
             }
-            if (refSearch.current && (refSearch.current.value === null || refSearch.current.value === '')) {
-              return alert('Please enter ID!')
+            if (
+              refSearch.current &&
+              (refSearch.current.value === null ||
+                refSearch.current.value === "")
+            ) {
+              return alert("Please enter ID!");
             }
             const { data: response } = await executeQueryToClient(`
               Select 
@@ -709,154 +783,176 @@ export default function WarehouseChecks() {
               From PullOut_Request a 
               Inner join PullOut_Request_Details b  on a.RCPNo = b.RCPNo 
               Where a.Status = 'APPROVED' 
-              And a.RCPNo = '${rowItm[1]}'`)
+              And a.RCPNo = '${rowItm[1]}'`);
 
-            const dr = response.data.map((itm: any) => itm.CheckNo)
+            const dr = response.data.map((itm: any) => itm.CheckNo);
             if (dr.length > 0) {
               if (refPDCStatus.current) {
-                refPDCStatus.current.value = 'Pull Out'
+                refPDCStatus.current.value = "Pull Out";
               }
               if (refSearch.current) {
-                refSearch.current.value = 'PNo'
+                refSearch.current.value = "PNo";
               }
               if (refRemarks.current) {
-                refRemarks.current.value = rowItm[5]
+                refRemarks.current.value = rowItm[5];
               }
               if (refIDS.current) {
-                refIDS.current.value = rowItm[2]
+                refIDS.current.value = rowItm[2];
               }
-              tsbSearch_Click()
+              tsbSearch_Click();
               wait(100).then(() => {
-                const getData = table.current.getData()
+                const getData = table.current.getData();
                 const selected = getData.map((itm: any, idx: number) => {
                   if (dr.includes(itm[5])) {
-                    return idx
+                    return idx;
                   }
-                  return null
-                })
+                  return null;
+                });
 
-                table.current.setSelectedRow(selected)
-                table.current.setIsTableSelectable(false)
-                table.current.setSelectedRow(getData.map((itm: any, idx: any) => idx))
+                table.current.setSelectedRow(selected);
+                table.current.setIsTableSelectable(false);
+                table.current.setSelectedRow(
+                  getData.map((itm: any, idx: any) => idx)
+                );
                 setMonitoring({
                   check: dr.length,
                   unCheck: `${getData.length - dr.length}`,
-                  found: getData.length
-                })
-              })
-
+                  found: getData.length,
+                });
+              });
             } else {
-              return alert('No request for pull-out!')
+              return alert("No request for pull-out!");
             }
           } else {
-
           }
 
-          modalCheckRef.current.closeDelay()
+          modalCheckRef.current.closeDelay();
         }}
       />
     </div>
-  )
-
+  );
 }
 
-const ModalCheck = forwardRef(({
-  handleOnSave,
-  handleOnClose,
-  getSelectedItem
-}: any, ref) => {
-  const { user, myAxios } = useContext(AuthContext)
-  const [showModal, setShowModal] = useState(false)
-  const [handleDelayClose, setHandleDelayClose] = useState(false)
-  const [blick, setBlick] = useState(false)
+const ModalCheck = forwardRef(
+  ({ handleOnSave, handleOnClose, getSelectedItem }: any, ref) => {
+    const modalRef = useRef<HTMLDivElement>(null);
+    const isMoving = useRef(false);
+    const offset = useRef({ x: 0, y: 0 });
 
-  const table = useRef<any>(null)
-  const rcpnRef = useRef<HTMLSelectElement>(null)
+    const { user, myAxios } = useContext(AuthContext);
+    const [showModal, setShowModal] = useState(false);
+    const [handleDelayClose, setHandleDelayClose] = useState(false);
+    const [blick, setBlick] = useState(false);
 
-  const closeDelay = () => {
-    setHandleDelayClose(true)
-    setTimeout(() => {
-      setShowModal(false)
-      setHandleDelayClose(false)
-      handleOnClose()
-    }, 100)
-  }
-  useImperativeHandle(ref, () => ({
+    const table = useRef<any>(null);
+    const rcpnRef = useRef<HTMLSelectElement>(null);
 
-    showModal: () => {
-      setShowModal(true)
+    const closeDelay = () => {
+      setHandleDelayClose(true);
+      setTimeout(() => {
+        setShowModal(false);
+        setHandleDelayClose(false);
+        handleOnClose();
+      }, 100);
+    };
+    useImperativeHandle(ref, () => ({
+      showModal: () => {
+        setShowModal(true);
+      },
+      clsoeModal: () => {
+        setShowModal(false);
+      },
+      getRefs: () => {
+        const refs = {
+          rcpnRef,
+        };
+        return refs;
+      },
+      mutate: () => {
+        mutate({ RCPNo: rcpnRef.current?.value });
+      },
+      closeDelay,
+    }));
+    const {
+      isLoading: isLoadingLoadRequestNumber,
+      data: dataLoadRequestNumber,
+    } = useQuery({
+      queryKey: "get-pullout-rcpno",
+      queryFn: async () =>
+        await myAxios.get(`/task/accounting/warehouse/get-pullout-rcpno`, {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }),
+    });
+    const { isLoading: isLoading, mutate: mutate } = useMutation({
+      mutationKey: "load-list",
+      mutationFn: async (variable: any) =>
+        await myAxios.post(`/task/accounting/warehouse/load-list`, variable, {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }),
+      onSuccess(res) {
+        table.current.setDataFormated(
+          res.data.list.map((itm: any, idx: number) => {
+            return {
+              row_count: idx + 1,
+              ...itm,
+            };
+          })
+        );
+      },
+    });
+    const handleMouseDown = (e: any) => {
+      if (!modalRef.current) return;
 
-    },
-    clsoeModal: () => {
-      setShowModal(false)
-    },
-    getRefs: () => {
-      const refs = {
-        rcpnRef
-      }
-      return refs
-    },
-    mutate: () => {
-      mutate({ RCPNo: rcpnRef.current?.value })
-    },
-    closeDelay
+      isMoving.current = true;
+      offset.current = {
+        x: e.clientX - modalRef.current.offsetLeft,
+        y: e.clientY - modalRef.current.offsetTop,
+      };
 
-  }))
-  const {
-    isLoading: isLoadingLoadRequestNumber,
-    data: dataLoadRequestNumber,
-  } = useQuery({
-    queryKey: 'get-pullout-rcpno',
-    queryFn: async () =>
-      await myAxios.get(`/task/accounting/warehouse/get-pullout-rcpno`, {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      }),
-  });
-  const {
-    isLoading: isLoading,
-    mutate: mutate
-  } = useMutation({
-    mutationKey: 'load-list',
-    mutationFn: async (variable: any) =>
-      await myAxios.post(`/task/accounting/warehouse/load-list`, variable, {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      }),
-    onSuccess(res) {
-      table.current.setDataFormated(res.data.list.map((itm: any, idx: number) => {
-        return {
-          row_count: idx + 1,
-          ...itm
-        }
-      }))
-    },
-  });
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    };
 
-  return (
-    showModal ?
+    // Move modal with mouse
+    const handleMouseMove = (e: any) => {
+      if (!isMoving.current || !modalRef.current) return;
+
+      modalRef.current.style.left = `${e.clientX - offset.current.x}px`;
+      modalRef.current.style.top = `${e.clientY - offset.current.y}px`;
+    };
+
+    // Stop moving when releasing mouse
+    const handleMouseUp = () => {
+      isMoving.current = false;
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+    return showModal ? (
       <>
-        <div style={{
-          position: "fixed",
-          top: 0,
-          bottom: 0,
-          left: 0,
-          right: 0,
-          background: "transparent",
-          zIndex: "88"
-        }}
-          onClick={() => {
-            setBlick(true)
-            setTimeout(() => {
-              setBlick(false)
-            }, 250)
-          }}
-
-        ></div>
-        {(isLoading) && <Loading />}
         <div
+          style={{
+            position: "fixed",
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            background: "transparent",
+            zIndex: "88",
+          }}
+          onClick={() => {
+            setBlick(true);
+            setTimeout(() => {
+              setBlick(false);
+            }, 250);
+          }}
+        ></div>
+        {isLoading && <Loading />}
+        <div
+          ref={modalRef}
           style={{
             height: blick ? "402px" : "400px",
             width: blick ? "60.3%" : "60%",
@@ -870,8 +966,9 @@ const ModalCheck = forwardRef(({
             zIndex: handleDelayClose ? -100 : 100,
             opacity: handleDelayClose ? 0 : 1,
             transition: "all 150ms",
-            boxShadow: '3px 6px 32px -7px rgba(0,0,0,0.75)'
-          }}>
+            boxShadow: "3px 6px 32px -7px rgba(0,0,0,0.75)",
+          }}
+        >
           <div
             style={{
               height: "22px",
@@ -880,11 +977,14 @@ const ModalCheck = forwardRef(({
               justifyContent: "space-between",
               padding: "5px",
               position: "relative",
-              alignItems: "center"
-
+              alignItems: "center",
+              cursor: "grab",
             }}
+            onMouseDown={handleMouseDown}
           >
-            <span style={{ fontSize: "13px", fontWeight: "bold" }}>Pull Out Viewer</span>
+            <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+              Pull Out Viewer
+            </span>
             <button
               className="btn-check-exit-modal"
               style={{
@@ -895,10 +995,10 @@ const ModalCheck = forwardRef(({
                 height: "22px",
                 position: "absolute",
                 top: 0,
-                right: 0
+                right: 0,
               }}
               onClick={() => {
-                closeDelay()
+                closeDelay();
               }}
             >
               <CloseIcon sx={{ fontSize: "22px" }} />
@@ -912,54 +1012,56 @@ const ModalCheck = forwardRef(({
               display: "flex",
             }}
           >
-            <div style={{
-              width: "100%",
-              display: "flex",
-              flexDirection: "column",
-              rowGap: "5px",
-              padding: "10px",
-            }}>
-              {
-                isLoadingLoadRequestNumber ?
-                  <LoadingButton loading={isLoadingLoadRequestNumber} />
-                  : <div
-                    style={{
-                      width: "100%",
-                      marginBottom: "8px"
-                    }}>
-                    <SelectInput
-                      label={{
-                        title: "RCP No.  : ",
-                        style: {
-                          fontSize: "12px",
-                          fontWeight: "bold",
-                          width: "100px",
-                        },
-                      }}
-                      selectRef={rcpnRef}
-                      select={{
-                        style: { flex: 1, height: "22px" },
-                        defaultValue: "Non-VAT",
-                        onChange: async (e) => {
-                          mutate({ RCPNo: e.currentTarget.value })
-                        },
-                        onKeyDown: (e) => {
-                          if (e.key === 'Enter' || e.key === 'NumpadEnter') {
-                            mutate({ RCPNo: e.currentTarget.value })
-                          }
+            <div
+              style={{
+                width: "100%",
+                display: "flex",
+                flexDirection: "column",
+                rowGap: "5px",
+                padding: "10px",
+              }}
+            >
+              {isLoadingLoadRequestNumber ? (
+                <LoadingButton loading={isLoadingLoadRequestNumber} />
+              ) : (
+                <div
+                  style={{
+                    width: "100%",
+                    marginBottom: "8px",
+                  }}
+                >
+                  <SelectInput
+                    label={{
+                      title: "RCP No.  : ",
+                      style: {
+                        fontSize: "12px",
+                        fontWeight: "bold",
+                        width: "100px",
+                      },
+                    }}
+                    selectRef={rcpnRef}
+                    select={{
+                      style: { flex: 1, height: "22px" },
+                      defaultValue: "Non-VAT",
+                      onChange: async (e) => {
+                        mutate({ RCPNo: e.currentTarget.value });
+                      },
+                      onKeyDown: (e) => {
+                        if (e.key === "Enter" || e.key === "NumpadEnter") {
+                          mutate({ RCPNo: e.currentTarget.value });
                         }
-
-                      }}
-                      containerStyle={{
-                        width: "300px",
-                        marginBottom: "12px"
-                      }}
-                      datasource={dataLoadRequestNumber?.data.rcpn}
-                      values={"RCPNo"}
-                      display={"RCPNo"}
-                    />
-                  </div>
-              }
+                      },
+                    }}
+                    containerStyle={{
+                      width: "300px",
+                      marginBottom: "12px",
+                    }}
+                    datasource={dataLoadRequestNumber?.data.rcpn}
+                    values={"RCPNo"}
+                    display={"RCPNo"}
+                  />
+                </div>
+              )}
               <DataGridViewMultiSelectionReact
                 ref={table}
                 columns={[
@@ -975,21 +1077,27 @@ const ModalCheck = forwardRef(({
                   flex: 1,
                 }}
                 getSelectedItem={(rowItm: any) => {
-                  getSelectedItem(rowItm)
+                  getSelectedItem(rowItm);
                 }}
                 onCheckAll={() => {
-                  const getData = table.current.getData()
+                  const getData = table.current.getData();
                   const filteredData = getData.map((itm: any, idx: number) => {
-                    if (itm.RCPNO !== "--" && itm.RCPNO !== "" && itm.Status !== 'APPROVED') {
-                      return idx
+                    if (
+                      itm.RCPNO !== "--" &&
+                      itm.RCPNO !== "" &&
+                      itm.Status !== "APPROVED"
+                    ) {
+                      return idx;
                     }
-                    return null
-                  })
-                  const selectedRows = filteredData.filter((itm: any) => itm !== null)
-                  table.current.setSelectedRow(selectedRows)
+                    return null;
+                  });
+                  const selectedRows = filteredData.filter(
+                    (itm: any) => itm !== null
+                  );
+                  table.current.setSelectedRow(selectedRows);
                 }}
                 onUnCheckAll={() => {
-                  table.current.setSelectedRow([])
+                  table.current.setSelectedRow([]);
                 }}
               />
             </div>
@@ -1004,18 +1112,18 @@ const ModalCheck = forwardRef(({
           </style>
         </div>
       </>
-      : null
-  )
-})
+    ) : null;
+  }
+);
 function isValidDate(dateString: string) {
   const date = new Date(dateString);
   return !isNaN(date.getTime());
 }
 function capitalizeWords(str: string) {
   return str
-    .split(' ') // Split the string into an array of words
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize the first letter of each word
-    .join(' '); // Join the words back into a single string
+    .split(" ") // Split the string into an array of words
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize the first letter of each word
+    .join(" "); // Join the words back into a single string
 }
 const ID_Entry = `
 SELECT 
@@ -1069,5 +1177,4 @@ SELECT
                 'Supplier' as IDType
        FROM
            entry_supplier aa) id_entry
- `
-
+ `;

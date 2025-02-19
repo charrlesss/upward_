@@ -3,8 +3,7 @@ import { AuthContext } from "./components/AuthContext";
 import Routers from "./components/Routers";
 import useAxios from "./hooks/useAxios";
 import { useQuery } from "react-query";
-import LoaderCircular from "./components/LoaderCircular";
-import { useUpwardTableModalSearch } from "./components/DataGridViewReact";
+import { Loading } from "./components/Loading";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -22,7 +21,7 @@ function App() {
   });
 
   if (isLoading) {
-    return <LoaderCircular open={true} />;
+    return <Loading/>;
   }
 
   return (

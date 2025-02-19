@@ -10,4 +10,3 @@ import { throttle } from 'lodash';
     throttledSearch
   }
 }
-export default useThrottleSearch

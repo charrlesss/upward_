@@ -149,7 +149,6 @@ export const DataGridViewReact = forwardRef(
       const startWidth = columnHeader[index].width;
 
       const doDrag = (moveEvent: any) => {
-
         const newWidth = startWidth + (moveEvent.clientX - startX);
         const updatedColumns = [...columnHeader];
         updatedColumns[index].width = newWidth > 50 ? newWidth : 50; // Set minimum column width
@@ -777,12 +776,10 @@ export const DataGridViewMultiSelectionReact = forwardRef(
     const [isTableSelectable, setIsTableSelectable] =
       useState(_isTableSelectable);
 
-
-      const [columnHeader, setColumnHeader] = useState(
-        columns.filter((itm: any) => !itm.hide)
-      );
-      const [hoveredColumn, setHoveredColumn] = useState(null);
-      
+    const [columnHeader, setColumnHeader] = useState(
+      columns.filter((itm: any) => !itm.hide)
+    );
+    const [hoveredColumn, setHoveredColumn] = useState(null);
 
     useEffect(() => {
       if (columns.length > 0) {
@@ -868,7 +865,6 @@ export const DataGridViewMultiSelectionReact = forwardRef(
       const startWidth = columnHeader[index].width;
 
       const doDrag = (moveEvent: any) => {
-
         const newWidth = startWidth + (moveEvent.clientX - startX);
         const updatedColumns = [...columnHeader];
         updatedColumns[index].width = newWidth > 50 ? newWidth : 50; // Set minimum column width
@@ -984,28 +980,28 @@ export const DataGridViewMultiSelectionReact = forwardRef(
                         textAlign: colItm.type === "number" ? "center" : "left",
                       }}
                     >
-                        <div
-                          key={idx}
-                          className={` ${
-                            hoveredColumn === idx ? `highlight-column` : ""
-                          }`} // Add the class if hovered
-                          style={{ width: colItm.width, height: "20px" }}
-                        >
-                          {colItm.label}
+                      <div
+                        key={idx}
+                        className={` ${
+                          hoveredColumn === idx ? `highlight-column` : ""
+                        }`} // Add the class if hovered
+                        style={{ width: colItm.width, height: "20px" }}
+                      >
+                        {colItm.label}
 
-                          <div
-                            className="resize-handle"
-                            onMouseDown={(e) => startResize(idx, e)}
-                            onMouseEnter={(e) => {
-                              e.preventDefault();
-                              handleMouseEnter(idx);
-                            }} // On hover
-                            onMouseLeave={(e) => {
-                              e.preventDefault();
-                              handleMouseLeave();
-                            }} // On mouse leave
-                          />
-                        </div>
+                        <div
+                          className="resize-handle"
+                          onMouseDown={(e) => startResize(idx, e)}
+                          onMouseEnter={(e) => {
+                            e.preventDefault();
+                            handleMouseEnter(idx);
+                          }} // On hover
+                          onMouseLeave={(e) => {
+                            e.preventDefault();
+                            handleMouseLeave();
+                          }} // On mouse leave
+                        />
+                      </div>
                     </th>
                   );
                 })}
@@ -1333,6 +1329,10 @@ export const useUpwardTableModalSearch = ({
     dataCache = [];
   }
   const UpwardTableModalSearch = () => {
+    const modalRef = useRef<HTMLDivElement>(null);
+    const isMoving = useRef(false);
+    const offset = useRef({ x: 0, y: 0 });
+
     const tableRef = useRef<any>(null);
     const [blick, setBlick] = useState(false);
     const [data, setData] = useState([]);
@@ -1353,6 +1353,34 @@ export const useUpwardTableModalSearch = ({
         tableRef.current?.setDataFormated(data);
       }
     }, [data]);
+
+    const handleMouseDown = (e: any) => {
+      if (!modalRef.current) return;
+
+      isMoving.current = true;
+      offset.current = {
+        x: e.clientX - modalRef.current.offsetLeft,
+        y: e.clientY - modalRef.current.offsetTop,
+      };
+
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    };
+
+    // Move modal with mouse
+    const handleMouseMove = (e: any) => {
+      if (!isMoving.current || !modalRef.current) return;
+
+      modalRef.current.style.left = `${e.clientX - offset.current.x}px`;
+      modalRef.current.style.top = `${e.clientY - offset.current.y}px`;
+    };
+
+    // Stop moving when releasing mouse
+    const handleMouseUp = () => {
+      isMoving.current = false;
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
 
     return show ? (
       <div id="modal-inject">
@@ -1375,6 +1403,7 @@ export const useUpwardTableModalSearch = ({
         ></div>
 
         <div
+        ref={modalRef}
           style={{
             background: "#F1F1F1",
             width: customWidth
@@ -1403,7 +1432,11 @@ export const useUpwardTableModalSearch = ({
               padding: "5px",
               position: "relative",
               alignItems: "center",
+              cursor: "grab",
+
             }}
+            onMouseDown={handleMouseDown}
+
           >
             <span style={{ fontSize: "13px", fontWeight: "bold" }}>Search</span>
             <button
@@ -1576,6 +1609,10 @@ export const useUpwardTableModalSearchSafeMode = ({
     _dataCache = [];
   }
   const UpwardTableModalSearch = () => {
+    const modalRef = useRef<HTMLDivElement>(null);
+    const isMoving = useRef(false);
+    const offset = useRef({ x: 0, y: 0 });
+
     const { user, myAxios } = useContext(AuthContext);
     const tableRef = useRef<any>(null);
     const [blick, setBlick] = useState(false);
@@ -1629,6 +1666,34 @@ export const useUpwardTableModalSearchSafeMode = ({
       }
     }
 
+    const handleMouseDown = (e: any) => {
+      if (!modalRef.current) return;
+
+      isMoving.current = true;
+      offset.current = {
+        x: e.clientX - modalRef.current.offsetLeft,
+        y: e.clientY - modalRef.current.offsetTop,
+      };
+
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    };
+
+    // Move modal with mouse
+    const handleMouseMove = (e: any) => {
+      if (!isMoving.current || !modalRef.current) return;
+
+      modalRef.current.style.left = `${e.clientX - offset.current.x}px`;
+      modalRef.current.style.top = `${e.clientY - offset.current.y}px`;
+    };
+
+    // Stop moving when releasing mouse
+    const handleMouseUp = () => {
+      isMoving.current = false;
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+
     return show ? (
       ReactDOM.createPortal(
         <div id="modal-inject">
@@ -1651,6 +1716,7 @@ export const useUpwardTableModalSearchSafeMode = ({
           ></div>
 
           <div
+            ref={modalRef}
             style={{
               background: "#F1F1F1",
               width: customWidth(blick),
@@ -1676,7 +1742,9 @@ export const useUpwardTableModalSearchSafeMode = ({
                 padding: "5px",
                 position: "relative",
                 alignItems: "center",
+                cursor: "grab",
               }}
+              onMouseDown={handleMouseDown}
             >
               <span style={{ fontSize: "13px", fontWeight: "bold" }}>
                 Search

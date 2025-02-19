@@ -227,6 +227,14 @@ export default function AccountingReport() {
             )}
             {buttonSelected === 10 && <FormPostDatedCheckRegistry />}
             {buttonSelected === 11 && <PettyCashFundDisbursement />}
+            {buttonSelected === 12 && (
+              <FormAbsDepoReturned
+                link={
+                  "/reports/accounting/report/generate-report-cash-disbursement-book-CDB"
+                }
+                reportTitle={"Cash Disbursement Book - CDB"}
+              />
+            )}
             {buttonSelected === 13 && (
               <FormAbsDepoReturned
                 link={

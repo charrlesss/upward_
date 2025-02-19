@@ -1,27 +1,10 @@
-import { Suspense, useState, useEffect, useContext } from "react";
-import { Outlet, useLocation } from "react-router-dom";
-import { styled } from "@mui/material/styles";
+import { Suspense,  } from "react";
+import { Outlet,  } from "react-router-dom";
 import Box from "@mui/material/Box";
 import CssBaseline from "@mui/material/CssBaseline";
-import MuiAppBar, { AppBarProps as MuiAppBarProps } from "@mui/material/AppBar";
-import Toolbar from "@mui/material/Toolbar";
-import IconButton from "@mui/material/IconButton";
-import MenuIcon from "@mui/icons-material/Menu";
-import SidebarDesktop from "./Sidebars/SidebarDesktop";
-import SidebarMobile from "./Sidebars/SiderbarMobile";
-import {
-  findObjectByLink,
-  findObjectPolicyByLink,
-} from "../lib/findObjectbyLink";
-import { sidebarOptions } from "./Sidebars/SidebarOptions";
-import LoaderLinear from "./LoaderLinear";
-import useUrlParams from "../hooks/useUrlParams";
-import { AuthContext } from "./AuthContext";
-import { Badge } from "@mui/material";
-import AccountCircle from "@mui/icons-material/AccountCircle";
-import NotificationsIcon from "@mui/icons-material/Notifications";
 import "../style/laoding.css";
 import Header from "./Header";
+import { Loading } from "./Loading";
 
 export const addToSidebarOptions = [
   {
@@ -75,7 +58,7 @@ export default function Layout() {
           },
         })}
       >
-        <Suspense fallback={<LoaderLinear open={true} />}>
+        <Suspense fallback={<Loading/>}>
           <Outlet />
         </Suspense>
       </Box>
@@ -108,7 +91,7 @@ export function RenderPage({ withHeader = true }: any) {
             },
           })}
         >
-          <Suspense fallback={<LoaderLinear open={true} />}>
+          <Suspense fallback={<Loading  />}>
             <Outlet />
           </Suspense>
         </Box>

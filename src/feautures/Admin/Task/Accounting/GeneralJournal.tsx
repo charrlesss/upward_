@@ -952,11 +952,11 @@ export default function GeneralJournal() {
     setTimeout(() => {
       const getData = table.current.getData();
       const totalCredit = getData.reduce(
-        (a: any, b: any) => a + parseFloat(b[4].replace(/,/g, "")),
+        (a: any, b: any) => a + parseFloat(b[5].replace(/,/g, "")),
         0
       );
       const totalDebit = getData.reduce(
-        (a: any, b: any) => a + parseFloat(b[5].replace(/,/g, "")),
+        (a: any, b: any) => a + parseFloat(b[4].replace(/,/g, "")),
         0
       );
       setMonitoring({
@@ -1160,6 +1160,7 @@ export default function GeneralJournal() {
           flex: 1,
           padding: "10px",
           background: "#F1F1F1",
+          rowGap:"10px"
         }}
       >
         <div
@@ -1351,44 +1352,7 @@ export default function GeneralJournal() {
               Print
             </Button>
           </div>
-          <div
-            style={{
-              fontSize: "13px",
-              border: "1px solid #d4d4d8",
-              width: "100%",
-              display: "flex",
-              columnGap: "50px",
-              height: "30px",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <p style={{ margin: 0, padding: 0, color: "black" }}>
-              <span style={{ fontSize: "12px" }}>Total Rows:</span>{" "}
-              <strong>{monitoring.totalRow}</strong>
-            </p>
-            <p style={{ margin: 0, padding: 0, color: "black" }}>
-              <span style={{ fontSize: "12px" }}>Total Debit:</span>{" "}
-              <strong>{monitoring.totalDebit}</strong>
-            </p>
-            <p style={{ margin: 0, padding: 0, color: "black" }}>
-              <span style={{ fontSize: "12px" }}>Total Credit:</span>{" "}
-              <strong>{monitoring.totalCredit}</strong>
-            </p>
-            <p style={{ margin: 0, padding: 0, color: "black" }}>
-              <span style={{ fontSize: "12px" }}>Balance:</span>{" "}
-              <strong
-                style={{
-                  color:
-                    parseInt(monitoring.balance.replace(/,/g, "")) !== 0
-                      ? "red"
-                      : "black",
-                }}
-              >
-                {monitoring.balance}
-              </strong>
-            </p>
-          </div>
+         
         </div>
         <div
           style={{
@@ -1478,7 +1442,7 @@ export default function GeneralJournal() {
             width: "100%",
             height: "auto",
             marginTop: "10px",
-
+          
             padding: "15px",
           }}
         >
@@ -1795,6 +1759,7 @@ export default function GeneralJournal() {
             </Button>
           </div>
         </fieldset>
+ 
         <DataGridViewReact
           containerStyle={{
             flex:1,
@@ -1861,6 +1826,68 @@ export default function GeneralJournal() {
             }
           }}
         />
+               <div
+            style={{
+              fontSize: "13px",
+              border: "1px solid #d4d4d8",
+              width: "100%",
+              display: "flex",
+              columnGap: "50px",
+              height: "30px",
+              alignItems: "center",
+              justifyContent: "flex-end",
+              padding:"0px 10px"
+            }}
+          >
+            <div style={{ margin: 0, padding: 0, color: "black" ,display:"flex" , columnGap:"10px" ,alignItems:"flex-end"}}>
+              <div style={{ fontSize: "12px" }}>Total Rows:</div>
+              <div style={{
+                   background:"white",
+                   padding:"0px 10px",
+                   textAlign:"right",
+                   width:"100px",
+                   fontWeight:"bold"
+              }}>{monitoring.totalRow}</div>
+            </div>
+            <div style={{ margin: 0, padding: 0, color: "black" ,display:"flex" , columnGap:"10px" ,alignItems:"flex-end"}}>
+              <div style={{ fontSize: "12px" }}>Total Debit:</div>
+              <div style={{
+                   background:"white",
+                   padding:"0px 10px",
+                   textAlign:"right",
+                   width:"100px",
+                   fontWeight:"bold"
+              }}>{monitoring.totalDebit}</div>
+            </div>
+            <div style={{ margin: 0, padding: 0, color: "black" ,display:"flex" , columnGap:"10px" ,alignItems:"flex-end"}}>
+              <div style={{ fontSize: "12px" }}>Total Credit:</div>
+              <div style={{
+                   background:"white",
+                   padding:"0px 10px",
+                   textAlign:"right",
+                   width:"100px",
+                   fontWeight:"bold"
+              }}>{monitoring.totalCredit}</div>
+            </div>
+            <div style={{ margin: 0, padding: 0, color: "black" ,display:"flex" , columnGap:"10px" ,alignItems:"flex-end"}}>
+              <div style={{ fontSize: "12px" }}>Balance:</div>{" "}
+              <div
+                style={{
+                  color:
+                    parseInt(monitoring.balance.replace(/,/g, "")) !== 0
+                      ? "red"
+                      : "black",
+                      background:"white",
+                      padding:"0px 10px",
+                      textAlign:"right",
+                      width:"100px",
+                      fontWeight:"bold"
+                }}
+              >
+                {monitoring.balance}
+              </div>
+            </div>
+          </div>
         <Modal open={openJobs} onClose={() => setOpenJobs(false)}>
           <Box
             sx={{

@@ -3,7 +3,7 @@ import { Box, Chip } from "@mui/material";
 import useUrlParams from "../../../../hooks/useUrlParams";
 import { User } from "../../../../components/AuthContext";
 import { AxiosInstance } from "axios";
-import LoaderCircular from "../../../../components/LoaderCircular";
+import { Loading } from "../../../../components/Loading";
 
 type classificationType =
   | "Client"
@@ -69,7 +69,7 @@ function LoadingEntry() {
       }}
     >
       <div>
-        <LoaderCircular open />
+        <Loading />
       </div>
     </div>
   );

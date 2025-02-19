@@ -30,7 +30,7 @@ import {
   TextFormatedInput,
   TextInput,
 } from "../../../../components/UpwardFields";
-import { format , lastDayOfMonth } from "date-fns";
+import { format, lastDayOfMonth } from "date-fns";
 import PageHelmet from "../../../../components/Helmet";
 import { wait } from "@testing-library/user-event/dist/utils";
 import SearchIcon from "@mui/icons-material/Search";
@@ -142,7 +142,6 @@ export default function PostDateChecks() {
         });
       },
     });
-
   const { mutate, isLoading: loadingAddNew } = useMutation({
     mutationKey: "update-pdc",
     mutationFn: async (variables: any) => {
@@ -154,7 +153,7 @@ export default function PostDateChecks() {
           },
         });
       }
-      
+
       delete variables.mode;
       return await myAxios.post("/task/accounting/add-pdc", variables, {
         headers: {
@@ -239,8 +238,10 @@ export default function PostDateChecks() {
           return newObjContainer;
         }
         const data = response.data.getSearchPDCCheck.map((itm: any) => {
-          itm.Check_Date = format(new Date(itm.Check_Date), 'MM/dd/yyyy')
-          itm.DateDeposit = itm.DateDeposit ? format(new Date(itm.DateDeposit), 'MM/dd/yyyy') : ""
+          itm.Check_Date = format(new Date(itm.Check_Date), "MM/dd/yyyy");
+          itm.DateDeposit = itm.DateDeposit
+            ? format(new Date(itm.DateDeposit), "MM/dd/yyyy")
+            : "";
           itm.Check_Amnt = formatNumber(
             parseFloat(itm.Check_Amnt.toString().replace(/,/g, ""))
           );
@@ -365,7 +366,6 @@ export default function PostDateChecks() {
       }
     },
   });
-
   const handleOnSave = useCallback(
     async (e: any) => {
       const pdcTableData = tableRef.current.getDataFormatted();
@@ -447,7 +447,6 @@ export default function PostDateChecks() {
     },
     [mutate, selectedFiles, pdcMode]
   );
-
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
@@ -469,7 +468,6 @@ export default function PostDateChecks() {
       setSelectedFiles(newFiles);
     }
   };
-
   const { mutate: mutatePrint, isLoading: isLoadingPrint } = useMutation({
     mutationKey: "print",
     mutationFn: async (variables: any) => {
@@ -503,7 +501,6 @@ export default function PostDateChecks() {
       }
     },
   });
-
   const clickPDCReceipt = () => {
     const pdcTableData = tableRef.current.getDataFormatted();
     const state = {
@@ -540,9 +537,7 @@ export default function PostDateChecks() {
           ? "UPWARD MANAGEMENT INSURANCE SERVICES"
           : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
     });
-   
   };
-
   function resetPDC() {
     setPdcMode("");
     tableRef.current.setSelectedRow(null);
@@ -573,8 +568,6 @@ export default function PostDateChecks() {
     });
   }
   function handleCheckDetailsSave() {
-   
-
     if (
       modalCheckRef.current.getRefs().checknoRef.current &&
       modalCheckRef.current.getRefs().bankRef.current &&
@@ -583,7 +576,6 @@ export default function PostDateChecks() {
       modalCheckRef.current.getRefs().checkdateRef.current &&
       modalCheckRef.current.getRefs().amountRef.current
     ) {
-
       const tableRows = tableRef.current.getDataFormatted();
       const selectedIndex = tableRef.current.getSelectedRow();
 
@@ -646,40 +638,50 @@ export default function PostDateChecks() {
         if (selectedIndex !== null) {
           const selectedRow = tableRef.current.getData();
 
-          let isCheckFind = selectedRow.map((itm:any)=>itm[0]).includes(modalCheckRef.current.getRefs().checknoRef.current.value)
-          if(isCheckFind){
-                  selectedRow[selectedIndex][0] =
-                  modalCheckRef.current.getRefs().checknoRef.current.value;
-                selectedRow[selectedIndex][1] =
-                  format(new Date(modalCheckRef.current.getRefs().checkdateRef.current.value), 'MM/dd/yyyy');
-                selectedRow[selectedIndex][2] = formatNumber(
-                  parseNumber(
-                    modalCheckRef.current
-                      .getRefs()
-                      .amountRef.current?.value.toString()
-                      .replace(/,/g, "")
-                  )
-                );
+          let isCheckFind = selectedRow
+            .map((itm: any) => itm[0])
+            .includes(modalCheckRef.current.getRefs().checknoRef.current.value);
+          console.log(isCheckFind);
+          if (isCheckFind) {
+            selectedRow[selectedIndex][0] =
+              modalCheckRef.current.getRefs().checknoRef.current.value;
+            selectedRow[selectedIndex][1] = format(
+              new Date(
+                modalCheckRef.current.getRefs().checkdateRef.current.value
+              ),
+              "MM/dd/yyyy"
+            );
+            selectedRow[selectedIndex][2] = formatNumber(
+              parseNumber(
+                modalCheckRef.current
+                  .getRefs()
+                  .amountRef.current?.value.toString()
+                  .replace(/,/g, "")
+              )
+            );
 
-                selectedRow[selectedIndex][3] =
-                  modalCheckRef.current.getRefs().bankRef.current.value;
-                selectedRow[selectedIndex][4] =
-                  modalCheckRef.current.getRefs().branchRef.current.value;
-                selectedRow[selectedIndex][5] =
-                  modalCheckRef.current.getRefs().remarksRef.current.value;
-                selectedRow[selectedIndex][6] =
-                  modalCheckRef.current.getRefs()._slipCodeRef.current;
-                selectedRow[selectedIndex][7] =
-                  modalCheckRef.current.getRefs()._slipDateRef.current;
-                selectedRow[selectedIndex][8] =
-                  modalCheckRef.current.getRefs()._checkOR.current;
-                selectedRow[selectedIndex][9] =
-                  modalCheckRef.current.getRefs().bankCode.current;
+            selectedRow[selectedIndex][3] =
+              modalCheckRef.current.getRefs().bankRef.current.value;
+            selectedRow[selectedIndex][4] =
+              modalCheckRef.current.getRefs().branchRef.current.value;
+            selectedRow[selectedIndex][5] =
+              modalCheckRef.current.getRefs().remarksRef.current.value;
+            selectedRow[selectedIndex][6] =
+              modalCheckRef.current.getRefs()._slipCodeRef.current;
+            selectedRow[selectedIndex][7] =
+              modalCheckRef.current.getRefs()._slipDateRef.current;
+            selectedRow[selectedIndex][8] =
+              modalCheckRef.current.getRefs()._checkOR.current;
+            selectedRow[selectedIndex][9] =
+              modalCheckRef.current.getRefs().bankCode.current;
 
-                tableRef.current.setData(selectedRow);
-                tableRef.current.setSelectedRow(null);
-                tableRef.current.resetCheckBox();
-                setHasSelectedRow(null);
+            tableRef.current.setData(selectedRow);
+            tableRef.current.setSelectedRow(null);
+            tableRef.current.resetCheckBox();
+            setHasSelectedRow(null);
+            modalCheckRef.current.clsoeModal();
+
+            return;
           }
 
           const checkCount =
@@ -720,7 +722,8 @@ export default function PostDateChecks() {
           }
 
           tableRef.current.setData([...tableRef.current.getData(), ...newData]);
-          
+          modalCheckRef.current.clsoeModal();
+
           return;
         } else {
           const checkCount =
@@ -761,6 +764,7 @@ export default function PostDateChecks() {
           }
 
           tableRef.current.setData([...tableRef.current.getData(), ...newData]);
+          modalCheckRef.current.clsoeModal();
         }
       }
     }
@@ -781,13 +785,34 @@ export default function PostDateChecks() {
 
   const isDisableField = pdcMode === "";
 
+  const validateDate = (value:any) => {
+    const [year,month,date] = value.split('-')
+    const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/(10|20|30|40|50|60|70|80|90)\d{2}$/;
+
+    if (!dateRegex.test(year)) {
+      alert("Invalid format or year does not start with 10, 20, 30, etc.");
+      return;
+    }else{
+      alert('valid')
+    }
+
+    // const [month, day, year] = date.split("/").map((num:any) => parseInt(num, 10));
+
+    // const testDate = new Date(year, month - 1, day);
+    // if (testDate.getFullYear() !== year || testDate.getMonth() + 1 !== month || testDate.getDate() !== day) {
+    //   alert("Invalid date (e.g., February 31st does not exist).");
+    // } else {
+    //   alert("Valid date!");
+    // }
+  };
+
   return (
     <>
       <ModalCheck
         ref={modalCheckRef}
         handleOnSave={() => {
           handleCheckDetailsSave();
-          modalCheckRef.current.clsoeModal();
+          // modalCheckRef.current.clsoeModal();
         }}
         handleOnClose={() => {
           tableRef.current.setSelectedRow(null);
@@ -811,7 +836,7 @@ export default function PostDateChecks() {
           padding: "10px",
           backgroundColor: "#F1F1F1",
           flexDirection: "column",
-          display:"flex"
+          display: "flex",
         }}
       >
         <Box
@@ -1092,6 +1117,9 @@ export default function PostDateChecks() {
                           remakrsRef.current?.focus();
                         }
                       },
+                      onBlur:(e)=>{
+                        validateDate(e.currentTarget.value)
+                      }
                     }}
                     inputRef={dateRef}
                   />
@@ -1254,11 +1282,11 @@ export default function PostDateChecks() {
             </Box>
           </Box>
         </form>
-         <DataGridViewReact
-        containerStyle={{
-          flex:1,
-          height:"auto"
-        }}
+        <DataGridViewReact
+          containerStyle={{
+            flex: 1,
+            height: "auto",
+          }}
           disbaleTable={isDisableField}
           ref={tableRef}
           rows={[]}
@@ -1297,7 +1325,7 @@ export default function PostDateChecks() {
                   modalCheckRef.current.getRefs().checknoRef.current.value =
                     rowSelected[0];
                   modalCheckRef.current.getRefs().checkdateRef.current.value =
-                    format(new Date(rowSelected[1]) ,'yyyy-MM-dd');
+                    format(new Date(rowSelected[1]), "yyyy-MM-dd");
                   modalCheckRef.current.getRefs().amountRef.current.value =
                     formatNumber(parseFloat(rowSelected[2].replace(/,/g, "")));
                   modalCheckRef.current.getRefs().bankRef.current.value =
@@ -1365,8 +1393,8 @@ export default function PostDateChecks() {
               });
             }
           }}
-        /> 
-       
+        />
+
         <div
           style={{
             display: showModal ? "flex" : "none",
@@ -1520,6 +1548,10 @@ export default function PostDateChecks() {
 
 const ModalCheck = forwardRef(
   ({ handleOnSave, handleOnClose, hasSelectedRow }: any, ref) => {
+    const modalRef = useRef<HTMLDivElement>(null);
+    const isMoving = useRef(false);
+    const offset = useRef({ x: 0, y: 0 });
+
     const [showModal, setShowModal] = useState(false);
     const [handleDelayClose, setHandleDelayClose] = useState(false);
     const [blick, setBlick] = useState(false);
@@ -1581,7 +1613,6 @@ const ModalCheck = forwardRef(
       searchModalInputRef,
       closeDelay,
     }));
-
     const {
       UpwardTableModalSearch: BankUpwardTableModalSearch,
       openModal: BankOpenModal,
@@ -1605,7 +1636,6 @@ const ModalCheck = forwardRef(
         }
       },
     });
-
     useEffect(() => {
       window.addEventListener("keydown", (e: any) => {
         if (e.key === "Escape") {
@@ -1613,6 +1643,34 @@ const ModalCheck = forwardRef(
         }
       });
     }, []);
+
+    const handleMouseDown = (e: any) => {
+      if (!modalRef.current) return;
+
+      isMoving.current = true;
+      offset.current = {
+        x: e.clientX - modalRef.current.offsetLeft,
+        y: e.clientY - modalRef.current.offsetTop,
+      };
+
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    };
+
+    // Move modal with mouse
+    const handleMouseMove = (e: any) => {
+      if (!isMoving.current || !modalRef.current) return;
+
+      modalRef.current.style.left = `${e.clientX - offset.current.x}px`;
+      modalRef.current.style.top = `${e.clientY - offset.current.y}px`;
+    };
+
+    // Stop moving when releasing mouse
+    const handleMouseUp = () => {
+      isMoving.current = false;
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
 
     return showModal ? (
       <>
@@ -1635,6 +1693,7 @@ const ModalCheck = forwardRef(
           }}
         ></div>
         <div
+          ref={modalRef}
           style={{
             height: blick ? "202px" : "200px",
             width: blick ? "60.3%" : "60%",
@@ -1651,6 +1710,7 @@ const ModalCheck = forwardRef(
             boxShadow: "3px 6px 32px -7px rgba(0,0,0,0.75)",
           }}
         >
+
           <div
             style={{
               height: "22px",
@@ -1660,7 +1720,10 @@ const ModalCheck = forwardRef(
               padding: "5px",
               position: "relative",
               alignItems: "center",
+              cursor: "grab",
             }}
+            onMouseDown={handleMouseDown}
+
           >
             <span style={{ fontSize: "13px", fontWeight: "bold" }}>
               Check Details
@@ -1855,28 +1918,28 @@ const ModalCheck = forwardRef(
                 }}
                 inputRef={amountRef}
               />
-                <TextInput
-                  label={{
-                    title: "Check Count : ",
-                    style: {
-                      fontSize: "12px",
-                      fontWeight: "bold",
-                      width: "90px",
-                    },
-                  }}
-                  input={{
-                    min: 1,
-                    defaultValue: "1",
-                    type: "number",
-                    style: { width: "200px", textAlign: "right" },
-                    onKeyDown: (e) => {
-                      if (e.code === "NumpadEnter" || e.code === "Enter") {
-                        handleOnSave();
-                      }
-                    },
-                  }}
-                  inputRef={_checkcountRef}
-                />
+              <TextInput
+                label={{
+                  title: "Check Count : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "90px",
+                  },
+                }}
+                input={{
+                  min: 1,
+                  defaultValue: "1",
+                  type: "number",
+                  style: { width: "200px", textAlign: "right" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      handleOnSave();
+                    }
+                  },
+                }}
+                inputRef={_checkcountRef}
+              />
               <div
                 style={{
                   display: "flex",
@@ -1959,13 +2022,21 @@ function incrementStringNumbers(str: string, increment: number) {
 
 function incrementDate(dateString: any, i: number) {
   const currentDate = new Date(dateString);
-  currentDate.setMonth(currentDate.getMonth() + i);
-
-  
-
-  return format(currentDate, "MM/dd/yyyy");
+  return format(addMonths(currentDate, i), "MM/dd/yyyy");
 }
 function isValidDate(dateString: string): boolean {
   const date = new Date(dateString);
   return date instanceof Date && !isNaN(date.getTime());
+}
+
+function addMonths(date: Date, monthsToAdd: number) {
+  let newDate = new Date(date);
+  newDate.setMonth(newDate.getMonth() + monthsToAdd);
+
+  // Check if the day overflowed into the next month
+  if (newDate.getDate() !== date.getDate()) {
+    newDate.setDate(0); // Set to the last day of the previous month
+  }
+
+  return newDate;
 }
