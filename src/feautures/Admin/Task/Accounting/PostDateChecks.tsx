@@ -786,24 +786,8 @@ export default function PostDateChecks() {
   const isDisableField = pdcMode === "";
 
   const validateDate = (value:any) => {
-    const [year,month,date] = value.split('-')
-    const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/(10|20|30|40|50|60|70|80|90)\d{2}$/;
 
-    if (!dateRegex.test(year)) {
-      alert("Invalid format or year does not start with 10, 20, 30, etc.");
-      return;
-    }else{
-      alert('valid')
-    }
-
-    // const [month, day, year] = date.split("/").map((num:any) => parseInt(num, 10));
-
-    // const testDate = new Date(year, month - 1, day);
-    // if (testDate.getFullYear() !== year || testDate.getMonth() + 1 !== month || testDate.getDate() !== day) {
-    //   alert("Invalid date (e.g., February 31st does not exist).");
-    // } else {
-    //   alert("Valid date!");
-    // }
+  
   };
 
   return (
@@ -1117,9 +1101,6 @@ export default function PostDateChecks() {
                           remakrsRef.current?.focus();
                         }
                       },
-                      onBlur:(e)=>{
-                        validateDate(e.currentTarget.value)
-                      }
                     }}
                     inputRef={dateRef}
                   />
@@ -1891,6 +1872,7 @@ const ModalCheck = forwardRef(
                       amountRef.current?.focus();
                     }
                   },
+               
                 }}
                 inputRef={checkdateRef}
               />

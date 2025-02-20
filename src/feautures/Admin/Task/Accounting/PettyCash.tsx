@@ -36,7 +36,6 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { flushSync } from "react-dom";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 
-
 export const reducer = (state: any, action: any) => {
   switch (action.type) {
     case "UPDATE_FIELD":
@@ -206,50 +205,6 @@ export default function PettyCash() {
         }),
       refetchOnWindowFocus: false,
     });
-  // const {
-  //   ModalComponent: ModalClientIDs,
-  //   openModal: openCliendIDsModal,
-  //   isLoading: isLoadingClientIdsModal,
-  //   closeModal: closeCliendIDsModal,
-  // } = useQueryModalTable({
-  //   link: {
-  //     url: "/task/accounting/search-pdc-policy-id",
-  //     queryUrlName: "searchPdcPolicyIds",
-  //   },
-  //   columns: [
-  //     { field: "Type", headerName: "Type", width: 130 },
-  //     { field: "IDNo", headerName: "ID No.", width: 200 },
-  //     {
-  //       field: "Name",
-  //       headerName: "Name",
-  //       flex: 1,
-  //     },
-  //     {
-  //       field: "ID",
-  //       headerName: "ID",
-  //       flex: 1,
-  //       hide: true,
-  //     },
-  //   ],
-  //   queryKey: "collection-polidy-ids",
-  //   uniqueId: "IDNo",
-  //   responseDataKey: "clientsId",
-  //   onSelected: (selectedRowData, data) => {
-  //     closeCliendIDsModal();
-  //     wait(100).then(() => {
-  // clientIdRef.current = selectedRowData[0].IDNo;
-  // subAcctRef.current = selectedRowData[0].Acronym;
-  // if (usageRef.current) usageRef.current.value = selectedRowData[0].Name;
-  //     });
-      // wait(200).then(() => {
-      //   if (amountRef.current) {
-      //     amountRef.current?.focus();
-      //     amountRef.current.value = "";
-      //   }
-      // });
-  //   },
-  //   searchRef: pdcSearchInput,
-  // });
 
   function handleOnSave() {
     if (payeeRef.current && payeeRef.current.value === "") {
@@ -391,42 +346,46 @@ export default function PettyCash() {
               Petty_Log.Acct_Code = '${transactionCodeRef.current}'
       `);
 
-    const currentData = tableRef.current.getData();
-    let RowIndex = 0;
-    if (currentData.length <= 0) {
-      currentData[0] = [];
-    } else {
-      const getSelectedRow = tableRef.current.getSelectedRow();
-      if (getSelectedRow) {
-        RowIndex = getSelectedRow;
+    const getSelectedItem = tableRef.current.getSelectedRow();
+    if (getSelectedItem !== null) {
+      const data = tableRef.current.getData();
+      data.splice(getSelectedItem, 1);
+      tableRef.current.setData(data);
+    }
+
+    wait(100).then(() => {
+      const currentData = tableRef.current.getData();
+      const newData = [
+        accountRef.current?.value,
+        amountRef.current?.value,
+        `${usageRef.current?.value} > ${clientIdRef.current} > ${subAcctRef.current}`,
+        `${TransDetail.data.data[0].Short} > ${TransDetail.data.data[0].Acct_Code}`,
+        subAcctRef.current,
+        clientIdRef.current,
+        usageRef.current?.value,
+        TransDetail.data.data[0].Acct_Code,
+        TransDetail.data.data[0].Short,
+        vatRef.current?.value,
+        invoiceRef.current?.value,
+      ];
+
+      if (getSelectedItem !== null) {
+        currentData.splice(getSelectedItem, 0, newData);
+        tableRef.current.setData(currentData);
+        tableRef.current.setSelectedRow(null);
+        tableRef.current.resetCheckBox();
       } else {
-        RowIndex = currentData.length;
-        currentData[currentData.length] = [];
+        tableRef.current.setData([...currentData, newData]);
+        tableRef.current.setSelectedRow(null);
+        tableRef.current.resetCheckBox();
       }
-    }
-    currentData[RowIndex][0] = accountRef.current?.value;
-    currentData[RowIndex][1] = amountRef.current?.value;
-    currentData[
-      RowIndex
-    ][2] = `${usageRef.current?.value} > ${clientIdRef.current} > ${subAcctRef.current}`;
-    currentData[
-      RowIndex
-    ][3] = `${TransDetail.data.data[0].Short} > ${TransDetail.data.data[0].Acct_Code}`;
-    currentData[RowIndex][4] = subAcctRef.current;
-    currentData[RowIndex][5] = clientIdRef.current;
-    currentData[RowIndex][6] = usageRef.current?.value;
-    currentData[RowIndex][7] = TransDetail.data.data[0].Acct_Code;
-    currentData[RowIndex][8] = TransDetail.data.data[0].Short;
-    currentData[RowIndex][9] = vatRef.current?.value;
-    currentData[RowIndex][10] = invoiceRef.current?.value;
-    tableRef.current.setData(currentData);
-    tableRef.current.setSelectedRow(null);
 
-    resetRefs();
+      resetRefs();
 
-    if (accountRef.current) {
-      accountRef.current.focus();
-    }
+      if (accountRef.current) {
+        accountRef.current.focus();
+      }
+    });
   }
   function resetRefs() {
     setTimeout(() => {
@@ -563,8 +522,7 @@ export default function PettyCash() {
         wait(100).then(() => {
           clientIdRef.current = rowItm[1];
           subAcctRef.current = rowItm[6];
-          if (usageRef.current)
-            usageRef.current.value = rowItm[2];
+          if (usageRef.current) usageRef.current.value = rowItm[2];
         });
         wait(200).then(() => {
           if (amountRef.current) {
@@ -906,12 +864,14 @@ export default function PettyCash() {
                     }
                   },
                 }}
-                icon={   <PersonSearchIcon
-                  sx={{
-                    fontSize: "18px",
-                    color: isDisableField ? "gray" : "black",
-                  }}
-                />}
+                icon={
+                  <PersonSearchIcon
+                    sx={{
+                      fontSize: "18px",
+                      color: isDisableField ? "gray" : "black",
+                    }}
+                  />
+                }
                 onIconClick={(e) => {
                   e.preventDefault();
                   if (usageRef.current) {
@@ -1042,10 +1002,10 @@ export default function PettyCash() {
         </div>
         <br />
         <DataGridViewReact
-        containerStyle={{
-          flex:1,
-          height:"auto"
-        }}
+          containerStyle={{
+            flex: 1,
+            height: "auto",
+          }}
           ref={tableRef}
           width="100%"
           height="350px"
@@ -1078,6 +1038,29 @@ export default function PettyCash() {
               transactionShortRef.current = rowItm[8];
             } else {
               resetRefs();
+            }
+          }}
+          onKeyDown={(rowSelected: any, RowIndex: any, e: any) => {
+            if (e.code === "Delete" || e.code === "Backspace") {
+              Swal.fire({
+                title: "Are you sure?",
+                text: `You won't to delete this Check No. ${rowSelected[0]}`,
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, delete it!",
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  setTimeout(() => {
+                    const newData = tableRef.current.getData();
+                    newData.splice(RowIndex, 1);
+                    tableRef.current.setData(newData);
+                    tableRef.current.setSelectedRow(null);
+                    tableRef.current.resetCheckBox();
+                  }, 100);
+                }
+              });
             }
           }}
         />
@@ -1461,7 +1444,6 @@ export const AutocompleteNumber = forwardRef(
           containerStyle={containerStyle}
           label={label}
           input={{
-   
             ...input,
             disabled: disableInput,
             type: "text",

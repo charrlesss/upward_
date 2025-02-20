@@ -48,11 +48,10 @@ export default function AccountingReport() {
     if (user) {
       if (user.userAccess === "ACCOUNTING_CHECKS") {
         setButtonList([{ label: "Post Dated Checks Registry", id: 10 }]);
-        setButtonSelected(10)
+        setButtonSelected(10);
       }
     }
   }, [user]);
-
 
   return (
     <>
@@ -1596,6 +1595,7 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
 }
 function FormFSReport({ link, reportTitle }: any) {
   const { myAxios, user } = useContext(AuthContext);
+
   const [title, setTitle] = useState(
     generateTitle({
       cmbformat: "Default",
@@ -1605,6 +1605,7 @@ function FormFSReport({ link, reportTitle }: any) {
     })
   );
 
+  const [report, setReport] = useState("Monthly");
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const formatRef = useRef<HTMLSelectElement>(null);
   const reportRef = useRef<HTMLSelectElement>(null);
@@ -1646,7 +1647,11 @@ function FormFSReport({ link, reportTitle }: any) {
       subAccount.toUpperCase() === "ALL" ? "" : `(${subAccount})`
     }\n${report} ${reportTitle} ${
       cmbformat === "Summary" ? "(Per Revenue Center)" : ""
-    }\n${format(new Date(date), "MMMM dd, yyyy")}`;
+    }\n${
+      report === "Monthly"
+        ? format(new Date(date), "MMMM, yyyy")
+        : format(new Date(date), "MMMM dd, yyyy")
+    }`;
   }
 
   function generateReport() {
@@ -1728,8 +1733,8 @@ function FormFSReport({ link, reportTitle }: any) {
           }}
           selectRef={formatRef}
           select={{
-            style: { width: "calc(100% - 120px)", height: "22px" },
             defaultValue: "Default",
+            style: { width: "calc(100% - 120px)", height: "22px" },
             onKeyDown: (e) => {
               if (e.code === "NumpadEnter" || e.code === "Enter") {
                 e.preventDefault();
@@ -1764,13 +1769,14 @@ function FormFSReport({ link, reportTitle }: any) {
           selectRef={reportRef}
           select={{
             style: { width: "calc(100% - 120px)", height: "22px" },
-            defaultValue: "Monthly",
+            value: report,
             onKeyDown: (e) => {
               if (e.code === "NumpadEnter" || e.code === "Enter") {
                 e.preventDefault();
               }
             },
             onChange: (e) => {
+              setReport(e.currentTarget.value)
               setTitle(
                 generateTitle({
                   cmbformat: formatRef.current?.value,
@@ -1846,44 +1852,44 @@ function FormFSReport({ link, reportTitle }: any) {
           values={"key"}
           display={"key"}
         />
-        <TextInput
-          label={{
-            title: "Date : ",
-            style: {
-              fontSize: "12px",
-              fontWeight: "bold",
-              width: "120px",
-            },
-          }}
-          input={{
-            type: "date",
-            defaultValue: format(new Date(), "yyyy-MM-dd"),
-            onKeyDown: (e) => {
-              if (e.key === "Enter" || e.key === "NumpadEnter") {
-                e.preventDefault();
-                // searchCashDisbursementOpenModal(e.currentTarget.value);
-              }
-              if (e.key === "ArrowDown") {
-                e.preventDefault();
-              }
-            },
-            onChange: (e) => {
-              setTitle(
-                generateTitle({
-                  cmbformat: formatRef.current?.value,
-                  report: reportRef.current?.value,
-                  subAccount: subAccountRef.current?.value,
-                  date: validateDate(e.currentTarget.value)
-                    ? new Date(e.currentTarget.value)
-                    : new Date(),
-                })
-              );
-            },
-            onBlur: (e) => {},
-            style: { width: "calc(100% - 120px)" },
-          }}
-          inputRef={dateRef}
-        />
+       <TextInput
+            label={{
+              title: "Date : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "120px",
+              },
+            }}
+            input={{
+              type: "date",
+              defaultValue: format(new Date(), "yyyy-MM-dd"),
+              onKeyDown: (e) => {
+                if (e.key === "Enter" || e.key === "NumpadEnter") {
+                  e.preventDefault();
+                  // searchCashDisbursementOpenModal(e.currentTarget.value);
+                }
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                }
+              },
+              onChange: (e) => {
+                setTitle(
+                  generateTitle({
+                    cmbformat: formatRef.current?.value,
+                    report: reportRef.current?.value,
+                    subAccount: subAccountRef.current?.value,
+                    date: validateDate(e.currentTarget.value)
+                      ? new Date(e.currentTarget.value)
+                      : new Date(),
+                  })
+                );
+              },
+              onBlur: (e) => {},
+              style: { width: "calc(100% - 120px)" },
+            }}
+            inputRef={dateRef}
+          />
 
         <Button
           onClick={generateReport}
@@ -1955,7 +1961,6 @@ function FormAbsDepoReturned({ link, reportTitle }: any) {
     });
 
   function generateTitle({ report, subAccount, date }: any) {
-    console.log(isValid(date));
     const _title =
       process.env.REACT_APP_DEPARTMENT === "UMIS"
         ? "UPWARD MANAGEMENT INSURANCE SERVICES"
@@ -1963,7 +1968,11 @@ function FormAbsDepoReturned({ link, reportTitle }: any) {
 
     return `${_title} ${
       subAccount.toUpperCase() === "ALL" ? "" : `(${subAccount})`
-    }\n${report} ${reportTitle}\n${format(new Date(date), "MMMM dd, yyyy")}
+    }\n${report} ${reportTitle}\n${
+      report === "Monthly"
+        ? format(new Date(date), "MMMM, yyyy")
+        : format(new Date(date), "MMMM dd, yyyy")
+    }
     `;
   }
 
@@ -2668,7 +2677,6 @@ function FormPostDatedCheckRegistry() {
     </>
   );
 }
-
 function PettyCashFundDisbursement() {
   const { user, myAxios } = useContext(AuthContext);
   const [title, setTitle] = useState("");
@@ -2961,12 +2969,11 @@ function PettyCashFundDisbursement() {
     </>
   );
 }
-function isValidDateString(dateString: string) {
-  return !isNaN(Date.parse(dateString));
-}
 const validateDate = (dateStr: any, dateFormat = "yyyy-MM-dd") => {
   const parsedDate = parse(dateStr, dateFormat, new Date());
   const isDateValid =
     isValid(parsedDate) && format(parsedDate, dateFormat) === dateStr;
   return isDateValid;
 };
+
+
