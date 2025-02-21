@@ -528,9 +528,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           >
             Policy Premium
           </Button>
-          {isLoading ? (
-            <div>Loading..</div>
-          ) : (
+ 
             <SelectInput
               ref={subAccountRef_}
               label={{
@@ -554,7 +552,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
               values={"Acronym"}
               display={"Acronym"}
             />
-          )}
+          
         </div>
       </div>
       {policyType === "REG" ? (
@@ -604,6 +602,7 @@ const COMRegular = forwardRef(
       openModal: clientOpenModal,
       closeModal: clientCloseModal,
     } = useUpwardTableModalSearchSafeMode({
+      
       link: "/task/production/search-client-by-id-or-name",
       column: [
         { key: "IDNo", label: "ID No", width: 120 },
@@ -3362,7 +3361,6 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             }}
             containerStyle={{
               width: "90%",
-              marginBottom: "12px",
             }}
             datasource={[]}
             values={"Account"}
@@ -3506,7 +3504,6 @@ const PolicyInformation = forwardRef((props: any, ref) => {
           <TextInput
             containerStyle={{
               width: "50%",
-              marginBottom: "8px",
             }}
             label={{
               title: "Date From:",
@@ -3532,7 +3529,6 @@ const PolicyInformation = forwardRef((props: any, ref) => {
           <TextInput
             containerStyle={{
               width: "50%",
-              marginBottom: "8px",
             }}
             label={{
               title: "Date To:",
@@ -3558,7 +3554,6 @@ const PolicyInformation = forwardRef((props: any, ref) => {
           <TextInput
             containerStyle={{
               width: "50%",
-              marginBottom: "8px",
             }}
             label={{
               title: "Date Issued:",
@@ -5021,7 +5016,6 @@ const PolicyPremium = forwardRef((props: any, ref) => {
     >
       <div
         style={{
-          border: "1px solid #9ca3af",
           height: "100%",
           width: "65%",
           padding: "15px",
@@ -5711,6 +5705,8 @@ const PolicyPremium = forwardRef((props: any, ref) => {
     </div>
   );
 });
+
+
 interface CustomButtonProps {
   currentStepIndex: number;
   index: number;

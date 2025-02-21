@@ -10,7 +10,7 @@ export function isValidDate(dateString:string) {
  
      // Ensure year is a valid four-digit number and within a reasonable range
      const parsedYear = parseInt(year);
-     if (parsedYear < 1000 || parsedYear > new Date().getFullYear()) {
+     if (parsedYear < 1000 || parsedYear > 2040) {
          return false;
      }
  

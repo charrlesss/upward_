@@ -242,6 +242,14 @@ export default function AccountingReport() {
                 reportTitle={"General Journal Book - GJB"}
               />
             )}
+            {buttonSelected === 16 && (
+              <AgingAccounts
+                link={
+                  "/reports/accounting/report/generate-report-aging-account"
+                }
+                reportTitle={"Aging of Accounts"}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -1776,7 +1784,20 @@ function FormFSReport({ link, reportTitle }: any) {
               }
             },
             onChange: (e) => {
-              setReport(e.currentTarget.value)
+              if (e.currentTarget.value === "Monthly") {
+                wait(100).then(() => {
+                  if (dateRef.current) {
+                    dateRef.current.value = format(new Date(), "yyyy-MM");
+                  }
+                });
+              } else {
+                wait(100).then(() => {
+                  if (dateRef.current) {
+                    dateRef.current.value = format(new Date(), "yyyy-MM-dd");
+                  }
+                });
+              }
+              setReport(e.currentTarget.value);
               setTitle(
                 generateTitle({
                   cmbformat: formatRef.current?.value,
@@ -1852,44 +1873,47 @@ function FormFSReport({ link, reportTitle }: any) {
           values={"key"}
           display={"key"}
         />
-       <TextInput
-            label={{
-              title: "Date : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "120px",
-              },
-            }}
-            input={{
-              type: "date",
-              defaultValue: format(new Date(), "yyyy-MM-dd"),
-              onKeyDown: (e) => {
-                if (e.key === "Enter" || e.key === "NumpadEnter") {
-                  e.preventDefault();
-                  // searchCashDisbursementOpenModal(e.currentTarget.value);
-                }
-                if (e.key === "ArrowDown") {
-                  e.preventDefault();
-                }
-              },
-              onChange: (e) => {
-                setTitle(
-                  generateTitle({
-                    cmbformat: formatRef.current?.value,
-                    report: reportRef.current?.value,
-                    subAccount: subAccountRef.current?.value,
-                    date: validateDate(e.currentTarget.value)
-                      ? new Date(e.currentTarget.value)
-                      : new Date(),
-                  })
-                );
-              },
-              onBlur: (e) => {},
-              style: { width: "calc(100% - 120px)" },
-            }}
-            inputRef={dateRef}
-          />
+        <TextInput
+          label={{
+            title: "Date : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "120px",
+            },
+          }}
+          input={{
+            type: report === "Monthly" ? "month" : "date",
+            defaultValue:
+              report === "Monthly"
+                ? format(new Date(), "yyyy-MM")
+                : format(new Date(), "yyyy-MM-dd"),
+            onKeyDown: (e) => {
+              if (e.key === "Enter" || e.key === "NumpadEnter") {
+                e.preventDefault();
+                // searchCashDisbursementOpenModal(e.currentTarget.value);
+              }
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+              }
+            },
+            onChange: (e) => {
+              setTitle(
+                generateTitle({
+                  cmbformat: formatRef.current?.value,
+                  report: reportRef.current?.value,
+                  subAccount: subAccountRef.current?.value,
+                  date: validateDate(e.currentTarget.value)
+                    ? new Date(e.currentTarget.value)
+                    : new Date(),
+                })
+              );
+            },
+            onBlur: (e) => {},
+            style: { width: "calc(100% - 120px)" },
+          }}
+          inputRef={dateRef}
+        />
 
         <Button
           onClick={generateReport}
@@ -1912,6 +1936,7 @@ function FormAbsDepoReturned({ link, reportTitle }: any) {
       date: new Date(),
     })
   );
+  const [report, setReport] = useState("Monthly");
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const formatRef = useRef<HTMLSelectElement>(null);
   const reportRef = useRef<HTMLSelectElement>(null);
@@ -2072,6 +2097,20 @@ function FormAbsDepoReturned({ link, reportTitle }: any) {
               }
             },
             onChange: (e) => {
+              if (e.currentTarget.value === "Monthly") {
+                wait(100).then(() => {
+                  if (dateRef.current) {
+                    dateRef.current.value = format(new Date(), "yyyy-MM");
+                  }
+                });
+              } else {
+                wait(100).then(() => {
+                  if (dateRef.current) {
+                    dateRef.current.value = format(new Date(), "yyyy-MM-dd");
+                  }
+                });
+              }
+              setReport(e.currentTarget.value);
               setTitle(
                 generateTitle({
                   report: e.currentTarget.value,
@@ -2133,8 +2172,11 @@ function FormAbsDepoReturned({ link, reportTitle }: any) {
           }}
           containerStyle={{ width: "100%" }}
           input={{
-            defaultValue: format(new Date(), "yyyy-MM-dd"),
-            type: "date",
+            defaultValue:
+              report === "Monthly"
+                ? format(new Date(), "yyyy-MM")
+                : format(new Date(), "yyyy-MM-dd"),
+            type: report === "Monthly" ? "month" : "date",
             onKeyDown: (e) => {
               if (e.key === "Enter" || e.key === "NumpadEnter") {
                 e.preventDefault();
@@ -2969,11 +3011,314 @@ function PettyCashFundDisbursement() {
     </>
   );
 }
+
+function AgingAccounts({ link, reportTitle }: any) {
+  const { myAxios, user } = useContext(AuthContext);
+
+  const [title, setTitle] = useState(
+    generateTitle({
+      cmbformat: "Default",
+      report: "Monthly",
+      subAccount: "ALL",
+      date: new Date(),
+    })
+  );
+
+  const [report, setReport] = useState("Monthly");
+  const titleRef = useRef<HTMLTextAreaElement>(null);
+  const formatRef = useRef<HTMLSelectElement>(null);
+  const reportRef = useRef<HTMLSelectElement>(null);
+  const subAccountRef = useRef<HTMLSelectElement>(null);
+  const _subAccountRef = useRef<any>(null);
+  const policyTypeRef = useRef<HTMLSelectElement>(null);
+  const dateRef = useRef<HTMLInputElement>(null);
+
+  const { mutate: mutateGenerateReport, isLoading: isLoadingGenerateReport } =
+    useMutation({
+      mutationKey: "generate-report",
+      mutationFn: async (variables: any) => {
+        return await myAxios.post(link, variables, {
+          responseType: "arraybuffer",
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        });
+      },
+      onSuccess: (response) => {
+        const pdfBlob = new Blob([response.data], { type: "application/pdf" });
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        window.open(
+          `/${
+            process.env.REACT_APP_DEPARTMENT
+          }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+          "_blank"
+        );
+      },
+    });
+
+  function generateTitle({ report, cmbformat, subAccount, date }: any) {
+    const _title =
+      process.env.REACT_APP_DEPARTMENT === "UMIS"
+        ? "UPWARD MANAGEMENT INSURANCE SERVICES"
+        : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.";
+
+    return `${_title} ${
+      subAccount.toUpperCase() === "ALL" ? "" : `(${subAccount})`
+    }\n${report} ${reportTitle} ${
+      cmbformat === "Summary" ? "(Per Revenue Center)" : ""
+    }\n${
+      report === "Monthly"
+        ? format(new Date(date), "MMMM, yyyy")
+        : format(new Date(date), "MMMM dd, yyyy")
+    }`;
+  }
+
+  function generateReport() {
+    mutateGenerateReport({
+      cmbformat: formatRef.current?.value,
+      report: reportRef.current?.value,
+      subAccount: subAccountRef.current?.value,
+      policyType: policyTypeRef.current?.value,
+      date: dateRef.current?.value,
+      title,
+    });
+  }
+
+  return (
+    <>
+      {isLoadingGenerateReport && <Loading />}
+      <div
+        style={{
+          display: "flex",
+          flex: 1,
+          flexDirection: "column",
+          padding: "5px",
+          rowGap: "10px",
+        }}
+      >
+        <TextAreaInput
+          containerStyle={{
+            marginBottom: "10px",
+          }}
+          label={{
+            title: "Title : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "100px",
+              display: "none",
+            },
+          }}
+          textarea={{
+            rows: 7,
+            style: { flex: 1 },
+            value: title,
+            onChange: (e) => {
+              setTitle(e.currentTarget.value);
+            },
+          }}
+          _inputRef={titleRef}
+        />
+        <SelectInput
+          label={{
+            title: "Format :",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "120px",
+            },
+          }}
+          selectRef={formatRef}
+          select={{
+            defaultValue: "All Accounts",
+            style: { width: "calc(100% - 120px)", height: "22px" },
+            onKeyDown: (e) => {
+              if (e.code === "NumpadEnter" || e.code === "Enter") {
+                e.preventDefault();
+              }
+            },
+            onChange: (e) => {
+              setTitle(
+                generateTitle({
+                  cmbformat: e.currentTarget.value,
+                  report: reportRef.current?.value,
+                  subAccount: subAccountRef.current?.value,
+                  date: validateDate(dateRef.current?.value as any)
+                    ? new Date(dateRef.current?.value as any)
+                    : new Date(),
+                })
+              );
+            },
+          }}
+          datasource={[{ key: "All Accounts" }]}
+          values={"key"}
+          display={"key"}
+        />
+        <SelectInput
+          label={{
+            title: "Report :",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "120px",
+            },
+          }}
+          selectRef={reportRef}
+          select={{
+            style: { width: "calc(100% - 120px)", height: "22px" },
+            value: report,
+            onKeyDown: (e) => {
+              if (e.code === "NumpadEnter" || e.code === "Enter") {
+                e.preventDefault();
+              }
+            },
+            onChange: (e) => {
+              if (e.currentTarget.value === "Monthly") {
+                wait(100).then(() => {
+                  if (dateRef.current) {
+                    dateRef.current.value = format(new Date(), "yyyy-MM");
+                  }
+                });
+              } else {
+                wait(100).then(() => {
+                  if (dateRef.current) {
+                    dateRef.current.value = format(new Date(), "yyyy-MM-dd");
+                  }
+                });
+              }
+              setReport(e.currentTarget.value);
+              setTitle(
+                generateTitle({
+                  cmbformat: formatRef.current?.value,
+                  report: e.currentTarget.value,
+                  subAccount: subAccountRef.current?.value,
+                  date: validateDate(dateRef.current?.value as any)
+                    ? new Date(dateRef.current?.value as any)
+                    : new Date(),
+                })
+              );
+            },
+          }}
+          datasource={[{ key: "Monthly" }]}
+          values={"key"}
+          display={"key"}
+        />
+        <SelectInput
+          ref={_subAccountRef}
+          label={{
+            title: "Sub Account :",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "120px",
+            },
+          }}
+          selectRef={subAccountRef}
+          select={{
+            style: { width: "calc(100% - 120px)", height: "22px" },
+            defaultValue: "HO",
+            onKeyDown: (e) => {
+              if (e.code === "NumpadEnter" || e.code === "Enter") {
+                e.preventDefault();
+              }
+            },
+            onChange: (e) => {
+              setTitle(
+                generateTitle({
+                  cmbformat: formatRef.current?.value,
+                  report: reportRef.current?.value,
+                  subAccount: e.currentTarget.value,
+                  date: validateDate(dateRef.current?.value as any)
+                    ? new Date(dateRef.current?.value as any)
+                    : new Date(),
+                })
+              );
+            },
+          }}
+          datasource={[{ Acronym: "All" }]}
+          values={"Acronym"}
+          display={"Acronym"}
+        />
+
+        <TextInput
+          label={{
+            title: "Date : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "120px",
+            },
+          }}
+          input={{
+            type: report === "Monthly" ? "month" : "date",
+            defaultValue:
+              report === "Monthly"
+                ? format(new Date(), "yyyy-MM")
+                : format(new Date(), "yyyy-MM-dd"),
+            onKeyDown: (e) => {
+              if (e.key === "Enter" || e.key === "NumpadEnter") {
+                e.preventDefault();
+                // searchCashDisbursementOpenModal(e.currentTarget.value);
+              }
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+              }
+            },
+            onChange: (e) => {
+              setTitle(
+                generateTitle({
+                  cmbformat: formatRef.current?.value,
+                  report: reportRef.current?.value,
+                  subAccount: subAccountRef.current?.value,
+                  date: validateDate(e.currentTarget.value)
+                    ? new Date(e.currentTarget.value)
+                    : new Date(),
+                })
+              );
+            },
+            onBlur: (e) => {},
+            style: { width: "calc(100% - 120px)" },
+          }}
+          inputRef={dateRef}
+        />
+        <SelectInput
+          label={{
+            title: "Policy Type :",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "120px",
+            },
+          }}
+          selectRef={policyTypeRef}
+          select={{
+            style: { width: "calc(100% - 120px)", height: "22px" },
+            defaultValue: "Regular",
+            onKeyDown: (e) => {
+              if (e.code === "NumpadEnter" || e.code === "Enter") {
+                e.preventDefault();
+              }
+            },
+          }}
+          datasource={[{ key: "Regular" }, { key: "Temporary" }]}
+          values={"key"}
+          display={"key"}
+        />
+        <Button
+          onClick={generateReport}
+          color="success"
+          variant="contained"
+          sx={{ height: "22px", fontSize: "12px", width: "100%" }}
+        >
+          Generate Report
+        </Button>
+      </div>
+    </>
+  );
+}
 const validateDate = (dateStr: any, dateFormat = "yyyy-MM-dd") => {
   const parsedDate = parse(dateStr, dateFormat, new Date());
   const isDateValid =
     isValid(parsedDate) && format(parsedDate, dateFormat) === dateStr;
   return isDateValid;
 };
-
-

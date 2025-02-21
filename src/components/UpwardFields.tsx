@@ -231,6 +231,16 @@ export function TextInput({
         id={id}
         {...input}
         onBlur={(e) => {
+          if (input.type === "month") {
+            if(!isValidDate(`${e.currentTarget.value}-01`)){
+              alert(`Invalid ${label.title?.replace(/:/g, "").trim()}!, Resetting date.`)
+              e.currentTarget.value = format(new Date(),'yyyy-MM')
+              wait(100).then(()=>{
+                inputRef?.current?.focus()
+              })
+              return
+            }
+          }
           if (input.type === "date") {
             if(!isValidDate(e.currentTarget.value)){
                  alert(`Invalid ${label.title?.replace(/:/g, "").trim()}!, Resetting date.`)
