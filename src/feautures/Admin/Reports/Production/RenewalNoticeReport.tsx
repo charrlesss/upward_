@@ -1,9 +1,11 @@
 import { useContext, useRef, useState } from "react"
 import { AuthContext } from "../../../../components/AuthContext"
 import { SelectInput, TextAreaInput, TextInput } from "../../../../components/UpwardFields"
-import { format, lastDayOfMonth, subYears, setDate } from "date-fns"
+import { format } from "date-fns"
 import { Button } from "@mui/material"
 import { useQuery } from "react-query"
+import PageHelmet from "../../../../components/Helmet"
+import { Loading } from "../../../../components/Loading"
 
 
 export default function RenewalNoticeReport() {
@@ -16,9 +18,23 @@ export default function RenewalNoticeReport() {
     date: new Date()
   }))
 
+ 
+  const titleRef = useRef<HTMLTextAreaElement>(null)
+  const format2Ref = useRef<HTMLSelectElement>(null)
+  const dateFormatRef = useRef<HTMLSelectElement>(null)
+  const TypeRef = useRef<HTMLSelectElement>(null)
+  const dateRef = useRef<HTMLInputElement>(null)
+  const policyTypeRef = useRef<HTMLSelectElement>(null)
+  const accountRef = useRef<HTMLSelectElement>(null)
+  const _accountRef = useRef<any>(null)
+
+  function generateTitle(props: any) {
+    const newTitle: string = `UPWARD MANAGEMENT INSURANCE SERVICES \nMonthly Renewal Notice Report (${props.type} - ${props.account})\nCut off Date: ${format(new Date(props.date), 'MMMM yyyy')}`
+    return newTitle
+  }
+
   const {
     isLoading: loadingAccount,
-    data: dataAccount
   } = useQuery({
     queryKey: "policy-account",
     queryFn: async () =>
@@ -30,22 +46,12 @@ export default function RenewalNoticeReport() {
     refetchOnWindowFocus: false,
     onSuccess: (data) => {
       const response = data as any;
-      console.log(response)
+      if(_accountRef.current)
+      _accountRef.current.setDataSource(response.data.data)
+      
     },
   });
 
-  const titleRef = useRef<HTMLTextAreaElement>(null)
-  const format2Ref = useRef<HTMLSelectElement>(null)
-  const dateFormatRef = useRef<HTMLSelectElement>(null)
-  const TypeRef = useRef<HTMLSelectElement>(null)
-  const dateRef = useRef<HTMLInputElement>(null)
-  const policyTypeRef = useRef<HTMLSelectElement>(null)
-  const accountRef = useRef<HTMLSelectElement>(null)
-
-  function generateTitle(props: any) {
-    const newTitle: string = `UPWARD MANAGEMENT INSURANCE SERVICES \nMonthly Renewal Notice Report (${props.type} - ${props.account})\nCut off Date: ${format(new Date(props.date), 'MMMM yyyy')}`
-    return newTitle
-  }
 
   async function generateReport() {
     const reportDetails: any = {
@@ -73,6 +79,9 @@ export default function RenewalNoticeReport() {
   }
 
   return (
+    <>
+    <PageHelmet title={"Renewal Notice Report"} />
+    {loadingAccount && <Loading />}
     <div style={{
       display: "flex",
       alignItems: "center",
@@ -159,6 +168,7 @@ export default function RenewalNoticeReport() {
           display={"key"}
         />
         <SelectInput
+          ref={_accountRef}
           label={{
             title: "Account : ",
             style: {
@@ -192,7 +202,7 @@ export default function RenewalNoticeReport() {
               }))
             }
           }}
-          datasource={dataAccount?.data.data}
+          datasource={[]}
           values={"Account"}
           display={"Account"}
         />
@@ -262,5 +272,8 @@ export default function RenewalNoticeReport() {
         />
         <Button onClick={generateReport} color="success" variant="contained" sx={{ height: "22px", fontSize: "12px" }}>Generate Report</Button>
       </div>
-    </div>)
+    </div>
+    </>
+
+    )
 }

@@ -13,6 +13,7 @@ import { useUpwardTableModalSearchSafeMode } from "../../../../components/DataGr
 import { wait } from "../../../../lib/wait";
 import { Loading } from "../../../../components/Loading";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
+import PageHelmet from "../../../../components/Helmet";
 
 const buttons = [
   { label: "Chart of Accounts", id: 0 },
@@ -55,6 +56,7 @@ export default function AccountingReport() {
 
   return (
     <>
+    <PageHelmet title={buttonList[buttonSelected].label} />
       <div
         style={{
           display: "flex",
@@ -839,13 +841,11 @@ function FormSubsidiaryLedger() {
   );
   const [subsi, setSubsi] = useState("ALL");
   const titleRef = useRef<HTMLTextAreaElement>(null);
-  const reportRef = useRef<HTMLSelectElement>(null);
   const accountRef = useRef<HTMLInputElement>(null);
   const _accountRef = useRef<HTMLInputElement>(null);
   const subsiRef = useRef<HTMLSelectElement>(null);
 
   const __subsiRef = useRef<any>(null);
-  const _subsiRef = useRef<HTMLSelectElement>(null);
   const subsiTextRef = useRef<HTMLInputElement>(null);
 
   const dateFromRef = useRef<HTMLInputElement>(null);
@@ -2368,6 +2368,7 @@ function FormPostDatedCheckRegistry() {
       sort: sortRef.current?.value,
       order: orderRef.current?.value,
     });
+
   }
   function generateExcelReport() {
     mutateGenerateExcelReport({
@@ -2791,19 +2792,7 @@ function PettyCashFundDisbursement() {
       seriesTo: toRef.current?.value,
     });
   }
-  function generateExcelReport() {
-    // mutateGenerateExcelReport({
-    //   title,
-    //   format: formatRef.current?.value,
-    //   field: fieldRef.current?.value,
-    //   branch: branchRef.current?.value,
-    //   dateFrom: dateFromRef.current?.value,
-    //   dateTo: dateToRef.current?.value,
-    //   type: typeRef.current?.value,
-    //   sort: sortRef.current?.value,
-    //   order: orderRef.current?.value,
-    // });
-  }
+
   const mutateSubAccountRef = useRef<any>(mutateSubAccount);
   const generateTitleRef = useRef<any>(generateTitle);
 

@@ -82,7 +82,7 @@ export default function Dashboard() {
   // style={{border:"1px solid red" ,height:"500px" ,background:"#D3D3D3"}}
   return (
     <div id="main" >
-      <PageHelmet title="Dashboard" />
+      <PageHelmet title={"Dashboard"} />
       {
         (user?.userAccess === "PRODUCTION" ||
           user?.userAccess === "ACCOUNTING" ||

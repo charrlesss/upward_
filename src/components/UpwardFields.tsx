@@ -5,14 +5,12 @@ import {
   ReactNode,
   useState,
   LegacyRef,
-  HTMLInputTypeAttribute,
   TextareaHTMLAttributes,
   CSSProperties,
   forwardRef,
   useImperativeHandle,
 } from "react";
 import "../style/design.css";
-import { AnyMxRecord } from "dns";
 import { isValidDate } from "../lib/validateDate";
 import { format } from "date-fns";
 import { wait } from "../lib/wait";
@@ -172,6 +170,11 @@ export function TextFormatedInput({
           handleBlur(e);
           onBlur(e);
         }} // Add .00 on blur
+        onFocus={(e)=>{
+          e.currentTarget.select()
+          if(input && input.onFocus)
+          input.onFocus(e)
+        }}
       />
       {icon && iconPosition === "end" && (
         <div

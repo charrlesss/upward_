@@ -30,7 +30,7 @@ import {
   TextFormatedInput,
   TextInput,
 } from "../../../../components/UpwardFields";
-import { format, lastDayOfMonth } from "date-fns";
+import { format } from "date-fns";
 import PageHelmet from "../../../../components/Helmet";
 import { wait } from "@testing-library/user-event/dist/utils";
 import SearchIcon from "@mui/icons-material/Search";
@@ -785,10 +785,7 @@ export default function PostDateChecks() {
 
   const isDisableField = pdcMode === "";
 
-  const validateDate = (value:any) => {
-
-  
-  };
+ 
 
   return (
     <>
@@ -1594,6 +1591,7 @@ const ModalCheck = forwardRef(
       searchModalInputRef,
       closeDelay,
     }));
+
     const {
       UpwardTableModalSearch: BankUpwardTableModalSearch,
       openModal: BankOpenModal,
@@ -1617,6 +1615,7 @@ const ModalCheck = forwardRef(
         }
       },
     });
+
     useEffect(() => {
       window.addEventListener("keydown", (e: any) => {
         if (e.key === "Escape") {
@@ -1765,7 +1764,6 @@ const ModalCheck = forwardRef(
                 }}
                 inputRef={checknoRef}
               />
-
               <TextInput
                 containerStyle={{
                   width: "370px",
@@ -1797,7 +1795,6 @@ const ModalCheck = forwardRef(
                 }}
                 inputRef={bankRef}
               />
-
               <TextInput
                 label={{
                   title: "Branch : ",
@@ -1919,6 +1916,9 @@ const ModalCheck = forwardRef(
                       handleOnSave();
                     }
                   },
+                  onFocus:(e)=>{
+                    e.currentTarget.select()
+                  }
                 }}
                 inputRef={_checkcountRef}
               />

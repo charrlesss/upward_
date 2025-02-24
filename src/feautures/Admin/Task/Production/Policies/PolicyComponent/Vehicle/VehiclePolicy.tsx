@@ -15,7 +15,7 @@ import {
   useImperativeHandle,
 } from "react";
 import { Button, IconButton } from "@mui/material";
-import { blue, green, grey, red } from "@mui/material/colors";
+import { blue, grey } from "@mui/material/colors";
 import { AuthContext } from "../../../../../../../components/AuthContext";
 import {
   SelectInput,
@@ -127,19 +127,21 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
     },
     onSuccess(response) {
       wait(100).then(() => {
+        if(subAccountRef_.current)
         subAccountRef_.current.setDataSource(response.data?.data);
         wait(100).then(() => {
           if (subAccountRef.current) subAccountRef.current.value = "HO";
         });
       });
     },
+    refetchOnWindowFocus:false
   });
   const {
     UpwardTableModalSearch: PolicySearchUpwardTableModalSearch,
     openModal: policySearchOpenModal,
     closeModal: policySearchCloseModal,
   } = useUpwardTableModalSearchSafeMode({
-    size: "medium",
+    size: "large",
     link: "/task/production/search-policy",
     column: [
       { key: "Date", label: "Date", width: 110 },
@@ -152,6 +154,11 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
       {
         key: "Name",
         label: "Name",
+        width: 255,
+      },
+      {
+        key: "ChassisNo",
+        label: "Chassis No",
         width: 255,
       },
     ],
@@ -528,7 +535,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           >
             Policy Premium
           </Button>
- 
+ {isLoading ? <>Laoding...</> :
             <SelectInput
               ref={subAccountRef_}
               label={{
@@ -551,7 +558,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
               datasource={[]}
               values={"Acronym"}
               display={"Acronym"}
-            />
+            />}
           
         </div>
       </div>
@@ -3860,7 +3867,6 @@ const PolicyInformation = forwardRef((props: any, ref) => {
 });
 const PolicyTypeDetails = forwardRef((props: any, ref) => {
   const policy = props.policy;
-  const policy_type = props.policyType;
 
   const premiumPaidRef = useRef<HTMLInputElement>(null);
   const estimatedValueSchedVehicleRef = useRef<HTMLInputElement>(null);
@@ -5726,11 +5732,7 @@ export const CustomButton = styled.button`
     background:white;
   },
 `;
-function parseNumber(value: any) {
-  return isNaN(value) 
-    ? "0.00"
-    : value;
-}
+
 function formatNumber(Amount: number) {
   return Amount.toLocaleString("en-US", {
     minimumFractionDigits: 2,
