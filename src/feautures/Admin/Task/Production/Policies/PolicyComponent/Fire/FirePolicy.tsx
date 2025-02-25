@@ -63,6 +63,8 @@ export default function FirePolicy() {
           ._occupancyRef.current.setDataSource(response.data?.occupancy);
       });
     },
+    refetchOnWindowFocus:false
+
   });
 
   const { isLoading: isLoadingAccount } = useQuery({
@@ -81,6 +83,8 @@ export default function FirePolicy() {
           ._accountRef.current.setDataSource(response.data?.account);
       });
     },
+    refetchOnWindowFocus:false
+
   });
   const { isLoading: isLoadingMortgagee } = useQuery({
     queryKey: "mortgagee",
@@ -98,8 +102,9 @@ export default function FirePolicy() {
           .mortgageeSelect_.current.setDataSource(response.data?.mortgagee);
       });
     },
-  });
+    refetchOnWindowFocus:false
 
+  });
 
 
   const { isLoading:isLoadingSubAccount } = useQuery({
@@ -475,7 +480,7 @@ export default function FirePolicy() {
           }}
         >
           <TextInput
-            containerStyle={{ width: "350px" }}
+            containerStyle={{ width: "550px" }}
             label={{
               title: "Search: ",
               style: {

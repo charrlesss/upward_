@@ -278,7 +278,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           />
         )}
         <TextInput
-          containerStyle={{ width: "350px" }}
+          containerStyle={{ width: "550px" }}
           label={{
             title: "Search: ",
             style: {
@@ -2555,7 +2555,7 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           />
         )}
         <TextInput
-          containerStyle={{ width: "350px" }}
+          containerStyle={{ width: "550px" }}
           label={{
             title: "Search: ",
             style: {
@@ -5711,8 +5711,6 @@ const PolicyPremium = forwardRef((props: any, ref) => {
     </div>
   );
 });
-
-
 interface CustomButtonProps {
   currentStepIndex: number;
   index: number;

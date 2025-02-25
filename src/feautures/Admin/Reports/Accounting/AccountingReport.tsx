@@ -2661,7 +2661,7 @@ function FormPostDatedCheckRegistry() {
             selectRef={sortRef}
             select={{
               style: { width: "calc(100% - 90px)", height: "22px" },
-              defaultValue: "All Accounts",
+              defaultValue: "Check Date",
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
                   e.preventDefault();
@@ -2688,7 +2688,7 @@ function FormPostDatedCheckRegistry() {
             selectRef={orderRef}
             select={{
               style: { width: "calc(100% - 90px)", height: "22px" },
-              defaultValue: "All Accounts",
+              defaultValue: "Ascending",
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
                   e.preventDefault();
