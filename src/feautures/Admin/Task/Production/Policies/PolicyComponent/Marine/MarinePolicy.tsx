@@ -468,7 +468,7 @@ export default function MarinePolicy() {
           flexDirection: "column",
         }}
       >
-        <PageHelmet title="Fire Policy" />
+        <PageHelmet title="Marine Policy" />
         <div
           style={{
             display: "flex",

@@ -1,191 +1,94 @@
 import {
-  createContext,
   useContext,
-  useReducer,
   useState,
   useRef,
-  useEffect,
-  useCallback,
+  forwardRef,
+  useImperativeHandle,
 } from "react";
-import { Box, Button, TextField } from "@mui/material";
-import { pink } from "@mui/material/colors";
-import AddIcon from "@mui/icons-material/Add";
+import { Button, IconButton } from "@mui/material";
+import { blue, grey } from "@mui/material/colors";
 import { AuthContext } from "../../../../../../../components/AuthContext";
-import { useQuery, useMutation, useQueryClient } from "react-query";
+import { useQuery, useMutation } from "react-query";
 import CloseIcon from "@mui/icons-material/Close";
-import SaveIcon from "@mui/icons-material/Save";
 import Swal from "sweetalert2";
-import DeleteIcon from "@mui/icons-material/Delete";
-import { GridRowSelectionModel } from "@mui/x-data-grid";
-import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
-import useQueryModalTable from "../../../../../../../hooks/useQueryModalTable";
-import { LoadingButton } from "@mui/lab";
-import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import { CustomButton } from "../Vehicle/VehiclePolicy";
-import useMultipleComponent from "../../../../../../../hooks/useMultipleComponent";
-import MSPRPolicyInformation from "./MSPRPolicyComponents/MSPRPolicyInformation";
-import MSPRPolicyPremium from "./MSPRPolicyComponents/MSPRPolicyPremium";
 import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../../../../../lib/confirmationAlert";
 import { addYears } from "date-fns";
 import PageHelmet from "../../../../../../../components/Helmet";
-
-const initialState = {
-  form_action: "REG",
-  form_type: "COM",
-  sub_account: "HO",
-  //insurer info
-  client_id: "",
-  client_name: "",
-  client_address: "",
-  //agent info
-  agent_id: "",
-  agent_name: "",
-  agent_com: "0.00",
-  sale_officer: "",
-  //Vehicle policy
-  PolicyAccount: "",
-  PolicyNo: "",
-
-  //Period Insurance
-  DateFrom: new Date(),
-  DateTo: addYears(new Date(), 1),
-  DateIssued: new Date(),
-
-  //
-  pAddress: "",
-  moneyRoutesFrom: "",
-  moneyRoutesTo: "",
-  safeDesc: "",
-  methodTrans: "",
-  //
-  guardsMinNum: "0",
-  messengerMaxNum: "0",
-
-  //
-  sec1: "",
-  sec2: "",
-  sec3: "",
-  //
-  prem1: "",
-  prem2: "",
-  prem3: "",
-
-  //calculation
-  netPremium: "",
-  vat: "",
-  docStamp: "",
-  localGovTaxPercent: "0.75",
-  localGovTax: "",
-  totalDue: "",
-  // extra
-  msprActioMode: "",
-};
-const reducer = (state: any, action: any) => {
-  switch (action.type) {
-    case "UPDATE_FIELD":
-      const newState = {
-        ...state,
-        [action.field]: action.value,
-      };
-      return newState;
-    default:
-      return state;
-  }
-};
-
-export const MSPRContext = createContext<any>({});
-
-const queryKeySearchPolicy = "mspr-search";
-const queryKeySearchClientEntry = "clients";
-const queryKeySearchAgentEntry = "agents";
-const queryKeyNeedData = "mspr-policy";
-const queryKeyAddOrUpdatePolicy = "mspr-policy";
-const queryKeyDeletePolicy = "mspr-policy";
+import {
+  SelectInput,
+  TextAreaInput,
+  TextFormatedInput,
+  TextInput,
+} from "../../../../../../../components/UpwardFields";
+import CalculateIcon from "@mui/icons-material/Calculate";
+import { formatNumber } from "../../../../Accounting/ReturnCheck";
+import { Autocomplete } from "../../../../Accounting/PettyCash";
+import { wait } from "../../../../../../../lib/wait";
+import { format } from "date-fns";
+import SearchIcon from "@mui/icons-material/Search";
+import SaveAsIcon from "@mui/icons-material/SaveAs";
+import AddBoxIcon from "@mui/icons-material/AddBox";
+import { Loading } from "../../../../../../../components/Loading";
+import { useUpwardTableModalSearchSafeMode } from "../../../../../../../components/DataGridViewReact";
 
 export default function MSPRPolicy() {
-  const { step, goTo, currentStepIndex } = useMultipleComponent([
-    <MSPRPolicyInformation />,
-    <MSPRPolicyPremium />,
-  ]);
-  const [state, dispatch] = useReducer(reducer, initialState);
   const { myAxios, user } = useContext(AuthContext);
-  const [clientRows, setClientRows] = useState<GridRowSelectionModel>([]);
-  const [agentRows, setAgentRows] = useState<GridRowSelectionModel>([]);
-  const [search, setSearch] = useState("");
-  const [Mortgagee, setMortgagee] = useState(false);
+  const [mode, setMode] = useState("");
+  const [selectedPage, setSelectedPage] = useState(0);
 
-  const [showField, setShowField] = useState({
-    thirdparty: state.form_type.toLowerCase() === "tpl",
-    compre: state.form_type.toLowerCase() === "com",
-  });
+  const searchRef = useRef<HTMLInputElement>(null);
+  const _policyInformationRef = useRef<any>(null);
+  const _policyPremiumRef = useRef<any>(null);
+  const subAccountRef = useRef<HTMLSelectElement>(null);
+  const subAccountRef_ = useRef<any>(null);
 
-  const queryClient = useQueryClient();
-  const isAddOrEditMode = state.msprActioMode === "";
-  const searchMSPRPolicyInputRef = useRef<HTMLInputElement>(null);
-  const newButtonRef = useRef<HTMLButtonElement>(null);
-  const cancelButtonRef = useRef<HTMLButtonElement>(null);
-  const deleteButtonRef = useRef<HTMLButtonElement>(null);
-
-  const { data: dataSubAccount, isLoading: isLoadingSubAccount } = useQuery({
-    queryKey: "get-sub_account",
-    queryFn: async () =>
-      await myAxios.get(`/task/production/get-sub_account`, {
+  const { isLoading: isLoadingAccount } = useQuery({
+    queryKey: "account",
+    queryFn: () => {
+      return myAxios.get("/task/production/mspr/get-account", {
         headers: {
           Authorization: `Bearer ${user?.accessToken}`,
         },
-      }),
+      });
+    },
+    onSuccess(response) {
+      wait(100).then(() => {
+        _policyInformationRef.current
+          .getRefs()
+          ._accountRef.current.setDataSource(response.data?.account);
+      });
+    },
+    refetchOnWindowFocus: false,
   });
 
-  const {
-    ModalComponent: ModalSearchMSPRPolicy,
-    openModal: openModalSearchMSPRPolicy,
-    isLoading: isLoadingModalSearchMSPRPolicy,
-    closeModal: closeModalSearchMSPRPolicy,
-  } = useQueryModalTable({
-    link: {
-      url: "/task/production/search-mspr-policy",
-      queryUrlName: "searchMsprPolicy",
+  const { isLoading: isLoadingSubAccount } = useQuery({
+    queryKey: "sub-account",
+    queryFn: () => {
+      return myAxios.get("/task/production/sub-account", {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      });
     },
-    columns: [
-      { field: "DateIssued", headerName: "Date", width: 200 },
-      { field: "PolicyNo", headerName: "Policy No", width: 250 },
-      {
-        field: "Account",
-        headerName: "Account",
-        width: 170,
-      },
-      {
-        field: "client_fullname",
-        headerName: "Full Name",
-        flex: 1,
-      },
-    ],
-    queryKey: "search-mspr-policy",
-    uniqueId: "PolicyNo",
-    responseDataKey: "msprPolicy",
-    onSelected: (selectedRowData) => {
-      onSearchSelected(selectedRowData);
-      closeModalSearchMSPRPolicy();
+    onSuccess(response) {
+      wait(100).then(() => {
+        if (subAccountRef_.current)
+          subAccountRef_.current.setDataSource(response.data?.data);
+        wait(100).then(() => {
+          if (subAccountRef.current) subAccountRef.current.value = "HO";
+        });
+      });
     },
-    onCellKeyDown: (__: any, key: any) => {
-      if (key.code === "Enter" || key.code === "NumpadEnter") {
-        onSearchSelected([__.row]);
-        closeModalSearchMSPRPolicy();
-      }
-    },
-    onSuccess(data) {
-      console.log(data);
-    },
-    searchRef: searchMSPRPolicyInputRef,
+    refetchOnWindowFocus: false,
   });
 
-  const { mutate, isLoading: loadingAddNew } = useMutation({
-    mutationKey: queryKeyAddOrUpdatePolicy,
+  const { mutate: mutateAddUpdate, isLoading: loadingAddUpdate } = useMutation({
+    mutationKey: "add-update",
     mutationFn: async (variables: any) => {
-      if (state.msprActioMode === "delete") {
+      if (mode === "edit") {
         return await myAxios.post(
           "/task/production/update-mspr-policy",
           variables,
@@ -196,7 +99,6 @@ export default function MSPRPolicy() {
           }
         );
       }
-
       return await myAxios.post("/task/production/add-mspr-policy", variables, {
         headers: {
           Authorization: `Bearer ${user?.accessToken}`,
@@ -205,8 +107,10 @@ export default function MSPRPolicy() {
     },
     onSuccess: async (res) => {
       if (res.data.success) {
-        await updateQueryByKey();
-        backToDefaultState(initialState, true);
+        setMode("");
+        _policyInformationRef.current.resetRefs();
+        _policyPremiumRef.current.resetRefs();
+
         return Swal.fire({
           position: "center",
           icon: "success",
@@ -226,601 +130,2020 @@ export default function MSPRPolicy() {
     },
   });
 
-  const { mutate: mutateDelete, isLoading: loadingDelete } = useMutation({
-    mutationKey: queryKeyDeletePolicy,
-    mutationFn: async (variables: any) => {
-      return await myAxios.post(
-        "/task/production/delete-mspr-policy",
-        variables,
-        {
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
+  const { mutate: mutateSelectedSearch, isLoading: laodingSelectedSearch } =
+    useMutation({
+      mutationKey: "selected-search",
+      mutationFn: async (variables: any) => {
+        return await myAxios.post(
+          "/task/production/selected-search-mspr-policy",
+          variables,
+          {
+            headers: {
+              Authorization: `Bearer ${user?.accessToken}`,
+            },
+          }
+        );
+      },
+      onSuccess: async (res) => {
+        if (res.data.success) {
+          const selected = res.data.data[0];
+          console.log(selected);
+          // client
+          if (_policyInformationRef.current.getRefs().clientIDRef.current) {
+            _policyInformationRef.current.getRefs().clientIDRef.current.value =
+              selected.IDNo;
+          }
+          if (_policyInformationRef.current.getRefs().clientNameRef.current) {
+            _policyInformationRef.current.getRefs().clientNameRef.current.value =
+              selected.ShortName;
+          }
+          if (
+            _policyInformationRef.current.getRefs().clientAddressRef.current
+          ) {
+            _policyInformationRef.current.getRefs().clientAddressRef.current.value =
+              selected.client_address;
+          }
+
+          // agent
+          if (_policyInformationRef.current.getRefs().agentIdRef.current) {
+            _policyInformationRef.current.getRefs().agentIdRef.current.value =
+              selected.agentIDNo;
+          }
+          if (_policyInformationRef.current.getRefs().agentNameRef.current) {
+            _policyInformationRef.current.getRefs().agentNameRef.current.value =
+              selected.agentName;
+          }
+          if (
+            _policyInformationRef.current.getRefs().agentCommisionRef.current
+          ) {
+            _policyInformationRef.current.getRefs().agentCommisionRef.current.value =
+              selected.AgentCom;
+          }
+          if (_policyInformationRef.current.getRefs().saleOfficerRef.current) {
+            _policyInformationRef.current.getRefs().saleOfficerRef.current.value =
+              selected.sale_officer;
+          }
+
+          // mspr policy
+          if (_policyInformationRef.current.getRefs().accountRef.current) {
+            _policyInformationRef.current.getRefs().accountRef.current.value =
+              selected.Account;
+          }
+          if (_policyInformationRef.current.getRefs().policyNoRef.current) {
+            _policyInformationRef.current.getRefs().policyNoRef.current.value =
+              selected.PolicyNo;
+          }
+      
+
+          // periiod insurance
+          if (_policyInformationRef.current.getRefs().dateFromRef.current) {
+            _policyInformationRef.current.getRefs().dateFromRef.current.value =
+              format(new Date(selected.PeriodFrom), "yyyy-MM-dd");
+          }
+          if (_policyInformationRef.current.getRefs().dateToRef.current) {
+            _policyInformationRef.current.getRefs().dateToRef.current.value =
+              format(new Date(selected.PeriodTo), "yyyy-MM-dd");
+          }
+          if (_policyInformationRef.current.getRefs().dateIssuedRef.current) {
+            _policyInformationRef.current.getRefs().dateIssuedRef.current.value =
+              format(new Date(selected.DateIssued), "yyyy-MM-dd");
+          }
+
+          // insured unit
+          if (_policyInformationRef.current.getRefs().premisesAddressRef.current) {
+            _policyInformationRef.current.getRefs().premisesAddressRef.current.value =
+              selected.Location;
+          }
+
+          if (_policyInformationRef.current.getRefs().moneyRoutesFromRef.current) {
+            _policyInformationRef.current.getRefs().moneyRoutesFromRef.current.value =
+              selected.OriginPoint;
+          }
+          if (
+            _policyInformationRef.current.getRefs().safeStrongroomDescRef.current
+          ) {
+            _policyInformationRef.current.getRefs().safeStrongroomDescRef.current.value =
+              selected.Saferoom;
+          }
+          if (_policyInformationRef.current.getRefs().moneyRoutesToRef.current) {
+            _policyInformationRef.current.getRefs().moneyRoutesToRef.current.value =
+              selected.DestinationPoint;
+          }
+          if (_policyInformationRef.current.getRefs().methodTransportationRef.current) {
+            _policyInformationRef.current.getRefs().methodTransportationRef.current.value =
+              selected.Method;
+          }
+
+          if (_policyInformationRef.current.getRefs().guardsMinimumNumberRef.current) {
+            _policyInformationRef.current.getRefs().guardsMinimumNumberRef.current.value =
+              formatNumber(parseFloat(selected.Guard.toString().replace(/,/g,'')));
+          }
+          if (_policyInformationRef.current.getRefs().messengerMaximumNumberRef.current) {
+            _policyInformationRef.current.getRefs().messengerMaximumNumberRef.current.value =
+              formatNumber(parseFloat(selected.Messenger.toString().replace(/,/g,'')));
+          }
+          
+
+          // premiums
+          if (_policyPremiumRef.current.getRefs().sectionIRef.current) {
+            _policyPremiumRef.current.getRefs().sectionIRef.current.value =
+              formatNumber(parseFloat(selected.SecI.toString().replace(/,/g,'')));
+          }
+          if (_policyPremiumRef.current.getRefs().sectionIBRef.current) {
+            _policyPremiumRef.current.getRefs().sectionIBRef.current.value =
+              formatNumber(parseFloat(selected.SecIB.toString().replace(/,/g,'')));
+          }
+          if (_policyPremiumRef.current.getRefs().sectionIIRef.current) {
+            _policyPremiumRef.current.getRefs().sectionIIRef.current.value =
+              formatNumber(parseFloat(selected.SecII.toString().replace(/,/g,'')));
+          }
+
+          if (_policyPremiumRef.current.getRefs().premium1Ref.current) {
+            _policyPremiumRef.current.getRefs().premium1Ref.current.value =
+              formatNumber(parseFloat(selected.SecIPremium.toString().replace(/,/g,'')));
+          }
+          if (_policyPremiumRef.current.getRefs().premium2Ref.current) {
+            _policyPremiumRef.current.getRefs().premium2Ref.current.value =
+              formatNumber(parseFloat(selected.SecIPremiumB.toString().replace(/,/g,'')));
+          }
+          if (_policyPremiumRef.current.getRefs().premium3Ref.current) {
+            _policyPremiumRef.current.getRefs().premium3Ref.current.value =
+              formatNumber(parseFloat(selected.SecIIPremium.toString().replace(/,/g,'')));
+          }
+
+          wait(100).then(() => {
+            _policyPremiumRef.current
+              .getRefs()
+              .cumputationButtonRef.current.click();
+          });
         }
-      );
-    },
-    onSuccess: async (res) => {
-      if (res.data.success) {
-        await updateQueryByKey();
-        backToDefaultState(initialState, true);
-        return Swal.fire({
-          position: "center",
-          icon: "success",
-          title: res.data.message,
-          showConfirmButton: false,
-          timer: 1500,
+      },
+    });
+
+  const {
+    UpwardTableModalSearch: ClientUpwardTableModalSearch,
+    openModal: clientOpenModal,
+    closeModal: clientCloseModal,
+  } = useUpwardTableModalSearchSafeMode({
+    link: "/task/production/search-client-by-id-or-name",
+    column: [
+      { key: "IDNo", label: "ID No", width: 120 },
+      { key: "Name", label: "Name", width: 200 },
+      {
+        key: "IDType",
+        label: "ID Type",
+        width: 90,
+      },
+      {
+        key: "address",
+        label: "Address",
+        width: 90,
+        hide: true,
+      },
+      {
+        key: "sale_officer",
+        label: "Sale Officer",
+        width: 90,
+        hide: true,
+      },
+    ],
+    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
+      if (rowItm) {
+        if (_policyInformationRef.current.getRefs().clientIDRef.current) {
+          _policyInformationRef.current.getRefs().clientIDRef.current.value =
+            rowItm[0];
+        }
+        if (_policyInformationRef.current.getRefs().clientNameRef.current) {
+          _policyInformationRef.current.getRefs().clientNameRef.current.value =
+            rowItm[1];
+        }
+        if (_policyInformationRef.current.getRefs().clientAddressRef.current) {
+          _policyInformationRef.current.getRefs().clientAddressRef.current.value =
+            rowItm[3];
+        }
+        if (_policyInformationRef.current.getRefs().saleOfficerRef.current) {
+          _policyInformationRef.current.getRefs().saleOfficerRef.current.value =
+            rowItm[4];
+        }
+        clientCloseModal();
+        wait(100).then(() => {
+          _policyInformationRef.current.getRefs().agentIdRef.current?.focus();
         });
       }
-
-      Swal.fire({
-        position: "center",
-        icon: "error",
-        title: res.data.message,
-        showConfirmButton: false,
-        timer: 1500,
-      });
     },
   });
-  const setDefaultValueForNumber = useCallback(() => {
-    state.sec1 = state.sec1 === "" ? "0" : state.sec1;
-    state.sec2 = state.sec2 === "" ? "0" : state.sec2;
-    state.sec3 = state.sec3 === "" ? "0" : state.sec3;
-    state.prem1 = state.prem1 === "" ? "0" : state.prem1;
-    state.prem2 = state.prem2 === "" ? "0" : state.prem2;
-    state.prem3 = state.prem3 === "" ? "0" : state.prem3;
-    state.netPremium = state.netPremium === "" ? "0" : state.netPremium;
-    state.vat = state.vat === "" ? "0" : state.vat;
-    state.docStamp = state.docStamp === "" ? "0" : state.docStamp;
-    state.localGovTaxPercent =
-      state.localGovTaxPercent === "" ? "0" : state.localGovTaxPercent;
-    state.localGovTax = state.localGovTax === "" ? "0" : state.localGovTax;
-    state.totalDue = state.totalDue === "" ? "0" : state.totalDue;
-  }, [state]);
-  const handleOnSave = useCallback(() => {
+
+  const {
+    UpwardTableModalSearch: AgentUpwardTableModalSearch,
+    openModal: agentOpenModal,
+    closeModal: agentCloseModal,
+  } = useUpwardTableModalSearchSafeMode({
+    link: "/task/production/search-agent-by-id-or-name",
+    column: [
+      { key: "IDNo", label: "ID No", width: 120 },
+      { key: "Name", label: "Name", width: 200 },
+      {
+        key: "IDType",
+        label: "ID Type",
+        width: 90,
+      },
+    ],
+    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
+      if (rowItm) {
+        if (_policyInformationRef.current.getRefs().agentIdRef.current) {
+          _policyInformationRef.current.getRefs().agentIdRef.current.value =
+            rowItm[0];
+        }
+        if (_policyInformationRef.current.getRefs().agentNameRef.current) {
+          _policyInformationRef.current.getRefs().agentNameRef.current.value =
+            rowItm[1];
+        }
+
+        agentCloseModal();
+        wait(100).then(() => {
+          _policyInformationRef.current.getRefs().accountRef.current?.focus();
+        });
+      }
+    },
+  });
+
+  const {
+    UpwardTableModalSearch: SearchFireUpwardTableModalSearch,
+    openModal: searchFireOpenModal,
+    closeModal: searchFireCloseModal,
+  } = useUpwardTableModalSearchSafeMode({
+    size: "medium",
+    link: "/task/production/search-mspr-policy",
+    column: [
+      { key: "_DateIssued", label: "Date", width: 100 },
+      { key: "PolicyNo", label: "Policy No", width: 150 },
+      {
+        key: "Account",
+        label: "Account",
+        width: 110,
+      },
+      {
+        key: "client_fullname",
+        label: "Full Name",
+        width: 200,
+      },
+    ],
+    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
+      if (rowItm) {
+        setMode("edit");
+        mutateSelectedSearch({ policyNo: rowItm[1] });
+        searchFireCloseModal();
+      }
+    },
+  });
+
+  function handleSave() {
     if (
-      state.client_name === "" ||
-      state.client_name === null ||
-      state.client_name === undefined
+      _policyInformationRef.current.requiredField() ||
+      _policyPremiumRef.current.requiredField()
     ) {
-      return Swal.fire(
-        "Unable to save! Invalid Client ID",
-        "you missed the Client Id Field?",
-        "error"
-      );
+      return;
     }
 
-    if (state.client_id === "" || state.client_id === null) {
-      return Swal.fire(
-        "Unable to save! Invalid IDNo.",
-        "you missed the Client Id Field?",
-        "error"
-      );
-    }
-    if (state.PolicyAccount === "" || state.PolicyAccount === null) {
-      return Swal.fire(
-        "Unable to save! Please select Account.",
-        "you missed the Account Field?",
-        "error"
-      );
-    }
-    if (state.PolicyNo === "" || state.PolicyNo === null) {
-      return Swal.fire(
-        "Unable to save! Invalid Policy No.",
-        "you missed the Policy No Field?",
-        "error"
-      );
-    }
-    if (state.msprActioMode === "delete") {
+    if (mode === "edit") {
       codeCondfirmationAlert({
         isUpdate: true,
         cb: (userCodeConfirmation) => {
-          setDefaultValueForNumber();
-          mutate({ ...state, userCodeConfirmation });
+          const data = {
+            ..._policyInformationRef.current.getRefsValue(),
+            ..._policyPremiumRef.current.getRefsValue(),
+            subAccountRef: subAccountRef.current?.value,
+            userCodeConfirmation,
+          };
+          mutateAddUpdate(data);
         },
       });
     } else {
       saveCondfirmationAlert({
         isConfirm: () => {
-          setDefaultValueForNumber();
-          mutate(state);
+          const data = {
+            ..._policyInformationRef.current.getRefsValue(),
+            ..._policyPremiumRef.current.getRefsValue(),
+            subAccountRef: subAccountRef.current?.value,
+          };
+          mutateAddUpdate(data);
         },
       });
     }
-  }, [setDefaultValueForNumber, state, mutate]);
-
-  useEffect(() => {
-    const handleKeyDown = (event: any) => {
-      if (
-        event.code === "AudioVolumeMute" ||
-        event.code === "F1" ||
-        event.keyCode === 173
-      ) {
-        event.preventDefault();
-        goTo(0);
-      }
-      if (
-        event.code === "AudioVolumeDown" ||
-        event.code === "F2" ||
-        event.keyCode === 174
-      ) {
-        event.preventDefault();
-        goTo(1);
-      }
-
-      if (
-        state.msprActioMode === "" &&
-        (event.code === "KeyN" ||
-          event.code === "Enter" ||
-          event.code === "NumpadEnter")
-      ) {
-        event.preventDefault();
-        newButtonRef.current?.click();
-      }
-      if (state.msprActioMode !== "" && event.code === "Escape") {
-        event.preventDefault();
-        cancelButtonRef.current?.click();
-      }
-      if (state.msprActioMode === "delete" && event.code === "Delete") {
-        event.preventDefault();
-        deleteButtonRef.current?.click();
-      }
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [handleOnSave, state.msprActioMode, goTo]);
-
-  const handleInputChange = (e: any) => {
-    const { name, value } = e.target;
-    dispatch({ type: "UPDATE_FIELD", field: name, value });
-  };
-
-  const customInputchange = (value: any, name: string) => {
-    dispatch({ type: "UPDATE_FIELD", field: name, value });
-  };
-
-  function computation() {
-    setDefaultValueForNumber();
-    const inpLocalGovTaxPercent = parseFloat(state.localGovTaxPercent);
-    if (state.prem1 === "") {
-      state.prem1 = "0.00";
-    }
-    if (state.prem2 === "") {
-      state.prem2 = "0.00";
-    }
-    if (state.prem3 === "") {
-      state.prem3 = "0.00";
-    }
-    const prem1 = parseFloat(state.prem1);
-    const prem2 = parseFloat(state.prem2);
-    const prem3 = parseFloat(state.prem3);
-    const VatPercentage = 12 / 100;
-    const DocPercentage = 12.5 / 100;
-    const LOGPercentage = inpLocalGovTaxPercent / 100;
-    const NewTotalPremium = prem1 + prem2 + prem3;
-
-    customInputchange((VatPercentage * NewTotalPremium).toFixed(2), "vat");
-    customInputchange((DocPercentage * NewTotalPremium).toFixed(2), "docStamp");
-    customInputchange(
-      (LOGPercentage * NewTotalPremium).toFixed(2),
-      "localGovTax"
-    );
-
-    customInputchange(NewTotalPremium.toFixed(2), "netPremium");
-    customInputchange(prem1.toFixed(2), "prim1");
-    customInputchange(prem2.toFixed(2), "prim2");
-    customInputchange(prem3.toFixed(2), "prim3");
-
-    customInputchange(
-      (
-        parseFloat(NewTotalPremium.toFixed(2)) +
-        parseFloat((VatPercentage * NewTotalPremium).toFixed(2)) +
-        parseFloat((DocPercentage * NewTotalPremium).toFixed(2)) +
-        parseFloat((LOGPercentage * NewTotalPremium).toFixed(2))
-      ).toFixed(2),
-      "totalDue"
-    );
   }
-
-  function backToDefaultState(json: any, resetAll: boolean = false) {
-    json.form_type = state.form_type;
-    json.form_action = state.form_action;
-    json.prem_text_one = state.prem_text_one;
-    json.prem_text_two = state.prem_text_two;
-    if (!resetAll) {
-      json.msprActioMode = state.msprActioMode;
-    }
-    Object.entries(json).forEach(([key, value]) => {
-      customInputchange(value, key);
-    });
-  }
-
-  async function updateQueryByKey() {
-    return Promise.all([
-      queryClient.invalidateQueries(queryKeySearchPolicy),
-      queryClient.invalidateQueries(queryKeySearchClientEntry),
-      queryClient.invalidateQueries(queryKeySearchAgentEntry),
-      queryClient.invalidateQueries(queryKeyNeedData),
-      queryClient.invalidateQueries(queryKeyAddOrUpdatePolicy),
-      queryClient.invalidateQueries(queryKeyDeletePolicy),
-    ]);
-  }
-
-  function onSearchSelected(selectedRowData: any) {
-    const {
-      PolicyNo,
-      Account,
-      PeriodFrom,
-      PeriodTo,
-      Location,
-      Saferoom,
-      OriginPoint,
-      DestinationPoint,
-      Method,
-      Guard,
-      Messenger,
-      SecI,
-      SecIPremium,
-      SecIB,
-      SecIPremiumB,
-      SecII,
-      SecIIPremium,
-      IDNo,
-      SubAcct,
-      DateIssued,
-      AgentID,
-      AgentCom,
-      client_fullname,
-      agent_fullname,
-      address,
-      sale_officer,
-      TotalPremium,
-      Vat,
-      DocStamp,
-      LGovTax,
-      TotalDue
-    } = selectedRowData[0];
-    customInputchange(SubAcct, "sub_account");
-    customInputchange(IDNo, "client_id");
-    customInputchange(client_fullname, "client_name");
-    customInputchange(address, "client_address");
-
-    customInputchange(AgentID, "agent_id");
-    customInputchange(agent_fullname, "agent_name");
-    customInputchange(AgentCom, "agent_com");
-    customInputchange(sale_officer, "sale_officer");
-
-    customInputchange(Account, "PolicyAccount");
-    customInputchange(PolicyNo, "PolicyNo");
-
-    customInputchange(PeriodFrom, "DateFrom");
-    customInputchange(PeriodTo, "DateTo");
-    customInputchange(DateIssued, "DateIssued");
-
-    customInputchange(Location, "pAddress");
-    customInputchange(OriginPoint, "moneyRoutesFrom");
-    customInputchange(DestinationPoint, "moneyRoutesTo");
-    customInputchange(Saferoom, "safeDesc");
-    customInputchange(Method, "methodTrans");
-
-    customInputchange(`${Guard}`, "guardsMinNum");
-    customInputchange(`${Messenger}`, "messengerMaxNum");
-
-    customInputchange(SecI, "sec1");
-    customInputchange(SecIB, "sec2");
-    customInputchange(SecII, "sec3");
-
-
-    customInputchange(SecIPremium, "prem1");
-    customInputchange(SecIPremiumB, "prem2");
-    customInputchange(SecIIPremium, "prem3");
-
-    customInputchange(formatNumber(parseFloat(TotalPremium)), "netPremium");
-    customInputchange(formatNumber(parseFloat(Vat)), "vat");
-    customInputchange(formatNumber(parseFloat(DocStamp)), "docStamp");
-    customInputchange(formatNumber(parseFloat(LGovTax)), "localGovTax");
-    customInputchange(formatNumber(parseFloat(TotalDue)), "totalDue");
-
-    customInputchange("delete", "msprActioMode");
-  }
-
-  function formatNumber(num: number) {
-    return (num || 0).toLocaleString("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })
-  }
-
-  function keySave(event: any) {
-    if (
-      state.mode !== "" &&
-      (event.code === "Enter" || event.code === "NumpadEnter")
-    ) {
-      event.preventDefault();
-      handleOnSave();
-    }
-  }
-
-  useEffect(() => {
-    const handleKeyDown = (event: any) => {
-      if ((event.ctrlKey || event.metaKey) && event.key === 's') {
-        event.preventDefault();
-        handleOnSave();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [handleOnSave]);
-
 
   return (
     <>
-      <PageHelmet title="MSPR Policy" />
-      <MSPRContext.Provider
-        value={{
-          state,
-          handleInputChange,
-          customInputchange,
-          Mortgagee,
-          setMortgagee,
-          showField,
-          setShowField,
-          clientRows,
-          setClientRows,
-          myAxios,
-          user,
-          agentRows,
-          setAgentRows,
-          computation,
-          isAddOrEditMode,
-          dispatch,
-          keySave,
+      {(isLoadingAccount ||
+        isLoadingSubAccount ||
+        laodingSelectedSearch ||
+        loadingAddUpdate) && <Loading />}
+      <AgentUpwardTableModalSearch />
+      <ClientUpwardTableModalSearch />
+      <SearchFireUpwardTableModalSearch />
+      <div
+        style={{
+          flex: 1,
+          height: "calc(100% - 35px)",
+          paddingTop: "5px",
+          display: "flex",
+          flexDirection: "column",
         }}
       >
-        <div style={{ display: "flex", columnGap: "5px" }}>
-          <div
-            style={{ display: "flex", columnGap: "8px", alignItems: "center" }}
+        <PageHelmet title="MSPR Policy" />
+        <div
+          style={{
+            display: "flex",
+            columnGap: "8px",
+            alignItems: "center",
+            marginBottom: "15px",
+          }}
+        >
+          <TextInput
+            containerStyle={{ width: "550px" }}
+            label={{
+              title: "Search: ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "60px",
+              },
+            }}
+            input={{
+              className: "search-input-up-on-key-down",
+              type: "search",
+              onKeyDown: (e) => {
+                if (e.key === "Enter" || e.key === "NumpadEnter") {
+                  e.preventDefault();
+                  searchFireOpenModal(e.currentTarget.value);
+                }
+              },
+              style: { width: "100%", height: "22px" },
+            }}
+            icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+            onIconClick={(e) => {
+              e.preventDefault();
+              if (searchRef.current) {
+                searchFireOpenModal(searchRef.current.value);
+              }
+            }}
+            inputRef={searchRef}
+          />
+          <Button
+            sx={{
+              height: "23px",
+              fontSize: "11px",
+            }}
+            disabled={mode === "add" || mode === "edit"}
+            size="small"
+            color="primary"
+            onClick={() => {
+              setMode("add");
+            }}
+            variant="contained"
+            startIcon={<AddBoxIcon />}
           >
-            <CustomButton
-              onClick={() => {
-                goTo(0);
-              }}
-              currentStepIndex={currentStepIndex}
-              index={0}
-            >
-              Policy Information
-            </CustomButton>
-            <NavigateNextIcon fontSize="small" />
-          </div>
-          <div
-            style={{ display: "flex", columnGap: "8px", alignItems: "center" }}
-          >
-            <CustomButton
-              onClick={() => {
-                goTo(1);
-              }}
-              currentStepIndex={currentStepIndex}
-              index={1}
-            >
-              Policy Premium
-            </CustomButton>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              columnGap: "20px",
-              marginLeft: "30px",
+            New
+          </Button>
+          <Button
+            variant="contained"
+            color="success"
+            startIcon={<SaveAsIcon />}
+            disabled={mode === ""}
+            size="small"
+            onClick={handleSave}
+            sx={{
+              height: "23px",
+              fontSize: "11px",
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                columnGap: "5px",
+            Save
+          </Button>
+          <Button
+            sx={{
+              height: "23px",
+              fontSize: "11px",
+            }}
+            variant="contained"
+            color="error"
+            startIcon={<CloseIcon />}
+            disabled={mode === ""}
+            size="small"
+            onClick={() => {
+              Swal.fire({
+                title: "Are you sure?",
+                text: "You won't be able to revert this!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, cencel it!",
+                cancelButtonText: "No",
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  setMode("");
+                  _policyInformationRef.current.resetRefs();
+                  _policyPremiumRef.current.resetRefs();
+                }
+              });
+            }}
+          >
+            Cancel
+          </Button>
+        </div>
+        <div style={{ display: "flex", columnGap: "7px", marginBottom: "6px" }}>
+          <div style={{ display: "flex", columnGap: "2px" }}>
+            <Button
+              // disabled={selectedPage === 0}
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+                background: selectedPage === 0 ? blue[700] : grey[700],
+                "&:hover": {
+                  background: selectedPage === 0 ? blue[800] : grey[800],
+                },
+              }}
+              variant="contained"
+              onClick={() => {
+                setSelectedPage(0);
               }}
             >
-              {state.msprActioMode === "" && (
-                <Button
-                  sx={{
-                    height: "30px",
-                    fontSize: "11px",
-                  }}
-                  ref={newButtonRef}
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={() => {
-                    customInputchange("add", "msprActioMode");
-                  }}
-                >
-                  New
-                </Button>
-              )}
+              Policy Information
+            </Button>
+            <Button
+              // disabled={selectedPage === 2}
+              sx={{
+                height: "23px",
+                fontSize: "11px",
 
-              <LoadingButton
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                }}
-                loading={loadingAddNew}
-                color="primary"
-                variant="contained"
-                type="submit"
-                onClick={handleOnSave}
-                disabled={state.msprActioMode === ""}
-                startIcon={<SaveIcon />}
-              >
-                Save
-              </LoadingButton>
-              {state.msprActioMode !== "" && (
-                <Button
-                  sx={{
-                    height: "30px",
-                    fontSize: "11px",
-                  }}
-                  ref={cancelButtonRef}
-                  variant="contained"
-                  startIcon={<CloseIcon />}
-                  color="error"
-                  onClick={() => {
-                    Swal.fire({
-                      title: "Are you sure?",
-                      text: "You won't be able to revert this!",
-                      icon: "warning",
-                      showCancelButton: true,
-                      confirmButtonColor: "#3085d6",
-                      cancelButtonColor: "#d33",
-                      confirmButtonText: "Yes, cancel it!",
-                    }).then((result) => {
-                      if (result.isConfirmed) {
-                        customInputchange("", "msprActioMode");
-                        backToDefaultState(initialState, true);
-                      }
-                    });
-                  }}
-                >
-                  Cancel
-                </Button>
-              )}
-              <LoadingButton
-                loading={loadingDelete}
-                ref={deleteButtonRef}
-                id="save-entry-header"
-                variant="contained"
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                  backgroundColor: pink[500],
-                  "&:hover": {
-                    backgroundColor: pink[600],
+                background: selectedPage === 2 ? blue[700] : grey[700],
+                "&:hover": {
+                  background: selectedPage === 2 ? blue[800] : grey[800],
+                },
+              }}
+              onClick={() => {
+                setSelectedPage(2);
+              }}
+              variant="contained"
+            >
+              Policy Premium
+            </Button>
+            <SelectInput
+              ref={subAccountRef_}
+              label={{
+                title: "Sub Account :",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
+              }}
+              selectRef={subAccountRef}
+              select={{
+                style: { flex: 1, height: "22px" },
+                defaultValue: "HO",
+              }}
+              containerStyle={{
+                flex: 2,
+                marginLeft: "20px",
+              }}
+              datasource={[]}
+              values={"Acronym"}
+              display={"Acronym"}
+            />
+          </div>
+        </div>
+        <div
+          style={{
+            display: selectedPage === 0 ? "flex" : "none",
+            flex: 1,
+            height: "100%",
+          }}
+        >
+          <PolicyInformation
+            myAxios={myAxios}
+            user={user}
+            disabled={mode === ""}
+            ref={_policyInformationRef}
+            clientSearch={(input: string) => {
+              clientOpenModal(input);
+            }}
+            agentSearch={(input: string) => {
+              agentOpenModal(input);
+            }}
+          />
+        </div>
+        <div
+          style={{
+            display: selectedPage === 2 ? "flex" : "none",
+            flex: 1,
+            height: "100%",
+          }}
+        >
+          <PolicyPremium
+            disabled={mode === ""}
+            ref={_policyPremiumRef}
+            onComputation={(refs: any) => {
+              let txtPremiumI = parseFloat(
+                refs.sectionIRef.current?.value.toString().replace(/,/g, "")
+              );
+              let txtPremiumIB = parseFloat(
+                refs.sectionIBRef.current?.value.toString().replace(/,/g, "")
+              );
+              let txtPremiumII = parseFloat(
+                refs.sectionIIRef.current?.value.toString().replace(/,/g, "")
+              );
+
+              let txtPremium = txtPremiumI + txtPremiumIB + txtPremiumII;
+
+              let txtVat = txtPremium * 0.12;
+              let txtDocStamp = txtPremium * 0.125;
+              let txtLocGovTax = txtPremium * 0.0075;
+              let txtTotalDue =
+                txtPremium + txtVat + txtDocStamp + txtLocGovTax;
+
+              if (refs.netPremiumRef.current) {
+                refs.netPremiumRef.current.value = formatNumber(txtVat);
+              }
+              if (refs.vatRef.current) {
+                refs.vatRef.current.value = formatNumber(txtVat);
+              }
+              if (refs.docstampRef.current) {
+                refs.docstampRef.current.value = formatNumber(txtDocStamp);
+              }
+              if (refs._localGovTaxRef.current) {
+                refs._localGovTaxRef.current.value = formatNumber(txtLocGovTax);
+              }
+              if (refs.totalDueRef.current) {
+                refs.totalDueRef.current.value = formatNumber(txtTotalDue);
+              }
+            }}
+          />
+        </div>
+      </div>
+    </>
+  );
+}
+
+const PolicyInformation = forwardRef((props: any, ref) => {
+  // Insurer Information
+  const clientIDRef = useRef<HTMLInputElement>(null);
+  const clientNameRef = useRef<HTMLInputElement>(null);
+  const clientAddressRef = useRef<HTMLTextAreaElement>(null);
+
+  // Insurer Information
+  const agentIdRef = useRef<HTMLInputElement>(null);
+  const agentNameRef = useRef<HTMLInputElement>(null);
+  const agentCommisionRef = useRef<HTMLInputElement>(null);
+  const saleOfficerRef = useRef<HTMLInputElement>(null);
+
+  // MSPR Policy
+  const _accountRef = useRef<any>(null);
+  const accountRef = useRef<HTMLSelectElement>(null);
+  const policyNoRef = useRef<HTMLInputElement>(null);
+
+  // Period of Insurance
+  const dateFromRef = useRef<HTMLInputElement>(null);
+  const dateToRef = useRef<HTMLInputElement>(null);
+  const dateIssuedRef = useRef<HTMLInputElement>(null);
+
+  // Insured Unit
+  const premisesAddressRef = useRef<HTMLTextAreaElement>(null);
+  const moneyRoutesFromRef = useRef<HTMLTextAreaElement>(null);
+  const safeStrongroomDescRef = useRef<HTMLTextAreaElement>(null);
+  const moneyRoutesToRef = useRef<HTMLTextAreaElement>(null);
+  const methodTransportationRef = useRef<HTMLTextAreaElement>(null);
+  const guardsMinimumNumberRef = useRef<HTMLInputElement>(null);
+  const messengerMaximumNumberRef = useRef<HTMLInputElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    getRefsValue: () => {
+      return {
+        clientIDRef: clientIDRef.current?.value,
+        clientNameRef: clientNameRef.current?.value,
+        clientAddressRef: clientAddressRef.current?.value,
+        agentIdRef: agentIdRef.current?.value,
+        agentNameRef: agentNameRef.current?.value,
+        agentCommisionRef: agentCommisionRef.current?.value,
+        saleOfficerRef: saleOfficerRef.current?.value,
+        _accountRef: _accountRef.current?.value,
+        accountRef: accountRef.current?.value,
+        policyNoRef: policyNoRef.current?.value,
+        dateFromRef: dateFromRef.current?.value,
+        dateToRef: dateToRef.current?.value,
+        dateIssuedRef: dateIssuedRef.current?.value,
+        premisesAddressRef: premisesAddressRef.current?.value,
+        moneyRoutesFromRef: moneyRoutesFromRef.current?.value,
+        safeStrongroomDescRef: safeStrongroomDescRef.current?.value,
+        moneyRoutesToRef: moneyRoutesToRef.current?.value,
+        methodTransportationRef: methodTransportationRef.current?.value,
+        guardsMinimumNumberRef: guardsMinimumNumberRef.current?.value,
+        messengerMaximumNumberRef: messengerMaximumNumberRef.current?.value,
+      };
+    },
+    getRefs: () => {
+      return {
+        clientIDRef,
+        clientNameRef,
+        clientAddressRef,
+        agentIdRef,
+        agentNameRef,
+        agentCommisionRef,
+        saleOfficerRef,
+        _accountRef,
+        accountRef,
+        policyNoRef,
+        dateFromRef,
+        dateToRef,
+        dateIssuedRef,
+        premisesAddressRef,
+        moneyRoutesFromRef,
+        safeStrongroomDescRef,
+        moneyRoutesToRef,
+        methodTransportationRef,
+        guardsMinimumNumberRef,
+        messengerMaximumNumberRef,
+      };
+    },
+    resetRefs: () => {
+      if (clientIDRef.current) {
+        clientIDRef.current.value = "";
+      }
+      if (clientNameRef.current) {
+        clientNameRef.current.value = "";
+      }
+      if (clientAddressRef.current) {
+        clientAddressRef.current.value = "";
+      }
+      if (agentIdRef.current) {
+        agentIdRef.current.value = "";
+      }
+      if (agentNameRef.current) {
+        agentNameRef.current.value = "";
+      }
+      if (agentCommisionRef.current) {
+        agentCommisionRef.current.value = "0.00";
+      }
+      if (saleOfficerRef.current) {
+        saleOfficerRef.current.value = "";
+      }
+
+      if (accountRef.current) {
+        accountRef.current.value = "";
+      }
+      if (policyNoRef.current) {
+        policyNoRef.current.value = "";
+      }
+
+      if (dateFromRef.current) {
+        dateFromRef.current.value = format(new Date(), "yyyy-MM-dd");
+      }
+      if (dateToRef.current) {
+        dateToRef.current.value = format(addYears(new Date(), 1), "yyyy-MM-dd");
+      }
+      if (dateIssuedRef.current) {
+        dateIssuedRef.current.value = format(new Date(), "yyyy-MM-dd");
+      }
+
+      if (premisesAddressRef.current) {
+        premisesAddressRef.current.value = "";
+      }
+      if (moneyRoutesFromRef.current) {
+        moneyRoutesFromRef.current.value = "";
+      }
+      if (safeStrongroomDescRef.current) {
+        safeStrongroomDescRef.current.value = "";
+      }
+      if (moneyRoutesToRef.current) {
+        moneyRoutesToRef.current.value = "";
+      }
+      if (methodTransportationRef.current) {
+        methodTransportationRef.current.value = "";
+      }
+      if (guardsMinimumNumberRef.current) {
+        guardsMinimumNumberRef.current.value = "0";
+      }
+      if (messengerMaximumNumberRef.current) {
+        messengerMaximumNumberRef.current.value = "0";
+      }
+    },
+    refEnableDisable: (disabled: boolean, department: string) => {
+      if (accountRef.current) {
+        accountRef.current.disabled = disabled;
+      }
+      if (clientIDRef.current) {
+        clientIDRef.current.disabled = disabled;
+      }
+      if (clientNameRef.current) {
+        clientNameRef.current.disabled = disabled;
+      }
+      if (clientAddressRef.current) {
+        clientAddressRef.current.disabled = disabled;
+      }
+      if (agentIdRef.current) {
+        agentIdRef.current.disabled = disabled;
+      }
+      if (agentNameRef.current) {
+        agentNameRef.current.disabled = disabled;
+      }
+      if (agentCommisionRef.current) {
+        agentCommisionRef.current.disabled = disabled;
+      }
+      if (saleOfficerRef.current) {
+        saleOfficerRef.current.disabled = disabled;
+      }
+
+      if (policyNoRef.current) {
+        policyNoRef.current.disabled = disabled;
+      }
+
+      if (dateFromRef.current) {
+        dateFromRef.current.disabled = disabled;
+      }
+      if (dateToRef.current) {
+        dateToRef.current.disabled = disabled;
+      }
+
+      if (dateIssuedRef.current) {
+        dateIssuedRef.current.disabled = disabled;
+      }
+
+      if (premisesAddressRef.current) {
+        premisesAddressRef.current.disabled = disabled;
+      }
+      if (moneyRoutesFromRef.current) {
+        moneyRoutesFromRef.current.disabled = disabled;
+      }
+      if (safeStrongroomDescRef.current) {
+        safeStrongroomDescRef.current.disabled = disabled;
+      }
+      if (moneyRoutesToRef.current) {
+        moneyRoutesToRef.current.disabled = disabled;
+      }
+      if (methodTransportationRef.current) {
+        methodTransportationRef.current.disabled = disabled;
+      }
+      if (guardsMinimumNumberRef.current) {
+        guardsMinimumNumberRef.current.disabled = disabled;
+      }
+      if (messengerMaximumNumberRef.current) {
+        messengerMaximumNumberRef.current.disabled = disabled;
+      }
+    },
+    requiredField: () => {
+      if (clientIDRef.current?.value === "") {
+        clientIDRef.current.focus();
+        alert("Client Details is Required!");
+        return true;
+      } else if (policyNoRef.current?.value === "") {
+        policyNoRef.current.focus();
+        alert("Policy No is Required!");
+        return true;
+      } else if (accountRef.current?.value === "") {
+        accountRef.current.focus();
+        alert("Account No is Required!");
+        return true;
+      } else {
+        return false;
+      }
+    },
+  }));
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        flex: 1,
+        marginTop: "10px",
+        rowGap: "20px",
+      }}
+    >
+      {/* First Field*/}
+      <div
+        style={{
+          display: "flex",
+          columnGap: "15px",
+        }}
+      >
+        {/* Insurer Information*/}
+        <div
+          style={{
+            width: "50%",
+            border: "1px solid #9ca3af",
+            boxSizing: "border-box",
+            padding: "10px",
+            position: "relative",
+            display: "flex",
+            flexDirection: "column",
+            rowGap: "5px",
+          }}
+        >
+          <span
+            style={{
+              position: "absolute",
+              top: "-12px",
+              left: "20px",
+              fontSize: "14px",
+              background: "#F1F1F1",
+              padding: "0 2px",
+              fontWeight: "bold",
+            }}
+          >
+            Insurer Information
+          </span>
+          <TextInput
+            containerStyle={{
+              width: "70%",
+            }}
+            label={{
+              title: "Client ID:",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "150px",
+              },
+            }}
+            input={{
+              disabled: props.disabled,
+              type: "text",
+              style: { width: "calc(100% - 150px) " },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  props.clientSearch(e.currentTarget.value);
+                }
+              },
+            }}
+            icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+            onIconClick={(e) => {
+              e.preventDefault();
+              props.clientSearch(clientIDRef.current?.value);
+            }}
+            inputRef={clientIDRef}
+          />
+          <TextInput
+            containerStyle={{
+              width: "90%",
+            }}
+            label={{
+              title: "Name:",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "150px",
+              },
+            }}
+            input={{
+              disabled: props.disabled,
+              type: "text",
+              style: { width: "calc(100% - 150px) " },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                }
+              },
+            }}
+            inputRef={clientNameRef}
+          />
+          <TextAreaInput
+            label={{
+              title: "Address",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "150px",
+              },
+            }}
+            textarea={{
+              disabled: props.disabled,
+              rows: 3,
+              style: { flex: 1 },
+              defaultValue: "",
+              onChange: (e) => {},
+            }}
+            _inputRef={clientAddressRef}
+          />
+        </div>
+        {/* Agent Information*/}
+        <div
+          style={{
+            width: "50%",
+            border: "1px solid #9ca3af",
+            boxSizing: "border-box",
+            padding: "10px",
+            position: "relative",
+            display: "flex",
+            flexDirection: "column",
+            rowGap: "5px",
+          }}
+        >
+          <span
+            style={{
+              position: "absolute",
+              top: "-12px",
+              left: "20px",
+              fontSize: "14px",
+              background: "#F1F1F1",
+              padding: "0 2px",
+              fontWeight: "bold",
+            }}
+          >
+            Agent Information
+          </span>
+          <TextInput
+            containerStyle={{
+              width: "70%",
+            }}
+            label={{
+              title: "Agent ID:",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "150px",
+              },
+            }}
+            input={{
+              disabled: props.disabled,
+              type: "text",
+              style: { width: "calc(100% - 150px) " },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  props.agentSearch(e.currentTarget.value);
+                }
+              },
+            }}
+            icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+            onIconClick={(e) => {
+              e.preventDefault();
+              props.agentSearch(agentIdRef.current?.value);
+            }}
+            inputRef={agentIdRef}
+          />
+          <TextInput
+            containerStyle={{
+              width: "90%",
+            }}
+            label={{
+              title: "Name:",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "150px",
+              },
+            }}
+            input={{
+              disabled: props.disabled,
+              type: "text",
+              style: { width: "calc(100% - 150px) " },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                }
+              },
+            }}
+            inputRef={agentNameRef}
+          />
+          <TextFormatedInput
+            label={{
+              title: "Commission:",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "150px",
+              },
+            }}
+            containerStyle={{
+              width: "50%",
+            }}
+            input={{
+              disabled: props.disabled,
+              defaultValue: "0.00",
+              type: "text",
+              style: { width: "calc(100% - 150px)" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                }
+              },
+            }}
+            inputRef={agentCommisionRef}
+          />
+          <TextInput
+            containerStyle={{
+              width: "100%",
+            }}
+            label={{
+              title: "Sale Officer:",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "150px",
+              },
+            }}
+            input={{
+              disabled: props.disabled,
+              type: "text",
+              style: { width: "calc(100% - 150px) " },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                }
+              },
+            }}
+            inputRef={saleOfficerRef}
+          />
+        </div>
+      </div>
+      {/* Second Field*/}
+      <div
+        style={{
+          display: "flex",
+          columnGap: "15px",
+        }}
+      >
+        {/* MSPR Policy*/}
+        <div
+          style={{
+            width: "50%",
+            border: "1px solid #9ca3af",
+            boxSizing: "border-box",
+            padding: "10px",
+            position: "relative",
+            display: "flex",
+            flexDirection: "column",
+            rowGap: "5px",
+          }}
+        >
+          <span
+            style={{
+              position: "absolute",
+              top: "-12px",
+              left: "20px",
+              fontSize: "14px",
+              background: "#F1F1F1",
+              padding: "0 2px",
+              fontWeight: "bold",
+            }}
+          >
+            MSPR Policy
+          </span>
+          <SelectInput
+            ref={_accountRef}
+            label={{
+              title: "Account:",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "150px",
+              },
+            }}
+            selectRef={accountRef}
+            select={{
+              disabled: props.disabled,
+              style: { flex: 1, height: "22px" },
+              defaultValue: "",
+              onChange: props.onChangeAccount,
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  policyNoRef.current?.focus();
+                }
+              },
+            }}
+            containerStyle={{
+              width: "90%",
+            }}
+            datasource={[]}
+            values={"Account"}
+            display={"Account"}
+          />
+          <TextInput
+            containerStyle={{
+              width: "90%",
+            }}
+            label={{
+              title: "Policy No: ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "150px",
+              },
+            }}
+            input={{
+              disabled: props.disabled,
+              type: "text",
+              style: { width: "calc(100% - 150px) " },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  dateFromRef.current?.focus();
+                }
+              },
+            }}
+            inputRef={policyNoRef}
+          />
+        </div>
+        {/* Period of Insurance*/}
+        <div
+          style={{
+            width: "50%",
+            border: "1px solid #9ca3af",
+            boxSizing: "border-box",
+            padding: "10px",
+            position: "relative",
+            display: "flex",
+            flexDirection: "column",
+            rowGap: "5px",
+          }}
+        >
+          <span
+            style={{
+              position: "absolute",
+              top: "-12px",
+              left: "20px",
+              fontSize: "14px",
+              background: "#F1F1F1",
+              padding: "0 2px",
+              fontWeight: "bold",
+            }}
+          >
+            Period of Insurance
+          </span>
+          <TextInput
+            containerStyle={{
+              width: "50%",
+            }}
+            label={{
+              title: "Date From:",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "150px",
+              },
+            }}
+            input={{
+              disabled: props.disabled,
+              type: "date",
+              defaultValue: format(new Date(), "yyyy-MM-dd"),
+              style: { width: "calc(100% - 150px)" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  dateToRef.current?.focus();
+                }
+              },
+            }}
+            inputRef={dateFromRef}
+          />
+          <TextInput
+            containerStyle={{
+              width: "50%",
+            }}
+            label={{
+              title: "Date To:",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "150px",
+              },
+            }}
+            input={{
+              disabled: props.disabled,
+              type: "date",
+              defaultValue: format(addYears(new Date(), 1), "yyyy-MM-dd"),
+              style: { width: "calc(100% - 150px)" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  dateIssuedRef.current?.focus();
+                }
+              },
+            }}
+            inputRef={dateToRef}
+          />
+          <TextInput
+            containerStyle={{
+              width: "50%",
+            }}
+            label={{
+              title: "Date Issued:",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "150px",
+              },
+            }}
+            input={{
+              disabled: props.disabled,
+              type: "date",
+              defaultValue: format(new Date(), "yyyy-MM-dd"),
+              style: { width: "calc(100% - 150px)" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  premisesAddressRef.current?.focus();
+                }
+              },
+            }}
+            inputRef={dateIssuedRef}
+          />
+        </div>
+      </div>
+      {/* Last Field*/}
+      {/* Insured Unit*/}
+      <div
+        style={{
+          width: "100%",
+          border: "1px solid #9ca3af",
+          boxSizing: "border-box",
+          padding: "10px",
+          position: "relative",
+          display: "flex",
+          flexDirection: "column",
+          rowGap: "5px",
+        }}
+      >
+        <span
+          style={{
+            position: "absolute",
+            top: "-12px",
+            left: "20px",
+            fontSize: "14px",
+            background: "#F1F1F1",
+            padding: "0 2px",
+            fontWeight: "bold",
+          }}
+        >
+          Insured Unit
+        </span>
+        <div style={{ display: "flex", columnGap: "100px" }}>
+          <TextAreaInput
+            containerStyle={{
+              width: "50%",
+            }}
+            label={{
+              title: "Premises Address :",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "200px",
+              },
+            }}
+            textarea={{
+              disabled: props.disabled,
+              rows: 2,
+              style: { width: "calc(100% - 200px) " },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  moneyRoutesFromRef.current?.focus();
+                }
+              },
+            }}
+            _inputRef={premisesAddressRef}
+          />
+          <TextAreaInput
+            containerStyle={{
+              width: "50%",
+            }}
+            label={{
+              title: "Money Routes From :",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "200px",
+              },
+            }}
+            textarea={{
+              disabled: props.disabled,
+              rows: 2,
+              style: { width: "calc(100% - 200px) " },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  safeStrongroomDescRef.current?.focus();
+                }
+              },
+            }}
+            _inputRef={moneyRoutesFromRef}
+          />
+        </div>
+        <div style={{ display: "flex", columnGap: "100px" }}>
+          <TextAreaInput
+            containerStyle={{
+              width: "50%",
+            }}
+            label={{
+              title: "Safe and/or Strongroom Desc.:",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "200px",
+              },
+            }}
+            textarea={{
+              disabled: props.disabled,
+              rows: 2,
+              style: { width: "calc(100% - 200px) " },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  moneyRoutesToRef.current?.focus();
+                }
+              },
+            }}
+            _inputRef={safeStrongroomDescRef}
+          />
+          <TextAreaInput
+            containerStyle={{
+              width: "50%",
+            }}
+            label={{
+              title: "Money Routes To:",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "200px",
+              },
+            }}
+            textarea={{
+              disabled: props.disabled,
+              rows: 2,
+              style: { width: "calc(100% - 200px) " },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  methodTransportationRef.current?.focus();
+                }
+              },
+            }}
+            _inputRef={moneyRoutesToRef}
+          />
+        </div>
+        <div style={{ display: "flex", columnGap: "100px" }}>
+          <TextAreaInput
+            containerStyle={{
+              width: "50%",
+            }}
+            label={{
+              title: "Method of Transportation :",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "200px",
+              },
+            }}
+            textarea={{
+              disabled: props.disabled,
+              rows: 2,
+              style: { width: "calc(100% - 200px) " },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  guardsMinimumNumberRef.current?.focus();
+                }
+              },
+            }}
+            _inputRef={methodTransportationRef}
+          />
+          <div style={{ width: "50%" }}>
+            <TextFormatedInput
+              label={{
+                title: "Guards Minimum Number :",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "200px",
+                },
+              }}
+              containerStyle={{
+                width: "70%",
+                marginBottom: "5px",
+              }}
+              input={{
+                disabled: props.disabled,
+                defaultValue: "0.00",
+                type: "text",
+                style: { width: "calc(100% - 200px)" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    messengerMaximumNumberRef.current?.focus();
+                  }
+                },
+              }}
+              inputRef={guardsMinimumNumberRef}
+            />
+            <TextFormatedInput
+              label={{
+                title: "Messenger Maximum Number :",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "200px",
+                },
+              }}
+              containerStyle={{
+                width: "70%",
+              }}
+              input={{
+                disabled: props.disabled,
+                defaultValue: "0.00",
+                type: "text",
+                style: { width: "calc(100% - 200px)" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  }
+                },
+              }}
+              inputRef={messengerMaximumNumberRef}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+});
+const PolicyPremium = forwardRef((props: any, ref) => {
+  const cumputationButtonRef = useRef<HTMLButtonElement>(null);
+
+  const sectionIRef = useRef<HTMLInputElement>(null);
+  const sectionIBRef = useRef<HTMLInputElement>(null);
+  const sectionIIRef = useRef<HTMLInputElement>(null);
+
+  const premium1Ref = useRef<HTMLInputElement>(null);
+  const premium2Ref = useRef<HTMLInputElement>(null);
+  const premium3Ref = useRef<HTMLInputElement>(null);
+
+  //Premiums
+  const netPremiumRef = useRef<HTMLInputElement>(null);
+  const vatRef = useRef<HTMLInputElement>(null);
+  const docstampRef = useRef<HTMLInputElement>(null);
+  const localGovTaxRef = useRef<HTMLInputElement>(null);
+  const _localGovTaxRef = useRef<HTMLInputElement>(null);
+  const totalDueRef = useRef<HTMLInputElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    getRefsValue: () => {
+      return {
+        sectionIRef:sectionIRef.current?.value,
+        sectionIBRef:sectionIBRef.current?.value,
+        sectionIIRef:sectionIIRef.current?.value,
+        premium1Ref:premium1Ref.current?.value,
+        premium2Ref:premium2Ref.current?.value,
+        premium3Ref:premium3Ref.current?.value,
+        netPremiumRef:netPremiumRef.current?.value,
+        vatRef:vatRef.current?.value,
+        docstampRef:docstampRef.current?.value,
+        localGovTaxRef:localGovTaxRef.current?.value,
+        _localGovTaxRef:_localGovTaxRef.current?.value,
+        totalDueRef:totalDueRef.current?.value,
+      };
+    },
+    getRefs: () => {
+      return {
+        sectionIRef,
+        sectionIBRef,
+        sectionIIRef,
+        premium1Ref,
+        premium2Ref,
+        premium3Ref,
+        netPremiumRef,
+        vatRef,
+        docstampRef,
+        localGovTaxRef,
+        _localGovTaxRef,
+        totalDueRef,
+        cumputationButtonRef
+      };
+    },
+    resetRefs: () => {
+      if (sectionIRef.current) {
+        sectionIRef.current.value = "0.00";
+      }
+      if (sectionIBRef.current) {
+        sectionIBRef.current.value = "0.00";
+      }
+      if (sectionIIRef.current) {
+        sectionIIRef.current.value = "0.00";
+      }
+
+      if (premium1Ref.current) {
+        premium1Ref.current.value = "0.00";
+      }
+      if (premium2Ref.current) {
+        premium2Ref.current.value = "0.00";
+      }
+      if (premium3Ref.current) {
+        premium3Ref.current.value = "0.00";
+      }
+
+
+      if (netPremiumRef.current) {
+        netPremiumRef.current.value = "0.00";
+      }
+
+      if (vatRef.current) {
+        vatRef.current.value = "0.00";
+      }
+      if (docstampRef.current) {
+        docstampRef.current.value = "0.00";
+      }
+
+      if (localGovTaxRef.current) {
+        localGovTaxRef.current.value = "0.75";
+      }
+      if (_localGovTaxRef.current) {
+        _localGovTaxRef.current.value = "0.00";
+      }
+
+      if (totalDueRef.current) {
+        totalDueRef.current.value = "0.00";
+      }
+    },
+    refEnableDisable: (disabled: boolean) => {
+      if (sectionIRef.current) {
+        sectionIRef.current.disabled = disabled;
+      }
+      if (sectionIBRef.current) {
+        sectionIBRef.current.disabled = disabled;
+      }
+      if (sectionIIRef.current) {
+        sectionIIRef.current.disabled = disabled;
+      }
+
+      if (premium1Ref.current) {
+        premium1Ref.current.disabled = disabled;
+      }
+      if (premium2Ref.current) {
+        premium2Ref.current.disabled = disabled;
+      }
+      if (premium3Ref.current) {
+        premium3Ref.current.disabled = disabled;
+      }
+
+
+      if (netPremiumRef.current) {
+        netPremiumRef.current.disabled = disabled;
+      }
+      if (vatRef.current) {
+        vatRef.current.disabled = disabled;
+      }
+      if (docstampRef.current) {
+        docstampRef.current.disabled = disabled;
+      }
+      if (localGovTaxRef.current) {
+        localGovTaxRef.current.disabled = disabled;
+      }
+      if (_localGovTaxRef.current) {
+        _localGovTaxRef.current.disabled = disabled;
+      }
+
+      if (totalDueRef.current) {
+        totalDueRef.current.disabled = disabled;
+      }
+    },
+    requiredField: () => {
+      if (totalDueRef.current?.value === "0.00") {
+        totalDueRef.current.focus();
+        alert("Total Due is Required!");
+        return true;
+      }
+      return false;
+    },
+  }));
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flex: 1,
+        width: "100%",
+        justifyContent: "center",
+        boxSizing: "border-box",
+      }}
+    >
+      <div
+        style={{
+          height: "100%",
+          width: "75%",
+          padding: "15px",
+          display: "flex",
+          rowGap: "20px",
+          boxSizing: "border-box",
+          columnGap: "10px",
+        }}
+      >
+        {/* first layer */}
+        <div
+          style={{
+            border: "1px solid #9ca3af",
+            width: "60%",
+            display: "flex",
+            padding: "10px",
+            position: "relative",
+          }}
+        >
+          <span
+            style={{
+              position: "absolute",
+              top: "-12px",
+              left: "10px",
+              fontSize: "14px",
+              background: "#F1F1F1",
+              padding: "0 2px",
+              fontWeight: "bold",
+            }}
+          ></span>
+          {/* firt layer */}
+          <div
+            style={{ display: "flex", flexDirection: "column", rowGap: "5px" }}
+          >
+            <div style={{ display: "flex", columnGap: "20px" }}>
+              <TextFormatedInput
+                label={{
+                  title: "Section I Insurance :",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "150px",
                   },
                 }}
-                disabled={state.msprActioMode !== "delete"}
-                startIcon={<DeleteIcon />}
-                onClick={() => {
-                  codeCondfirmationAlert({
-                    isUpdate: false,
-                    cb: (userCodeConfirmation) => {
-                      mutateDelete({
-                        PolicyAccount: state.PolicyAccount,
-                        PolicyNo: state.PolicyNo,
-                        policyType: state.policyType,
-                        userCodeConfirmation,
-                      });
-                    },
-                  });
+                containerStyle={{
+                  width: "65%",
                 }}
-              >
-                Delete
-              </LoadingButton>
+                input={{
+                  disabled: props.disabled,
+                  defaultValue: "0.00",
+                  type: "text",
+                  style: { width: "calc(100% - 150px)" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      premium1Ref.current?.focus();
+                    }
+                  },
+                }}
+                inputRef={sectionIRef}
+              />
+              <TextFormatedInput
+                label={{
+                  title: "Premium :",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "80px",
+                  },
+                }}
+                containerStyle={{
+                  width: "50%",
+                }}
+                input={{
+                  disabled: props.disabled,
+                  defaultValue: "0.00",
+                  type: "text",
+                  style: { width: "calc(100% - 80px)" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      sectionIBRef.current?.focus();
+                    }
+                  },
+                }}
+                inputRef={premium1Ref}
+              />
+            </div>
+            <div style={{ display: "flex", columnGap: "20px" }}>
+              <TextFormatedInput
+                label={{
+                  title: "Section IB Insurance :",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "150px",
+                  },
+                }}
+                containerStyle={{
+                  width: "65%",
+                }}
+                input={{
+                  disabled: props.disabled,
+                  defaultValue: "0.00",
+                  type: "text",
+                  style: { width: "calc(100% - 150px)" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      premium2Ref.current?.focus();
+                    }
+                  },
+                }}
+                inputRef={sectionIBRef}
+              />
+              <TextFormatedInput
+                label={{
+                  title: "Premium :",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "80px",
+                  },
+                }}
+                containerStyle={{
+                  width: "50%",
+                }}
+                input={{
+                  disabled: props.disabled,
+                  defaultValue: "0.00",
+                  type: "text",
+                  style: { width: "calc(100% - 80px)" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      sectionIIRef.current?.focus();
+                    }
+                  },
+                }}
+                inputRef={premium2Ref}
+              />
+            </div>
+            <div style={{ display: "flex", columnGap: "20px" }}>
+              <TextFormatedInput
+                label={{
+                  title: "Section II Insurance :",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "150px",
+                  },
+                }}
+                containerStyle={{
+                  width: "65%",
+                }}
+                input={{
+                  disabled: props.disabled,
+                  defaultValue: "0.00",
+                  type: "text",
+                  style: { width: "calc(100% - 150px)" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      premium3Ref.current?.focus();
+                    }
+                  },
+                }}
+                inputRef={sectionIIRef}
+              />
+              <TextFormatedInput
+                label={{
+                  title: "Premium :",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "80px",
+                  },
+                }}
+                containerStyle={{
+                  width: "50%",
+                }}
+                input={{
+                  disabled: props.disabled,
+                  defaultValue: "0.00",
+                  type: "text",
+                  style: { width: "calc(100% - 80px)" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      netPremiumRef.current?.focus();
+                    }
+                  },
+                }}
+                inputRef={premium3Ref}
+              />
             </div>
           </div>
         </div>
-        <Box
-          sx={(theme) => ({
+        {/* second layer */}
+        <div
+          style={{
+            border: "1px solid #9ca3af",
+            width: "40%",
+            position: "relative",
             display: "flex",
-            alignItems: "center",
-            columnGap: "20px",
-            marginBottom: "10px",
-            [theme.breakpoints.down("sm")]: {
-              flexDirection: "column",
-              alignItems: "flex-start",
-              flex: 1,
-            },
-          })}
+            flexDirection: "column",
+            rowGap: "5px",
+            padding: "10px",
+            boxSizing: "border-box",
+          }}
         >
+          <span
+            style={{
+              position: "absolute",
+              top: "-12px",
+              left: "10px",
+              fontSize: "14px",
+              background: "#F1F1F1",
+              padding: "0 2px",
+              fontWeight: "bold",
+            }}
+          >
+            Premiums
+          </span>
           <div
             style={{
-              marginTop: "10px",
-              marginBottom: "12px",
-              width: "100%",
+              display: "flex",
+              columnGap: "10px",
+              height: "22px",
             }}
-          ></div>
-        </Box>
-        <div style={{ marginBottom: "5px", display: "flex", gap: "10px" }}>
-          {isLoadingModalSearchMSPRPolicy ? (
-            <LoadingButton loading={isLoadingModalSearchMSPRPolicy} />
-          ) : (
-            <TextField
-              label="Search"
-              size="small"
-              name="search"
-              value={search}
-              onChange={(e: any) => {
-                setSearch(e.target.value);
-              }}
-              onKeyDown={(e) => {
-                if (e.code === "Enter" || e.code === "NumpadEnter") {
-                  e.preventDefault();
-                  customInputchange("", "msprActioMode");
-                  backToDefaultState(initialState, true);
-                  openModalSearchMSPRPolicy(search);
-                }
-              }}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-              }}
-              sx={{
-                width: "300px",
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            />
-          )}
-          {isLoadingSubAccount ? (
-            <LoadingButton loading={isLoadingSubAccount} />
-          ) : (
-            <FormControl
-              size="small"
-              sx={(theme) => ({
-                width: "150px",
-                ".MuiFormLabel-root": {
-                  fontSize: "14px",
-                  background: "white",
-                  zIndex: 99,
-                  padding: "0 3px",
+          >
+            <TextFormatedInput
+              label={{
+                title: "Net Premium :",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "150px",
                 },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              })}
+              }}
+              containerStyle={{
+                width: "100%",
+              }}
+              input={{
+                disabled: props.disabled,
+                defaultValue: "0.00",
+                type: "text",
+                style: { width: "calc(100% - 150px)" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    props.onComputation({
+                      sectionIRef,
+                      sectionIBRef,
+                      sectionIIRef,
+                      netPremiumRef,
+                      vatRef,
+                      docstampRef,
+                      localGovTaxRef,
+                      _localGovTaxRef,
+                      totalDueRef,
+                    });
+                  }
+                },
+              }}
+              inputRef={netPremiumRef}
+            />
+            <div
+              style={{
+                height: "100%",
+                width: "50px",
+                position: "relative",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
-              <InputLabel id="subAccount">Sub Account</InputLabel>
-              <Select
-                sx={{
-                  height: "27px",
-                  fontSize: "14px",
-                }}
+              <IconButton
+                ref={cumputationButtonRef}
                 size="small"
-                labelId="subAccount"
-                label="subAccount"
-                name="sub_account"
-                value={state.sub_account}
-                onChange={(e) => {
-                  handleInputChange(e);
+                color="info"
+                onClick={() => {
+                  props.onComputation({
+                    sectionIRef,
+                    sectionIBRef,
+                    sectionIIRef,
+                    netPremiumRef,
+                    vatRef,
+                    docstampRef,
+                    localGovTaxRef,
+                    _localGovTaxRef,
+                    totalDueRef,
+                  });
                 }}
               >
-                {(dataSubAccount?.data.sub_account).map(
-                  (items: any, idx: number) => {
-                    return (
-                      <MenuItem key={idx} value={items.Acronym.trim()}>
-                        {items.Acronym}
-                      </MenuItem>
-                    );
+                <CalculateIcon />
+              </IconButton>
+            </div>
+          </div>
+
+          <TextFormatedInput
+            label={{
+              title: "Vat:",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "150px",
+              },
+            }}
+            containerStyle={{
+              width: "100%",
+            }}
+            input={{
+              disabled: props.disabled,
+              defaultValue: "0.00",
+              type: "text",
+              style: { width: "calc(100% - 150px)" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  docstampRef.current?.focus();
+                }
+              },
+            }}
+            inputRef={vatRef}
+          />
+          <TextFormatedInput
+            label={{
+              title: "Doc Stamp:",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "150px",
+              },
+            }}
+            containerStyle={{
+              width: "100%",
+            }}
+            input={{
+              disabled: props.disabled,
+              defaultValue: "0.00",
+              type: "text",
+              style: { width: "calc(100% - 150px)" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  localGovTaxRef.current?.focus();
+                }
+              },
+            }}
+            inputRef={docstampRef}
+          />
+          <div
+            style={{
+              display: "flex",
+              columnGap: "10px",
+              height: "22px",
+              width: "100%",
+            }}
+          >
+            <TextFormatedInput
+              label={{
+                title: "Local Gov Tax",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "150px",
+                },
+              }}
+              containerStyle={{
+                width: "70%",
+              }}
+              input={{
+                disabled: props.disabled,
+                defaultValue: "0.0075",
+                type: "text",
+                style: { width: "calc(100% - 150px)" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    _localGovTaxRef.current?.focus();
                   }
-                )}
-              </Select>
-            </FormControl>
-          )}
+                },
+              }}
+              inputRef={localGovTaxRef}
+            />
+            <TextFormatedInput
+              label={{
+                title: "",
+                style: {
+                  display: "none",
+                },
+              }}
+              containerStyle={{
+                width: "30%",
+              }}
+              input={{
+                disabled: props.disabled,
+                defaultValue: "0.00",
+                type: "text",
+                style: { width: "100%" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    totalDueRef.current?.focus();
+                  }
+                },
+              }}
+              inputRef={_localGovTaxRef}
+            />
+          </div>
+
+          <div
+            style={{
+              width: "100%",
+              border: "1px dashed black",
+              margin: "5px 0px",
+            }}
+          ></div>
+          <TextFormatedInput
+            label={{
+              title: "Total Due:",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "150px",
+              },
+            }}
+            containerStyle={{
+              width: "100%",
+            }}
+            input={{
+              disabled: props.disabled,
+              defaultValue: "0.00",
+              type: "text",
+              style: { width: "calc(100% - 150px)" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                }
+              },
+            }}
+            inputRef={totalDueRef}
+          />
         </div>
-        {step}
-        {ModalSearchMSPRPolicy}
-      </MSPRContext.Provider>
-
-    </>
-
+      </div>
+    </div>
   );
-}
+});

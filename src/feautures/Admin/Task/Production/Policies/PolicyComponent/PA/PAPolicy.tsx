@@ -406,7 +406,7 @@ export default function PAPolicy() {
           flexDirection: "column",
         }}
       >
-        <PageHelmet title="Fire Policy" />
+        <PageHelmet title="PA Policy" />
         <div
           style={{
             display: "flex",
