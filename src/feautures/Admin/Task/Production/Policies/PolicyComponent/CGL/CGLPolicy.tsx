@@ -244,11 +244,24 @@ export default function PAPolicy() {
               );
           }
 
-          wait(100).then(() => {
-            _policyInformationRef.current
-              .getRefs()
-              .cumputationButtonRef.current.click();
-          });
+          if (_policyInformationRef.current.getRefs().vatRef.current) {
+            _policyInformationRef.current.getRefs().vatRef.current.value = formatNumber(parseFloat((selected.Vat || 0).toString().replace(/,/g,'')) ) 
+          }
+          if (_policyInformationRef.current.getRefs().docstampRef.current) {
+            _policyInformationRef.current.getRefs().docstampRef.current.value = formatNumber(parseFloat((selected.DocStamp || 0).toString().replace(/,/g,'')) ) 
+          }
+          if (_policyInformationRef.current.getRefs()._localGovTaxRef.current) {
+            _policyInformationRef.current.getRefs()._localGovTaxRef.current.value = formatNumber(parseFloat((selected.LGovTax || 0).toString().replace(/,/g,'')) ) 
+          }
+          if (_policyInformationRef.current.getRefs().totalDueRef.current) {
+            _policyInformationRef.current.getRefs().totalDueRef.current.value = formatNumber(parseFloat((selected.TotalDue || 0).toString().replace(/,/g,'')) ) 
+          }
+
+          // wait(100).then(() => {
+          //   _policyInformationRef.current
+          //     .getRefs()
+          //     .cumputationButtonRef.current.click();
+          // });
         }
       },
     });

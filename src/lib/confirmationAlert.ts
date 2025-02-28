@@ -6,9 +6,11 @@ export function codeCondfirmationAlert(props: {
   isConfirm?: () => void;
   isDeclined?: () => void;
   text?: string;
+  title?: string;
+  saveTitle?: string;
 }) {
   Swal.fire({
-    title: `Are you sure!`,
+    title: props?.title ? props?.title :`Are you sure!`,
     html: props?.text
       ? props?.text
       : props.isUpdate
@@ -20,7 +22,7 @@ export function codeCondfirmationAlert(props: {
       autocapitalize: "off",
     },
     showCancelButton: true,
-    confirmButtonText: "Save",
+    confirmButtonText: props?.saveTitle ? props?.saveTitle : "Save",
     confirmButtonColor: "green",
     showLoaderOnConfirm: true,
     preConfirm: async (userCodeConfirmation) => {

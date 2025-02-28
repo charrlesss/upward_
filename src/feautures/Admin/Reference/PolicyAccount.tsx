@@ -1,89 +1,93 @@
-import React, { useContext, useState, useRef, useReducer } from "react";
-import { Box, TextField, Button } from "@mui/material";
+import React, {
+  useContext,
+  useState,
+  useRef,
+  useReducer,
+  useEffect,
+  useId,
+} from "react";
+import { Button } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { GridRowSelectionModel } from "@mui/x-data-grid";
-import FormGroup from "@mui/material/FormGroup";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Checkbox from "@mui/material/Checkbox";
 import { pink } from "@mui/material/colors";
 import { AuthContext } from "../../../components/AuthContext";
-import { useMutation, useQuery, useQueryClient } from "react-query";
+import { useMutation } from "react-query";
 import Swal from "sweetalert2";
 import { wait } from "../../../lib/wait";
 import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
-import Table from "../../../components/Table";
 import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../lib/confirmationAlert";
 import PageHelmet from "../../../components/Helmet";
-
-const initialState = {
-  AccountCode: "",
-  Account: "",
-  Description: "",
-  search: "",
-  mode: "",
-  COM: false,
-  TPL: false,
-  MAR: false,
-  FIRE: false,
-  G02: false,
-  G13: false,
-  G16: false,
-  MSPR: false,
-  PA: false,
-  CGL: false,
-  Inactive: false,
-};
-export const reducer = (state: any, action: any) => {
-  switch (action.type) {
-    case "UPDATE_FIELD":
-      return {
-        ...state,
-        [action.field]: action.value,
-      };
-    default:
-      return state;
-  }
-};
+import { TextInput } from "../../../components/UpwardFields";
+import SearchIcon from "@mui/icons-material/Search";
+import { Loading } from "../../../components/Loading";
+import { DataGridViewReact } from "../../../components/DataGridViewReact";
 
 export const poliyAccountColumn = [
-  { field: "Account", headerName: "Account", width: 350 },
-  { field: "AccountCode", headerName: "Account Code", width: 200 },
-  { field: "Description", headerName: "Description", flex: 1 },
-  { field: "createdAt", headerName: "Created At", width: 250 },
+  { key: "AccountCode", label: "Code", width: 200 },
+  { key: "Account", label: "Account", width: 350 },
+  { key: "Description", label: "Description", width: 400 },
+  { key: "_Inactive", label: "Inactive", width: 100 },
+  { key: "Inactive", label: "Inactive", hide: true },
+  { key: "COM", label: "", hide: true },
+  { key: "TPL", label: "", hide: true },
+  { key: "MAR", label: "", hide: true },
+  { key: "FIRE", label: "", hide: true },
+  { key: "G02", label: "", hide: true },
+  { key: "G13", label: "", hide: true },
+  { key: "G16", label: "", hide: true },
+  { key: "MSPR", label: "", hide: true },
+  { key: "PA", label: "", hide: true },
+  { key: "CGL", label: "", hide: true },
+  { key: "createdAt", label: "", hide: true },
 ];
-const queryKey = "policy-account";
 
 export default function PolicyAccount() {
-  const refParent = useRef<HTMLDivElement>(null);
-
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const tableRef = useRef<any>(null);
   const { myAxios, user } = useContext(AuthContext);
-  const [rows, setRows] = useState<GridRowSelectionModel>([]);
-  const table = useRef<any>(null);
-  const queryClient = useQueryClient();
-  const { isLoading, refetch: refetchPolicyAccountSearch } = useQuery({
-    queryKey,
-    queryFn: async () =>
-      await myAxios.get(
-        `/reference/get-policy-account?policySearch=${state.search}`,
-        {
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
-        }
-      ),
-    onSuccess: (res) => {
-      setRows((res as any)?.data.policy);
+  const [mode, setMode] = useState("");
+  const inputSearchRef = useRef<HTMLInputElement>(null);
+
+  const accountCodeRef = useRef<HTMLInputElement>(null);
+  const accountRef = useRef<HTMLInputElement>(null);
+  const descriptionRef = useRef<HTMLInputElement>(null);
+  const inactiveRef = useRef<HTMLInputElement>(null);
+  const comRef = useRef<HTMLInputElement>(null);
+  const tplRef = useRef<HTMLInputElement>(null);
+  const marineRef = useRef<HTMLInputElement>(null);
+  const fireRef = useRef<HTMLInputElement>(null);
+  const bondG02Ref = useRef<HTMLInputElement>(null);
+  const bondG13Ref = useRef<HTMLInputElement>(null);
+  const bondG16Ref = useRef<HTMLInputElement>(null);
+  const msprRef = useRef<HTMLInputElement>(null);
+  const paRef = useRef<HTMLInputElement>(null);
+  const cglRef = useRef<HTMLInputElement>(null);
+
+  const { mutate: mutateSearch, isLoading: loadingSearch } = useMutation({
+    mutationKey: "search-policy",
+    mutationFn: async (variables: any) => {
+      return await myAxios.post("/reference/search-policy-account", variables, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      });
+    },
+    onSuccess: (response) => {
+      if (response.data.success) {
+        wait(100).then(() => {
+          tableRef.current.setDataFormated(response.data.data);
+        });
+      }
     },
   });
+  const mutateSearchRef = useRef<any>(mutateSearch);
+
   const { mutate: mutateAdd, isLoading: loadingAdd } = useMutation({
-    mutationKey: queryKey,
+    mutationKey: "add",
     mutationFn: async (variables: any) => {
       return await myAxios.post("/reference/add-policy-account", variables, {
         headers: {
@@ -94,7 +98,7 @@ export default function PolicyAccount() {
     onSuccess,
   });
   const { mutate: mutateEdit, isLoading: loadingEdit } = useMutation({
-    mutationKey: queryKey,
+    mutationKey: "update",
     mutationFn: async (variables: any) => {
       return await myAxios.post("/reference/update-policy-account", variables, {
         headers: {
@@ -105,7 +109,7 @@ export default function PolicyAccount() {
     onSuccess,
   });
   const { mutate: mutateDelete, isLoading: loadingDelete } = useMutation({
-    mutationKey: queryKey,
+    mutationKey: "delete",
     mutationFn: async (variables: any) => {
       return await myAxios.post("/reference/delete-policy-account", variables, {
         headers: {
@@ -115,20 +119,9 @@ export default function PolicyAccount() {
     },
     onSuccess,
   });
-  const handleInputChange = (e: any) => {
-    const { name, value } = e.target;
-    dispatch({ type: "UPDATE_FIELD", field: name, value });
-  };
-  const handleCheckboxChange = (e: any) => {
-    const { name, value } = e.target;
-    dispatch({
-      type: "UPDATE_FIELD",
-      field: name,
-      value: !JSON.parse(value),
-    });
-  };
+
   function handleOnSave(e: any) {
-    if (state.Account === "") {
+    if (accountCodeRef.current?.value === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -137,7 +130,7 @@ export default function PolicyAccount() {
         timer: 1500,
       });
     }
-    if (state.AccountCode === "") {
+    if (accountRef.current?.value === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -146,26 +139,25 @@ export default function PolicyAccount() {
         timer: 1500,
       });
     }
-    if (state.Account.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Account is too long!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-    if (state.AccountCode >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "error",
-        title: "Account Code is too long",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
+
     e.preventDefault();
-    if (state.mode === "edit") {
+    const state = {
+      AccountCode: accountCodeRef.current?.value,
+      Account: accountRef.current?.value,
+      Description: descriptionRef.current?.value,
+      Inactive: inactiveRef.current?.checked,
+      COM: comRef.current?.checked,
+      TPL: tplRef.current?.checked,
+      MAR: marineRef.current?.checked,
+      FIRE: fireRef.current?.checked,
+      G02: bondG02Ref.current?.checked,
+      G13: bondG13Ref.current?.checked,
+      G16: bondG16Ref.current?.checked,
+      MSPR: msprRef.current?.checked,
+      PA: paRef.current?.checked,
+      CGL: cglRef.current?.checked,
+    };
+    if (mode === "edit") {
       codeCondfirmationAlert({
         isUpdate: true,
         cb: (userCodeConfirmation) => {
@@ -181,15 +173,55 @@ export default function PolicyAccount() {
     }
   }
   function resetModule() {
-    setNewStateValue(dispatch, initialState);
-    table.current?.removeSelection();
-    wait(500).then(() => {
-      refetchPolicyAccountSearch();
-    });
+    if (accountCodeRef.current) {
+      accountCodeRef.current.value = "";
+    }
+    if (accountRef.current) {
+      accountRef.current.value = "";
+    }
+    if (descriptionRef.current) {
+      descriptionRef.current.value = "";
+    }
+    if (inactiveRef.current) {
+      inactiveRef.current.checked = false;
+    }
+    if (comRef.current) {
+      comRef.current.checked = false;
+    }
+    if (tplRef.current) {
+      tplRef.current.checked = false;
+    }
+    if (marineRef.current) {
+      marineRef.current.checked = false;
+    }
+    if (fireRef.current) {
+      fireRef.current.checked = false;
+    }
+    if (bondG02Ref.current) {
+      bondG02Ref.current.checked = false;
+    }
+    if (bondG13Ref.current) {
+      bondG13Ref.current.checked = false;
+    }
+    if (bondG16Ref.current) {
+      bondG16Ref.current.checked = false;
+    }
+    if (msprRef.current) {
+      msprRef.current.checked = false;
+    }
+    if (paRef.current) {
+      paRef.current.checked = false;
+    }
+    if (cglRef.current) {
+      cglRef.current.checked = false;
+    }
   }
   function onSuccess(res: any) {
     if (res.data.success) {
-      queryClient.invalidateQueries("bank-account-trans");
+      tableRef.current.setSelectedRow(null);
+      tableRef.current.resetCheckBox();
+      mutateSearchRef.current({search:""})
+      setMode('')
       resetModule();
       return Swal.fire({
         position: "center",
@@ -209,8 +241,13 @@ export default function PolicyAccount() {
     });
   }
 
+  useEffect(() => {
+    mutateSearchRef.current({ search: "" });
+  }, []);
+
   return (
     <>
+      {loadingSearch && <Loading />}
       <PageHelmet title="Policy Account" />
 
       <div
@@ -219,485 +256,398 @@ export default function PolicyAccount() {
           flexDirection: "column",
           flex: 1,
           width: "100%",
-          padding: "5px"
-
+          padding: "5px",
         }}
       >
-        <Box
-          sx={(theme) => ({
+        <div
+          style={{
             display: "flex",
             alignItems: "center",
-            columnGap: "20px",
-            [theme.breakpoints.down("sm")]: {
-              flexDirection: "column",
-              alignItems: "flex-start",
-              marginBottom: "15px",
-            },
-          })}
-        >
-          <div
-            style={{
-              marginTop: "10px",
-              marginBottom: "12px",
-              width: "100%",
-            }}
-          >
-            <TextField
-              label="Search"
-              fullWidth
-              size="small"
-              type="text"
-              name="search"
-              value={state.search}
-              onChange={handleInputChange}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-              }}
-              sx={{
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-              onKeyDown={(e) => {
-                if (e.code === "Enter" || e.code === "NumpadEnter") {
-                  e.preventDefault();
-                  return refetchPolicyAccountSearch();
-                }
-              }}
-            />
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              columnGap: "20px",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                columnGap: "5px",
-              }}
-            >
-              {state.mode === "" && (
-                <Button
-                  sx={{
-                    height: "30px",
-                    fontSize: "11px",
-                  }}
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  id="entry-header-save-button"
-                  onClick={() => {
-                    handleInputChange({ target: { value: "add", name: "mode" } });
-                  }}
-                >
-                  New
-                </Button>
-              )}
-
-              <LoadingButton
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                }}
-                id="save-entry-header"
-                color="primary"
-                variant="contained"
-                type="submit"
-                onClick={handleOnSave}
-                disabled={state.mode === ""}
-                startIcon={<SaveIcon />}
-                loading={loadingAdd || loadingEdit}
-              >
-                Save
-              </LoadingButton>
-              {state.mode !== "" && (
-                <Button
-                  sx={{
-                    height: "30px",
-                    fontSize: "11px",
-                  }}
-                  variant="contained"
-                  startIcon={<CloseIcon />}
-                  color="error"
-                  onClick={() => {
-                    Swal.fire({
-                      title: "Are you sure?",
-                      text: "You won't be able to revert this!",
-                      icon: "warning",
-                      showCancelButton: true,
-                      confirmButtonColor: "#3085d6",
-                      cancelButtonColor: "#d33",
-                      confirmButtonText: "Yes, cancel it!",
-                    }).then((result) => {
-                      if (result.isConfirmed) {
-                        resetModule();
-                      }
-                    });
-                  }}
-                >
-                  Cancel
-                </Button>
-              )}
-              <LoadingButton
-                id="save-entry-header"
-                variant="contained"
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                  backgroundColor: pink[500],
-                  "&:hover": {
-                    backgroundColor: pink[600],
-                  },
-                }}
-                disabled={state.mode !== "edit"}
-                startIcon={<DeleteIcon />}
-                loading={loadingDelete}
-                onClick={() => {
-                  codeCondfirmationAlert({
-                    isUpdate: false,
-                    cb: (userCodeConfirmation) => {
-                      mutateDelete({
-                        Account: state.Account,
-                        userCodeConfirmation,
-                      });
-                    },
-                  });
-                }}
-              >
-                Delete
-              </LoadingButton>
-            </div>
-          </div>
-        </Box>
-        <form
-          onSubmit={handleOnSave}
-          onKeyDown={(e) => {
-            if (e.code === "Enter" || e.code === "NumpadEnter") {
-              e.preventDefault();
-              handleOnSave(e);
-              return;
-            }
+            columnGap: "5px",
+            marginBottom: "10px",
           }}
         >
-          <Box
-            sx={(theme) => ({
-              display: "flex",
-              columnGap: "15px",
-              flexDirection: "row",
-              [theme.breakpoints.down("md")]: {
-                flexDirection: "column",
-                rowGap: "10px",
+          <TextInput
+            containerStyle={{
+              width: "550px",
+              marginRight: "10px",
+            }}
+            label={{
+              title: "Search: ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "50px",
               },
-            })}
-          >
-            <TextField
-              size="small"
-              label="Account"
-              name="Account"
-              required
-              value={state.Account}
-              onChange={handleInputChange}
-              disabled={state.mode === "" || state.mode === "edit"}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-              }}
+            }}
+            input={{
+              className: "search-input-up-on-key-down",
+              type: "search",
+              onKeyDown: (e) => {
+                if (e.key === "Enter" || e.key === "NumpadEnter") {
+                  e.preventDefault();
+                  mutateSearch({ search: e.currentTarget.value });
+                }
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  const datagridview = document.querySelector(
+                    ".grid-container"
+                  ) as HTMLDivElement;
+                  datagridview.focus();
+                }
+              },
+              style: { width: "500px" },
+            }}
+            icon={
+              <SearchIcon
+                sx={{
+                  fontSize: "18px",
+                }}
+              />
+            }
+            onIconClick={(e) => {
+              e.preventDefault();
+              if (inputSearchRef.current) {
+                mutateSearch({ search: inputSearchRef.current.value });
+              }
+            }}
+            inputRef={inputSearchRef}
+          />
+
+          {mode === "" && (
+            <Button
               sx={{
-                minWidth: "200px",
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+                height: "22px",
+                fontSize: "11px",
               }}
-            />
-            <TextField
-              size="small"
-              label="Account Code"
-              name="AccountCode"
-              required
-              value={state.AccountCode}
-              onChange={handleInputChange}
-              disabled={state.mode === ""}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-              }}
-              sx={{
-                minWidth: "200px",
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            />
-            <TextField
-              fullWidth
-              size="small"
-              label="Description"
-              name="Description"
-              required
-              value={state.Description}
-              onChange={handleInputChange}
-              disabled={state.mode === ""}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-              }}
-              sx={{
-                flex: 1,
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            />
-          </Box>
-          <fieldset style={{ border: "1px solid #cbd5e1" }}>
-            <legend style={{ color: "#6b7280" }}>Policy Type</legend>
-            <FormGroup
-              sx={{
-                display: "flex",
-                flexDirection: "row",
-                justifyContent: "space-between",
+              variant="contained"
+              startIcon={<AddIcon />}
+              id="entry-header-save-button"
+              onClick={() => {
+                setMode("add");
               }}
             >
-              <FormControlLabel
-                sx={{
-                  ".MuiTypography-root": {
-                    fontSize: "14px",
-                  },
-                }}
-                disabled={state.mode === ""}
-                control={
-                  <Checkbox
-                    size="small"
-                    name="COM"
-                    checked={state.COM}
-                    value={state.COM}
-                    onChange={handleCheckboxChange}
-                  />
+              New
+            </Button>
+          )}
+          <LoadingButton
+            sx={{
+              height: "22px",
+                fontSize: "11px",
+            }}
+            id="save-entry-header"
+            color="primary"
+            variant="contained"
+            type="submit"
+            onClick={handleOnSave}
+            disabled={mode === ""}
+            startIcon={<SaveIcon />}
+            loading={loadingAdd || loadingEdit}
+          >
+            Save
+          </LoadingButton>
+          {mode !== "" && (
+            <Button
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<CloseIcon />}
+              color="error"
+              onClick={() => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, cancel it!",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    resetModule();
+                    setMode('')
+                    tableRef.current.setSelectedRow(null);
+                    tableRef.current.resetCheckBox();
+                  }
+                });
+              }}
+            >
+              Cancel
+            </Button>
+          )}
+          <LoadingButton
+            id="save-entry-header"
+            variant="contained"
+            sx={{
+              height: "22px",
+                fontSize: "11px",
+              backgroundColor: pink[500],
+              "&:hover": {
+                backgroundColor: pink[600],
+              },
+            }}
+            disabled={mode !== "edit"}
+            startIcon={<DeleteIcon />}
+            loading={loadingDelete}
+            onClick={() => {
+              
+              codeCondfirmationAlert({
+                isUpdate: false,
+                title:"Confirmation",
+                saveTitle:"Confirm",
+                text:`Are you sure you want to delete '${accountRef.current?.value}'?`,
+                cb: (userCodeConfirmation) => {
+                  mutateDelete({
+                    Account: accountCodeRef.current?.value,
+                    userCodeConfirmation,
+                  });
+                },
+              });
+            }}
+          >
+            Delete
+          </LoadingButton>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            rowGap: "5px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              width: "590px",
+              justifyContent: "space-between",
+            }}
+          >
+            <TextInput
+              label={{
+                title: "Account Code: ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "95px",
+                },
+              }}
+              input={{
+                disabled: mode === "" || mode === "edit",
+                type: "text",
+                style: { width: "300px" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    e.preventDefault();
+                  }
+                },
+              }}
+              inputRef={accountCodeRef}
+            />
+            <CheckBoxLabel
+              gridRow={1}
+              inputRef={inactiveRef}
+              label="Mark as Inactive"
+            />
+          </div>
+          <TextInput
+            label={{
+              title: "Account : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "95px",
+              },
+            }}
+            input={{
+              disabled: mode === "" ,
+              type: "text",
+              style: { width: "500px" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  e.preventDefault();
                 }
+              },
+            }}
+            inputRef={accountRef}
+          />
+          <TextInput
+            label={{
+              title: "Description : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "95px",
+              },
+            }}
+            input={{
+              disabled: mode === "" ,
+              type: "text",
+              style: { width: "500px" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  e.preventDefault();
+                }
+              },
+            }}
+            inputRef={descriptionRef}
+          />
+          <fieldset
+            style={{
+              border: "1px solid black",
+              padding: "5px",
+              width: "590px",
+            }}
+          >
+            <legend
+              style={{ color: "black", fontSize: "13px", fontWeight: "bold" }}
+            >
+              Policy Type
+            </legend>
+            <div
+              style={{
+                width: "100%",
+                display: "grid",
+                gridTemplateColumns: "repeat(5, 1fr)",
+                gap: "10px",
+              }}
+            >
+              <CheckBoxLabel
+                gridRow={1}
+                inputRef={comRef}
                 label="Comprehensive"
               />
-              <FormControlLabel
-                sx={{
-                  ".MuiTypography-root": {
-                    fontSize: "14px",
-                  },
-                }}
-                disabled={state.mode === ""}
-                control={
-                  <Checkbox
-                    size="small"
-                    name="MAR"
-                    value={state.MAR}
-                    checked={state.MAR}
-                    onChange={handleCheckboxChange}
-                  />
-                }
-                label="Marine"
-              />
-              <FormControlLabel
-                sx={{
-                  ".MuiTypography-root": {
-                    fontSize: "14px",
-                  },
-                }}
-                disabled={state.mode === ""}
-                control={
-                  <Checkbox
-                    size="small"
-                    name="G02"
-                    value={state.G02}
-                    checked={state.G02}
-                    onChange={handleCheckboxChange}
-                  />
-                }
+              <CheckBoxLabel gridRow={2} inputRef={tplRef} label="TPL" />
+              <CheckBoxLabel gridRow={1} inputRef={marineRef} label="Marine" />
+              <CheckBoxLabel gridRow={2} inputRef={fireRef} label="Fire" />
+              <CheckBoxLabel
+                gridRow={1}
+                inputRef={bondG02Ref}
                 label="Bond G(02)"
               />
-              <FormControlLabel
-                sx={{
-                  ".MuiTypography-root": {
-                    fontSize: "14px",
-                  },
-                }}
-                disabled={state.mode === ""}
-                control={
-                  <Checkbox
-                    size="small"
-                    name="G13"
-                    value={state.G13}
-                    checked={state.G13}
-                    onChange={handleCheckboxChange}
-                  />
-                }
+              <CheckBoxLabel
+                gridRow={2}
+                inputRef={bondG13Ref}
                 label="Bond G(13)"
               />
-              <FormControlLabel
-                sx={{
-                  ".MuiTypography-root": {
-                    fontSize: "14px",
-                  },
-                }}
-                disabled={state.mode === ""}
-                control={
-                  <Checkbox
-                    size="small"
-                    name="G16"
-                    value={state.G16}
-                    checked={state.G16}
-                    onChange={handleCheckboxChange}
-                  />
-                }
+              <CheckBoxLabel
+                gridRow={1}
+                inputRef={bondG16Ref}
                 label="Bond G(16)"
               />
-              <FormControlLabel
-                sx={{
-                  ".MuiTypography-root": {
-                    fontSize: "14px",
-                  },
-                }}
-                disabled={state.mode === ""}
-                control={
-                  <Checkbox
-                    size="small"
-                    name="PA"
-                    value={state.PA}
-                    checked={state.PA}
-                    onChange={handleCheckboxChange}
-                  />
-                }
-                label="PA"
-              />
-              <FormControlLabel
-                sx={{
-                  ".MuiTypography-root": {
-                    fontSize: "14px",
-                  },
-                }}
-                disabled={state.mode === ""}
-                control={
-                  <Checkbox
-                    size="small"
-                    name="TPL"
-                    value={state.TPL}
-                    checked={state.TPL}
-                    onChange={handleCheckboxChange}
-                  />
-                }
-                label="TPL"
-              />
-              <FormControlLabel
-                sx={{
-                  ".MuiTypography-root": {
-                    fontSize: "14px",
-                  },
-                }}
-                disabled={state.mode === ""}
-                control={
-                  <Checkbox
-                    size="small"
-                    name="FIRE"
-                    value={state.FIRE}
-                    checked={state.FIRE}
-                    onChange={handleCheckboxChange}
-                  />
-                }
-                label="Fire"
-              />
-              <FormControlLabel
-                sx={{
-                  ".MuiTypography-root": {
-                    fontSize: "14px",
-                  },
-                }}
-                disabled={state.mode === ""}
-                control={
-                  <Checkbox
-                    size="small"
-                    name="MSPR"
-                    value={state.MSPR}
-                    checked={state.MSPR}
-                    onChange={handleCheckboxChange}
-                  />
-                }
-                label="MSPR"
-              />
-              <FormControlLabel
-                sx={{
-                  ".MuiTypography-root": {
-                    fontSize: "14px",
-                  },
-                }}
-                disabled={state.mode === ""}
-                control={
-                  <Checkbox
-                    size="small"
-                    name="CGL"
-                    value={state.CGL}
-                    checked={state.CGL}
-                    onChange={handleCheckboxChange}
-                  />
-                }
-                label="CGL"
-              />
-            </FormGroup>
+              <CheckBoxLabel gridRow={2} inputRef={msprRef} label="MSPR" />
+              <CheckBoxLabel gridRow={1} inputRef={paRef} label="PA" />
+              <CheckBoxLabel gridRow={2} inputRef={cglRef} label="CGL" />
+            </div>
           </fieldset>
-        </form>
+        </div>
         <div
           style={{
             marginTop: "10px",
             width: "100%",
             position: "relative",
             flex: 1,
+            display: "flex",
           }}
         >
-          <Box
-            style={{
-              height: `400px`,
-              width: "100%",
-              overflowX: "scroll",
-              position: "absolute",
+          <DataGridViewReact
+            containerStyle={{
+              flex: 1,
+              height: "auto",
             }}
-          >
-            <Table
-              ref={table}
-              isLoading={isLoading || loadingAdd || loadingEdit || loadingDelete}
-              columns={poliyAccountColumn}
-              rows={rows}
-              table_id={"Account"}
-              isSingleSelection={true}
-              isRowFreeze={false}
-              dataSelection={(selection, data, code) => {
-                const rowSelected = data.filter(
-                  (item: any) => item.Account === selection[0]
-                )[0];
-                if (rowSelected === undefined || rowSelected.length <= 0) {
-                  setNewStateValue(dispatch, initialState);
-                  handleInputChange({ target: { value: "", name: "mode" } });
-                  return;
+            ref={tableRef}
+            columns={poliyAccountColumn}
+            height="280px"
+            getSelectedItem={(rowItm: any) => {
+              if (rowItm) {
+                setMode("edit");
+                if (accountCodeRef.current) {
+                  accountCodeRef.current.value = rowItm[0];
                 }
-                handleInputChange({ target: { value: "edit", name: "mode" } });
-
-                if (code === "Delete" || code === "Backspace") {
-                  codeCondfirmationAlert({
-                    isUpdate: false,
-                    cb: (userCodeConfirmation) => {
-                      mutateDelete({
-                        Account: state.Account,
-                        userCodeConfirmation,
-                      });
-                    },
-                  });
-                  return;
+                if (accountRef.current) {
+                  accountRef.current.value = rowItm[1];
                 }
-
-                setNewStateValue(dispatch, rowSelected);
-              }}
-            />
-          </Box>
+                if (descriptionRef.current) {
+                  descriptionRef.current.value = rowItm[2];
+                }
+                if (inactiveRef.current) {
+                  inactiveRef.current.checked = rowItm[4];
+                }
+                if (comRef.current) {
+                  comRef.current.checked = rowItm[5];
+                }
+                if (tplRef.current) {
+                  tplRef.current.checked = rowItm[6];
+                }
+                if (marineRef.current) {
+                  marineRef.current.checked = rowItm[7];
+                }
+                if (fireRef.current) {
+                  fireRef.current.checked = rowItm[8];
+                }
+                if (bondG02Ref.current) {
+                  bondG02Ref.current.checked = rowItm[9];
+                }
+                if (bondG13Ref.current) {
+                  bondG13Ref.current.checked = rowItm[10];
+                }
+                if (bondG16Ref.current) {
+                  bondG16Ref.current.checked = rowItm[11];
+                }
+                if (msprRef.current) {
+                  msprRef.current.checked = rowItm[12];
+                }
+                if (paRef.current) {
+                  paRef.current.checked = rowItm[13];
+                }
+                if (cglRef.current) {
+                  cglRef.current.checked = rowItm[14 ];
+                }
+              } else {
+                resetModule();
+              }
+            }}
+    
+          />
         </div>
       </div>
     </>
   );
 }
+const CheckBoxLabel = ({
+  inputRef,
+  label,
+  gridRow,
+}: {
+  inputRef: React.RefObject<HTMLInputElement>;
+  label: string;
+  gridRow: number;
+}) => {
+  const id = useId();
+  return (
+    <div style={{ display: "flex", columnGap: "5px", gridRow }}>
+      <input
+        id={id}
+        ref={inputRef}
+        type="checkbox"
+        style={{
+          cursor: "pointer",
+        }}
+      />
+      <label
+        htmlFor={id}
+        style={{
+          fontSize: "12px",
+          cursor: "pointer",
+        }}
+      >
+        {label}
+      </label>
+    </div>
+  );
+};
+
 export function setNewStateValue(dispatch: any, obj: any) {
   Object.entries(obj).forEach(([field, value]) => {
     dispatch({ type: "UPDATE_FIELD", field, value });

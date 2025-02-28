@@ -1227,8 +1227,8 @@ export default function CashDisbursement() {
               }
               onIconClick={(e) => {
                 e.preventDefault();
-                if (refCode.current) {
-                  searchCashDisbursementOpenModal(refCode.current.value);
+                if (inputSearchRef.current) {
+                  searchCashDisbursementOpenModal(inputSearchRef.current.value);
                 }
               }}
               inputRef={inputSearchRef}

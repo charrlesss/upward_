@@ -1,4 +1,11 @@
-import React, { useContext, useState, useRef, useReducer } from "react";
+import React, {
+  useContext,
+  useState,
+  useRef,
+  useReducer,
+  useId,
+  useEffect,
+} from "react";
 import { Box, TextField, Button } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -19,6 +26,10 @@ import {
   saveCondfirmationAlert,
 } from "../../../lib/confirmationAlert";
 import PageHelmet from "../../../components/Helmet";
+import { TextInput } from "../../../components/UpwardFields";
+import SearchIcon from "@mui/icons-material/Search";
+import { DataGridViewReact } from "../../../components/DataGridViewReact";
+import { Loading } from "../../../components/Loading";
 
 const initialState = {
   Bank_Code: "",
@@ -39,33 +50,41 @@ export const reducer = (state: any, action: any) => {
   }
 };
 export const bankColumn = [
-  { field: "Bank_Code", headerName: "Bank Code", flex: 1 },
-  { field: "Bank", headerName: "Bank", flex: 1 },
-  { field: "Inactive", headerName: "Active", flex: 1 },
+  { key: "Bank_Code", label: "Bank Code", width: 120 },
+  { key: "Bank", label: "Bank", width: 500 },
+  { key: "Inactive", label: "Active", width: 100 },
 ];
-const queryKey = "bank";
 export default function Bank() {
-  const refParent = useRef<HTMLDivElement>(null);
-
-  const [state, dispatch] = useReducer(reducer, initialState);
   const { myAxios, user } = useContext(AuthContext);
-  const [rows, setRows] = useState<GridRowSelectionModel>([]);
-  const table = useRef<any>(null);
-  const queryClient = useQueryClient();
-  const { isLoading, refetch: refetchBankSearch } = useQuery({
-    queryKey,
-    queryFn: async () =>
-      await myAxios.get(`/reference/get-banks?bankSearch=${state.search}`, {
+  const inputSearchRef = useRef<HTMLInputElement>(null);
+  const [mode, setMode] = useState("");
+  const tableRef = useRef<any>(null);
+
+  const bankCodeRef = useRef<HTMLInputElement>(null);
+  const bankNameRef = useRef<HTMLInputElement>(null);
+  const inactiveRef = useRef<HTMLInputElement>(null);
+
+  const { mutate: mutateSearch, isLoading: loadingSearch } = useMutation({
+    mutationKey: "search-policy",
+    mutationFn: async (variables: any) => {
+      return await myAxios.post("/reference/search-bank", variables, {
         headers: {
           Authorization: `Bearer ${user?.accessToken}`,
         },
-      }),
-    onSuccess: (res) => {
-      setRows((res as any)?.data.bank);
+      });
+    },
+    onSuccess: (response) => {
+      if (response.data.success) {
+        wait(100).then(() => {
+          tableRef.current.setDataFormated(response.data.data);
+        });
+      }
     },
   });
+  const mutateSearchRef = useRef<any>(mutateSearch);
+
   const { mutate: mutateAdd, isLoading: loadingAdd } = useMutation({
-    mutationKey: queryKey,
+    mutationKey: "add",
     mutationFn: async (variables: any) => {
       return await myAxios.post("/reference/add-bank", variables, {
         headers: {
@@ -76,7 +95,7 @@ export default function Bank() {
     onSuccess,
   });
   const { mutate: mutateEdit, isLoading: loadingEdit } = useMutation({
-    mutationKey: queryKey,
+    mutationKey: "edit",
     mutationFn: async (variables: any) => {
       return await myAxios.post("/reference/update-bank", variables, {
         headers: {
@@ -87,7 +106,7 @@ export default function Bank() {
     onSuccess,
   });
   const { mutate: mutateDelete, isLoading: loadingDelete } = useMutation({
-    mutationKey: queryKey,
+    mutationKey: "delete",
     mutationFn: async (variables: any) => {
       return await myAxios.post("/reference/delete-bank", variables, {
         headers: {
@@ -97,14 +116,10 @@ export default function Bank() {
     },
     onSuccess,
   });
-  const handleInputChange = (e: any) => {
-    const { name, value } = e.target;
-    dispatch({ type: "UPDATE_FIELD", field: name, value });
-  };
 
   function handleOnSave(e: any) {
     e.preventDefault();
-    if (state.Bank_Code === "") {
+    if (bankCodeRef.current?.value === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -113,7 +128,7 @@ export default function Bank() {
         timer: 1500,
       });
     }
-    if (state.Bank === "") {
+    if (bankNameRef.current?.value === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -122,25 +137,12 @@ export default function Bank() {
         timer: 1500,
       });
     }
-    if (state.Bank_Code.length >= 10) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Invalid bank code is too long",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-    if (state.Bank.length >= 50) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Invalid bank is too long",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-    if (state.mode === "edit") {
+    const state = {
+      Bank_Code: bankCodeRef.current?.value,
+      Bank: bankNameRef.current?.value,
+      Inactive: inactiveRef.current?.checked,
+    };
+    if (mode === "edit") {
       codeCondfirmationAlert({
         isUpdate: true,
         cb: (userCodeConfirmation) => {
@@ -156,17 +158,24 @@ export default function Bank() {
     }
   }
   function resetModule() {
-    setNewStateValue(dispatch, initialState);
-    table.current?.removeSelection();
-    wait(500).then(() => {
-      refetchBankSearch();
-    });
+    if (bankCodeRef.current) {
+      bankCodeRef.current.value = "";
+    }
+    if (bankNameRef.current) {
+      bankNameRef.current.value = "";
+    }
+    if (inactiveRef.current) {
+      inactiveRef.current.checked = false;
+    }
   }
 
   function onSuccess(res: any) {
     if (res.data.success) {
-      queryClient.invalidateQueries(queryKey);
+      tableRef.current.setSelectedRow(null);
+      tableRef.current.resetCheckBox();
+      mutateSearchRef.current({ search: "" });
       resetModule();
+      setMode('')
       return Swal.fire({
         position: "center",
         icon: "success",
@@ -184,8 +193,13 @@ export default function Bank() {
     });
   }
 
+  useEffect(() => {
+    mutateSearchRef.current({ search: "" });
+  }, []);
+
   return (
     <>
+      {loadingSearch && <Loading />}
       <PageHelmet title="Bank" />
       <div
         style={{
@@ -194,312 +208,310 @@ export default function Bank() {
           width: "100%",
           height: "100%",
           flex: 1,
-          padding: "5px"
+          padding: "5px",
         }}
       >
-        {/* <Box>
-        <Typography variant="h5" sx={{ marginBottom: "10px" }}>
-          Bank Details
-        </Typography>
-      </Box> */}
-        <Box
-          sx={(theme) => ({
+        <div
+          style={{
+            marginTop: "10px",
+            marginBottom: "12px",
+            width: "100%",
             display: "flex",
-            alignItems: "center",
-            columnGap: "20px",
-            [theme.breakpoints.down("sm")]: {
-              flexDirection: "column",
-              alignItems: "flex-start",
-              marginBottom: "15px",
-            },
-          })}
-        >
-          <div
-            style={{
-              marginTop: "10px",
-              marginBottom: "12px",
-              width: "100%",
-            }}
-          >
-            <TextField
-              label="Search"
-              fullWidth
-              size="small"
-              type="text"
-              value={state.search}
-              name="search"
-              onChange={handleInputChange}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-              }}
-              onKeyDown={(e) => {
-                if (e.code === "Enter" || e.code === "NumpadEnter") {
-                  e.preventDefault();
-                  return refetchBankSearch();
-                }
-              }}
-              sx={{
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            />
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              columnGap: "20px",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                columnGap: "5px",
-              }}
-            >
-              {state.mode === "" && (
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  id="entry-header-save-button"
-                  sx={{
-                    height: "30px",
-                    fontSize: "11px",
-                  }}
-                  onClick={() => {
-                    handleInputChange({ target: { value: "add", name: "mode" } });
-                  }}
-                >
-                  New
-                </Button>
-              )}
-              <LoadingButton
-                id="save-entry-header"
-                color="primary"
-                variant="contained"
-                type="submit"
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                }}
-                onClick={handleOnSave}
-                startIcon={<SaveIcon />}
-                disabled={state.mode === ""}
-                loading={loadingAdd || loadingEdit}
-              >
-                Save
-              </LoadingButton>
-              {state.mode !== "" && (
-                <Button
-                  sx={{
-                    height: "30px",
-                    fontSize: "11px",
-                  }}
-                  variant="contained"
-                  startIcon={<CloseIcon />}
-                  color="error"
-                  onClick={() => {
-                    Swal.fire({
-                      title: "Are you sure?",
-                      text: "You won't be able to revert this!",
-                      icon: "warning",
-                      showCancelButton: true,
-                      confirmButtonColor: "#3085d6",
-                      cancelButtonColor: "#d33",
-                      confirmButtonText: "Yes, cancel it!",
-                    }).then((result) => {
-                      if (result.isConfirmed) {
-                        resetModule();
-                      }
-                    });
-                  }}
-                >
-                  Cancel
-                </Button>
-              )}
-
-              <LoadingButton
-                id="save-entry-header"
-                variant="contained"
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                  backgroundColor: pink[500],
-                  "&:hover": {
-                    backgroundColor: pink[600],
-                  },
-                }}
-                loading={loadingDelete}
-                startIcon={<DeleteIcon />}
-                disabled={state.mode !== "edit"}
-                onClick={() => {
-                  codeCondfirmationAlert({
-                    isUpdate: false,
-                    cb: (userCodeConfirmation) => {
-                      mutateDelete({
-                        Bank_Code: state.Bank_Code,
-                        userCodeConfirmation,
-                      });
-                    },
-                  });
-                }}
-              >
-                Delete
-              </LoadingButton>
-            </div>
-          </div>
-        </Box>
-        <form
-          onSubmit={handleOnSave}
-          onKeyDown={(e) => {
-            if (e.code === "Enter" || e.code === "NumpadEnter") {
-              e.preventDefault();
-              handleOnSave(e);
-              return;
-            }
+            columnGap: "7px",
           }}
         >
-          <Box
-            sx={(theme) => ({
-              width: "100%",
-              display: "flex",
-              columnGap: "15px",
-              flexDirection: "row",
-              [theme.breakpoints.down("md")]: {
-                flexDirection: "column",
-                rowGap: "10px",
+          <TextInput
+            containerStyle={{
+              width: "550px",
+              marginRight: "20px",
+            }}
+            label={{
+              title: "Search: ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "50px",
               },
-            })}
-          >
-            <TextField
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-              }}
-              sx={{
-                width: "100%",
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-              required
-              variant="outlined"
-              size="small"
-              label="Bank Code"
-              name="Bank_Code"
-              value={state.Bank_Code}
-              onChange={handleInputChange}
-              disabled={state.mode === "edit" || state.mode === ""}
-            />
-            <TextField
-              required
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-              }}
-              sx={{
-                width: "100%",
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-              variant="outlined"
-              size="small"
-              label="Bank Name"
-              name="Bank"
-              value={state.Bank}
-              onChange={handleInputChange}
-              disabled={state.mode === ""}
-            />
-            <FormControlLabel
-              sx={{
-                ".MuiTypography-root": {
-                  fontSize: "14px",
-                },
-                minWidth: "200px",
-              }}
-              disabled={state.mode === ""}
-              control={
-                <Checkbox
-                  size="small"
-                  name="Inactive"
-                  checked={state.Inactive}
-                  onChange={(e) => {
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "Inactive",
-                      value: e.target.checked,
-                    });
-                  }}
-                />
+            }}
+            input={{
+              className: "search-input-up-on-key-down",
+              type: "search",
+              onKeyDown: (e) => {
+                if (e.key === "Enter" || e.key === "NumpadEnter") {
+                  e.preventDefault();
+                  mutateSearch({ search: e.currentTarget.value });
+                }
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  const datagridview = document.querySelector(
+                    ".grid-container"
+                  ) as HTMLDivElement;
+                  datagridview.focus();
+                }
+              },
+              style: { width: "500px" },
+            }}
+            icon={
+              <SearchIcon
+                sx={{
+                  fontSize: "18px",
+                }}
+              />
+            }
+            onIconClick={(e) => {
+              e.preventDefault();
+              if (inputSearchRef.current) {
+                mutateSearch({ search: inputSearchRef.current.value });
               }
-              label="Mark As Inactive"
+            }}
+            inputRef={inputSearchRef}
+          />
+          {mode === "" && (
+            <Button
+              style={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<AddIcon />}
+              id="entry-header-save-button"
+            
+              onClick={() => {
+                setMode("add");
+              }}
+            >
+              New
+            </Button>
+          )}
+          <LoadingButton
+            style={{
+              height: "22px",
+              fontSize: "11px",
+            }}
+            id="save-entry-header"
+            color="primary"
+            variant="contained"
+            type="submit"
+            sx={{
+              height: "30px",
+              fontSize: "11px",
+            }}
+            onClick={handleOnSave}
+            startIcon={<SaveIcon />}
+            disabled={mode === ""}
+            loading={loadingAdd || loadingEdit}
+          >
+            Save
+          </LoadingButton>
+          {mode !== "" && (
+            <Button
+              style={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<CloseIcon />}
+              color="error"
+              onClick={() => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, cancel it!",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    resetModule();
+                    setMode('')
+                    tableRef.current.setSelectedRow(null);
+                    tableRef.current.resetCheckBox();
+                  }
+                });
+              }}
+            >
+              Cancel
+            </Button>
+          )}
+          <LoadingButton
+            id="save-entry-header"
+            variant="contained"
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+              backgroundColor: pink[500],
+              "&:hover": {
+                backgroundColor: pink[600],
+              },
+            }}
+            loading={loadingDelete}
+            startIcon={<DeleteIcon />}
+            disabled={mode !== "edit"}
+            onClick={() => {
+              codeCondfirmationAlert({
+                isUpdate: false,
+                title: "Confirmation",
+                saveTitle: "Confirm",
+                text: `Are you sure you want to delete '${bankNameRef.current?.value}'?`,
+                cb: (userCodeConfirmation) => {
+                  mutateDelete({
+                    Bank_Code: bankCodeRef.current?.value,
+                    userCodeConfirmation,
+                  });
+                },
+              });
+            }}
+          >
+            Delete
+          </LoadingButton>
+        </div>
+
+        <fieldset
+          style={{
+            border: "1px solid black",
+            padding: "5px",
+            width: "590px",
+            rowGap: "5px",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <legend
+            style={{ color: "black", fontSize: "13px", fontWeight: "bold" }}
+          >
+            Bank Details
+          </legend>
+          <div
+            style={{
+              display: "flex",
+              width: "590px",
+              justifyContent: "space-between",
+            }}
+          >
+            <TextInput
+              label={{
+                title: "Account Code: ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "95px",
+                },
+              }}
+              input={{
+                disabled: mode === "" ,
+                type: "text",
+                style: { width: "300px" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    e.preventDefault();
+                  }
+                },
+              }}
+              inputRef={bankCodeRef}
             />
-          </Box>
-        </form>
+            <CheckBoxLabel
+              gridRow={1}
+              inputRef={inactiveRef}
+              label="Mark as Inactive"
+            />
+          </div>
+          <TextInput
+            label={{
+              title: "Bank Name : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "95px",
+              },
+            }}
+            input={{
+              disabled: mode === "" ,
+              type: "text",
+              style: { width: "500px" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  e.preventDefault();
+                }
+              },
+            }}
+            inputRef={bankNameRef}
+          />
+        </fieldset>
+
         <div
-          ref={refParent}
           style={{
             marginTop: "10px",
             width: "100%",
             position: "relative",
             flex: 1,
+            display: "flex",
           }}
         >
-          <Box
-            style={{
-              height: `${refParent.current?.getBoundingClientRect().height}px`,
-              width: "100%",
-              overflowX: "scroll",
-              position: "absolute",
+          <DataGridViewReact
+            containerStyle={{
+              flex: 1,
+              height: "auto",
             }}
-          >
-            <Table
-              ref={table}
-              isLoading={isLoading || loadingDelete || loadingEdit || loadingAdd}
-              columns={bankColumn}
-              rows={rows}
-              table_id={"Bank_Code"}
-              isSingleSelection={true}
-              isRowFreeze={false}
-              dataSelection={(selection, data, code) => {
-                const rowSelected = data.filter(
-                  (item: any) => item.Bank_Code === selection[0]
-                )[0];
-                if (rowSelected === undefined || rowSelected.length <= 0) {
-                  setNewStateValue(dispatch, initialState);
-                  handleInputChange({ target: { value: "", name: "mode" } });
-                  return;
+            ref={tableRef}
+            columns={bankColumn}
+            height="280px"
+            getSelectedItem={(rowItm: any) => {
+              if (rowItm) {
+                setMode('edit')
+                if (bankCodeRef.current) {
+                  bankCodeRef.current.value = rowItm[0];
                 }
-                const newState = {
-                  Bank_Code: rowSelected.Bank_Code,
-                  Bank: rowSelected.Bank,
-                  Inactive: rowSelected.Inactive === "NO",
-                  mode: "edit",
-                };
-                setNewStateValue(dispatch, newState);
-                if (code === "Delete" || code === "Backspace") {
-                  wait(350).then(() => {
-                    codeCondfirmationAlert({
-                      isUpdate: false,
-                      cb: (userCodeConfirmation) => {
-                        mutateDelete({
-                          Bank_Code: rowSelected.Bank_Code,
-                          userCodeConfirmation,
-                        });
-                      },
-                    });
-                  });
-                  return;
+                if (bankNameRef.current) {
+                  bankNameRef.current.value = rowItm[1];
                 }
-              }}
-            />
-          </Box>
+                if (inactiveRef.current) {
+                  inactiveRef.current.checked = rowItm[2] !== "YES";
+                }
+              } else {
+                resetModule();
+              }
+            }}
+          />
         </div>
       </div>
     </>
   );
 }
+
+const CheckBoxLabel = ({
+  inputRef,
+  label,
+  gridRow,
+}: {
+  inputRef: React.RefObject<HTMLInputElement>;
+  label: string;
+  gridRow: number;
+}) => {
+  const id = useId();
+  return (
+    <div style={{ display: "flex", columnGap: "5px", gridRow }}>
+      <input
+        id={id}
+        ref={inputRef}
+        type="checkbox"
+        style={{
+          cursor: "pointer",
+        }}
+      />
+      <label
+        htmlFor={id}
+        style={{
+          fontSize: "12px",
+          cursor: "pointer",
+        }}
+      >
+        {label}
+      </label>
+    </div>
+  );
+};
+
 export function setNewStateValue(dispatch: any, obj: any) {
   Object.entries(obj).forEach(([field, value]) => {
     dispatch({ type: "UPDATE_FIELD", field, value });

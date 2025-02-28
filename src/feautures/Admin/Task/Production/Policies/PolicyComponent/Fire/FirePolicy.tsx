@@ -105,8 +105,6 @@ export default function FirePolicy() {
     refetchOnWindowFocus:false
 
   });
-
-
   const { isLoading:isLoadingSubAccount } = useQuery({
     queryKey: "sub-account",
     queryFn: () => {
@@ -191,7 +189,6 @@ export default function FirePolicy() {
       onSuccess: async (res) => {
         if (res.data.success) {
           const selected = res.data.data[0];
-          console.log(selected);
           // client
           if (_policyInformationRef.current.getRefs().clientIDRef.current) {
             _policyInformationRef.current.getRefs().clientIDRef.current.value =
@@ -287,12 +284,32 @@ export default function FirePolicy() {
           }
 
           if (_policyPremiumRef.current.getRefs().percentageRef.current) {
-            _policyPremiumRef.current.getRefs().percentageRef.current.value = selected.Percentage
+            _policyPremiumRef.current.getRefs().percentageRef.current.value = formatNumber(parseFloat((selected.Percentage || 0).toString().replace(/,/g,'')) ) 
           }
 
-         wait(100).then(()=>{
-          _policyPremiumRef.current.getRefs().cumputationButtonRef.current.click()
-         })
+          if (_policyPremiumRef.current.getRefs().totalPremiumRef.current) {
+            _policyPremiumRef.current.getRefs().totalPremiumRef.current.value = formatNumber(parseFloat((selected.TotalPremium || 0).toString().replace(/,/g,'')) ) 
+          }
+
+          if (_policyPremiumRef.current.getRefs().vatRef.current) {
+            _policyPremiumRef.current.getRefs().vatRef.current.value = formatNumber(parseFloat((selected.Vat || 0).toString().replace(/,/g,'')) ) 
+          }
+          if (_policyPremiumRef.current.getRefs().docstampRef.current) {
+            _policyPremiumRef.current.getRefs().docstampRef.current.value = formatNumber(parseFloat((selected.DocStamp || 0).toString().replace(/,/g,'')) ) 
+          }
+          if (_policyPremiumRef.current.getRefs()._localGovTaxRef.current) {
+            _policyPremiumRef.current.getRefs()._localGovTaxRef.current.value = formatNumber(parseFloat((selected.LGovTax || 0).toString().replace(/,/g,'')) ) 
+          }
+          if (_policyPremiumRef.current.getRefs().fsTaxRef.current) {
+            _policyPremiumRef.current.getRefs().fsTaxRef.current.value = formatNumber(parseFloat((selected.FireTax || 0).toString().replace(/,/g,'')) ) 
+          }
+          if (_policyPremiumRef.current.getRefs().totalDueRef.current) {
+            _policyPremiumRef.current.getRefs().totalDueRef.current.value = formatNumber(parseFloat((selected.TotalDue || 0).toString().replace(/,/g,'')) ) 
+          }
+
+        //  wait(100).then(()=>{
+        //   _policyPremiumRef.current.getRefs().cumputationButtonRef.current.click()
+        //  })
           
         }
       },

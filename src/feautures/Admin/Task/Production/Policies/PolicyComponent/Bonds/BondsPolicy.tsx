@@ -64,7 +64,6 @@ export default function BondsPolicy() {
     },
     refetchOnWindowFocus: false,
   });
-
   const { mutate: mutateAccount, isLoading: isLoadingAccount } = useMutation({
     mutationKey: "get-account",
     mutationFn: async (variables: any) => {
@@ -86,9 +85,7 @@ export default function BondsPolicy() {
       });
     },
   });
-
   const mutateAccountRef = useRef<any>(mutateAccount);
-
   const { isLoading: isLoadingSubAccount } = useQuery({
     queryKey: "sub-account",
     queryFn: () => {
@@ -109,13 +106,12 @@ export default function BondsPolicy() {
     },
     refetchOnWindowFocus: false,
   });
-
   const { mutate: mutateAddUpdate, isLoading: loadingAddUpdate } = useMutation({
     mutationKey: "add-update",
     mutationFn: async (variables: any) => {
       if (mode === "edit") {
         return await myAxios.post(
-          "/task/production/update-fire-policy",
+          "/task/production/update-bonds-policy",
           variables,
           {
             headers: {
@@ -124,11 +120,15 @@ export default function BondsPolicy() {
           }
         );
       }
-      return await myAxios.post("/task/production/add-fire-policy", variables, {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      });
+      return await myAxios.post(
+        "/task/production/add-bonds-policy",
+        variables,
+        {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }
+      );
     },
     onSuccess: async (res) => {
       if (res.data.success) {
@@ -154,13 +154,12 @@ export default function BondsPolicy() {
       });
     },
   });
-
   const { mutate: mutateSelectedSearch, isLoading: laodingSelectedSearch } =
     useMutation({
       mutationKey: "selected-search",
       mutationFn: async (variables: any) => {
         return await myAxios.post(
-          "/task/production/selected-search-fire-policy",
+          "/task/production/get-search-selected-bonds-policy",
           variables,
           {
             headers: {
@@ -218,57 +217,83 @@ export default function BondsPolicy() {
             _policyInformationRef.current.getRefs().policyNoRef.current.value =
               selected.PolicyNo;
           }
-          if (_policyInformationRef.current.getRefs().billNoRef.current) {
-            _policyInformationRef.current.getRefs().billNoRef.current.value =
-              selected.BillNo;
+          if (_policyInformationRef.current.getRefs().policyTypeRef.current) {
+            _policyInformationRef.current.getRefs().policyTypeRef.current.value =
+              selected.PolicyType;
+          }
+
+          if (_policyInformationRef.current.getRefs().officerRef.current) {
+            _policyInformationRef.current.getRefs().officerRef.current.value =
+              selected.Officer;
+          }
+          if (_policyInformationRef.current.getRefs().positionRef.current) {
+            _policyInformationRef.current.getRefs().positionRef.current.value =
+              selected.OPosition;
           }
 
           // periiod insurance
-          if (_policyInformationRef.current.getRefs().dateFromRef.current) {
-            _policyInformationRef.current.getRefs().dateFromRef.current.value =
-              format(new Date(selected.DateFrom), "yyyy-MM-dd");
+          if (_policyInformationRef.current.getRefs().biddingDateRef.current) {
+            _policyInformationRef.current.getRefs().biddingDateRef.current.value =
+              format(new Date(selected.BidDate), "yyyy-MM-dd");
           }
-          if (_policyInformationRef.current.getRefs().dateToRef.current) {
-            _policyInformationRef.current.getRefs().dateToRef.current.value =
-              format(new Date(selected.DateTo), "yyyy-MM-dd");
+          if (_policyInformationRef.current.getRefs().timeRef.current) {
+            _policyInformationRef.current.getRefs().timeRef.current.value =
+              format(new Date(selected.BidTime), "hh:mm")
           }
           if (_policyInformationRef.current.getRefs().dateIssuedRef.current) {
             _policyInformationRef.current.getRefs().dateIssuedRef.current.value =
               format(new Date(selected.DateIssued), "yyyy-MM-dd");
+
+          }
+          if (_policyInformationRef.current.getRefs().validityRef.current) {
+            _policyInformationRef.current.getRefs().validityRef.current.value =
+              selected.Validity;
           }
 
           // insured unit
-          if (_policyInformationRef.current.getRefs().locationRiskRef.current) {
-            _policyInformationRef.current.getRefs().locationRiskRef.current.value =
-              selected.Location;
+          if (_policyInformationRef.current.getRefs().unitRef.current) {
+            _policyInformationRef.current.getRefs().unitRef.current.value =
+              selected.UnitDetail;
           }
-          if (_policyInformationRef.current.getRefs().occupancyRef.current) {
-            _policyInformationRef.current.getRefs().occupancyRef.current.value =
-              selected.Occupancy;
-          }
-          if (
-            _policyInformationRef.current.getRefs().propertyInsuredRef.current
-          ) {
-            _policyInformationRef.current.getRefs().propertyInsuredRef.current.value =
-              selected.PropertyInsured;
-          }
-          if (_policyInformationRef.current.getRefs().boundariesRef.current) {
-            _policyInformationRef.current.getRefs().boundariesRef.current.value =
-              selected.Boundaries;
-          }
-          if (_policyInformationRef.current.getRefs().constructionRef.current) {
-            _policyInformationRef.current.getRefs().constructionRef.current.value =
-              selected.Constraction;
+          if (_policyInformationRef.current.getRefs().obligeeRef.current) {
+            _policyInformationRef.current.getRefs().obligeeRef.current.value =
+              selected.Obligee;
           }
 
-          // mortgagee
-          if (_policyPremiumRef.current.getRefs().mortgageeSelect.current) {
-            _policyPremiumRef.current.getRefs().mortgageeSelect.current.value =
-              selected.Mortgage;
+          // 1
+          if (_policyPremiumRef.current.getRefs().name1Ref.current) {
+            _policyPremiumRef.current.getRefs().name1Ref.current.value =
+              selected.NotaryName;
           }
-          if (_policyPremiumRef.current.getRefs().warrientiesRef.current) {
-            _policyPremiumRef.current.getRefs().warrientiesRef.current.value =
-              selected.Warranties;
+          if (_policyPremiumRef.current.getRefs().tcn1Ref.current) {
+            _policyPremiumRef.current.getRefs().tcn1Ref.current.value =
+              selected.TaxCerNo;
+          }
+          if (_policyPremiumRef.current.getRefs().il1Ref.current) {
+            _policyPremiumRef.current.getRefs().il1Ref.current.value =
+              selected.IssuedLocation ;
+          }
+          if (_policyPremiumRef.current.getRefs().di1Ref.current) {
+            _policyPremiumRef.current.getRefs().di1Ref.current.value =
+              format(new Date(selected.NIssued), "yyyy-MM-dd");
+          }
+
+          // 2
+          if (_policyPremiumRef.current.getRefs().name2Ref.current) {
+            _policyPremiumRef.current.getRefs().name2Ref.current.value =
+              selected.CapacityAs;
+          }
+          if (_policyPremiumRef.current.getRefs().tcn2Ref.current) {
+            _policyPremiumRef.current.getRefs().tcn2Ref.current.value =
+              selected.TaxCerNoCorp;
+          }
+          if (_policyPremiumRef.current.getRefs().il2Ref.current) {
+            _policyPremiumRef.current.getRefs().il2Ref.current.value =
+              selected.IssuedLoctCorp;
+          }
+          if (_policyPremiumRef.current.getRefs().di2Ref.current) {
+            _policyPremiumRef.current.getRefs().di2Ref.current.value =
+              format(new Date(selected.CIssued), "yyyy-MM-dd");
           }
 
           // Premiums
@@ -276,25 +301,87 @@ export default function BondsPolicy() {
             _policyPremiumRef.current.getRefs().insuredValueRef.current.value =
               formatNumber(
                 parseFloat(
-                  (selected.InsuredValue || 0).toString().replace(/,/g, "")
+                  (selected.BondValue || 0).toString().replace(/,/g, "")
                 )
               );
           }
 
           if (_policyPremiumRef.current.getRefs().percentageRef.current) {
             _policyPremiumRef.current.getRefs().percentageRef.current.value =
-              selected.Percentage;
+                formatNumber(
+                parseFloat(
+                  (selected.Percentage || 0).toString().replace(/,/g, "")
+                )
+              );
           }
 
-          wait(100).then(() => {
-            _policyPremiumRef.current
-              .getRefs()
-              .cumputationButtonRef.current.click();
-          });
+          if (_policyPremiumRef.current.getRefs().totalPremiumRef.current) {
+            _policyPremiumRef.current.getRefs().totalPremiumRef.current.value =
+                formatNumber(
+                parseFloat(
+                  (selected.TotalPremium || 0).toString().replace(/,/g, "")
+                )
+              );
+          }
+
+          if (_policyPremiumRef.current.getRefs().vatRef.current) {
+            _policyPremiumRef.current.getRefs().vatRef.current.value =
+                formatNumber(
+                parseFloat(
+                  (selected.Vat || 0).toString().replace(/,/g, "")
+                )
+              );
+          }
+          if (_policyPremiumRef.current.getRefs().docstampRef.current) {
+            _policyPremiumRef.current.getRefs().docstampRef.current.value =
+                formatNumber(
+                parseFloat(
+                  (selected.DocStamp || 0).toString().replace(/,/g, "")
+                )
+              );
+          }
+          if (_policyPremiumRef.current.getRefs()._localGovTaxRef.current) {
+            _policyPremiumRef.current.getRefs()._localGovTaxRef.current.value =
+                formatNumber(
+                parseFloat(
+                  (selected.LGovTax || 0).toString().replace(/,/g, "")
+                )
+              );
+          }
+          if (_policyPremiumRef.current.getRefs().umisRef.current) {
+            _policyPremiumRef.current.getRefs().umisRef.current.value =
+                formatNumber(
+                parseFloat(
+                  (selected.Notarial || 0).toString().replace(/,/g, "")
+                )
+              );
+          }
+          if (_policyPremiumRef.current.getRefs().principalRef.current) {
+            _policyPremiumRef.current.getRefs().principalRef.current.value =
+                formatNumber(
+                parseFloat(
+                  (selected.Misc || 0).toString().replace(/,/g, "")
+                )
+              );
+          }
+          if (_policyPremiumRef.current.getRefs().totalDueRef.current) {
+            _policyPremiumRef.current.getRefs().totalDueRef.current.value =
+                formatNumber(
+                parseFloat(
+                  (selected.TotalDue || 0).toString().replace(/,/g, "")
+                )
+              );
+          }
+
+
+          // wait(100).then(() => {
+          //   _policyPremiumRef.current
+          //     .getRefs()
+          //     .cumputationButtonRef.current.click();
+          // });
         }
       },
     });
-
   const {
     UpwardTableModalSearch: ClientUpwardTableModalSearch,
     openModal: clientOpenModal,
@@ -347,7 +434,6 @@ export default function BondsPolicy() {
       }
     },
   });
-
   const {
     UpwardTableModalSearch: AgentUpwardTableModalSearch,
     openModal: agentOpenModal,
@@ -381,14 +467,13 @@ export default function BondsPolicy() {
       }
     },
   });
-
   const {
     UpwardTableModalSearch: SearchFireUpwardTableModalSearch,
     openModal: searchFireOpenModal,
     closeModal: searchFireCloseModal,
   } = useUpwardTableModalSearchSafeMode({
     size: "medium",
-    link: "/task/production/search-fire-policy",
+    link: "/task/production/search-bonds-policy",
     column: [
       { key: "_DateIssued", label: "Date", width: 100 },
       { key: "PolicyNo", label: "Policy No", width: 150 },
@@ -411,7 +496,6 @@ export default function BondsPolicy() {
       }
     },
   });
-
   function handleSave() {
     if (
       _policyInformationRef.current.requiredField() ||
@@ -446,7 +530,6 @@ export default function BondsPolicy() {
       });
     }
   }
-
   useEffect(() => {
     mutateAccountRef.current({ policyType: "" });
   }, []);
@@ -760,7 +843,6 @@ const PolicyInformation = forwardRef((props: any, ref) => {
         _accountRef: _accountRef.current?.value,
         accountRef: accountRef.current?.value,
         policyNoRef: policyNoRef.current?.value,
-        _policyTypeRef: _policyTypeRef.current?.value,
         policyTypeRef: policyTypeRef.current?.value,
         officerRef: officerRef.current?.value,
         positionRef: positionRef.current?.value,
@@ -936,6 +1018,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       }
     },
   }));
+
   return (
     <div
       style={{
@@ -1578,12 +1661,103 @@ const PolicyPremium = forwardRef((props: any, ref) => {
 
   useImperativeHandle(ref, () => ({
     getRefsValue: () => {
-      return {};
+      return {
+        name1Ref: name1Ref.current?.value,
+        tcn1Ref: tcn1Ref.current?.value,
+        il1Ref: il1Ref.current?.value,
+        di1Ref: di1Ref.current?.value,
+        name2Ref: name2Ref.current?.value,
+        tcn2Ref: tcn2Ref.current?.value,
+        il2Ref: il2Ref.current?.value,
+        di2Ref: di2Ref.current?.value,
+        insuredValueRef: insuredValueRef.current?.value,
+        percentageRef: percentageRef.current?.value,
+        totalPremiumRef: totalPremiumRef.current?.value,
+        vatRef: vatRef.current?.value,
+        docstampRef: docstampRef.current?.value,
+        localGovTaxRef: localGovTaxRef.current?.value,
+        _localGovTaxRef: _localGovTaxRef.current?.value,
+        umisRef: umisRef.current?.value,
+        principalRef: principalRef.current?.value,
+        totalDueRef: totalDueRef.current?.value,
+      };
     },
     getRefs: () => {
-      return {};
+      return {
+        name1Ref,
+        tcn1Ref,
+        il1Ref,
+        di1Ref,
+        name2Ref,
+        tcn2Ref,
+        il2Ref,
+        di2Ref,
+        insuredValueRef,
+        percentageRef,
+        totalPremiumRef,
+        vatRef,
+        docstampRef,
+        localGovTaxRef,
+        _localGovTaxRef,
+        umisRef,
+        principalRef,
+        totalDueRef,
+        cumputationButtonRef
+      };
     },
-    resetRefs: () => {},
+    resetRefs: () => {
+      if (name1Ref.current) {
+        name1Ref.current.value = "";
+      }
+      if (tcn1Ref.current) {
+        tcn1Ref.current.value = "";
+      }
+      if (il1Ref.current) {
+        il1Ref.current.value = "";
+      }
+      if (di1Ref.current) {
+        di1Ref.current.value = "";
+      }
+
+      if (name2Ref.current) {
+        name2Ref.current.value = "";
+      }
+      if (tcn2Ref.current) {
+        tcn2Ref.current.value = "";
+      }
+      if (il2Ref.current) {
+        il2Ref.current.value = "";
+      }
+      if (di2Ref.current) {
+        di2Ref.current.value = "";
+      }
+
+      if (insuredValueRef.current) {
+        insuredValueRef.current.value = "0.00";
+      }
+
+      if (percentageRef.current) {
+        percentageRef.current.value = "0.00";
+      }
+      if (totalPremiumRef.current) {
+        totalPremiumRef.current.value = "0.00";
+      }
+      if (vatRef.current) {
+        vatRef.current.value = "0.00";
+      }
+      if (docstampRef.current) {
+        docstampRef.current.value = "0.00";
+      }
+      if (_localGovTaxRef.current) {
+        _localGovTaxRef.current.value = "0.00";
+      }
+      if (umisRef.current) {
+        umisRef.current.value = "0.00";
+      }
+      if (principalRef.current) {
+        principalRef.current.value = "0.00";
+      }
+    },
     refEnableDisable: (disabled: boolean) => {},
     requiredField: () => {
       if (totalDueRef.current?.value === "0.00") {
@@ -1740,7 +1914,8 @@ const PolicyPremium = forwardRef((props: any, ref) => {
               }}
               input={{
                 disabled: props.disabled,
-                type: "text",
+                type: "date",
+                defaultValue: format(new Date(), "yyyy-MM-dd"),
                 style: { width: "calc(100% - 150px) " },
                 onKeyDown: (e) => {
                   if (e.code === "NumpadEnter" || e.code === "Enter") {
@@ -1862,7 +2037,8 @@ const PolicyPremium = forwardRef((props: any, ref) => {
               }}
               input={{
                 disabled: props.disabled,
-                type: "text",
+                type: "date",
+                defaultValue: format(new Date(), "yyyy-MM-dd"),
                 style: { width: "calc(100% - 150px) " },
                 onKeyDown: (e) => {
                   if (e.code === "NumpadEnter" || e.code === "Enter") {
@@ -1961,7 +2137,7 @@ const PolicyPremium = forwardRef((props: any, ref) => {
                       _localGovTaxRef,
                       umisRef,
                       principalRef,
-                      totalDueRef
+                      totalDueRef,
                     });
                     totalPremiumRef.current?.focus();
                   }
@@ -1994,7 +2170,7 @@ const PolicyPremium = forwardRef((props: any, ref) => {
                     _localGovTaxRef,
                     umisRef,
                     principalRef,
-                    totalDueRef
+                    totalDueRef,
                   });
                 }}
               >
