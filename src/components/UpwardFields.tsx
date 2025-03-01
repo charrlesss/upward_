@@ -436,6 +436,7 @@ export function ButtonField({
         ref={buttonRetRef}
         style={{
           ...button.style,
+          cursor:"pointer",
           background: !disabled ? "transparent" : "#f1f1f1",
         }}
         className="tooltip-button"

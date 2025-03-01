@@ -1,21 +1,14 @@
-import React, { useContext, useState, useRef, useReducer } from "react";
-
-import {
-  Box,
-  TextField,
-  Button,
-  FormControlLabel,
-  Checkbox,
-  IconButton,
-  FormControl,
-  InputLabel,
-  OutlinedInput,
-  InputAdornment,
-} from "@mui/material";
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import React, {
+  useContext,
+  useState,
+  useRef,
+  useReducer,
+  useId,
+  useEffect,
+} from "react";
+import { Box, TextField, Button } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import SwitchAccountIcon from "@mui/icons-material/SwitchAccount";
 import { GridRowSelectionModel } from "@mui/x-data-grid";
 import { pink } from "@mui/material/colors";
 import { AuthContext } from "../../../components/AuthContext";
@@ -24,32 +17,24 @@ import Swal from "sweetalert2";
 import { wait } from "../../../lib/wait";
 import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
-import PersonSearchIcon from "@mui/icons-material/PersonSearch";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import { LoadingButton } from "@mui/lab";
-import useQueryModalTable from "../../../hooks/useQueryModalTable";
 import Table from "../../../components/Table";
 import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../lib/confirmationAlert";
 import PageHelmet from "../../../components/Helmet";
+import { TextInput } from "../../../components/UpwardFields";
+import SearchIcon from "@mui/icons-material/Search";
+import {
+  DataGridViewReact,
+  useUpwardTableModalSearchSafeMode,
+} from "../../../components/DataGridViewReact";
+import { Loading } from "../../../components/Loading";
 
-const initialState = {
-  Account_No: "",
-  Account_Name: "",
-  Account_Type: "",
-  Desc: "",
-  Option: 0,
-  Account_ID: "",
-  Inactive: false,
-  IDNo: "",
-  Account_ID_Name: "",
-  Identity: "",
-  BankName: "",
-  Auto: "",
-  mode: "",
-  search: "",
-};
+
 export const reducer = (state: any, action: any) => {
   switch (action.type) {
     case "UPDATE_FIELD":
@@ -62,60 +47,58 @@ export const reducer = (state: any, action: any) => {
   }
 };
 export const bankAccountColumn = [
-  { field: "Auto", headerName: "Auto", hide: true },
-  { field: "Account_No", headerName: "Account No#", width: 300 },
-  { field: "Account_Name", headerName: "Account Name", flex: 1 },
-  { field: "Account_Type", headerName: "Account Type", flex: 1 },
-  { field: "Desc", headerName: "Bank Name", flex: 1 },
-  { field: "Account_ID", headerName: "Account ID", flex: 1 },
-  { field: "Inactive", headerName: "Inactive", flex: 1 },
-  { field: "IDNo", headerName: "ID No", flex: 1 },
-  { field: "Identity", headerName: "Identity", flex: 1 },
+  { key: "Account_Number", label: "Account Number", width: 120 },
+  { key: "Account_Name", label: "Account Name", width: 350 },
+  { key: "Account_Type", label: "AccountType", width: 100 },
+  { key: "Bank_Name", label: "Bank Name", width: 100 },
+  { key: "Account_ID", label: "Account ID", width: 100 },
+  { key: "Inactive", label: "Inactive", width: 100 },
+  { key: "ID_No", label: "IDNo", width: 100 },
+  { key: "Identity", label: "Identity", width: 300 },
+  { key: "Bank", label: "", width: 300 ,hide:true},
+  { key: "Acct_Title", label: "", width: 300 ,hide:true},
+  { key: "Auto", label: "", width: 300 ,hide:true},
 ];
-export const chartColumn = [
-  { field: "Acct_Code", headerName: "Code", flex: 1 },
-  { field: "Acct_Title", headerName: "Title", flex: 1 },
-  { field: "Short", headerName: "Short Name", flex: 1 },
-];
-export const bannkColumn = [
-  { field: "Bank_Code", headerName: "Code", flex: 1 },
-  { field: "Bank", headerName: "Bank Name", flex: 1 },
-];
-export const clientColumn = [
-  { field: "entry_client_id", headerName: "ID", width: 130 },
-  { field: "fullname", headerName: "First Name", flex: 1 },
-  {
-    field: "entry_type",
-    headerName: "ID Type",
-    width: 150,
-  },
-];
-
 export default function BankAccount() {
-  const refParent = useRef<HTMLDivElement>(null);
-  const [state, dispatch] = useReducer(reducer, initialState);
   const { myAxios, user } = useContext(AuthContext);
-  const [rows, setRows] = useState<GridRowSelectionModel>([]);
-  const clientSearchInput = useRef<HTMLInputElement>(null);
-  const queryClient = useQueryClient();
-  const table = useRef<any>(null);
-  const { isLoading, refetch: refetchBankAccountSearch } = useQuery({
-    queryKey: "bank-account-trans",
-    queryFn: async () =>
-      await myAxios.get(
-        `/reference/get-bank-account?bankAccountSearch=${state.search}`,
-        {
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
-        }
-      ),
-    onSuccess: (res) => {
-      setRows((res as any)?.data.bankAccount);
+  const inputSearchRef = useRef<HTMLInputElement>(null);
+  const [mode, setMode] = useState("");
+  const tableRef = useRef<any>(null);
+
+  const accountNoRef = useRef<HTMLInputElement>(null);
+  const accountNameRef = useRef<HTMLInputElement>(null);
+  const accountTypeRef = useRef<HTMLInputElement>(null);
+  const inactiveRef = useRef<HTMLInputElement>(null);
+
+  const bankCodeRef = useRef('');
+  const bankRef = useRef<HTMLInputElement>(null);
+  const accountCodeRef = useRef('');
+  const accountRef = useRef<HTMLInputElement>(null);
+  const iDNoRef = useRef<HTMLInputElement>(null);
+  const identityRef = useRef<HTMLInputElement>(null);
+  const autoRef = useRef('');
+
+  const { mutate: mutateSearch, isLoading: loadingSearch } = useMutation({
+    mutationKey: "search-banck-account",
+    mutationFn: async (variables: any) => {
+      return await myAxios.post("/reference/search-bank-accounts", variables, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      });
+    },
+    onSuccess: (response) => {
+      if (response.data.success) {
+        wait(100).then(() => {
+          tableRef.current.setDataFormated(response.data.data);
+        });
+      }
     },
   });
+  const mutateSearchRef = useRef<any>(mutateSearch);
+
   const { mutate: mutateAdd, isLoading: loadingAdd } = useMutation({
-    mutationKey: "bank-account-actions",
+    mutationKey: "add",
     mutationFn: async (variables: any) => {
       return await myAxios.post("/reference/add-bank-account", variables, {
         headers: {
@@ -126,7 +109,7 @@ export default function BankAccount() {
     onSuccess,
   });
   const { mutate: mutateEdit, isLoading: loadingEdit } = useMutation({
-    mutationKey: "bank-account-actions",
+    mutationKey: "edit",
     mutationFn: async (variables: any) => {
       return await myAxios.post("/reference/update-bank-account", variables, {
         headers: {
@@ -137,7 +120,7 @@ export default function BankAccount() {
     onSuccess,
   });
   const { mutate: mutateDelete, isLoading: loadingDelete } = useMutation({
-    mutationKey: "bank-account-actions",
+    mutationKey: "delete",
     mutationFn: async (variables: any) => {
       return await myAxios.post("/reference/delete-bank-account", variables, {
         headers: {
@@ -147,220 +130,159 @@ export default function BankAccount() {
     },
     onSuccess,
   });
+
   const {
-    ModalComponent: ModalBank,
-    openModal: openBank,
-    isLoading: isLoadingBank,
-    closeModal: closeBank,
-  } = useQueryModalTable({
-    link: {
-      url: "/reference/get-banks",
-      queryUrlName: "bankSearch",
-    },
-    columns: bannkColumn,
-    queryKey: "get-banks",
-    uniqueId: "Bank_Code",
-    responseDataKey: "bank",
-    onSelected: (selectedRowData) => {
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "BankName",
-        value: selectedRowData[0].Bank,
-      });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "Desc",
-        value: selectedRowData[0].Bank_Code,
-      });
-      closeBank();
-    },
-    searchRef: clientSearchInput,
-  });
-  const {
-    ModalComponent: ModalChartAccount,
-    openModal: openChartAccount,
-    isLoading: isLoadingChartAccount,
-    closeModal: closeChartAccount,
-  } = useQueryModalTable({
-    link: {
-      url: "/reference/get-chart-accounts",
-      queryUrlName: "chartAccountSearch",
-    },
-    columns: chartColumn,
-    queryKey: "get-chart-accounts",
-    uniqueId: "Acct_Code",
-    responseDataKey: "chartAccount",
-    onSelected: (selectedRowData, data) => {
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "Account_ID_Name",
-        value: selectedRowData[0].Acct_Title,
-      });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "Account_ID",
-        value: selectedRowData[0].Acct_Code,
-      });
-      closeChartAccount();
-    },
-    searchRef: clientSearchInput,
-  });
-  const {
-    ModalComponent: ModalSearchClient,
-    openModal: openSearchClient,
-    isLoading: isLoadingSearchClient,
-    closeModal: closeSearchClient,
-  } = useQueryModalTable({
-    link: {
-      url: "/reference/search-client",
-      queryUrlName: "searchClientInput",
-    },
-    columns: [
-      { field: "IDNo", headerName: "ID No.", width: 150 },
-      {
-        field: "Name",
-        headerName: "Name",
-        flex: 1,
-      },
-      {
-        field: "ID",
-        headerName: "ID",
-        hide: true,
-      },
+    UpwardTableModalSearch: BankUpwardTableModalSearch,
+    openModal: bankOpenModal,
+    closeModal: bankCloseModal,
+  } = useUpwardTableModalSearchSafeMode({
+    link: "/reference/search-bank-from-bank-account",
+    column: [
+      { key: "Code", label: "Code", width: 130 },
+      { key: "Bank_Name", label: "Bank Name", width: 350 },
     ],
-    queryKey: "search-client",
-    uniqueId: "ID",
-    responseDataKey: "client",
-    onSelected: (selectedRowData, data) => {
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "IDNo",
-        value: selectedRowData[0].IDNo,
-      });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "Identity",
-        value: selectedRowData[0].Name,
-      });
-      closeSearchClient();
+    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
+      if (rowItm) {
+        wait(100).then(() => {
+          if(bankRef.current){
+            bankRef.current.value = rowItm[1]
+          }
+          bankCodeRef.current = rowItm[0]
+
+          accountRef.current?.focus()
+        });
+        bankCloseModal();
+      }
     },
-    searchRef: clientSearchInput,
   });
-  const handleInputChange = (e: any) => {
-    const { name, value } = e.target;
-    dispatch({ type: "UPDATE_FIELD", field: name, value });
-  };
+
+  const {
+    UpwardTableModalSearch:ChartAccountUpwardTableModalSearch,
+    openModal:chartAccountOpenModal,
+    closeModal:chartAccountCloseModal,
+  } = useUpwardTableModalSearchSafeMode({
+    size:"medium",
+    link: "/reference/search-chart-account-from-bank-account",
+    column: [
+      { key: "Code", label: "Code", width: 80 },
+      { key: "Title", label: "Title", width: 270 },
+      { key: "Short", label: "Short Name", width: 300 },
+    ],
+    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
+      if (rowItm) {
+        wait(100).then(() => {
+          if(accountRef.current){
+            accountRef.current.value = rowItm[1]
+          }
+          accountCodeRef.current  = rowItm[0]
+          iDNoRef.current?.focus()
+
+        });
+        chartAccountCloseModal();
+      }
+    },
+  });
+
+  const {
+    UpwardTableModalSearch: ClientUpwardTableModalSearch,
+    openModal: clientOpenModal,
+    closeModal: clientCloseModal,
+  } = useUpwardTableModalSearchSafeMode({
+    size:"medium",
+    link: "/reference/search-client-from-bank-account",
+    column: [
+      { key: "IDNo", label: "ID. No.", width: 130 },
+      { key: "Name", label: "Name", width: 350 },
+      { key: "IDType", label: "ID Type", width: 80 },
+    ],
+    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
+      if (rowItm) {
+        wait(100).then(() => {
+          if(iDNoRef.current){
+            iDNoRef.current.value = rowItm[0]
+          }
+          if(identityRef.current){
+            identityRef.current.value = rowItm[1]
+          }
+          inactiveRef.current?.focus()
+        });
+        clientCloseModal();
+      }
+    },
+  });
+
   function handleOnSave(e: any) {
     e.preventDefault();
-    if (state.Account_No === "") {
+    if (accountNoRef.current?.value === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
-        title: "Account No is Required Field",
+        title: "Please provide account number!",
         showConfirmButton: false,
         timer: 1500,
       });
     }
-    if (state.Account_Name === "") {
+    if (accountNameRef.current?.value === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
-        title: "Account Name is Required Field",
+        title: "Please provide account name",
         showConfirmButton: false,
         timer: 1500,
       });
     }
-    if (state.Account_Type === "") {
+    if (accountTypeRef.current?.value === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
-        title: "Account Type is Required Field",
+        title: "Please provide account account type",
         showConfirmButton: false,
         timer: 1500,
       });
     }
-    if (state.Account_ID === "") {
+    if (bankRef.current?.value === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
-        title: "Account ID is Required Field",
+        title: "Please provide bank on deposit slip",
         showConfirmButton: false,
         timer: 1500,
       });
     }
-    if (state.BankName === "") {
+    if (accountRef.current?.value === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
-        title: "Bank is Required Field",
+        title: "Please provide account on deposit slip",
         showConfirmButton: false,
         timer: 1500,
       });
     }
-    if (state.Identity === "") {
+    if (iDNoRef.current?.value === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
-        title: "Identity is Required Field",
+        title: "Please provide identity on deposit slip",
         showConfirmButton: false,
         timer: 1500,
       });
     }
-    if (state.Account_No.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Account No is too long",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-    if (state.Account_Name >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Account Name is too long",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-    if (state.Account_Type >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Account Type is too long",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-    if (state.Account_ID >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Account ID is too long",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-    if (state.BankName >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "invalid Bank is too long",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-    if (state.Identity >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "invalid identity is too long",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-    if (state.mode === "edit") {
+    let state:any = {
+      Account_No: accountNoRef.current?.value,
+      Account_Name: accountNameRef.current?.value,
+      Account_Type: accountTypeRef.current?.value,
+      Desc: bankCodeRef.current,
+      Option: 0,
+      Account_ID: accountCodeRef.current,
+      Inactive: inactiveRef.current?.checked,
+      IDNo: iDNoRef.current?.value,
+      Identity: identityRef.current?.value,
+    };
+    if (mode === "edit") {
+      state = {
+        ...state,
+        Auto:autoRef.current
+      }
       codeCondfirmationAlert({
         isUpdate: true,
         cb: (userCodeConfirmation) => {
@@ -376,16 +298,43 @@ export default function BankAccount() {
     }
   }
   function resetModule() {
-    setNewStateValue(dispatch, initialState);
-    table.current?.removeSelection();
-    wait(500).then(() => {
-      refetchBankAccountSearch();
-    });
+    if (accountNoRef.current) {
+      accountNoRef.current.value = "";
+    }
+    if (accountNameRef.current) {
+      accountNameRef.current.value = "";
+    }
+    if (accountTypeRef.current) {
+      accountTypeRef.current.value = "";
+    }
+    if (inactiveRef.current) {
+      inactiveRef.current.checked = false;
+    }
+
+    if (bankRef.current) {
+      bankRef.current.value = '';
+    }
+    if (accountRef.current) {
+      accountRef.current.value = '';
+    }
+    if (iDNoRef.current) {
+      iDNoRef.current.value = '';
+    }
+    if (identityRef.current) {
+      identityRef.current.value = '';
+    }
+    bankCodeRef.current = ''
+    accountCodeRef.current = ''
+     autoRef.current = ''
   }
+
   function onSuccess(res: any) {
     if (res.data.success) {
-      queryClient.invalidateQueries("bank-account-trans");
+      tableRef.current.setSelectedRow(null);
+      tableRef.current.resetCheckBox();
+      mutateSearchRef.current({ search: "" });
       resetModule();
+      setMode("");
       return Swal.fire({
         position: "center",
         icon: "success",
@@ -394,7 +343,6 @@ export default function BankAccount() {
         timer: 1500,
       });
     }
-
     Swal.fire({
       position: "center",
       icon: "error",
@@ -404,9 +352,17 @@ export default function BankAccount() {
     });
   }
 
+  useEffect(() => {
+    mutateSearchRef.current({ search: "" });
+  }, []);
+
   return (
     <>
-      <PageHelmet title="Bank Account" />
+      {loadingSearch && <Loading />}
+      <PageHelmet title="Bank" />
+      <BankUpwardTableModalSearch />
+      <ChartAccountUpwardTableModalSearch />
+      <ClientUpwardTableModalSearch />
       <div
         style={{
           display: "flex",
@@ -414,555 +370,499 @@ export default function BankAccount() {
           width: "100%",
           height: "100%",
           flex: 1,
-          padding: "5px"
-
+          padding: "5px",
         }}
       >
-        <Box
-          sx={(theme) => ({
+        <div
+          style={{
+            marginTop: "10px",
+            marginBottom: "12px",
+            width: "100%",
+            display: "flex",
+            columnGap: "7px",
+          }}
+        >
+          <TextInput
+            containerStyle={{
+              width: "550px",
+              marginRight: "20px",
+            }}
+            label={{
+              title: "Search: ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "50px",
+              },
+            }}
+            input={{
+              className: "search-input-up-on-key-down",
+              type: "search",
+              onKeyDown: (e) => {
+                if (e.key === "Enter" || e.key === "NumpadEnter") {
+                  e.preventDefault();
+                  mutateSearch({ search: e.currentTarget.value });
+                }
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  const datagridview = document.querySelector(
+                    ".grid-container"
+                  ) as HTMLDivElement;
+                  datagridview.focus();
+                }
+              },
+              style: { width: "500px" },
+            }}
+            icon={
+              <SearchIcon
+                sx={{
+                  fontSize: "18px",
+                }}
+              />
+            }
+            onIconClick={(e) => {
+              e.preventDefault();
+              if (inputSearchRef.current) {
+                mutateSearch({ search: inputSearchRef.current.value });
+              }
+            }}
+            inputRef={inputSearchRef}
+          />
+          {mode === "" && (
+            <Button
+              style={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<AddIcon />}
+              id="entry-header-save-button"
+              onClick={() => {
+                setMode("add");
+              }}
+            >
+              New
+            </Button>
+          )}
+          <LoadingButton
+            style={{
+              height: "22px",
+              fontSize: "11px",
+            }}
+            id="save-entry-header"
+            color="primary"
+            variant="contained"
+            type="submit"
+            sx={{
+              height: "30px",
+              fontSize: "11px",
+            }}
+            onClick={handleOnSave}
+            startIcon={<SaveIcon />}
+            disabled={mode === ""}
+            loading={loadingAdd || loadingEdit}
+          >
+            Save
+          </LoadingButton>
+          {mode !== "" && (
+            <Button
+              style={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<CloseIcon />}
+              color="error"
+              onClick={() => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, cancel it!",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    resetModule();
+                    setMode("");
+                    tableRef.current.setSelectedRow(null);
+                    tableRef.current.resetCheckBox();
+                  }
+                });
+              }}
+            >
+              Cancel
+            </Button>
+          )}
+          <LoadingButton
+            id="save-entry-header"
+            variant="contained"
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+              backgroundColor: pink[500],
+              "&:hover": {
+                backgroundColor: pink[600],
+              },
+            }}
+            loading={loadingDelete}
+            startIcon={<DeleteIcon />}
+            disabled={mode !== "edit"}
+            onClick={() => {
+              codeCondfirmationAlert({
+                isUpdate: false,
+                title: "Confirmation",
+                saveTitle: "Confirm",
+                text: `Are you sure you want to delete '${accountNoRef.current?.value}'?`,
+                cb: (userCodeConfirmation) => {
+                  mutateDelete({
+                    Auto: autoRef.current,
+                    userCodeConfirmation,
+                  });
+                },
+              });
+            }}
+          >
+            Delete
+          </LoadingButton>
+        </div>
+        <fieldset
+          style={{
+            border: "1px solid black",
+            padding: "5px",
+            width: "590px",
+            rowGap: "5px",
             display: "flex",
             alignItems: "center",
             columnGap: "20px",
-            [theme.breakpoints.down("sm")]: {
-              flexDirection: "column",
-              alignItems: "flex-start",
-              marginBottom: "15px",
-            },
-          })}
-        >
-          <div
-            style={{
-              marginTop: "10px",
-              marginBottom: "12px",
-              width: "100%",
-            }}
-          >
-            <TextField
-              label="Search"
-              fullWidth
-              size="small"
-              type="text"
-              name="search"
-              value={state.search}
-              onChange={handleInputChange}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-              }}
-              sx={{
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-              onKeyDown={(e) => {
-                if (e.code === "Enter" || e.code === "NumpadEnter") {
-                  e.preventDefault();
-                  return refetchBankAccountSearch();
-                }
-              }}
-            />
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              columnGap: "20px",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                columnGap: "5px",
-              }}
-            >
-              {state.mode === "" && (
-                <Button
-                  sx={{
-                    height: "30px",
-                    fontSize: "11px",
-                  }}
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  id="entry-header-save-button"
-                  onClick={() => {
-                    handleInputChange({ target: { value: "add", name: "mode" } });
-                  }}
-                >
-                  New
-                </Button>
-              )}
-              <LoadingButton
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                }}
-                id="save-entry-header"
-                color="primary"
-                variant="contained"
-                type="submit"
-                onClick={handleOnSave}
-                startIcon={<SaveIcon />}
-                loading={loadingAdd || loadingEdit}
-                disabled={state.mode === ""}
-              >
-                Save
-              </LoadingButton>
-              {state.mode !== "" && (
-                <Button
-                  sx={{
-                    height: "30px",
-                    fontSize: "11px",
-                  }}
-                  variant="contained"
-                  startIcon={<CloseIcon />}
-                  color="error"
-                  onClick={() => {
-                    Swal.fire({
-                      title: "Are you sure?",
-                      text: "You won't be able to revert this!",
-                      icon: "warning",
-                      showCancelButton: true,
-                      confirmButtonColor: "#3085d6",
-                      cancelButtonColor: "#d33",
-                      confirmButtonText: "Yes, cancel it!",
-                    }).then((result) => {
-                      if (result.isConfirmed) {
-                        resetModule();
-                      }
-                    });
-                  }}
-                >
-                  Cancel
-                </Button>
-              )}
-
-              <LoadingButton
-                id="save-entry-header"
-                variant="contained"
-                loading={loadingDelete}
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                  backgroundColor: pink[500],
-                  "&:hover": {
-                    backgroundColor: pink[600],
-                  },
-                }}
-                startIcon={<DeleteIcon />}
-                disabled={state.mode !== "edit"}
-                onClick={() => {
-                  codeCondfirmationAlert({
-                    isUpdate: false,
-                    cb: (userCodeConfirmation) => {
-                      mutateDelete({
-                        Auto: state.Auto,
-                        userCodeConfirmation,
-                      });
-                    },
-                  });
-                }}
-              >
-                Delete
-              </LoadingButton>
-            </div>
-          </div>
-        </Box>
-        <form
-          onKeyDown={(e) => {
-            if (
-              ["Account_ID_Name", "BankName", "IDNo"].includes(
-                (e.target as any).name
-              )
-            ) {
-              if (e.code === "Enter" || e.code === "NumpadEnter") {
-                e.preventDefault();
-              }
-              return;
-            }
-            if (e.code === "Enter" || e.code === "NumpadEnter") {
-              e.preventDefault();
-              handleOnSave(e);
-              return;
-            }
           }}
         >
-          <Box
-            sx={(theme) => ({
-              width: "100%",
-              display: "flex",
-              columnGap: "15px",
-              [theme.breakpoints.down("sm")]: {
-                flexDirection: "column",
-                rowGap: "10px",
-              },
-            })}
+          <legend
+            style={{ color: "black", fontSize: "13px", fontWeight: "bold" }}
           >
-            {!isLoading && (
-              <React.Fragment>
-                <TextField
-                  required
-                  variant="outlined"
-                  size="small"
-                  label="Account No"
-                  name="Account_No"
-                  value={state.Account_No}
-                  onChange={handleInputChange}
-                  InputProps={{
-                    style: { height: "27px", fontSize: "14px" },
-                  }}
-                  sx={{
-                    flex: 1,
-                    height: "27px",
-                    ".MuiFormLabel-root": { fontSize: "14px" },
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                  }}
-                  disabled={state.mode === "" || state.mode === "edit"}
-                />
-                <TextField
-                  required
-                  variant="outlined"
-                  size="small"
-                  label="Account Name"
-                  name="Account_Name"
-                  value={state.Account_Name}
-                  onChange={handleInputChange}
-                  InputProps={{
-                    style: { height: "27px", fontSize: "14px" },
-                  }}
-                  sx={{
-                    flex: 1,
-                    height: "27px",
-                    ".MuiFormLabel-root": { fontSize: "14px" },
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                  }}
-                  disabled={state.mode === ""}
-                />
-                <TextField
-                  required
-                  variant="outlined"
-                  size="small"
-                  label="Account Type"
-                  name="Account_Type"
-                  value={state.Account_Type}
-                  onChange={handleInputChange}
-                  InputProps={{
-                    style: { height: "27px", fontSize: "14px" },
-                  }}
-                  sx={{
-                    flex: 1,
-                    height: "27px",
-                    ".MuiFormLabel-root": { fontSize: "14px" },
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                  }}
-                  disabled={state.mode === ""}
-                />
-                <FormControlLabel
-                  sx={{
-                    ".MuiTypography-root": {
-                      fontSize: "14px",
-                    },
-                    minWidth: "200px",
-                  }}
-                  disabled={state.mode === ""}
-                  control={
-                    <Checkbox
-                      size="small"
-                      name="Inactive"
-                      checked={state.Inactive}
-                      onChange={(e) => {
-                        dispatch({
-                          type: "UPDATE_FIELD",
-                          field: "Inactive",
-                          value: e.target.checked,
-                        });
-                      }}
-                    />
-                  }
-                  label="Mark as Inactive"
-                />
-              </React.Fragment>
-            )}
-          </Box>
-          <br />
-          <Box
-            sx={(theme) => ({
-              width: "100%",
+            Bank Account Details
+          </legend>
+
+          <div
+            style={{
               display: "flex",
-              columnGap: "15px",
-              gap: "20px",
-              padding: "15px",
-              border: "1px solid #cbd5e1",
-              borderRadius: "5px",
-              position: "relative",
-              [theme.breakpoints.down("sm")]: {
-                flexDirection: "column",
-                rowGap: "10px",
-              },
-            })}
+              flexDirection: "column",
+              rowGap: "5px",
+            }}
           >
-            <span
-              style={{
-                position: "absolute",
-                top: "-12px",
-                left: "20px",
-                background: "white",
-                padding: "0 5px",
+            <TextInput
+              label={{
+                title: "Account No: ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "95px",
+                },
               }}
+              input={{
+                disabled: mode === "",
+                type: "text",
+                style: { width: "200px" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    e.preventDefault();
+                    accountNameRef.current?.focus()
+                  }
+                },
+              }}
+              inputRef={accountNoRef}
+            />
+            <TextInput
+              label={{
+                title: "Account Name : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "95px",
+                },
+              }}
+              input={{
+                disabled: mode === "",
+                type: "text",
+                style: { width: "350px" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    e.preventDefault();
+                    accountTypeRef.current?.focus()
+                  }
+                },
+              }}
+              inputRef={accountNameRef}
+            />
+            <TextInput
+              label={{
+                title: "Account Type : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "95px",
+                },
+              }}
+              input={{
+                disabled: mode === "",
+                type: "text",
+                style: { width: "350px" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    e.preventDefault();
+                    bankRef.current?.focus()
+                  }
+                },
+              }}
+              inputRef={accountTypeRef}
+            />
+            <CheckBoxLabel
+              gridRow={1}
+              inputRef={inactiveRef}
+              label="Mark as Inactive"
+            />
+          </div>
+          <fieldset
+            style={{
+              border: "1px solid black",
+              padding: "5px",
+              width: "50%",
+              rowGap: "5px",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <legend
+              style={{ color: "black", fontSize: "13px", fontWeight: "bold" }}
             >
               Deposit Slip
-            </span>
-            {isLoadingBank ? (
-              <LoadingButton loading={isLoadingBank} />
-            ) : (
-              <FormControl
-                disabled={state.mode === ""}
-                variant="outlined"
-                size="small"
-                sx={{
-                  flex: 1,
-                  ".MuiFormLabel-root": {
-                    fontSize: "14px",
-                    background: "white",
-                    zIndex: 99,
-                    padding: "0 3px",
-                  },
-                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                }}
-              >
-                <InputLabel htmlFor="Bank">Bank</InputLabel>
-                <OutlinedInput
-                  disabled={state.mode === ""}
-                  sx={{
-                    height: "27px",
-                    fontSize: "14px",
-                  }}
-                  fullWidth
-                  label="Bank"
-                  name="BankName"
-                  value={state.BankName}
-                  onChange={handleInputChange}
-                  onKeyDown={(e) => {
-                    if (e.code === "Enter" || e.code === "NumpadEnter") {
-                      e.preventDefault();
-                      return openBank(state.BankName);
-                    }
-                  }}
-                  id="Bank"
-                  endAdornment={
-                    <InputAdornment position="end">
-                      <IconButton
-                        disabled={state.mode === ""}
-                        color="secondary"
-                        edge="end"
-                        onClick={() => {
-                          openBank(state.BankName);
-                        }}
-                      >
-                        <AccountBalanceIcon />
-                      </IconButton>
-                    </InputAdornment>
-                  }
-                />
-              </FormControl>
-            )}
-            {isLoadingChartAccount ? (
-              <LoadingButton loading={isLoadingChartAccount} />
-            ) : (
-              <FormControl
-                disabled={state.mode === ""}
-                variant="outlined"
-                size="small"
-                sx={{
-                  flex: 1,
-                  ".MuiFormLabel-root": {
-                    fontSize: "14px",
-                    background: "white",
-                    zIndex: 99,
-                    padding: "0 3px",
-                  },
-                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                }}
-              >
-                <InputLabel htmlFor="account">Account</InputLabel>
-                <OutlinedInput
-                  disabled={state.mode === ""}
-                  sx={{
-                    height: "27px",
-                    fontSize: "14px",
-                  }}
-                  fullWidth
-                  label="Account"
-                  name="Account_ID_Name"
-                  value={state.Account_ID_Name}
-                  onChange={handleInputChange}
-                  onKeyDown={(e) => {
-                    if (e.code === "Enter" || e.code === "NumpadEnter") {
-                      e.preventDefault();
-                      return openChartAccount(state.Account_ID_Name);
-                    }
-                  }}
-                  id="account"
-                  endAdornment={
-                    <InputAdornment position="end">
-                      <IconButton
-                        disabled={state.mode === ""}
-                        color="secondary"
-                        edge="end"
-                        onClick={() => {
-                          openChartAccount(state.Account_ID_Name);
-                        }}
-                      >
-                        <SwitchAccountIcon />
-                      </IconButton>
-                    </InputAdornment>
-                  }
-                />
-              </FormControl>
-            )}
-            {isLoadingSearchClient ? (
-              <LoadingButton loading={isLoadingSearchClient} />
-            ) : (
-              <FormControl
-                disabled={state.mode === ""}
-                variant="outlined"
-                size="small"
-                sx={{
-                  flex: 1,
-                  ".MuiFormLabel-root": {
-                    fontSize: "14px",
-                    background: "white",
-                    zIndex: 99,
-                    padding: "0 3px",
-                  },
-                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                }}
-              >
-                <InputLabel htmlFor="ID-No">ID No</InputLabel>
-                <OutlinedInput
-                  disabled={state.mode === ""}
-                  sx={{
-                    height: "27px",
-                    fontSize: "14px",
-                  }}
-                  fullWidth
-                  label="ID No"
-                  name="IDNo"
-                  value={state.IDNo}
-                  onChange={handleInputChange}
-                  onKeyDown={(e) => {
-                    if (e.code === "Enter" || e.code === "NumpadEnter") {
-                      e.preventDefault();
-                      return openSearchClient(state.IDNo);
-                    }
-                  }}
-                  id="ID-No"
-                  endAdornment={
-                    <InputAdornment position="end">
-                      <IconButton
-                        disabled={state.mode === ""}
-                        aria-label="search-client"
-                        color="secondary"
-                        edge="end"
-                        onClick={() => {
-                          openSearchClient(state.IDNo);
-                        }}
-                      >
-                        <PersonSearchIcon />
-                      </IconButton>
-                    </InputAdornment>
-                  }
-                />
-              </FormControl>
-            )}
-            <TextField
-              disabled={state.mode === ""}
-              required
-              variant="outlined"
-              size="small"
-              label="Identity"
-              name="Identity"
-              value={state.Identity}
-              onChange={handleInputChange}
-              InputProps={{
-                readOnly: true,
-                style: { height: "27px", fontSize: "14px" },
+            </legend>
+            <TextInput
+              label={{
+                title: "Bank : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "95px",
+                },
               }}
-              sx={{
-                flex: 1,
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              containerStyle={{ width: "395px" }}
+              input={{
+                disabled: mode === "",
+                type: "text",
+                style: { width: "300px" },
+                onKeyDown: (e) => {
+                  if (e.key === "Enter" || e.key === "NumpadEnter") {
+                    e.preventDefault();
+                    bankOpenModal(e.currentTarget.value);
+                  }
+                },
               }}
+              icon={
+                <SearchIcon
+                  sx={{
+                    fontSize: "18px",
+                  }}
+                />
+              }
+              onIconClick={(e) => {
+                e.preventDefault();
+                if (inputSearchRef.current) {
+                  bankOpenModal(inputSearchRef.current.value);
+                }
+              }}
+              inputRef={bankRef}
             />
-          </Box>
-        </form>
+            <TextInput
+              label={{
+                title: "Account : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "95px",
+                },
+              }}
+              containerStyle={{ width: "395px" }}
+              input={{
+                disabled: mode === "",
+                type: "text",
+                style: { width: "300px" },
+                onKeyDown: (e) => {
+                  if (e.key === "Enter" || e.key === "NumpadEnter") {
+                    e.preventDefault();
+                    chartAccountOpenModal(e.currentTarget.value );
+                  }
+                },
+              }}
+              icon={
+                <SearchIcon
+                  sx={{
+                    fontSize: "18px",
+                  }}
+                />
+              }
+              onIconClick={(e) => {
+                e.preventDefault();
+                if (inputSearchRef.current) {
+                  chartAccountOpenModal(inputSearchRef.current.value );
+                }
+              }}
+              inputRef={accountRef}
+            />
+            <TextInput
+              label={{
+                title: "ID No. : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "95px",
+                },
+              }}
+              containerStyle={{ width: "395px" }}
+              input={{
+                disabled: mode === "",
+                type: "text",
+                style: { width: "300px" },
+                onKeyDown: (e) => {
+                  if (e.key === "Enter" || e.key === "NumpadEnter") {
+                    e.preventDefault();
+                    clientOpenModal( e.currentTarget.value );
+                  }
+                },
+              }}
+              icon={
+                <SearchIcon
+                  sx={{
+                    fontSize: "18px",
+                  }}
+                />
+              }
+              onIconClick={(e) => {
+                e.preventDefault();
+                if (inputSearchRef.current) {
+                  clientOpenModal( inputSearchRef.current.value);
+                }
+              }}
+              inputRef={iDNoRef}
+            />
+            <TextInput
+              label={{
+                title: "Identity : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "95px",
+                },
+              }}
+              input={{
+                disabled: mode === "",
+                type: "text",
+                style: { width: "400px" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    e.preventDefault();
+                  }
+                },
+              }}
+              inputRef={identityRef}
+            />
+          </fieldset>
+        </fieldset>
         <div
-          ref={refParent}
           style={{
             marginTop: "10px",
             width: "100%",
             position: "relative",
             flex: 1,
+            display: "flex",
           }}
         >
-          <Box
-            style={{
-              height: `${refParent.current?.getBoundingClientRect().height as number
-                }px`,
-              width: "100%",
-              overflowX: "scroll",
-              position: "absolute",
+          <DataGridViewReact
+            containerStyle={{
+              flex: 1,
+              height: "auto",
             }}
-          >
-            <Table
-              ref={table}
-              isLoading={isLoading || loadingAdd || loadingEdit || loadingDelete}
-              columns={bankAccountColumn}
-              rows={rows}
-              table_id={"Auto"}
-              isSingleSelection={true}
-              isRowFreeze={false}
-              dataSelection={(selection, data, code) => {
-                const rowSelected = data.filter(
-                  (item: any) => item.Auto === selection[0]
-                )[0];
-                if (rowSelected === undefined || rowSelected.length <= 0) {
-                  setNewStateValue(dispatch, initialState);
-                  handleInputChange({ target: { value: "", name: "mode" } });
-                  return;
+            ref={tableRef}
+            columns={bankAccountColumn}
+            height="280px"
+            getSelectedItem={(rowItm: any) => {
+              if (rowItm) {
+                setMode("edit");
+                console.log(rowItm)
+
+                if (accountNoRef.current) {
+                  accountNoRef.current.value = rowItm[0];
                 }
-                handleInputChange({ target: { value: "edit", name: "mode" } });
-
-                if (code === "Delete" || code === "Backspace") {
-                  codeCondfirmationAlert({
-                    isUpdate: false,
-                    cb: (userCodeConfirmation) => {
-                      mutateDelete({
-                        Auto: rowSelected.Auto,
-                        userCodeConfirmation,
-                      });
-                    },
-                  });
-
-                  return;
+                if (accountNameRef.current) {
+                  accountNameRef.current.value = rowItm[1];
                 }
-
-                const newState = {
-                  ...rowSelected,
-                  Inactive: rowSelected.Inactive !== "NO",
-                };
-                console.log(newState);
-                setNewStateValue(dispatch, newState);
-              }}
-            />
-          </Box>
+                if (accountTypeRef.current) {
+                  accountTypeRef.current.value = rowItm[2];
+                }
+                if (inactiveRef.current) {
+                  inactiveRef.current.checked = rowItm[5] === 'YES';
+                }
+            
+                if (bankRef.current) {
+                  bankRef.current.value = rowItm[8];
+                }
+                if (accountRef.current) {
+                  accountRef.current.value = rowItm[9];
+                }
+                if (iDNoRef.current) {
+                  iDNoRef.current.value = rowItm[6];
+                }
+                if (identityRef.current) {
+                  identityRef.current.value = rowItm[7];;
+                }
+                bankCodeRef.current = rowItm[3];
+                accountCodeRef.current = rowItm[4];
+                autoRef.current = rowItm[10]
+              } else {
+                resetModule();
+              }
+            }}
+          />
         </div>
-        {ModalSearchClient}
-        {ModalChartAccount}
-        {ModalBank}
-      </div></>
+      </div>
+    </>
   );
 }
+
+const CheckBoxLabel = ({
+  inputRef,
+  label,
+  gridRow,
+}: {
+  inputRef: React.RefObject<HTMLInputElement>;
+  label: string;
+  gridRow: number;
+}) => {
+  const id = useId();
+  return (
+    <div style={{ display: "flex", columnGap: "5px", gridRow }}>
+      <input
+        id={id}
+        ref={inputRef}
+        type="checkbox"
+        style={{
+          cursor: "pointer",
+        }}
+      />
+      <label
+        htmlFor={id}
+        style={{
+          fontSize: "12px",
+          cursor: "pointer",
+        }}
+      >
+        {label}
+      </label>
+    </div>
+  );
+};
+
 export function setNewStateValue(dispatch: any, obj: any) {
   Object.entries(obj).forEach(([field, value]) => {
     dispatch({ type: "UPDATE_FIELD", field, value });

@@ -14,6 +14,7 @@ import {
   TextInput,
 } from "../../../components/UpwardFields";
 import PageHelmet from "../../../components/Helmet";
+import { DataGridViewReact } from "../../../components/DataGridViewReact";
 
 export const reducer = (state: any, action: any) => {
   switch (action.type) {
@@ -27,14 +28,14 @@ export const reducer = (state: any, action: any) => {
   }
 };
 export const chartAccountColumn = [
-  { field: "Acct_Code", headerName: "Account Code", width: 150 },
-  { field: "Acct_Title", headerName: "Account Name/Account Title", width: 300 },
-  { field: "Short", headerName: "Short Name", width: 300 },
-  { field: "Acct_Type", headerName: "Account Type", width: 200 },
-  { field: "Account", headerName: "Account", width: 100 },
-  { field: "SubAccnt", headerName: "Sub Account ?", width: 100 },
-  { field: "IDNo", headerName: "I.D. ?", width: 100 },
-  { field: "Inactive", headerName: "Inactive ?", width: 100 },
+  { key: "Acct_Code", label: "Account Code", width: 150 },
+  { key: "Acct_Title", label: "Account Name/Account Title", width: 300 },
+  { key: "Short", label: "Short Name", width: 300 },
+  { key: "Acct_Type", label: "Account Type", width: 200 },
+  { key: "Account", label: "Account", width: 100 },
+  { key: "SubAccnt", label: "Sub Account ?", width: 100 },
+  { key: "IDNo", label: "I.D. ?", width: 100 },
+  { key: "Inactive", label: "Inactive ?", width: 100 },
 ];
 const queryKey = "chart-account";
 
@@ -58,7 +59,8 @@ export default function ChartAccount() {
     queryKey,
     queryFn: async () =>
       await myAxios.get(
-        `/reference/get-chart-accounts?chartAccountSearch=${inputSearchRef.current?.value ?? ""
+        `/reference/get-chart-accounts?chartAccountSearch=${
+          inputSearchRef.current?.value ?? ""
         }`,
         {
           headers: {
@@ -218,8 +220,8 @@ export default function ChartAccount() {
   const handleAdd = () => {
     setMode("add");
     setTimeout(() => {
-      inputCodeRef.current?.focus()
-    }, 100)
+      inputCodeRef.current?.focus();
+    }, 100);
   };
   const handleDelete = () => {
     codeCondfirmationAlert({
@@ -291,8 +293,7 @@ export default function ChartAccount() {
     }
   }
 
-  const width = window.innerWidth - 100;
-  const height = window.innerHeight - 90;
+  
   const disableFields = mode === "";
 
   if (isLoading || loadingAdd || loadingEdit || loadingDelete) {
@@ -304,16 +305,15 @@ export default function ChartAccount() {
       <PageHelmet title="Chart Account" />
       <div
         style={{
+          display: "flex",
+          flexDirection: "column",
+          width: "100%",
+          height: "100%",
           flex: 1,
-          backgroundColor: "#F8F8FF",
-          padding: "5px"
-
+          padding: "5px",
         }}
       >
-        <div
-          style={{ width: `${width}px`, height: `${height}px`, margin: "auto" }}
-        >
-          <div
+         <div
             style={{
               height: "120px",
             }}
@@ -443,7 +443,12 @@ export default function ChartAccount() {
                 }}
                 tooltipText="SAVE"
               >
-                <svg width="17px" height="17px" viewBox="0 0 24 24" fill="green">
+                <svg
+                  width="17px"
+                  height="17px"
+                  viewBox="0 0 24 24"
+                  fill="green"
+                >
                   <path
                     fillRule="evenodd"
                     clipRule="evenodd"
@@ -646,17 +651,34 @@ export default function ChartAccount() {
               />
             </div>
           </div>
-          <UpwardTable
-            ref={tableRef}
-            rows={rows}
-            column={chartAccountColumn}
-            width={width}
-            height={height}
-            dataReadOnly={true}
-            onSelectionChange={onSelectionChange}
-            isMultipleSelect={false}
-          />
-        </div>
+          <div
+            style={{
+              marginTop: "10px",
+              width: "100%",
+              position: "relative",
+              flex: 1,
+              display: "flex",
+            }}
+          >
+            <DataGridViewReact
+              containerStyle={{
+                flex: 1,
+                height: "auto",
+              }}
+              ref={tableRef}
+              columns={chartAccountColumn}
+              height="280px"
+              getSelectedItem={(rowItm: any) => {
+                if (rowItm) {
+                  setMode("edit");
+                  console.log(rowItm);
+                } else {
+                  // resetModule();
+                }
+              }}
+            />
+          </div>
+
       </div>
     </>
   );
