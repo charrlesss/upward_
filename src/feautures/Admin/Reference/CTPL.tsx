@@ -72,21 +72,7 @@ export default function CTPL() {
     },
     onSuccess,
   });
-  // const { mutate: mutateEdit, isLoading: loadingEdit } = useMutation({
-  //   mutationKey: "edit",
-  //   mutationFn: async (variables: any) => {
-  //     return await myAxios.post(
-  //       "/reference/update-ctpl",
-  //       variables,
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${user?.accessToken}`,
-  //         },
-  //       }
-  //     );
-  //   },
-  //   onSuccess,
-  // });
+
   const { mutate: mutateDelete, isLoading: loadingDelete } = useMutation({
     mutationKey: "delete",
     mutationFn: async (variables: any) => {
@@ -101,22 +87,7 @@ export default function CTPL() {
   function handleOnSave(e: any) {
     e.preventDefault();
 
-    // if (mode === "edit") {
-    //   codeCondfirmationAlert({
-    //     isUpdate: true,
-    //     cb: (userCodeConfirmation) => {
-    //       mutateEdit({
-    //         Prefix: prefixRef.current?.value,
-    //         NumSeriesFrom: numSeriesFromRef.current?.value,
-    //         NumSeriesTo: numSeriesToRef.current?.value,
-    //         Cost: costRef.current?.value,
-    //         ctplType: ctplType.current,
-    //         ctplId: ctplId.current,
-    //         userCodeConfirmation,
-    //       });
-    //     },
-    //   });
-    // } else {
+ 
     saveCondfirmationAlert({
       isConfirm: () => {
         mutateAdd({
@@ -129,7 +100,6 @@ export default function CTPL() {
         });
       },
     });
-    // }
   }
   function resetModule() {
     if (prefixRef.current) {

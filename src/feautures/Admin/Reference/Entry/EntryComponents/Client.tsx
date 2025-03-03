@@ -200,6 +200,7 @@ export default function Client() {
       }),
     onSuccess: (res) => {
       wait(100).then(() => {
+        if (_subAccount.current)
         _subAccount.current.setDataSource(res.data?.subAccount);
         wait(100).then(() => {
           const data = res.data?.subAccount.filter(
@@ -532,7 +533,7 @@ export default function Client() {
           style={{
             display: "flex",
             flexDirection: "column",
-            rowGap: "10px",
+            rowGap: "5px",
             flex: 1,
           }}
         >
@@ -732,7 +733,7 @@ export default function Client() {
           style={{
             display: "flex",
             flexDirection: "column",
-            rowGap: "10px",
+            rowGap: "5px",
             marginBottom: "40px",
             flex: 1,
           }}

@@ -1,114 +1,108 @@
-import React, { useContext, useRef, useState } from "react";
-import {
-  Box,
-  TextField,
-  FormControl,
-  OutlinedInput,
-  InputAdornment,
-  IconButton,
-  Button,
-} from "@mui/material";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { Button } from "@mui/material";
 import { AuthContext } from "../../../../../components/AuthContext";
-import { useReducer } from "react";
-import { useMutation, useQuery, useQueryClient } from "react-query";
-import InputLabel from "@mui/material/InputLabel";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
+import { useMutation, useQuery } from "react-query";
 import Swal from "sweetalert2";
-import { reducer, employeeColumn } from "../../../data/entry";
-import { setNewStateValue } from "../../../Task/Accounting/PostDateChecks";
-import { wait } from "../../../../../lib/wait";
-import Table from "../../../../../components/Table";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { LoadingButton } from "@mui/lab";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
+import { wait } from "../../../../../lib/wait";
 import { pink } from "@mui/material/colors";
 import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../../../lib/confirmationAlert";
-import { UpwardTable } from "../../../../../components/UpwardTable";
 import PageHelmet from "../../../../../components/Helmet";
-
-const initialState = {
-  firstname: "",
-  lastname: "",
-  middlename: "",
-  address: "",
-  sub_account: "",
-  search: "",
-  mode: "",
-  entry_employee_id: "",
-  suffix: "",
-};
-
+import {
+  SelectInput,
+  TextAreaInput,
+  TextInput,
+} from "../../../../../components/UpwardFields";
+import SearchIcon from "@mui/icons-material/Search";
+import { DataGridViewReact } from "../../../../../components/DataGridViewReact";
+import { Loading } from "../../../../../components/Loading";
+import { Autocomplete } from "../../../Task/Accounting/PettyCash";
+const employeeColumn = [
+  { key: "entry_employee_id", label: "ID", width: 130 },
+  { key: "firstname", label: "First Name", width: 200 },
+  {
+    key: "lastname",
+    label: "Last Name",
+    width: 200,
+  },
+  {
+    key: "middlename",
+    label: "Middle Name",
+    width: 200,
+  },
+  {
+    key: "suffix",
+    label: "Suffix",
+    width: 130,
+  },
+  {
+    key: "NewShortName",
+    label: "Sub Account",
+    width: 130,
+  },
+ 
+  {
+    key: "address",
+    label: "Address",
+    width: 500,
+  },
+  {
+    key: "createdAt",
+    label: "Created At",
+    width: 130,
+    hide:true
+  },
+];
 export default function Employee() {
-  const refParent = useRef<HTMLDivElement>(null);
-  const [rows, setRows] = useState([]);
-  const [state, dispatch] = useReducer(reducer, initialState);
   const { myAxios, user } = useContext(AuthContext);
-  const queryKey = "entry_employee_id";
-  const queryClient = useQueryClient();
-  const table = useRef<any>(null);
+  const [mode, setMode] = useState("");
 
-  const {
-    data: subAccountData,
-    isLoading: subAccountLoading,
-    refetch: refetchSubAcct,
-  } = useQuery({
-    queryKey: "sub-accounts",
+  const tableRef = useRef<any>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const clientIdRef = useRef<HTMLInputElement>(null);
+  const firstnameRef = useRef<HTMLInputElement>(null);
+  const middleRef = useRef<HTMLInputElement>(null);
+  const lastnameRef = useRef<HTMLInputElement>(null);
+
+  const fullnameRef = useRef<HTMLTextAreaElement>(null);
+  const authorizeRepRef = useRef<HTMLInputElement>(null);
+
+  const suffixRef = useRef<HTMLInputElement>(null);
+  const _subAccount = useRef<any>(null);
+  const subAccount = useRef<HTMLSelectElement>(null);
+  const branchCodeRef = useRef("");
+  const addressRef = useRef<HTMLTextAreaElement>(null);
+
+  const { isLoading: loadingClientId, refetch: refetchClientId } = useQuery({
+    queryKey: "employee-generate-id",
     queryFn: async () =>
-      await myAxios.get(`/reference/sub-account`, {
-        headers: { Authorization: `Bearer ${user?.accessToken}` },
-      }),
-    onSuccess: (res) => {
-      console.log(res);
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "sub_account",
-        value: res.data?.defaultValue[0]?.Sub_Acct,
-      });
-    },
-  });
-
-  const { isLoading: loadingEmployeeId, refetch: refetchEmployeeId } = useQuery(
-    {
-      queryKey: "employee-generate-id",
-      queryFn: async () =>
-        await myAxios.post(
-          "/reference/id-entry-generate-id",
-          { sign: "E", type: "entry employee" },
-          {
-            headers: { Authorization: `Bearer ${user?.accessToken}` },
-          }
-        ),
-      refetchOnWindowFocus: false,
-      onSuccess: (res) => {
-        handleInputChange({
-          target: { value: res.data.generateID, name: "entry_employee_id" },
-        });
-      },
-    }
-  );
-
-  const { isLoading, refetch: refetchEmployeeSearch } = useQuery({
-    queryKey,
-    queryFn: async () =>
-      await myAxios.get(
-        `/reference/search-entry?entrySearch=${state.search}&entry=Employee`,
+      await myAxios.post(
+        "/reference/id-entry-generate-id",
+        { sign: "M", type: "entry employee" },
         {
           headers: { Authorization: `Bearer ${user?.accessToken}` },
         }
       ),
+    refetchOnWindowFocus: false,
     onSuccess: (res) => {
-      setRows((res as any)?.data.entry);
+      wait(100).then(() => {
+        if (clientIdRef.current) {
+          clientIdRef.current.value = res.data.generateID;
+        }
+      });
     },
   });
+
   const { mutate: mutateAdd, isLoading: loadingAdd } = useMutation({
-    mutationKey: queryKey,
+    mutationKey: "add-client",
     mutationFn: async (variables: any) =>
       await myAxios.post("/reference/id-entry-employee", variables, {
         headers: { Authorization: `Bearer ${user?.accessToken}` },
@@ -116,15 +110,15 @@ export default function Employee() {
     onSuccess,
   });
   const { mutate: mutateEdit, isLoading: loadingEdit } = useMutation({
-    mutationKey: queryKey,
+    mutationKey: "edit-employee",
     mutationFn: async (variables: any) =>
-      await myAxios.post(`/reference/entry-update?entry=Employee`, variables, {
+      await myAxios.post(`/reference/id-entry-employee-update`, variables, {
         headers: { Authorization: `Bearer ${user?.accessToken}` },
       }),
     onSuccess,
   });
   const { mutate: mutateDelete, isLoading: loadingDelete } = useMutation({
-    mutationKey: queryKey,
+    mutationKey: "delete-client",
     mutationFn: async (variables: any) =>
       await myAxios.post(`/reference/entry-delete?entry=Employee`, variables, {
         headers: {
@@ -133,24 +127,59 @@ export default function Employee() {
       }),
     onSuccess,
   });
-  const handleInputChange = (e: any) => {
-    const { name, value } = e.target;
-    const uppercase = ["lastname", "middlename", "firstname"];
-    if (uppercase.includes(name)) {
-      return dispatch({
-        type: "UPDATE_FIELD",
-        field: name,
-        value: value.toUpperCase(),
-      });
-    }
+  const { isLoading: isLoadingSearch, mutate: mutateSearch } = useMutation({
+    mutationKey: "search",
+    mutationFn: async (variables: any) =>
+      await myAxios.post(`/reference/search-entry`, variables, {
+        headers: { Authorization: `Bearer ${user?.accessToken}` },
+      }),
+    onSuccess: (res) => {
+      console.log(res);
+      tableRef.current.setDataFormated((res as any)?.data.entry);
+    },
+  });
+  const { isLoading: subAccountLoading, refetch: refetchSubAcct } = useQuery({
+    queryKey: "sub-accounts",
+    queryFn: async () =>
+      await myAxios.get(`/reference/sub-account`, {
+        headers: { Authorization: `Bearer ${user?.accessToken}` },
+      }),
+    onSuccess: (res) => {
+      wait(100).then(() => {
+        if (_subAccount.current)
+          _subAccount.current.setDataSource(res.data?.subAccount);
+        wait(100).then(() => {
+          const data = res.data?.subAccount.filter(
+            (itm: any) => itm.Acronym === "HO"
+          );
 
-    dispatch({ type: "UPDATE_FIELD", field: name, value });
-  };
+          if (subAccount.current) subAccount.current.value = data[0].ShortName;
+          branchCodeRef.current = data[0].Sub_Acct;
+        });
+      });
+    },
+  });
+
+  const mutateSearchRef = useRef(mutateSearch);
+  useEffect(() => {
+    mutateSearchRef.current({
+      search: "",
+      entry: "Employee",
+    });
+  }, []);
 
   function onSuccess(res: any) {
     if (res.data.success) {
-      queryClient.invalidateQueries(queryKey);
-      resetModule();
+      resetField();
+      setMode("");
+      tableRef.current.setSelectedRow(null);
+      tableRef.current.resetCheckBox();
+
+      mutateSearchRef.current({
+        search: "",
+        entry: "Employee",
+      });
+
       return Swal.fire({
         position: "center",
         icon: "success",
@@ -168,7 +197,7 @@ export default function Employee() {
     });
   }
   function handleOnSave(e: any) {
-    if (state.firstname === "") {
+    if (firstnameRef.current?.value === "") {
       return Swal.fire({
         position: "center",
         icon: "error",
@@ -177,16 +206,8 @@ export default function Employee() {
         timer: 1500,
       });
     }
-    if (state.lastname === "") {
-      return Swal.fire({
-        position: "center",
-        icon: "error",
-        title: "Lastname is required!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-    if (state.sub_account === "") {
+    
+    if (subAccount.current?.value === "") {
       return Swal.fire({
         position: "center",
         icon: "error",
@@ -196,55 +217,19 @@ export default function Employee() {
       });
     }
 
-    if (state.firstname.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "error",
-        title: "Firstname is too Long!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-    if (state.middlename.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "error",
-        title: "Middlename is too Long!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-    if (state.lastname.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "error",
-        title: "Lastname is too Long!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-    if (state.sub_account.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "error",
-        title: "Sub Account is too Long!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-
-    if (state.address.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "error",
-        title: "Address is too Long!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-
+    const state = {
+      entry_employee_id: clientIdRef.current?.value,
+      firstname: firstnameRef.current?.value.toLocaleUpperCase(),
+      middlename: middleRef.current?.value.toLocaleUpperCase(),
+      lastname: lastnameRef.current?.value.toLocaleUpperCase(),
+      company: fullnameRef.current?.value.toLocaleUpperCase(),
+      auth_representative: authorizeRepRef.current?.value,
+      suffix: suffixRef.current?.value,
+      sub_account: branchCodeRef.current,
+      address: addressRef.current?.value,
+    };
     e.preventDefault();
-    if (state.mode === "edit") {
+    if (mode === "edit") {
       codeCondfirmationAlert({
         isUpdate: true,
         cb: (userCodeConfirmation) => {
@@ -259,20 +244,399 @@ export default function Employee() {
       });
     }
   }
-  function resetModule() {
-    setNewStateValue(dispatch, initialState);
-    table.current?.resetTableSelected();
-    wait(250).then(() => {
-      refetchEmployeeId();
-      refetchEmployeeSearch();
+  function resetField() {
+    wait(100).then(() => {
+      if (firstnameRef.current) {
+        firstnameRef.current.value = "";
+      }
+      if (middleRef.current) {
+        middleRef.current.value = "";
+      }
+      if (lastnameRef.current) {
+        lastnameRef.current.value = "";
+      }
+
+      if (suffixRef.current) {
+        suffixRef.current.value = "";
+      }
+      if (addressRef.current) {
+        addressRef.current.value = "";
+      }
+      branchCodeRef.current = "";
+
+      refetchClientId();
       refetchSubAcct();
     });
   }
-  const width = window.innerWidth - 40;
-  const height = window.innerHeight - 140;
+
   return (
     <>
       <PageHelmet title="ID Entry - Employee" />
+      {isLoadingSearch && <Loading />}
+      <div
+        style={{
+          display: "flex",
+          columnGap: "10px",
+          marginBottom: "10px",
+        }}
+      >
+        <TextInput
+          containerStyle={{
+            width: "500px",
+          }}
+          label={{
+            title: "Search: ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "70px",
+            },
+          }}
+          input={{
+            className: "search-input-up-on-key-down",
+            type: "search",
+            onKeyDown: (e) => {
+              if (e.key === "Enter" || e.key === "NumpadEnter") {
+                e.preventDefault();
+                mutateSearch({
+                  search: e.currentTarget.value,
+                  entry: "Employee",
+                });
+              }
+            },
+            style: { width: "100%" },
+          }}
+          icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+          onIconClick={(e) => {
+            e.preventDefault();
+            if (searchInputRef.current) {
+              mutateSearch({
+                search: searchInputRef.current.value,
+                entry: "Employee",
+              });
+            }
+          }}
+          inputRef={searchInputRef}
+        />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            columnGap: "5px",
+            marginLeft: "10px",
+          }}
+        >
+          {mode === "" && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              id="entry-header-save-button"
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              onClick={() => {
+                refetchClientId();
+                setMode("add");
+              }}
+            >
+              New
+            </Button>
+          )}
+          <LoadingButton
+            id="save-entry-header"
+            color="primary"
+            variant="contained"
+            type="submit"
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+            }}
+            onClick={handleOnSave}
+            startIcon={<SaveIcon />}
+            disabled={mode === ""}
+            loading={loadingAdd || loadingEdit}
+          >
+            Save
+          </LoadingButton>
+
+          <LoadingButton
+            disabled={mode === ""}
+            id="save-entry-header"
+            variant="contained"
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+              backgroundColor: pink[500],
+              "&:hover": {
+                backgroundColor: pink[600],
+              },
+            }}
+            loading={loadingDelete}
+            startIcon={<DeleteIcon />}
+            onClick={() => {
+              codeCondfirmationAlert({
+                isUpdate: false,
+                cb: (userCodeConfirmation) => {
+                  mutateDelete({
+                    id: clientIdRef.current?.value,
+                    userCodeConfirmation,
+                  });
+                },
+              });
+            }}
+          >
+            Delete
+          </LoadingButton>
+          {mode !== "" && (
+            <Button
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<CloseIcon />}
+              color="error"
+              onClick={() => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, cancel it!",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    resetField();
+                    setMode("");
+                    tableRef.current.setSelectedRow(null);
+                    tableRef.current.resetCheckBox();
+                  }
+                });
+              }}
+            >
+              Cancel
+            </Button>
+          )}
+        </div>
+      </div>
+      <div
+        style={{
+          display: "flex",
+          columnGap: "20px",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            rowGap: "5px",
+            flex: 1,
+          }}
+        >
+          {loadingClientId ? (
+            <LoadingButton loading={loadingClientId} />
+          ) : (
+            <TextInput
+              label={{
+                title: "Employee ID : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "130px",
+                },
+              }}
+              input={{
+                disabled: mode === "",
+                readOnly: true,
+                type: "text",
+                style: { width: "100%", height: "22px" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    firstnameRef.current?.focus();
+                  }
+                },
+              }}
+              inputRef={clientIdRef}
+            />
+          )}
+
+          <TextInput
+            label={{
+              title: "First Name : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "130px",
+              },
+            }}
+            input={{
+              disabled: mode === "",
+              type: "text",
+              style: {
+                width: "100%",
+                height: "22px",
+                textTransform: "uppercase",
+              },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  middleRef.current?.focus();
+                }
+              },
+            }}
+            inputRef={firstnameRef}
+          />
+          <TextInput
+            label={{
+              title: "Middle Name : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "130px",
+              },
+            }}
+            input={{
+              disabled: mode === "",
+              type: "text",
+              style: {
+                width: "100%",
+                height: "22px",
+                textTransform: "uppercase",
+              },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  lastnameRef.current?.focus();
+                }
+              },
+            }}
+            inputRef={middleRef}
+          />
+          <TextInput
+            label={{
+              title: "Last Name : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "130px",
+              },
+            }}
+            input={{
+              disabled: mode === "",
+              type: "text",
+              style: {
+                width: "100%",
+                height: "22px",
+                textTransform: "uppercase",
+              },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  suffixRef.current?.focus();
+                }
+              },
+            }}
+            inputRef={lastnameRef}
+          />
+          <TextInput
+            label={{
+              title: "Suffix : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "130px",
+              },
+            }}
+            input={{
+              disabled: mode === "",
+              type: "text",
+              style: { width: "100%", height: "22px" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  subAccount.current?.focus();
+                }
+              },
+            }}
+            inputRef={suffixRef}
+          />
+        </div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            rowGap: "5px",
+            marginBottom: "40px",
+            flex: 1,
+          }}
+        >
+          {subAccountLoading ? (
+            <LoadingButton loading={subAccountLoading} />
+          ) : (
+            <Autocomplete
+              disableInput={mode === ""}
+              ref={_subAccount}
+              containerStyle={{
+                width: "100%",
+              }}
+              label={{
+                title: "Sub Account : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "110px",
+                },
+              }}
+              DisplayMember={"ShortName"}
+              DataSource={[]}
+              inputRef={subAccount}
+              input={{
+                style: {
+                  width: "100%",
+                },
+              }}
+              onChange={(selected: any, e: any) => {
+                if (subAccount.current)
+                  subAccount.current.value = selected.ShortName;
+                console.log(selected);
+
+                branchCodeRef.current = selected.Sub_Acct;
+              }}
+              onKeydown={(e: any) => {
+                if (e.key === "Enter" || e.key === "NumpadEnter") {
+                  e.preventDefault();
+                  addressRef.current?.focus();
+                }
+              }}
+            />
+          )}
+
+          <TextAreaInput
+            containerStyle={{
+              alignItems: "flex-start",
+            }}
+            label={{
+              title: "Address : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "110px",
+              },
+            }}
+            textarea={{
+              disabled: mode === "",
+              style: { width: "100%", height: "100px" },
+              onKeyDown: (e) => {
+                e.stopPropagation();
+                if (
+                  (e.code === "NumpadEnter" && !e.shiftKey) ||
+                  (e.code === "Enter" && !e.shiftKey)
+                ) {
+                }
+              },
+            }}
+            _inputRef={addressRef}
+          />
+        </div>
+      </div>
       <div
         style={{
           display: "flex",
@@ -282,434 +646,54 @@ export default function Employee() {
           flex: 1,
         }}
       >
-        <Box
-          sx={(theme) => ({
-            display: "flex",
-            alignItems: "center",
-            columnGap: "20px",
-            [theme.breakpoints.down("sm")]: {
-              flexDirection: "column",
-              alignItems: "flex-start",
-              flex: 1,
-              marginBottom: "15px",
-            },
-          })}
-        >
-          <div
-            style={{
-              marginTop: "10px",
-              marginBottom: "12px",
-              width: "100%",
-            }}
-          >
-            <TextField
-              label="Search"
-              fullWidth
-              size="small"
-              type="text"
-              value={state.search}
-              name="search"
-              onChange={handleInputChange}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-                className: "manok",
-              }}
-              onKeyDown={(e) => {
-                if (e.code === "Enter" || e.code === "NumpadEnter") {
-                  e.preventDefault();
-                  return refetchEmployeeSearch();
+        <DataGridViewReact
+          height="340px"
+          ref={tableRef}
+          rows={[]}
+          columns={employeeColumn}
+          getSelectedItem={(rowSelected: any, _: any, RowIndex: any) => {
+            if (rowSelected) {
+              setMode("edit");
+              wait(100).then(() => {
+                if (clientIdRef.current) {
+                  clientIdRef.current.value = rowSelected[0];
                 }
-                if (e.key === "ArrowDown") {
-                  e.preventDefault();
-                  const datagridview = document.querySelector(
-                    `.grid-container`
-                  ) as HTMLDivElement;
-                  datagridview.focus();
+                if (firstnameRef.current) {
+                  firstnameRef.current.value = rowSelected[1];
                 }
-              }}
-              sx={{
-                width: "500px",
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            />
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              columnGap: "20px",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                columnGap: "5px",
-              }}
-            >
-              {state.mode === "" && (
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  id="entry-header-save-button"
-                  sx={{
-                    height: "30px",
-                    fontSize: "11px",
-                  }}
-                  onClick={() => {
-                    refetchEmployeeId();
-                    handleInputChange({
-                      target: { value: "add", name: "mode" },
-                    });
-                  }}
-                >
-                  New
-                </Button>
-              )}
-              <LoadingButton
-                id="save-entry-header"
-                color="primary"
-                variant="contained"
-                type="submit"
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                }}
-                onClick={handleOnSave}
-                startIcon={<SaveIcon />}
-                disabled={state.mode === ""}
-                loading={loadingAdd || loadingEdit}
-              >
-                Save
-              </LoadingButton>
-              {state.mode !== "" && (
-                <Button
-                  sx={{
-                    height: "30px",
-                    fontSize: "11px",
-                  }}
-                  variant="contained"
-                  startIcon={<CloseIcon />}
-                  color="error"
-                  onClick={() => {
-                    Swal.fire({
-                      title: "Are you sure?",
-                      text: "You won't be able to revert this!",
-                      icon: "warning",
-                      showCancelButton: true,
-                      confirmButtonColor: "#3085d6",
-                      cancelButtonColor: "#d33",
-                      confirmButtonText: "Yes, cancel it!",
-                    }).then((result) => {
-                      if (result.isConfirmed) {
-                        resetModule();
-                      }
-                    });
-                  }}
-                >
-                  Cancel
-                </Button>
-              )}
+                if (middleRef.current) {
+                  middleRef.current.value = rowSelected[2];
+                }
+                if (lastnameRef.current) {
+                  lastnameRef.current.value = rowSelected[3];
+                }
+                if (suffixRef.current) {
+                  suffixRef.current.value = rowSelected[4];
+                }
+                if (subAccount.current) {
+                  subAccount.current.value = rowSelected[5];
+                }
 
-              <LoadingButton
-                id="save-entry-header"
-                variant="contained"
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                  backgroundColor: pink[500],
-                  "&:hover": {
-                    backgroundColor: pink[600],
-                  },
-                }}
-                loading={loadingDelete}
-                startIcon={<DeleteIcon />}
-                disabled={state.mode !== "edit"}
-                onClick={() => {
-                  codeCondfirmationAlert({
-                    isUpdate: false,
-                    cb: (userCodeConfirmation) => {
-                      mutateDelete({
-                        id: state.entry_employee_id,
-                        userCodeConfirmation,
-                      });
-                    },
-                  });
-                }}
-              >
-                Delete
-              </LoadingButton>
-            </div>
-          </div>
-        </Box>
-        <form
-          onKeyDown={(e) => {
-            const enterList = [
-              "firstname",
-              "lastname",
-              "middlename",
-              "address",
-              "entry_employee_id",
-            ];
-            if (
-              (e.code === "Enter" || e.code === "NumpadEnter") &&
-              enterList.includes((e.target as any).name)
-            ) {
-              e.preventDefault();
-              handleOnSave(e);
-            }
-          }}
-          onSubmit={handleOnSave}
-          id="Form-Employee"
-        >
-          <Box
-            sx={(theme) => ({
-              display: "flex",
-              columnGap: "15px",
-              flexDirection: "row",
-              marginBottom: "10px",
-              [theme.breakpoints.down("md")]: {
-                flexDirection: "column",
-                rowGap: "10px",
-              },
-            })}
-          >
-            {loadingEmployeeId ? (
-              <LoadingButton loading={loadingEmployeeId} />
-            ) : (
-              <FormControl
-                fullWidth
-                variant="outlined"
-                size="small"
-                disabled={state.mode === ""}
-                sx={{
-                  flex: 1,
-                  ".MuiFormLabel-root": {
-                    fontSize: "14px",
-                    background: "white",
-                    zIndex: 99,
-                    padding: "0 3px",
-                  },
-                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                }}
-              >
-                <InputLabel htmlFor="employee-auto-generate-id-field">
-                  Employee ID
-                </InputLabel>
-                <OutlinedInput
-                  sx={{
-                    height: "27px",
-                    fontSize: "14px",
-                  }}
-                  disabled={state.mode === ""}
-                  fullWidth
-                  label="Employee ID"
-                  name="entry_employee_id"
-                  value={state.entry_employee_id}
-                  onChange={handleInputChange}
-                  readOnly={true}
-                  id="employee-auto-generate-id-field"
-                  endAdornment={
-                    <InputAdornment position="end">
-                      <IconButton
-                        disabled={state.mode === ""}
-                        aria-label="search-client"
-                        color="secondary"
-                        edge="end"
-                        onClick={() => {
-                          refetchEmployeeId();
-                        }}
-                      >
-                        <RestartAltIcon />
-                      </IconButton>
-                    </InputAdornment>
-                  }
-                />
-              </FormControl>
-            )}
-            <TextField
-              type="text"
-              name="firstname"
-              label="First Name"
-              size="small"
-              required
-              onChange={handleInputChange}
-              disabled={state.mode === ""}
-              value={state.firstname}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-              }}
-              sx={{
-                flex: 1,
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            />
-            <TextField
-              type="text"
-              name="middlename"
-              label="Middle Name"
-              size="small"
-              onChange={handleInputChange}
-              disabled={state.mode === ""}
-              value={state.middlename}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-              }}
-              sx={{
-                flex: 1,
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            />
-            <TextField
-              type="text"
-              name="lastname"
-              label="Last Name"
-              size="small"
-              required
-              onChange={handleInputChange}
-              disabled={state.mode === ""}
-              value={state.lastname}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-              }}
-              sx={{
-                flex: 1,
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            />
-          </Box>
-          <div
-            style={{
-              display: "flex",
-              columnGap: "10px",
-              alignItems: "center",
-              marginBottom: "10px",
-            }}
-          >
-            <TextField
-              type="text"
-              name="suffix"
-              label="Suffix"
-              size="small"
-              required
-              onChange={handleInputChange}
-              disabled={state.mode === ""}
-              value={state.suffix}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-              }}
-              sx={{
-                width: "100px",
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            />
-            {subAccountLoading ? (
-              <LoadingButton loading={subAccountLoading} />
-            ) : (
-              <FormControl
-                fullWidth
-                required
-                size="small"
-                sx={{
-                  width: "300px",
-                  ".MuiFormLabel-root": {
-                    fontSize: "14px",
-                    background: "white",
-                    zIndex: 99,
-                    padding: "0 3px",
-                  },
-                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                }}
-              >
-                <InputLabel id="Sub Account">Sub Account</InputLabel>
-                <Select
-                  sx={{
-                    height: "27px",
-                    fontSize: "14px",
-                  }}
-                  disabled={state.mode === ""}
-                  value={state.sub_account}
-                  onChange={handleInputChange}
-                  labelId="Sub Account"
-                  label="Sub Account"
-                  name="sub_account"
-                >
-                  {[...subAccountData?.data.subAccount].map(
-                    (item: {
-                      Sub_Acct: string;
-                      ShortName: string;
-                      Acronym: string;
-                    }) => {
-                      return (
-                        <MenuItem key={item.Sub_Acct} value={item.Sub_Acct}>
-                          {item.ShortName}
-                        </MenuItem>
-                      );
-                    }
-                  )}
-                </Select>
-              </FormControl>
-            )}
-            <TextField
-              name="address"
-              label="Address"
-              minRows={10}
-              size="small"
-              fullWidth
-              onChange={handleInputChange}
-              disabled={state.mode === ""}
-              value={state.address}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-              }}
-              sx={{
-                flex: 1,
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            />
-          </div>
-        </form>
-
-        <UpwardTable
-          ref={table}
-          isLoading={isLoading || loadingDelete || loadingEdit || loadingAdd}
-          rows={rows}
-          column={employeeColumn}
-          width={width}
-          height={height}
-          dataReadOnly={true}
-          onSelectionChange={(rowSelected) => {
-            if (rowSelected.length > 0) {
-              handleInputChange({ target: { value: "edit", name: "mode" } });
-
-              setNewStateValue(dispatch, rowSelected[0]);
+                if (addressRef.current) {
+                  addressRef.current.value = rowSelected[6];
+                }
+              });
             } else {
-              setNewStateValue(dispatch, initialState);
-              handleInputChange({ target: { value: "", name: "mode" } });
+              tableRef.current.setSelectedRow(null);
+              tableRef.current.resetCheckBox();
+              resetField();
+              setMode("");
               return;
             }
           }}
-          onKeyDown={(row, key) => {
-            if (key === "Delete" || key === "Backspace") {
-              const rowSelected = row[0];
+          onKeyDown={(rowSelected: any, RowIndex: any, e: any) => {
+            if (e.code === "Delete" || e.code === "Backspace") {
               wait(100).then(() => {
                 codeCondfirmationAlert({
                   isUpdate: false,
                   cb: (userCodeConfirmation) => {
                     mutateDelete({
-                      id: rowSelected.entry_employee_id,
+                      id: rowSelected[0],
                       userCodeConfirmation,
                     });
                   },
@@ -718,63 +702,7 @@ export default function Employee() {
               return;
             }
           }}
-          inputsearchselector=".manok"
         />
-
-        {/* <div
-        ref={refParent}
-        style={{
-          marginTop: "10px",
-          width: "100%",
-          position: "relative",
-          flex: 1,
-        }}
-      >
-        <Box
-          style={{
-            height: `${refParent.current?.getBoundingClientRect().height}px`,
-            width: "100%",
-            overflowX: "scroll",
-            position: "absolute",
-          }}
-        >
-          <Table
-            ref={table}
-            isLoading={isLoading || loadingDelete || loadingEdit || loadingAdd}
-            columns={employeeColumn}
-            rows={rows}
-            table_id={"entry_employee_id"}
-            isSingleSelection={true}
-            isRowFreeze={false}
-            dataSelection={(selection, data, code) => {
-              const rowSelected = data.filter(
-                (item: any) => item.entry_employee_id === selection[0]
-              )[0];
-              if (rowSelected === undefined || rowSelected.length <= 0) {
-                setNewStateValue(dispatch, initialState);
-                handleInputChange({ target: { value: "", name: "mode" } });
-                return;
-              }
-              handleInputChange({ target: { value: "edit", name: "mode" } });
-              setNewStateValue(dispatch, rowSelected);
-              if (code === "Delete" || code === "Backspace") {
-                wait(350).then(() => {
-                  codeCondfirmationAlert({
-                    isUpdate: false,
-                    cb: (userCodeConfirmation) => {
-                      mutateDelete({
-                        id: state.entry_employee_id,
-                        userCodeConfirmation,
-                      });
-                    },
-                  });
-                });
-                return;
-              }
-            }}
-          />
-        </Box>
-      </div> */}
       </div>
     </>
   );

@@ -1,105 +1,98 @@
-import React, { useContext, useRef, useState } from "react";
-import {
-  Box,
-  TextField,
-  IconButton,
-  InputAdornment,
-  OutlinedInput,
-  Button,
-} from "@mui/material";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { Button } from "@mui/material";
 import { AuthContext } from "../../../../../components/AuthContext";
-import { useReducer } from "react";
-import { useMutation, useQuery, useQueryClient } from "react-query";
+import { useMutation, useQuery } from "react-query";
 import Swal from "sweetalert2";
-import { reducer, fixedAssetstColumn } from "../../../data/entry";
-import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
-import { setNewStateValue } from "../../../Task/Accounting/PostDateChecks";
-import { wait } from "@testing-library/user-event/dist/utils";
-import Table from "../../../../../components/Table";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
+import { wait } from "../../../../../lib/wait";
 import { pink } from "@mui/material/colors";
 import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../../../lib/confirmationAlert";
-import { UpwardTable } from "../../../../../components/UpwardTable";
 import PageHelmet from "../../../../../components/Helmet";
+import {
+  TextAreaInput,
+  TextInput,
+} from "../../../../../components/UpwardFields";
+import SearchIcon from "@mui/icons-material/Search";
+import { DataGridViewReact } from "../../../../../components/DataGridViewReact";
+import { Loading } from "../../../../../components/Loading";
+import { Autocomplete } from "../../../Task/Accounting/PettyCash";
+const fixedAssetsColumn = [
+  { key: "entry_fixed_assets_id", label: "ID", width: 130 },
+  { key: "fullname", label: "Full Name", width: 400 },
+  {
+    key: "ShortName",
+    label: "ShortName",
+    width: 200,
+  },
+  {
+    key: "description",
+    label: "Description",
+    width: 400,
+  },
+  {
+    key: "remarks",
+    label: "Remarks",
+    width: 400,
+  },
+ 
+  {
+    key: "createdAt",
+    label: "createdAt",
+    width: 200,
+    hide:true
+  },
+  {
+    key: "sub_account",
+    label: "sub_account",
+    width: 200,
+    hide:true
+  },
 
-const initialState = {
-  description: "",
-  remarks: "",
-  fullname: "",
-  search: "",
-  mode: "",
-  entry_fixed_assets_id: "",
-  sub_account: "c02534ee-6d7e-40dd-a22b-bc9024fa12ca",
-};
-
+];
 export default function FixedAssets() {
-  const refParent = useRef<HTMLDivElement>(null);
-  const [rows, setRows] = useState([]);
-  const [state, dispatch] = useReducer(reducer, initialState);
   const { myAxios, user } = useContext(AuthContext);
-  const queryClient = useQueryClient();
-  const table = useRef<any>(null);
-  const queryKey = "entry_fixed_assets_id";
+  const [mode, setMode] = useState("");
 
-  const {
-    data: subAccountData,
-    isLoading: subAccountLoading,
-    refetch: refetchSubAcct,
-  } = useQuery({
-    queryKey: "sub-accounts",
+  const tableRef = useRef<any>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const clientIdRef = useRef<HTMLInputElement>(null);
+  const fullnameRef = useRef<HTMLTextAreaElement>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const remarksRef = useRef<HTMLTextAreaElement>(null);
+  const _subAccountRef = useRef<any>(null);
+  const subAccountRef = useRef<HTMLSelectElement>(null);
+  const Sub_AcctRef = useRef("");
+
+  const { isLoading: loadingClientId, refetch: refetchClientId } = useQuery({
+    queryKey: "fixed_assets-generate-id",
     queryFn: async () =>
-      await myAxios.get(`/reference/sub-account`, {
-        headers: { Authorization: `Bearer ${user?.accessToken}` },
-      }),
-    onSuccess: (res) => {
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "sub_account",
-        value: res.data?.defaultValue[0]?.Sub_Acct,
-      });
-    },
-  });
-  const { isLoading: loadingFixedAssetId, refetch: refetchFixedAssetId } =
-    useQuery({
-      queryKey: "fixed-generate-id",
-      queryFn: async () =>
-        await myAxios.post(
-          "/reference/id-entry-generate-id",
-          { sign: "FA", type: "entry fixed assets" },
-          {
-            headers: { Authorization: `Bearer ${user?.accessToken}` },
-          }
-        ),
-      refetchOnWindowFocus: false,
-      onSuccess: (res) => {
-        handleInputChange({
-          target: { value: res.data.generateID, name: "entry_fixed_assets_id" },
-        });
-      },
-    });
-  const { isLoading, refetch: refetchFixedAssetSearch } = useQuery({
-    queryKey,
-    queryFn: async () =>
-      await myAxios.get(
-        `/reference/search-entry?entrySearch=${state.search}&entry=Fixed Assets`,
+      await myAxios.post(
+        "/reference/id-entry-generate-id",
+        { sign: "FA", type: "entry fixed assets" },
         {
           headers: { Authorization: `Bearer ${user?.accessToken}` },
         }
       ),
+    refetchOnWindowFocus: false,
     onSuccess: (res) => {
-      setRows((res as any)?.data.entry);
+      wait(100).then(() => {
+        if (clientIdRef.current) {
+          clientIdRef.current.value = res.data.generateID;
+        }
+      });
     },
   });
+
   const { mutate: mutateAdd, isLoading: loadingAdd } = useMutation({
-    mutationKey: queryKey,
+    mutationKey: "add-fixed-assets",
     mutationFn: async (variables: any) =>
       await myAxios.post("/reference/id-entry-fixed-assets", variables, {
         headers: { Authorization: `Bearer ${user?.accessToken}` },
@@ -108,47 +101,79 @@ export default function FixedAssets() {
   });
 
   const { mutate: mutateEdit, isLoading: loadingEdit } = useMutation({
-    mutationKey: queryKey,
+    mutationKey: "edit-fixed-assets",
+    mutationFn: async (variables: any) =>
+      await myAxios.post(`/reference/id-entry-fixed-assets-update`, variables, {
+        headers: { Authorization: `Bearer ${user?.accessToken}` },
+      }),
+    onSuccess,
+  });
+  const { mutate: mutateDelete, isLoading: loadingDelete } = useMutation({
+    mutationKey: "delete-client",
+    mutationFn: async (variables: any) =>
+      await myAxios.post(`/reference/entry-delete?entry=Fixed Assets`, variables, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      }),
+    onSuccess,
+  });
+  const { isLoading: isLoadingSearch, mutate: mutateSearch } = useMutation({
+    mutationKey: "search",
     mutationFn: async (variables: any) =>
       await myAxios.post(
-        `/reference/entry-update?entry=Fixed Assets`,
+        `/reference/search-entry`,
         variables,
         {
           headers: { Authorization: `Bearer ${user?.accessToken}` },
         }
       ),
-    onSuccess,
+    onSuccess: (res) => {
+      tableRef.current.setDataFormated((res as any)?.data.entry);
+    },
   });
-  const { mutate: mutateDelete, isLoading: loadingDelete } = useMutation({
-    mutationKey: queryKey,
-    mutationFn: async (variables: any) =>
-      await myAxios.post(
-        `/reference/entry-delete?entry=Fixed Assets`,
-        variables,
-        {
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
-        }
-      ),
-    onSuccess,
-  });
-  const handleInputChange = (e: any) => {
-    const { name, value } = e.target;
-    const uppercase = ["fullname", "description", "remarks"];
-    if (uppercase.includes(name)) {
-      return dispatch({
-        type: "UPDATE_FIELD",
-        field: name,
-        value: value.toUpperCase(),
+  const { isLoading: subAccountLoading, refetch: refetchSubAcct } = useQuery({
+    queryKey: "sub-accounts",
+    queryFn: async () =>
+      await myAxios.get(`/reference/sub-account`, {
+        headers: { Authorization: `Bearer ${user?.accessToken}` },
+      }),
+    onSuccess: (res) => {
+      wait(100).then(() => {
+        if (_subAccountRef.current)
+          _subAccountRef.current.setDataSource(res.data?.subAccount);
+        wait(100).then(() => {
+          const data = res.data?.subAccount.filter(
+            (itm: any) => itm.Acronym === "HO"
+          );
+
+          if (subAccountRef.current)
+            subAccountRef.current.value = data[0].ShortName;
+          Sub_AcctRef.current = data[0].Sub_Acct;
+        });
       });
-    }
-    dispatch({ type: "UPDATE_FIELD", field: name, value });
-  };
+    },
+  });
+
+  const mutateSearchRef = useRef(mutateSearch);
+  useEffect(() => {
+    mutateSearchRef.current({
+      search: "",
+      entry: "Fixed Assets",
+    });
+  }, []);
+
   function onSuccess(res: any) {
     if (res.data.success) {
-      queryClient.invalidateQueries(queryKey);
-      resetModule();
+      resetField();
+      setMode("");
+      tableRef.current.setSelectedRow(null);
+      tableRef.current.resetCheckBox();
+
+      mutateSearchRef.current({
+        search: "",
+        entry: "Fixed Assets",
+      });
       return Swal.fire({
         position: "center",
         icon: "success",
@@ -166,37 +191,25 @@ export default function FixedAssets() {
     });
   }
   function handleOnSave(e: any) {
-    if (state.fullname === "") {
+    if (fullnameRef.current?.value === "") {
       return Swal.fire({
         position: "center",
         icon: "error",
-        title: "Fullname is required!",
+        title: "Full Name is required!",
         showConfirmButton: false,
         timer: 1500,
       });
     }
-    if (state.description === "") {
-      return Swal.fire({
-        position: "center",
-        icon: "error",
-        title: "Description is required!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-
-    if (state.fullname.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "error",
-        title: "Fullname is too Long!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-
+    
+    const state = {
+      entry_fixed_assets_id: clientIdRef.current?.value,
+      fullname: fullnameRef.current?.value.toLocaleUpperCase(),
+      description: descriptionRef.current?.value,
+      remarks: remarksRef.current?.value,
+      sub_account: Sub_AcctRef.current,
+    };
     e.preventDefault();
-    if (state.mode === "edit") {
+    if (mode === "edit") {
       codeCondfirmationAlert({
         isUpdate: true,
         cb: (userCodeConfirmation) => {
@@ -211,20 +224,355 @@ export default function FixedAssets() {
       });
     }
   }
-  function resetModule() {
-    setNewStateValue(dispatch, initialState);
-    table.current?.resetTableSelected();
-    wait(250).then(() => {
-      refetchFixedAssetSearch();
-      refetchFixedAssetId();
+  function resetField() {
+    wait(100).then(() => {
+      refetchClientId();
       refetchSubAcct();
+      if(fullnameRef.current){
+        fullnameRef.current.value = ''
+      }
+      if(descriptionRef.current){
+        descriptionRef.current.value = ''
+      }
+      if(remarksRef.current){
+        remarksRef.current.value = ''
+      }
+      if(subAccountRef.current){
+        subAccountRef.current.value = 'Head Office'
+      }
     });
   }
-  const width = window.innerWidth - 40;
-  const height = window.innerHeight - 100;
+
   return (
     <>
       <PageHelmet title="ID Entry - Fixed Assets" />
+      {isLoadingSearch && <Loading />}
+      <div
+        style={{
+          display: "flex",
+          columnGap: "10px",
+          marginBottom: "10px",
+        }}
+      >
+        <TextInput
+          containerStyle={{
+            width: "500px",
+          }}
+          label={{
+            title: "Search: ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "70px",
+            },
+          }}
+          input={{
+            className: "search-input-up-on-key-down",
+            type: "search",
+            onKeyDown: (e) => {
+              if (e.key === "Enter" || e.key === "NumpadEnter") {
+                e.preventDefault();
+                mutateSearch({
+                  search: e.currentTarget.value,
+                  entry: "Fixed Assets",
+                });
+              }
+            },
+            style: { width: "100%" },
+          }}
+          icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+          onIconClick={(e) => {
+            e.preventDefault();
+            if (searchInputRef.current) {
+              mutateSearch({
+                search: searchInputRef.current.value,
+                entry: "Fixed Assets",
+              });
+            }
+          }}
+          inputRef={searchInputRef}
+        />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            columnGap: "5px",
+            marginLeft: "10px",
+          }}
+        >
+          {mode === "" && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              id="entry-header-save-button"
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              onClick={() => {
+                refetchClientId();
+                setMode("add");
+              }}
+            >
+              New
+            </Button>
+          )}
+          <LoadingButton
+            id="save-entry-header"
+            color="primary"
+            variant="contained"
+            type="submit"
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+            }}
+            onClick={handleOnSave}
+            startIcon={<SaveIcon />}
+            disabled={mode === ""}
+            loading={loadingAdd || loadingEdit}
+          >
+            Save
+          </LoadingButton>
+
+          <LoadingButton
+            disabled={mode === ""}
+            id="save-entry-header"
+            variant="contained"
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+              backgroundColor: pink[500],
+              "&:hover": {
+                backgroundColor: pink[600],
+              },
+            }}
+            loading={loadingDelete}
+            startIcon={<DeleteIcon />}
+            onClick={() => {
+              codeCondfirmationAlert({
+                isUpdate: false,
+                cb: (userCodeConfirmation) => {
+                  mutateDelete({
+                    id: clientIdRef.current?.value,
+                    userCodeConfirmation,
+                  });
+                },
+              });
+            }}
+          >
+            Delete
+          </LoadingButton>
+          {mode !== "" && (
+            <Button
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<CloseIcon />}
+              color="error"
+              onClick={() => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, cancel it!",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    resetField();
+                    setMode("");
+                    tableRef.current.setSelectedRow(null);
+                    tableRef.current.resetCheckBox();
+                  }
+                });
+              }}
+            >
+              Cancel
+            </Button>
+          )}
+        </div>
+      </div>
+      <div
+        style={{
+          display: "flex",
+          columnGap: "20px",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            rowGap: "5px",
+            flex: 1,
+          }}
+        >
+          {loadingClientId ? (
+            <LoadingButton loading={loadingClientId} />
+          ) : (
+            <TextInput
+              label={{
+                title: "Fixed Assets ID: ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "130px",
+                },
+              }}
+              containerStyle={{ width: "50%" }}
+              input={{
+                disabled: mode === "",
+                readOnly: true,
+                type: "text",
+                style: { width: "calc(100% - 130px)", height: "22px" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    fullnameRef.current?.focus();
+                  }
+                },
+              }}
+              inputRef={clientIdRef}
+            />
+          )}
+          <TextAreaInput
+            label={{
+              title: "Full Name : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "130px",
+              },
+            }}
+            containerStyle={{
+              alignItems: "flex-start",
+              width: "100%",
+            }}
+            textarea={{
+              disabled: mode === "",
+              style: { width: "calc(100% - 130px)" },
+              rows: 2,
+              onKeyDown: (e) => {
+                e.stopPropagation();
+                if (
+                  (e.code === "NumpadEnter" && !e.shiftKey) ||
+                  (e.code === "Enter" && !e.shiftKey)
+                ) {
+                  descriptionRef.current?.focus();
+                }
+              },
+            }}
+            _inputRef={fullnameRef}
+          />
+          <TextAreaInput
+            label={{
+              title: "Description : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "130px",
+              },
+            }}
+            containerStyle={{
+              alignItems: "flex-start",
+              width: "100%",
+            }}
+            textarea={{
+              disabled: mode === "",
+              style: { width: "calc(100% - 130px)" },
+              rows: 2,
+              onKeyDown: (e) => {
+                e.stopPropagation();
+                if (
+                  (e.code === "NumpadEnter" && !e.shiftKey) ||
+                  (e.code === "Enter" && !e.shiftKey)
+                ) {
+                  subAccountRef.current?.focus();
+                }
+              },
+            }}
+            _inputRef={descriptionRef}
+          />
+        </div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            rowGap: "5px",
+            marginBottom: "40px",
+            flex: 1,
+          }}
+        >
+          {subAccountLoading ? (
+            <LoadingButton loading={subAccountLoading} />
+          ) : (
+            <Autocomplete
+              disableInput={mode === ""}
+              ref={_subAccountRef}
+              containerStyle={{
+                width: "50%",
+              }}
+              label={{
+                title: "Sub Account : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "165px",
+                },
+              }}
+              DisplayMember={"ShortName"}
+              DataSource={[]}
+              inputRef={subAccountRef}
+              input={{
+                style: {
+                  width: "100%",
+                },
+              }}
+              onChange={(selected: any, e: any) => {
+                if (subAccountRef.current)
+                  subAccountRef.current.value = selected.ShortName;
+                console.log(selected);
+
+                Sub_AcctRef.current = selected.Sub_Acct;
+              }}
+              onKeydown={(e: any) => {
+                if (e.key === "Enter" || e.key === "NumpadEnter") {
+                  e.preventDefault();
+                  remarksRef.current?.focus();
+                }
+              }}
+            />
+          )}
+
+          <TextAreaInput
+            label={{
+              title: "Remarks : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "130px",
+              },
+            }}
+            containerStyle={{
+              alignItems: "flex-start",
+            }}
+            textarea={{
+              disabled: mode === "",
+              style: { width: "100%", height: "50px" },
+              onKeyDown: (e) => {
+                e.stopPropagation();
+                if (
+                  (e.code === "NumpadEnter" && !e.shiftKey) ||
+                  (e.code === "Enter" && !e.shiftKey)
+                ) {
+                }
+              },
+            }}
+            _inputRef={remarksRef}
+          />
+        </div>
+      </div>
       <div
         style={{
           display: "flex",
@@ -234,396 +582,47 @@ export default function FixedAssets() {
           flex: 1,
         }}
       >
-        <Box
-          sx={(theme) => ({
-            display: "flex",
-            alignItems: "center",
-            columnGap: "20px",
-            [theme.breakpoints.down("sm")]: {
-              flexDirection: "column",
-              alignItems: "flex-start",
-              flex: 1,
-              marginBottom: "15px",
-            },
-          })}
-        >
-          <div
-            style={{
-              marginTop: "10px",
-              marginBottom: "12px",
-              width: "100%",
-            }}
-          >
-            <TextField
-              label="Search"
-              fullWidth
-              size="small"
-              type="text"
-              value={state.search}
-              name="search"
-              onChange={handleInputChange}
-              onKeyDown={(e) => {
-                if (e.code === "Enter" || e.code === "NumpadEnter") {
-                  e.preventDefault();
-                  return refetchFixedAssetSearch();
+        <DataGridViewReact
+          height="340px"
+          ref={tableRef}
+          rows={[]}
+          columns={fixedAssetsColumn}
+          getSelectedItem={(rowSelected: any, _: any, RowIndex: any) => {
+            if (rowSelected) {
+              setMode("edit");
+              wait(100).then(() => {
+                if (clientIdRef.current) {
+                  clientIdRef.current.value = rowSelected[0];
                 }
-                if (e.key === "ArrowDown") {
-                  e.preventDefault();
-                  const datagridview = document.querySelector(
-                    `.grid-container`
-                  ) as HTMLDivElement;
-                  datagridview.focus();
+                if (fullnameRef.current) {
+                  fullnameRef.current.value = rowSelected[1];
                 }
-
-              }}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-                className: "manok"
-              }}
-              sx={{
-                width: "500px",
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            />
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              columnGap: "20px",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                columnGap: "5px",
-              }}
-            >
-              {state.mode === "" && (
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  id="entry-header-save-button"
-                  sx={{
-                    height: "30px",
-                    fontSize: "11px",
-                  }}
-                  onClick={() => {
-                    refetchFixedAssetId();
-                    handleInputChange({ target: { value: "add", name: "mode" } });
-                  }}
-                >
-                  New
-                </Button>
-              )}
-              <LoadingButton
-                id="save-entry-header"
-                color="primary"
-                variant="contained"
-                type="submit"
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                }}
-                onClick={handleOnSave}
-                startIcon={<SaveIcon />}
-                disabled={state.mode === ""}
-                loading={loadingAdd || loadingEdit}
-              >
-                Save
-              </LoadingButton>
-              {state.mode !== "" && (
-                <Button
-                  sx={{
-                    height: "30px",
-                    fontSize: "11px",
-                  }}
-                  variant="contained"
-                  startIcon={<CloseIcon />}
-                  color="error"
-                  onClick={() => {
-                    Swal.fire({
-                      title: "Are you sure?",
-                      text: "You won't be able to revert this!",
-                      icon: "warning",
-                      showCancelButton: true,
-                      confirmButtonColor: "#3085d6",
-                      cancelButtonColor: "#d33",
-                      confirmButtonText: "Yes, cancel it!",
-                    }).then((result) => {
-                      if (result.isConfirmed) {
-                        resetModule();
-                      }
-                    });
-                  }}
-                >
-                  Cancel
-                </Button>
-              )}
-
-              <LoadingButton
-                id="save-entry-header"
-                variant="contained"
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                  backgroundColor: pink[500],
-                  "&:hover": {
-                    backgroundColor: pink[600],
-                  },
-                }}
-                loading={loadingDelete}
-                startIcon={<DeleteIcon />}
-                disabled={state.mode !== "edit"}
-                onClick={() => {
-                  codeCondfirmationAlert({
-                    isUpdate: false,
-                    cb: (userCodeConfirmation) => {
-                      mutateDelete({
-                        id: state.entry_fixed_assets_id,
-                        userCodeConfirmation,
-                      });
-                    },
-                  });
-                }}
-              >
-                Delete
-              </LoadingButton>
-            </div>
-          </div>
-        </Box>
-        <form
-          onKeyDown={(e) => {
-            const enterList = [
-              "description",
-              "remarks",
-              "fullname",
-              "entry_fixed_assets_id",
-            ];
-            if (
-              (e.code === "Enter" || e.code === "NumpadEnter") &&
-              enterList.includes((e.target as any).name)
-            ) {
-              e.preventDefault();
-              handleOnSave(e);
-            }
-          }}
-          onSubmit={handleOnSave}
-          id="Form-Fixed Assets"
-        >
-          <Box
-            sx={(theme) => ({
-              display: "flex",
-              columnGap: "15px",
-              flexDirection: "row",
-              [theme.breakpoints.down("md")]: {
-                flexDirection: "column",
-                rowGap: "10px",
-              },
-              marginBottom: "10px",
-            })}
-          >
-            {loadingFixedAssetId ? (
-              <LoadingButton loading={loadingFixedAssetId} />
-            ) : (
-              <FormControl
-                variant="outlined"
-                size="small"
-                disabled={state.mode === ""}
-                sx={{
-                  width: "150px",
-                  ".MuiFormLabel-root": {
-                    fontSize: "14px",
-                    background: "white",
-                    zIndex: 99,
-                    padding: "0 3px",
-                  },
-                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                }}
-              >
-                <InputLabel htmlFor="fixed_assets-auto-generate-id-field">
-                  Fixed Assets ID
-                </InputLabel>
-                <OutlinedInput
-                  sx={{
-                    height: "27px",
-                    fontSize: "14px",
-                  }}
-                  disabled={state.mode === ""}
-                  fullWidth
-                  label="Fixed Assets ID"
-                  name="entry_fixed_assets_id"
-                  value={state.entry_fixed_assets_id}
-                  onChange={handleInputChange}
-                  readOnly={true}
-                  id="fixed_assets-auto-generate-id-field"
-                  endAdornment={
-                    <InputAdornment position="end">
-                      <IconButton
-                        disabled={state.mode === ""}
-                        aria-label="search-client"
-                        color="secondary"
-                        edge="end"
-                        onClick={() => {
-                          refetchFixedAssetId();
-                        }}
-                      >
-                        <RestartAltIcon />
-                      </IconButton>
-                    </InputAdornment>
-                  }
-                />
-              </FormControl>
-            )}
-            <TextField
-              label="Full Name"
-              name="fullname"
-              minRows={10}
-              fullWidth
-              style={{ marginBottom: "10px" }}
-              size="small"
-              required
-              value={state.fullname}
-              onChange={handleInputChange}
-              disabled={state.mode === ""}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-              }}
-              sx={{
-                flex: 1,
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            />
-            <TextField
-              label="Description"
-              name="description"
-              minRows={10}
-              fullWidth
-              style={{ marginBottom: "10px" }}
-              size="small"
-              required
-              value={state.description}
-              onChange={handleInputChange}
-              disabled={state.mode === ""}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-              }}
-              sx={{
-                flex: 1,
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            />
-            <TextField
-              label="Remarks"
-              name="remarks"
-              minRows={10}
-              fullWidth
-              style={{ marginBottom: "10px" }}
-              size="small"
-              value={state.remarks}
-              onChange={handleInputChange}
-              disabled={state.mode === ""}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-              }}
-              sx={{
-                flex: 1,
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            />
-            {subAccountLoading ? (
-              <LoadingButton loading={subAccountLoading} />
-            ) : (
-              <FormControl
-                fullWidth
-                required
-                size="small"
-                sx={{
-                  flex: 1,
-                  ".MuiFormLabel-root": {
-                    fontSize: "14px",
-                    background: "white",
-                    zIndex: 99,
-                    padding: "0 3px",
-                  },
-                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                }}
-              >
-                <InputLabel id="Sub Account">Sub Account</InputLabel>
-                <Select
-                  sx={{
-                    height: "27px",
-                    fontSize: "14px",
-                  }}
-                  disabled={state.mode === ""}
-                  value={state.sub_account}
-                  onChange={(e) => {
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "sub_account",
-                      value: e.target.value,
-                    });
-                  }}
-                  labelId="Sub Account"
-                  label="Sub Account"
-                  name="sub_account"
-                >
-                  {subAccountData?.data.subAccount.map(
-                    (item: {
-                      Sub_Acct: string;
-                      ShortName: string;
-                      Acronym: string;
-                    }) => {
-                      return (
-                        <MenuItem key={item.Sub_Acct} value={item.Sub_Acct}>
-                          {item.ShortName}
-                        </MenuItem>
-                      );
-                    }
-                  )}
-                </Select>
-              </FormControl>
-            )}
-          </Box>
-        </form>
-        <UpwardTable
-          ref={table}
-          isLoading={isLoading || loadingDelete || loadingEdit || loadingAdd}
-          rows={rows}
-          column={fixedAssetstColumn}
-          width={width}
-          height={height}
-          dataReadOnly={true}
-          onSelectionChange={(rowSelected) => {
-            if (rowSelected.length > 0) {
-              handleInputChange({ target: { value: "edit", name: "mode" } });
-
-              setNewStateValue(dispatch, rowSelected[0]);
-
+                if (subAccountRef.current) {
+                  subAccountRef.current.value = rowSelected[2];
+                }
+                if (descriptionRef.current) {
+                  descriptionRef.current.value = rowSelected[3];
+                }
+                if (remarksRef.current) {
+                  remarksRef.current.value = rowSelected[4];
+                }
+              });
             } else {
-              setNewStateValue(dispatch, initialState);
-              handleInputChange({ target: { value: "", name: "mode" } });
+              tableRef.current.setSelectedRow(null);
+              tableRef.current.resetCheckBox();
+              resetField();
+              setMode("");
               return;
             }
           }}
-          onKeyDown={(row, key) => {
-            if (key === "Delete" || key === "Backspace") {
-              const rowSelected = row[0];
+          onKeyDown={(rowSelected: any, RowIndex: any, e: any) => {
+            if (e.code === "Delete" || e.code === "Backspace") {
               wait(100).then(() => {
                 codeCondfirmationAlert({
                   isUpdate: false,
                   cb: (userCodeConfirmation) => {
                     mutateDelete({
-                      id: rowSelected.entry_fixed_assets_id,
+                      id: rowSelected[0],
                       userCodeConfirmation,
                     });
                   },
@@ -632,62 +631,7 @@ export default function FixedAssets() {
               return;
             }
           }}
-          inputsearchselector=".manok"
         />
-        {/* <div
-        ref={refParent}
-        style={{
-          marginTop: "10px",
-          width: "100%",
-          position: "relative",
-          flex: 1,
-        }}
-      >
-        <Box
-          style={{
-            height: `${refParent.current?.getBoundingClientRect().height}px`,
-            width: "100%",
-            overflowX: "scroll",
-            position: "absolute",
-          }}
-        >
-          <Table
-            ref={table}
-            isLoading={isLoading || loadingDelete || loadingEdit || loadingAdd}
-            columns={fixedAssetstColumn}
-            rows={rows}
-            table_id={"entry_fixed_assets_id"}
-            isSingleSelection={true}
-            isRowFreeze={false}
-            dataSelection={(selection, data, code) => {
-              const rowSelected = data.filter(
-                (item: any) => item.entry_fixed_assets_id === selection[0]
-              )[0];
-              if (rowSelected === undefined || rowSelected.length <= 0) {
-                setNewStateValue(dispatch, initialState);
-                handleInputChange({ target: { value: "", name: "mode" } });
-                return;
-              }
-              handleInputChange({ target: { value: "edit", name: "mode" } });
-
-              setNewStateValue(dispatch, rowSelected);
-
-              if (code === "Delete" || code === "Backspace") {
-                codeCondfirmationAlert({
-                  isUpdate: false,
-                  cb: (userCodeConfirmation) => {
-                    mutateDelete({
-                      id: rowSelected.entry_fixed_assets_id,
-                      userCodeConfirmation,
-                    });
-                  },
-                });
-                return;
-              }
-            }}
-          />
-        </Box>
-      </div> */}
       </div>
     </>
   );
