@@ -1,22 +1,13 @@
-import React, { useContext, useState, useRef, useReducer } from "react";
-import {
-  Box,
-  TextField,
-  Button,
-  LinearProgress,
-  Autocomplete,
-} from "@mui/material";
+import { useContext, useEffect, useState, useRef } from "react";
+import { Button } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import { GridRowSelectionModel } from "@mui/x-data-grid";
 import { AuthContext } from "../../../components/AuthContext";
-import { useMutation, useQuery, useQueryClient } from "react-query";
+import { useMutation } from "react-query";
 import Swal from "sweetalert2";
 import { wait } from "../../../lib/wait";
 import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { NumericFormatCustom } from "../../../components/NumberFormat";
-import Table from "../../../components/Table";
 import { LoadingButton } from "@mui/lab";
 import {
   codeCondfirmationAlert,
@@ -24,67 +15,55 @@ import {
 } from "../../../lib/confirmationAlert";
 import { pink } from "@mui/material/colors";
 import PageHelmet from "../../../components/Helmet";
-const initialState = {
-  Prefix: "",
-  NumSeriesFrom: 0,
-  NumSeriesTo: 0,
-  Cost: "",
-  ctplType: "",
-  search: "",
-  mode: "",
-  ctplId: "",
-};
+import { TextFormatedInput, TextInput } from "../../../components/UpwardFields";
+import SearchIcon from "@mui/icons-material/Search";
+import { DataGridViewReact } from "../../../components/DataGridViewReact";
+import { Loading } from "../../../components/Loading";
 
-export const reducer = (state: any, action: any) => {
-  switch (action.type) {
-    case "UPDATE_FIELD":
-      return {
-        ...state,
-        [action.field]: action.value,
-      };
-    default:
-      return state;
-  }
-};
-
-export const ctplColumn = [
-  { field: "Prefix", headerName: "Prefix", width: 150 },
-  { field: "NumSeriesFrom", headerName: "NumSeriesFrom", flex: 1 },
-  { field: "NumSeriesTo", headerName: "NumSeriesTo", flex: 1 },
-  { field: "Cost", headerName: "Cost", flex: 1 },
-  { field: "CreatedBy", headerName: "Created By", width: 250 },
-  { field: "createdAt", headerName: "Created At", width: 150 },
+const pettyLogColumn = [
+  { key: "Prefix", label: "Prefix", width: 160 },
+  { key: "NumSeriesFrom", label: "Number Series From", width: 160 },
+  { key: "NumSeriesTo", label: "Number Series To", width: 160 },
+  { key: "Cost", label: "Cost", width: 120 },
+  { key: "ctplId", label: "", width: 0, hide: true },
+  { key: "ctplType", label: "", width: 0, hide: true },
 ];
-const queryKey = "ctpl";
-export default function CTPL() {
-  const refParent = useRef<HTMLDivElement>(null);
-  const [state, dispatch] = useReducer(reducer, initialState);
-  const { myAxios, user } = useContext(AuthContext);
-  const [rows, setRows] = useState<GridRowSelectionModel>([]);
-  const table = useRef<any>(null);
-  const queryClient = useQueryClient();
 
-  const {
-    data,
-    isLoading,
-    refetch: refetchCtplSearch,
-  } = useQuery({
-    queryKey,
-    queryFn: async () =>
-      await myAxios.get(`/reference/get-ctpl?ctplSearch=${state.search}`, {
+export default function CTPL() {
+  const { myAxios, user } = useContext(AuthContext);
+  const inputSearchRef = useRef<HTMLInputElement>(null);
+  const [mode, setMode] = useState("");
+  const tableRef = useRef<any>(null);
+
+  const prefixRef = useRef<HTMLInputElement>(null);
+  const numSeriesFromRef = useRef<HTMLInputElement>(null);
+  const numSeriesToRef = useRef<HTMLInputElement>(null);
+  const costRef = useRef<HTMLInputElement>(null);
+  const ctplType = useRef("");
+  const ctplId = useRef("");
+
+  const { mutate: mutateSearch, isLoading: loadingSearch } = useMutation({
+    mutationKey: "search-ctpl",
+    mutationFn: async (variables: any) => {
+      return await myAxios.post("/reference/search-ctpl", variables, {
         headers: {
           Authorization: `Bearer ${user?.accessToken}`,
         },
-      }),
-    onSuccess: (res) => {
-      setRows((res as any)?.data.ctpl.ctpl);
+      });
+    },
+    onSuccess: (response) => {
+      if (response.data.success) {
+        wait(100).then(() => {
+          console.log(response.data);
+          tableRef.current.setDataFormated(response.data.data);
+        });
+      }
     },
   });
-
+  const mutateSearchRef = useRef<any>(mutateSearch);
   const { mutate: mutateAdd, isLoading: loadingAdd } = useMutation({
-    mutationKey: queryKey,
+    mutationKey: "add",
     mutationFn: async (variables: any) => {
-      delete variables.mode;
       return await myAxios.post("/reference/add-ctpl", variables, {
         headers: {
           Authorization: `Bearer ${user?.accessToken}`,
@@ -93,10 +72,24 @@ export default function CTPL() {
     },
     onSuccess,
   });
+  // const { mutate: mutateEdit, isLoading: loadingEdit } = useMutation({
+  //   mutationKey: "edit",
+  //   mutationFn: async (variables: any) => {
+  //     return await myAxios.post(
+  //       "/reference/update-ctpl",
+  //       variables,
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${user?.accessToken}`,
+  //         },
+  //       }
+  //     );
+  //   },
+  //   onSuccess,
+  // });
   const { mutate: mutateDelete, isLoading: loadingDelete } = useMutation({
-    mutationKey: queryKey,
+    mutationKey: "delete",
     mutationFn: async (variables: any) => {
-      delete variables.mode;
       return await myAxios.post("/reference/delete-ctpl", variables, {
         headers: {
           Authorization: `Bearer ${user?.accessToken}`,
@@ -105,61 +98,62 @@ export default function CTPL() {
     },
     onSuccess,
   });
-
-  const handleInputChange = (e: any) => {
-    const { name, value } = e.target;
-    if (name === "Line") {
-      dispatch({ type: "UPDATE_FIELD", field: "Type", value: "" });
-    }
-    dispatch({ type: "UPDATE_FIELD", field: name, value });
-  };
-
   function handleOnSave(e: any) {
     e.preventDefault();
-    state.Cost = state.Cost === "" ? "0" : parseFloat(state.Cost).toFixed(2);
 
-    if (state.Cost === "") {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Cost is required!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-
-    if (state.Cost.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Cost is too long!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
+    // if (mode === "edit") {
+    //   codeCondfirmationAlert({
+    //     isUpdate: true,
+    //     cb: (userCodeConfirmation) => {
+    //       mutateEdit({
+    //         Prefix: prefixRef.current?.value,
+    //         NumSeriesFrom: numSeriesFromRef.current?.value,
+    //         NumSeriesTo: numSeriesToRef.current?.value,
+    //         Cost: costRef.current?.value,
+    //         ctplType: ctplType.current,
+    //         ctplId: ctplId.current,
+    //         userCodeConfirmation,
+    //       });
+    //     },
+    //   });
+    // } else {
     saveCondfirmationAlert({
       isConfirm: () => {
-        mutateAdd(state);
+        mutateAdd({
+          Prefix: prefixRef.current?.value,
+          NumSeriesFrom: numSeriesFromRef.current?.value,
+          NumSeriesTo: numSeriesToRef.current?.value,
+          Cost: costRef.current?.value,
+          ctplType: ctplType.current,
+          ctplId: ctplId.current,
+        });
       },
     });
+    // }
   }
-
-  const handleInputSelectionChange = (data: any) => {
-    const { name, value } = data;
-    dispatch({ type: "UPDATE_FIELD", field: name, value });
-  };
-
   function resetModule() {
-    setNewStateValue(dispatch, initialState);
-    table.current?.removeSelection();
-    wait(500).then(() => {
-      refetchCtplSearch();
-    });
+    if (prefixRef.current) {
+      prefixRef.current.value = "";
+    }
+    if (numSeriesFromRef.current) {
+      numSeriesFromRef.current.value = "0";
+    }
+    if (numSeriesToRef.current) {
+      numSeriesToRef.current.value = "0";
+    }
+    if (costRef.current) {
+      costRef.current.value = "0.00";
+    }
+    ctplType.current = "";
+    ctplId.current = "";
   }
   function onSuccess(res: any) {
     if (res.data.success) {
-      queryClient.invalidateQueries(queryKey);
+      tableRef.current.setSelectedRow(null);
+      tableRef.current.resetCheckBox();
+      mutateSearchRef.current({ search: "" });
       resetModule();
+      setMode("");
       return Swal.fire({
         position: "center",
         icon: "success",
@@ -168,7 +162,6 @@ export default function CTPL() {
         timer: 1500,
       });
     }
-
     Swal.fire({
       position: "center",
       icon: "error",
@@ -178,9 +171,14 @@ export default function CTPL() {
     });
   }
 
+  useEffect(() => {
+    mutateSearchRef.current({ search: "" });
+  }, []);
+
   return (
     <>
-      <PageHelmet title="CPTL" />
+      {loadingSearch && <Loading />}
+      <PageHelmet title="CTPL" />
       <div
         style={{
           display: "flex",
@@ -188,363 +186,313 @@ export default function CTPL() {
           width: "100%",
           height: "100%",
           flex: 1,
-          padding: "5px"
-
+          padding: "5px",
         }}
       >
-        {/* <Box>
-        <Typography variant="h5" sx={{ marginBottom: "10px" }}>
-          CTPL Details
-        </Typography>
-      </Box> */}
-        <Box
-          sx={(theme) => ({
+        <div
+          style={{
+            marginTop: "10px",
+            marginBottom: "12px",
+            width: "100%",
             display: "flex",
-            alignItems: "center",
-            columnGap: "20px",
-            [theme.breakpoints.down("sm")]: {
-              flexDirection: "column",
-              alignItems: "flex-start",
-              flex: 1,
-              marginBottom: "15px",
-            },
-          })}
-        >
-          <div
-            style={{
-              marginTop: "10px",
-              marginBottom: "12px",
-              width: "100%",
-            }}
-          >
-            <TextField
-              label="Search"
-              fullWidth
-              size="small"
-              type="text"
-              name="search"
-              value={state.search}
-              onChange={handleInputChange}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-              }}
-              sx={{
-                width: "500px",
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-              onKeyDown={(e) => {
-                if (e.code === "Enter" || e.code === "NumpadEnter") {
-                  e.preventDefault();
-                  return refetchCtplSearch();
-                }
-              }}
-            />
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              columnGap: "20px",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                columnGap: "5px",
-              }}
-            >
-              {state.mode === "" && (
-                <Button
-                  sx={{
-                    height: "30px",
-                    fontSize: "11px",
-                  }}
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  id="entry-header-save-button"
-                  onClick={() => {
-                    handleInputChange({ target: { value: "add", name: "mode" } });
-                  }}
-                >
-                  New
-                </Button>
-              )}
-
-              <LoadingButton
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                }}
-                id="save-entry-header"
-                color="primary"
-                variant="contained"
-                type="submit"
-                onClick={handleOnSave}
-                disabled={state.mode === "" || state.mode === "edit"}
-                startIcon={<SaveIcon />}
-                loading={loadingAdd}
-              >
-                Save
-              </LoadingButton>
-              {state.mode !== "" && (
-                <Button
-                  sx={{
-                    height: "30px",
-                    fontSize: "11px",
-                  }}
-                  variant="contained"
-                  startIcon={<CloseIcon />}
-                  color="error"
-                  onClick={() => {
-                    Swal.fire({
-                      title: "Are you sure?",
-                      text: "You won't be able to revert this!",
-                      icon: "warning",
-                      showCancelButton: true,
-                      confirmButtonColor: "#3085d6",
-                      cancelButtonColor: "#d33",
-                      confirmButtonText: "Yes, cancel it!",
-                    }).then((result) => {
-                      if (result.isConfirmed) {
-                        resetModule();
-                      }
-                    });
-                  }}
-                >
-                  Cancel
-                </Button>
-              )}
-
-              <LoadingButton
-                variant="contained"
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                  backgroundColor: pink[500],
-                  "&:hover": {
-                    backgroundColor: pink[600],
-                  },
-                }}
-                disabled={state.mode !== "edit"}
-                startIcon={<DeleteIcon />}
-                loading={loadingDelete}
-                onClick={() => {
-                  codeCondfirmationAlert({
-                    isUpdate: false,
-                    cb: (userCodeConfirmation) => {
-                      mutateDelete({
-                        ctplId: state.ctplId,
-                        userCodeConfirmation,
-                      });
-                    },
-                  });
-                }}
-              >
-                Delete
-              </LoadingButton>
-            </div>
-          </div>
-        </Box>
-        <form
-          onSubmit={handleOnSave}
-          onKeyDown={(e) => {
-            if (e.code === "Enter" || e.code === "NumpadEnter") {
-              e.preventDefault();
-              handleOnSave(e);
-              return;
-            }
+            columnGap: "7px",
           }}
         >
-          <Box
-            sx={(theme) => ({
-              display: "flex",
-              columnGap: "15px",
-              flexDirection: "row",
-              [theme.breakpoints.down("md")]: {
-                flexDirection: "column",
-                rowGap: "10px",
+          <TextInput
+            containerStyle={{
+              width: "550px",
+              marginRight: "20px",
+            }}
+            label={{
+              title: "Search: ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "50px",
               },
-            })}
-          >
-            {isLoading ? (
-              <LinearProgress />
-            ) : (
-              <Autocomplete
-                disabled={state.mode === "" || state.mode === "edit"}
-                value={state.Prefix}
-                onChange={(event: any, value: string | null) => {
-                  handleInputSelectionChange({ name: "Prefix", value });
+            }}
+            input={{
+              className: "search-input-up-on-key-down",
+              type: "search",
+              onKeyDown: (e) => {
+                if (e.key === "Enter" || e.key === "NumpadEnter") {
+                  e.preventDefault();
+                  mutateSearch({ search: e.currentTarget.value });
+                }
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  const datagridview = document.querySelector(
+                    ".grid-container"
+                  ) as HTMLDivElement;
+                  datagridview.focus();
+                }
+              },
+              style: { width: "500px" },
+            }}
+            icon={
+              <SearchIcon
+                sx={{
+                  fontSize: "18px",
                 }}
-                size="small"
-                freeSolo
-                disableClearable
-                options={(data as any).data?.ctpl?.prefix.map(
-                  (option: any) => option.prefixName
-                )}
-                getOptionLabel={(option: any) => option}
-                sx={(theme) => ({
-                  width: 500,
-                  ".MuiFormLabel-root": {
-                    fontSize: "14px",
-                  },
-                  ".MuiInputBase-input": {
-                    width: "100% !important",
-                  },
-                  ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                  ".MuiAutocomplete-input ": {
-                    position: "absolute",
-                  },
-                  [theme.breakpoints.down("md")]: { width: "100%" },
-                })}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Prefix"
-                    name="Prefix"
-                    InputProps={{
-                      ...params.InputProps,
-                      style: { height: "27px", fontSize: "14px" },
-                    }}
-                    onChange={handleInputChange}
-                  />
-                )}
               />
-            )}
-            <TextField
-              required
-              fullWidth
-              type="number"
-              variant="outlined"
-              size="small"
-              label="NumSeriesFrom"
-              name="NumSeriesFrom"
-              value={state.NumSeriesFrom}
-              onChange={handleInputChange}
-              disabled={state.mode === "" || state.mode === "edit"}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
+            }
+            onIconClick={(e) => {
+              e.preventDefault();
+              if (inputSearchRef.current) {
+                mutateSearch({ search: inputSearchRef.current?.value });
+              }
+            }}
+            inputRef={inputSearchRef}
+          />
+          {mode === "" && (
+            <Button
+              style={{
+                height: "22px",
+                fontSize: "11px",
               }}
-              sx={{
-                flex: 1,
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
+              variant="contained"
+              startIcon={<AddIcon />}
+              id="entry-header-save-button"
+              onClick={() => {
+                setMode("add");
               }}
-            />
-            <TextField
-              required
-              fullWidth
-              type="number"
-              variant="outlined"
-              size="small"
-              label="NumSeriesTo"
-              name="NumSeriesTo"
-              value={state.NumSeriesTo}
-              onChange={handleInputChange}
-              disabled={state.mode === "" || state.mode === "edit"}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
+            >
+              New
+            </Button>
+          )}
+          <LoadingButton
+            style={{
+              height: "22px",
+              fontSize: "11px",
+            }}
+            id="save-entry-header"
+            color="primary"
+            variant="contained"
+            type="submit"
+            sx={{
+              height: "30px",
+              fontSize: "11px",
+            }}
+            onClick={handleOnSave}
+            startIcon={<SaveIcon />}
+            disabled={mode === ""}
+            loading={loadingAdd}
+          >
+            Save
+          </LoadingButton>
+          {mode !== "" && (
+            <Button
+              style={{
+                height: "22px",
+                fontSize: "11px",
               }}
-              sx={{
-                flex: 1,
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            />
-            <TextField
-              required
-              fullWidth
-              type="text"
-              variant="outlined"
-              size="small"
-              label="Cost"
-              name="Cost"
-              value={state.Cost}
-              onChange={handleInputChange}
-              disabled={state.mode === "" || state.mode === "edit"}
-              placeholder="0.00"
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-                inputComponent: NumericFormatCustom as any,
-              }}
-              sx={{
-                flex: 1,
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-              onBlur={() => {
-                dispatch({
-                  type: "UPDATE_FIELD",
-                  field: "Cost",
-                  value: parseFloat(state.Cost).toFixed(2),
+              variant="contained"
+              startIcon={<CloseIcon />}
+              color="error"
+              onClick={() => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, cancel it!",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    resetModule();
+                    setMode("");
+                    tableRef.current.setSelectedRow(null);
+                    tableRef.current.resetCheckBox();
+                  }
                 });
               }}
-            />
-          </Box>
-        </form>
+            >
+              Cancel
+            </Button>
+          )}
+          <LoadingButton
+            id="save-entry-header"
+            variant="contained"
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+              backgroundColor: pink[500],
+              "&:hover": {
+                backgroundColor: pink[600],
+              },
+            }}
+            loading={loadingDelete}
+            startIcon={<DeleteIcon />}
+            disabled={mode !== "edit"}
+            onClick={() => {
+              codeCondfirmationAlert({
+                isUpdate: false,
+                title: "Confirmation",
+                saveTitle: "Confirm",
+                text: `Are you sure you want to delete ?`,
+                cb: (userCodeConfirmation) => {
+                  mutateDelete({
+                    ctplId: ctplId.current,
+                    userCodeConfirmation,
+                  });
+                },
+              });
+            }}
+          >
+            Delete
+          </LoadingButton>
+        </div>
+        <fieldset
+          style={{
+            // border: "1px solid black",
+            padding: "5px",
+            width: "590px",
+            rowGap: "5px",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <TextInput
+            containerStyle={{
+              width: "320px",
+              marginRight: "20px",
+            }}
+            label={{
+              title: "Prefix: ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "120px",
+              },
+            }}
+            input={{
+              disabled: mode === "",
+              className: "search-input-up-on-key-down",
+              type: "text",
+              onKeyDown: (e) => {
+                if (e.key === "Enter" || e.key === "NumpadEnter") {
+                  e.preventDefault();
+                  numSeriesFromRef.current?.focus();
+                }
+              },
+              style: { width: "calc(320px - 120px)" },
+            }}
+            inputRef={prefixRef}
+          />
+          <TextInput
+            label={{
+              title: "Num Series From : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "120px",
+              },
+            }}
+            input={{
+              min: 1,
+              defaultValue: "0",
+              type: "number",
+              style: { width: "200px", textAlign: "right" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  numSeriesToRef.current?.focus();
+                }
+              },
+              onFocus: (e) => {
+                e.currentTarget.select();
+              },
+            }}
+            inputRef={numSeriesFromRef}
+          />
+          <TextInput
+            label={{
+              title: "Num Series To : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "120px",
+              },
+            }}
+            input={{
+              min: 1,
+              defaultValue: "0",
+              type: "number",
+              style: { width: "200px", textAlign: "right" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  costRef.current?.focus();
+                }
+              },
+              onFocus: (e) => {
+                e.currentTarget.select();
+              },
+            }}
+            inputRef={numSeriesToRef}
+          />
+          <TextFormatedInput
+            label={{
+              title: "Cost : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "120px",
+              },
+            }}
+            input={{
+              placeholder: "0.00",
+              defaultValue: "",
+              type: "text",
+              style: { width: "200px" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                }
+              },
+            }}
+            inputRef={costRef}
+          />
+        </fieldset>
         <div
-          ref={refParent}
           style={{
             marginTop: "10px",
             width: "100%",
             position: "relative",
             flex: 1,
+            display: "flex",
           }}
         >
-          <Box
-            style={{
-              height: `${refParent.current?.getBoundingClientRect().height}px`,
-              width: "100%",
-              overflowX: "scroll",
-              position: "absolute",
+          <DataGridViewReact
+            containerStyle={{
+              flex: 1,
+              height: "auto",
             }}
-          >
-            <Table
-              ref={table}
-              isLoading={loadingAdd || isLoading}
-              columns={ctplColumn}
-              rows={rows}
-              table_id={"ctplId"}
-              isSingleSelection={true}
-              isRowFreeze={false}
-              dataSelection={(selection, data, code) => {
-                const rowSelected = data.filter(
-                  (item: any) => item.ctplId === selection[0]
-                )[0];
-                if (rowSelected === undefined || rowSelected.length <= 0) {
-                  setNewStateValue(dispatch, initialState);
-                  handleInputChange({ target: { value: "", name: "mode" } });
-                  return;
+            ref={tableRef}
+            columns={pettyLogColumn}
+            height="280px"
+            getSelectedItem={(rowItm: any) => {
+              if (rowItm) {
+                setMode("edit");
+                if (prefixRef.current) {
+                  prefixRef.current.value = rowItm[0];
                 }
-                handleInputChange({ target: { value: "edit", name: "mode" } });
-                if (code === "Delete" || code === "Backspace") {
-                  codeCondfirmationAlert({
-                    isUpdate: false,
-                    cb: (userCodeConfirmation) => {
-                      mutateDelete({
-                        ctplId: rowSelected.ctplId,
-                        userCodeConfirmation,
-                      });
-                    },
-                  });
-                  return;
+                if (numSeriesFromRef.current) {
+                  numSeriesFromRef.current.value = rowItm[1];
                 }
-                setNewStateValue(dispatch, rowSelected);
-              }}
-            />
-          </Box>
+                if (numSeriesToRef.current) {
+                  numSeriesToRef.current.value = rowItm[2];
+                }
+                if (costRef.current) {
+                  costRef.current.value = rowItm[3];
+                }
+                ctplId.current = rowItm[4];
+                ctplType.current = rowItm[5];
+              } else {
+                resetModule();
+              }
+            }}
+          />
         </div>
       </div>
     </>
   );
-}
-export function setNewStateValue(dispatch: any, obj: any) {
-  Object.entries(obj).forEach(([field, value]) => {
-    dispatch({ type: "UPDATE_FIELD", field, value });
-  });
 }

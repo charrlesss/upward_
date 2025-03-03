@@ -31,24 +31,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import { DataGridViewReact } from "../../../components/DataGridViewReact";
 import { Loading } from "../../../components/Loading";
 
-const initialState = {
-  Bank_Code: "",
-  Bank: "",
-  Inactive: false,
-  search: "",
-  mode: "",
-};
-export const reducer = (state: any, action: any) => {
-  switch (action.type) {
-    case "UPDATE_FIELD":
-      return {
-        ...state,
-        [action.field]: action.value,
-      };
-    default:
-      return state;
-  }
-};
+
 export const bankColumn = [
   { key: "Bank_Code", label: "Bank Code", width: 120 },
   { key: "Bank", label: "Bank", width: 500 },
@@ -512,8 +495,3 @@ const CheckBoxLabel = ({
   );
 };
 
-export function setNewStateValue(dispatch: any, obj: any) {
-  Object.entries(obj).forEach(([field, value]) => {
-    dispatch({ type: "UPDATE_FIELD", field, value });
-  });
-}

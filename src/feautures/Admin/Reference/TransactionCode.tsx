@@ -1,83 +1,64 @@
-import React, { useContext, useState, useRef, useReducer } from "react";
-import {
-  Box,
-  TextField,
-  Button,
-  FormControlLabel,
-  Checkbox,
-} from "@mui/material";
+import { useContext, useState, useRef, useEffect, useId } from "react";
+import { Button } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { GridRowSelectionModel } from "@mui/x-data-grid";
 import { pink } from "@mui/material/colors";
 import { AuthContext } from "../../../components/AuthContext";
-import { useMutation, useQuery, useQueryClient } from "react-query";
+import { useMutation } from "react-query";
 import Swal from "sweetalert2";
 import { wait } from "../../../lib/wait";
 import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
-import Table from "../../../components/Table";
 import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../lib/confirmationAlert";
 import PageHelmet from "../../../components/Helmet";
+import { TextInput } from "../../../components/UpwardFields";
+import SearchIcon from "@mui/icons-material/Search";
+import { DataGridViewReact } from "../../../components/DataGridViewReact";
+import { Loading } from "../../../components/Loading";
 
-const initialState = {
-  Code: "",
-  Description: "",
-  Acct_Code: "",
-  mode: "",
-  search: "",
-  Inactive: false,
-};
-export const reducer = (state: any, action: any) => {
-  switch (action.type) {
-    case "UPDATE_FIELD":
-      return {
-        ...state,
-        [action.field]: action.value,
-      };
-    default:
-      return state;
-  }
-};
-
-export const transactionCodeColumn = [
-  { field: "Code", headerName: "Code", flex: 1 },
-  { field: "Description", headerName: "Description", flex: 1 },
-  { field: "Acct_Code", headerName: "Account Code", flex: 1 },
-  { field: "Inactive", headerName: "Inactive", flex: 1 },
+export const bankColumn = [
+  { key: "Code", label: "Transaction Code", width: 200 },
+  { key: "Description", label: "Description", width: 500 },
+  { key: "Acct_Code", label: "Account Code Name", width: 200 },
+  { key: "Inactive", label: "Inactive", width: 100 },
 ];
-const queryKey = "transaction-code";
 export default function TransactionCode() {
-  const refParent = useRef<HTMLDivElement>(null);
-  const [state, dispatch] = useReducer(reducer, initialState);
   const { myAxios, user } = useContext(AuthContext);
-  const [rows, setRows] = useState<GridRowSelectionModel>([]);
-  const table = useRef<any>(null);
+  const inputSearchRef = useRef<HTMLInputElement>(null);
+  const [mode, setMode] = useState("");
+  const tableRef = useRef<any>(null);
 
-  const queryClient = useQueryClient();
+  const transactionCodeRef = useRef<HTMLInputElement>(null);
+  const descriptionRef = useRef<HTMLInputElement>(null);
+  const accountRef = useRef<HTMLInputElement>(null);
+  const inactiveRef = useRef<HTMLInputElement>(null);
 
-  const { isLoading, refetch: refetchTransactionCodeSearch } = useQuery({
-    queryKey,
-    queryFn: async () =>
-      await myAxios.get(
-        `/reference/get-transaction-code?transactionCodeSearch=${state.search}`,
-        {
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
-        }
-      ),
-    onSuccess: (res) => {
-      setRows((res as any)?.data.transactionCode);
+  const { mutate: mutateSearch, isLoading: loadingSearch } = useMutation({
+    mutationKey: "search-transaction-code",
+    mutationFn: async (variables: any) => {
+      return await myAxios.post("/reference/search-transaction-code", variables, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      });
+    },
+    onSuccess: (response) => {
+      if (response.data.success) {
+        console.log(response.data);
+        wait(100).then(() => {
+          tableRef.current.setDataFormated(response.data.data);
+        });
+      }
     },
   });
+  const mutateSearchRef = useRef<any>(mutateSearch);
 
   const { mutate: mutateAdd, isLoading: loadingAdd } = useMutation({
-    mutationKey: queryKey,
+    mutationKey: "add",
     mutationFn: async (variables: any) => {
       return await myAxios.post("/reference/add-transaction-code", variables, {
         headers: {
@@ -88,102 +69,65 @@ export default function TransactionCode() {
     onSuccess,
   });
   const { mutate: mutateEdit, isLoading: loadingEdit } = useMutation({
-    mutationKey: queryKey,
+    mutationKey: "edit",
     mutationFn: async (variables: any) => {
-      return await myAxios.post(
-        "/reference/update-transaction-code",
-        variables,
-        {
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
-        }
-      );
+      return await myAxios.post("/reference/update-transaction-code", variables, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      });
     },
     onSuccess,
   });
   const { mutate: mutateDelete, isLoading: loadingDelete } = useMutation({
-    mutationKey: queryKey,
+    mutationKey: "delete",
     mutationFn: async (variables: any) => {
-      return await myAxios.post(
-        "/reference/delete-transaction-code",
-        variables,
-        {
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
-        }
-      );
+      return await myAxios.post("/reference/delete-transaction-code", variables, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      });
     },
     onSuccess,
   });
 
-  const handleInputChange = (e: any) => {
-    const { name, value } = e.target;
-    dispatch({ type: "UPDATE_FIELD", field: name, value });
-  };
-
   function handleOnSave(e: any) {
-    // Code: "",
-    // Description: "",
-    // Acct_Code: "",
-    if (state.Code === "") {
+    e.preventDefault();
+    if (transactionCodeRef.current?.value === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
-        title: "Code is required!",
+        title: "Please provide sub account code!",
         showConfirmButton: false,
         timer: 1500,
       });
     }
-    if (state.Description === "") {
+    if (descriptionRef.current?.value === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
-        title: "Description is required!",
+        title: "Please provide description!",
         showConfirmButton: false,
         timer: 1500,
       });
     }
-    if (state.Acct_Code === "") {
+    if (descriptionRef.current?.value === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
-        title: "Acct Code is required!",
+        title: "Please provide short name!",
         showConfirmButton: false,
         timer: 1500,
       });
     }
 
-    if (state.Code.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Code is too long!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-    if (state.Description.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Description is too long!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-    if (state.Acct_Code.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Acct Code is too long!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-    e.preventDefault();
-    if (state.mode === "edit") {
+    const state = {
+      Code: transactionCodeRef.current?.value,
+      Description: descriptionRef.current?.value,
+      Acct_Code: accountRef.current?.value,
+      Inactive: inactiveRef.current?.checked,
+    };
+    if (mode === "edit") {
       codeCondfirmationAlert({
         isUpdate: true,
         cb: (userCodeConfirmation) => {
@@ -198,10 +142,28 @@ export default function TransactionCode() {
       });
     }
   }
+  function resetModule() {
+    if (transactionCodeRef.current) {
+      transactionCodeRef.current.value = "";
+    }
+    if (descriptionRef.current) {
+      descriptionRef.current.value = "";
+    }
+    if (accountRef.current) {
+      accountRef.current.value = "";
+    }
+    if (inactiveRef.current) {
+      inactiveRef.current.checked = false;
+    }
+  }
+
   function onSuccess(res: any) {
     if (res.data.success) {
-      queryClient.invalidateQueries(queryKey);
+      tableRef.current.setSelectedRow(null);
+      tableRef.current.resetCheckBox();
+      mutateSearchRef.current({ search: "" });
       resetModule();
+      setMode("");
       return Swal.fire({
         position: "center",
         icon: "success",
@@ -210,7 +172,6 @@ export default function TransactionCode() {
         timer: 1500,
       });
     }
-
     Swal.fire({
       position: "center",
       icon: "error",
@@ -219,17 +180,15 @@ export default function TransactionCode() {
       timer: 1500,
     });
   }
-  function resetModule() {
-    setNewStateValue(dispatch, initialState);
-    table.current?.removeSelection();
-    wait(500).then(() => {
-      refetchTransactionCodeSearch();
-    });
-  }
+
+  useEffect(() => {
+    mutateSearchRef.current({ search: "" });
+  }, []);
 
   return (
     <>
-      <PageHelmet title="Transaction Code" />
+      {loadingSearch && <Loading />}
+      <PageHelmet title="Transation Code" />
       <div
         style={{
           display: "flex",
@@ -237,329 +196,321 @@ export default function TransactionCode() {
           width: "100%",
           height: "100%",
           flex: 1,
-          padding: "5px"
-
+          padding: "5px",
         }}
       >
-
-        <Box
-          sx={(theme) => ({
+        <div
+          style={{
+            marginTop: "10px",
+            marginBottom: "12px",
+            width: "100%",
             display: "flex",
-            alignItems: "center",
-            columnGap: "20px",
-            [theme.breakpoints.down("sm")]: {
-              flexDirection: "column",
-              alignItems: "flex-start",
-              marginBottom: "15px",
-            },
-          })}
-        >
-          <div
-            style={{
-              marginTop: "10px",
-              marginBottom: "12px",
-              width: "100%",
-            }}
-          >
-            <TextField
-              label="Search"
-              fullWidth
-              size="small"
-              type="text"
-              name="search"
-              value={state.search}
-              onChange={handleInputChange}
-              onKeyDown={(e) => {
-                if (e.code === "Enter" || e.code === "NumpadEnter") {
-                  e.preventDefault();
-                  return refetchTransactionCodeSearch();
-                }
-              }}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-              }}
-              sx={{
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            />
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              columnGap: "20px",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                columnGap: "5px",
-              }}
-            >
-              {state.mode === "" && (
-                <Button
-                  sx={{
-                    height: "30px",
-                    fontSize: "11px",
-                  }}
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  id="entry-header-save-button"
-                  onClick={() => {
-                    handleInputChange({ target: { value: "add", name: "mode" } });
-                  }}
-                >
-                  New
-                </Button>
-              )}
-
-              <LoadingButton
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                }}
-                id="save-entry-header"
-                color="primary"
-                variant="contained"
-                type="submit"
-                onClick={handleOnSave}
-                disabled={state.mode === ""}
-                startIcon={<SaveIcon />}
-                loading={loadingAdd || loadingEdit}
-              >
-                Save
-              </LoadingButton>
-
-              {state.mode !== "" && (
-                <Button
-                  sx={{
-                    height: "30px",
-                    fontSize: "11px",
-                  }}
-                  variant="contained"
-                  startIcon={<CloseIcon />}
-                  color="error"
-                  onClick={() => {
-                    Swal.fire({
-                      title: "Are you sure?",
-                      text: "You won't be able to revert this!",
-                      icon: "warning",
-                      showCancelButton: true,
-                      confirmButtonColor: "#3085d6",
-                      cancelButtonColor: "#d33",
-                      confirmButtonText: "Yes, cancel it!",
-                    }).then((result) => {
-                      if (result.isConfirmed) {
-                        resetModule();
-                      }
-                    });
-                  }}
-                >
-                  Cancel
-                </Button>
-              )}
-
-              <LoadingButton
-                id="save-entry-header"
-                variant="contained"
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                  backgroundColor: pink[500],
-                  "&:hover": {
-                    backgroundColor: pink[600],
-                  },
-                }}
-                disabled={state.mode !== "edit"}
-                loading={loadingDelete}
-                startIcon={<DeleteIcon />}
-                onClick={() => {
-                  codeCondfirmationAlert({
-                    isUpdate: false,
-                    cb: (userCodeConfirmation) => {
-                      mutateDelete({
-                        Bank_Code: state.Bank_Code,
-                        userCodeConfirmation,
-                      });
-                    },
-                  });
-                }}
-              >
-                Delete
-              </LoadingButton>
-            </div>
-          </div>
-        </Box>
-        <form
-          onKeyDown={(e) => {
-            if (e.code === "Enter" || e.code === "NumpadEnter") {
-              e.preventDefault();
-              handleOnSave(e);
-              return;
-            }
+            columnGap: "7px",
           }}
         >
-          <Box
-            sx={(theme) => ({
-              display: "flex",
-              columnGap: "15px",
-              flexDirection: "row",
-              [theme.breakpoints.down("md")]: {
-                flexDirection: "column",
-                rowGap: "10px",
+          <TextInput
+            containerStyle={{
+              width: "550px",
+              marginRight: "20px",
+            }}
+            label={{
+              title: "Search: ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "50px",
               },
-            })}
+            }}
+            input={{
+              className: "search-input-up-on-key-down",
+              type: "search",
+              onKeyDown: (e) => {
+                if (e.key === "Enter" || e.key === "NumpadEnter") {
+                  e.preventDefault();
+                  mutateSearch({ search: e.currentTarget.value });
+                }
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  const datagridview = document.querySelector(
+                    ".grid-container"
+                  ) as HTMLDivElement;
+                  datagridview.focus();
+                }
+              },
+              style: { width: "500px" },
+            }}
+            icon={
+              <SearchIcon
+                sx={{
+                  fontSize: "18px",
+                }}
+              />
+            }
+            onIconClick={(e) => {
+              e.preventDefault();
+              if (inputSearchRef.current) {
+                mutateSearch({ search: inputSearchRef.current.value });
+              }
+            }}
+            inputRef={inputSearchRef}
+          />
+          {mode === "" && (
+            <Button
+              style={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<AddIcon />}
+              id="entry-header-save-button"
+              onClick={() => {
+                setMode("add");
+              }}
+            >
+              New
+            </Button>
+          )}
+          <LoadingButton
+            style={{
+              height: "22px",
+              fontSize: "11px",
+            }}
+            id="save-entry-header"
+            color="primary"
+            variant="contained"
+            type="submit"
+            sx={{
+              height: "30px",
+              fontSize: "11px",
+            }}
+            onClick={handleOnSave}
+            startIcon={<SaveIcon />}
+            disabled={mode === ""}
+            loading={loadingAdd || loadingEdit}
           >
-            {!isLoading && (
-              <React.Fragment>
-                <TextField
-                  required
-                  variant="outlined"
-                  size="small"
-                  label="Transaction Code"
-                  name="Code"
-                  value={state.Code}
-                  onChange={handleInputChange}
-                  disabled={state.mode === "" || state.mode === "edit"}
-                  InputProps={{
-                    style: { height: "27px", fontSize: "14px" },
-                  }}
-                  sx={{
-                    flex: 1,
-                    height: "27px",
-                    ".MuiFormLabel-root": { fontSize: "14px" },
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                  }}
-                />
-                <TextField
-                  required
-                  variant="outlined"
-                  size="small"
-                  label="Description"
-                  name="Description"
-                  value={state.Description}
-                  onChange={handleInputChange}
-                  disabled={state.mode === ""}
-                  InputProps={{
-                    style: { height: "27px", fontSize: "14px" },
-                  }}
-                  sx={{
-                    flex: 1,
-                    height: "27px",
-                    ".MuiFormLabel-root": { fontSize: "14px" },
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                  }}
-                />
-                <TextField
-                  required
-                  variant="outlined"
-                  size="small"
-                  label="Account"
-                  name="Acct_Code"
-                  value={state.Acct_Code}
-                  onChange={handleInputChange}
-                  disabled={state.mode === ""}
-                  InputProps={{
-                    style: { height: "27px", fontSize: "14px" },
-                  }}
-                  sx={{
-                    flex: 1,
-                    height: "27px",
-                    ".MuiFormLabel-root": { fontSize: "14px" },
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                  }}
-                />
-
-                <FormControlLabel
-                  sx={{
-                    ".MuiTypography-root": {
-                      fontSize: "14px",
-                    },
-                  }}
-                  control={
-                    <Checkbox
-                      size="small"
-                      name="Inactive"
-                      checked={state.Inactive}
-                      onChange={(e) => {
-                        dispatch({
-                          type: "UPDATE_FIELD",
-                          field: "Inactive",
-                          value: e.target.checked,
-                        });
-                      }}
-                    />
+            Save
+          </LoadingButton>
+          {mode !== "" && (
+            <Button
+              style={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<CloseIcon />}
+              color="error"
+              onClick={() => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, cancel it!",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    resetModule();
+                    setMode("");
+                    tableRef.current.setSelectedRow(null);
+                    tableRef.current.resetCheckBox();
                   }
-                  label="Mark as Inactive"
-                />
-              </React.Fragment>
-            )}
-          </Box>
-        </form>
+                });
+              }}
+            >
+              Cancel
+            </Button>
+          )}
+          <LoadingButton
+            id="save-entry-header"
+            variant="contained"
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+              backgroundColor: pink[500],
+              "&:hover": {
+                backgroundColor: pink[600],
+              },
+            }}
+            loading={loadingDelete}
+            startIcon={<DeleteIcon />}
+            disabled={mode !== "edit"}
+            onClick={() => {
+              codeCondfirmationAlert({
+                isUpdate: false,
+                title: "Confirmation",
+                saveTitle: "Confirm",
+                text: `Are you sure you want to delete '${transactionCodeRef.current?.value}'?`,
+                cb: (userCodeConfirmation) => {
+                  mutateDelete({
+                    Code: transactionCodeRef.current?.value,
+                    userCodeConfirmation,
+                  });
+                },
+              });
+            }}
+          >
+            Delete
+          </LoadingButton>
+        </div>
+
+        <fieldset
+          style={{
+            // border: "1px solid black",
+            padding: "5px",
+            width: "590px",
+            rowGap: "5px",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <TextInput
+            label={{
+              title: "Transaction  Code : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "100px",
+              },
+            }}
+            input={{
+              disabled: mode === "",
+              type: "text",
+              style: { width: "500px" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  e.preventDefault();
+                  descriptionRef.current?.focus();
+                }
+              },
+            }}
+            inputRef={transactionCodeRef}
+          />
+          <TextInput
+            label={{
+              title: "Description : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "100px",
+              },
+            }}
+            input={{
+              disabled: mode === "",
+              type: "text",
+              style: { width: "500px" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  accountRef.current?.focus();
+
+                  e.preventDefault();
+                }
+              },
+            }}
+            inputRef={descriptionRef}
+          />
+          <TextInput
+            label={{
+              title: "Account : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "100px",
+              },
+            }}
+            input={{
+              disabled: mode === "",
+              type: "text",
+              style: { width: "500px" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  e.preventDefault();
+                  inactiveRef.current?.focus();
+                }
+              },
+            }}
+            inputRef={accountRef}
+          />
+          <CheckBoxLabel
+            gridRow={1}
+            inputRef={inactiveRef}
+            label="Mark as Inactive"
+          />
+        </fieldset>
+
         <div
-          ref={refParent}
           style={{
             marginTop: "10px",
             width: "100%",
             position: "relative",
             flex: 1,
+            display: "flex",
           }}
         >
-          <Box
-            style={{
-              height: `${refParent.current?.getBoundingClientRect().height}px`,
-              width: "100%",
-              overflowX: "scroll",
-              position: "absolute",
+          <DataGridViewReact
+            containerStyle={{
+              flex: 1,
+              height: "auto",
             }}
-          >
-            <Table
-              ref={table}
-              isLoading={isLoading || loadingAdd || loadingEdit || loadingDelete}
-              columns={transactionCodeColumn}
-              rows={rows}
-              table_id={"Code"}
-              isSingleSelection={true}
-              isRowFreeze={false}
-              dataSelection={(selection, data, code) => {
-                const rowSelected = data.filter(
-                  (item: any) => item.Code === selection[0]
-                )[0];
-                if (rowSelected === undefined || rowSelected.length <= 0) {
-                  setNewStateValue(dispatch, initialState);
-                  handleInputChange({ target: { value: "", name: "mode" } });
-                  return;
+            ref={tableRef}
+            columns={bankColumn}
+            height="280px"
+            getSelectedItem={(rowItm: any) => {
+              if (rowItm) {
+                setMode("edit");
+                if (transactionCodeRef.current) {
+                  transactionCodeRef.current.value = rowItm[0];
                 }
-
-                handleInputChange({ target: { value: "edit", name: "mode" } });
-                if (code === "Delete" || code === "Backspace") {
-                  wait(400).then(() => {
-                    codeCondfirmationAlert({
-                      isUpdate: false,
-                      cb: (userCodeConfirmation) => {
-                        mutateDelete({
-                          Code: rowSelected.Code,
-                          userCodeConfirmation,
-                        });
-                      },
-                    });
-                  });
-                  return;
+                if (descriptionRef.current) {
+                  descriptionRef.current.value = rowItm[1];
                 }
-                setNewStateValue(dispatch, rowSelected);
-              }}
-            />
-          </Box>
+                if (accountRef.current) {
+                  accountRef.current.value = rowItm[2];
+                }
+                if (inactiveRef.current) {
+                  inactiveRef.current.checked = rowItm[3] == 'YES';
+                }
+              } else {
+                resetModule();
+              }
+            }}
+          />
         </div>
       </div>
     </>
   );
 }
-export function setNewStateValue(dispatch: any, obj: any) {
-  Object.entries(obj).forEach(([field, value]) => {
-    dispatch({ type: "UPDATE_FIELD", field, value });
-  });
-}
+
+const CheckBoxLabel = ({
+  inputRef,
+  label,
+  gridRow,
+}: {
+  inputRef: React.RefObject<HTMLInputElement>;
+  label: string;
+  gridRow: number;
+}) => {
+  const id = useId();
+  return (
+    <div style={{ display: "flex", columnGap: "5px", gridRow }}>
+      <input
+        id={id}
+        ref={inputRef}
+        type="checkbox"
+        style={{
+          cursor: "pointer",
+        }}
+      />
+      <label
+        htmlFor={id}
+        style={{
+          fontSize: "12px",
+          cursor: "pointer",
+        }}
+      >
+        {label}
+      </label>
+    </div>
+  );
+};
+
