@@ -2385,7 +2385,7 @@ function FormPostDatedCheckRegistry() {
   }
 
   function generateTitle({ branch, dateFrom, dateTo }: any) {
-    const department = user?.department;
+    const department = process.env.REACT_APP_DEPARTMENT;
     return `${
       department === "UMIS"
         ? "UPWARD MANAGEMENT INSURANCE SERVICES "

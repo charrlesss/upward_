@@ -759,6 +759,8 @@ export default function Agent() {
                   addressRef.current.value = rowSelected[8];
                 }
 
+                branchCodeRef.current = rowSelected[9];
+
               });
             } else {
               tableRef.current.setSelectedRow(null);

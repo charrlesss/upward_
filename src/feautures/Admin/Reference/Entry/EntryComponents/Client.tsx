@@ -24,6 +24,8 @@ import SearchIcon from "@mui/icons-material/Search";
 import { DataGridViewReact } from "../../../../../components/DataGridViewReact";
 import { Loading } from "../../../../../components/Loading";
 import { Autocomplete } from "../../../Task/Accounting/PettyCash";
+import ImportExportIcon from "@mui/icons-material/ImportExport";
+
 const clientColumn = [
   { key: "entry_client_id", label: "ID", width: 130 },
   { key: "company", label: "Company", width: 200 },
@@ -94,16 +96,15 @@ const clientColumn = [
     key: "sub_account",
     label: "sub_account",
     width: 300,
-    hidde: true,
+    hide: true,
   },
   {
     key: "ShortName",
     label: "ShortName",
     width: 300,
-    hidde: true,
+    hide: true,
   },
-
-]
+];
 export default function Client() {
   const { myAxios, user } = useContext(AuthContext);
   const [option, setOption] = useState("individual");
@@ -151,6 +152,30 @@ export default function Client() {
       });
     },
   });
+
+  const { mutate: mutateExportRecord, isLoading: isLoadingExportRecord } =
+    useMutation({
+      mutationKey: "generate-excel-report",
+      mutationFn: async (variables: any) => {
+        return await myAxios.post(
+          "/reference/export-client-record",
+          variables,
+          {
+            responseType: "arraybuffer",
+            headers: {
+              Authorization: `Bearer ${user?.accessToken}`,
+            },
+          }
+        );
+      },
+      onSuccess: (response) => {
+        const pdfBlob = new Blob([response.data], { type: "application/pdf" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(pdfBlob);
+        link.download = "report.xls"; // Set the desired file name
+        link.click(); // Simulate a click to start the download
+      },
+    });
 
   const { mutate: mutateAdd, isLoading: loadingAdd } = useMutation({
     mutationKey: "add-client",
@@ -201,7 +226,7 @@ export default function Client() {
     onSuccess: (res) => {
       wait(100).then(() => {
         if (_subAccount.current)
-        _subAccount.current.setDataSource(res.data?.subAccount);
+          _subAccount.current.setDataSource(res.data?.subAccount);
         wait(100).then(() => {
           const data = res.data?.subAccount.filter(
             (itm: any) => itm.Acronym === "HO"
@@ -228,7 +253,6 @@ export default function Client() {
       setMode("");
       tableRef.current.setSelectedRow(null);
       tableRef.current.resetCheckBox();
-  
 
       mutateSearchRef.current({
         search: "",
@@ -365,7 +389,7 @@ export default function Client() {
         addressRef.current.value = "";
       }
       if (branchRef.current) {
-        branchRef.current.value = ''
+        branchRef.current.value = "";
       }
       branchCodeRef.current = "";
     });
@@ -374,7 +398,7 @@ export default function Client() {
   return (
     <>
       <PageHelmet title="ID Entry - Client" />
-      {isLoadingSearch && <Loading />}
+      {(isLoadingSearch || isLoadingExportRecord) && <Loading />}
       <div
         style={{
           display: "flex",
@@ -521,6 +545,29 @@ export default function Client() {
               Cancel
             </Button>
           )}
+          <Button
+            color="success"
+            variant="contained"
+            startIcon={<ImportExportIcon />}
+            id="entry-header-save-button"
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+            }}
+            onClick={() => {
+              const department = process.env.REACT_APP_DEPARTMENT;
+
+              mutateExportRecord({
+                title: `${
+                  department === "UMIS"
+                    ? "UPWARD MANAGEMENT INSURANCE SERVICES "
+                    : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC. "
+                }\nCLIENT ENTRTY`,
+              });
+            }}
+          >
+            Export Record
+          </Button>
         </div>
       </div>
       <div
@@ -991,7 +1038,9 @@ export default function Client() {
                   clientIdRef.current.value = rowSelected[0];
                 }
                 if (optionRef.current) {
-                  optionRef.current.value = rowSelected[9]?.toString().toLowerCase();
+                  optionRef.current.value = rowSelected[9]
+                    ?.toString()
+                    .toLowerCase();
                 }
                 if (firstnameRef.current) {
                   firstnameRef.current.value = rowSelected[2];

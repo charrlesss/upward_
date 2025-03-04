@@ -1,119 +1,134 @@
-import React, { useContext, useRef, useState } from "react";
-import {
-  Box,
-  TextField,
-  Button,
-  IconButton,
-  InputAdornment,
-  OutlinedInput,
-} from "@mui/material";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { Button } from "@mui/material";
 import { AuthContext } from "../../../../../components/AuthContext";
-import { useReducer } from "react";
-import { useMutation, useQuery, useQueryClient } from "react-query";
-import { setNewStateValue } from "../../../Task/Accounting/PostDateChecks";
+import { useMutation, useQuery } from "react-query";
 import Swal from "sweetalert2";
-import { reducer, supplierColumn } from "../../../data/entry";
-import {
-  PhoneNumberFormat,
-  TelephoneFormat,
-} from "../../../../../components/MaskFormat";
-
-import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
-import { wait } from "@testing-library/user-event/dist/utils";
-import Table from "../../../../../components/Table";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
+import { wait } from "../../../../../lib/wait";
 import { pink } from "@mui/material/colors";
 import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../../../lib/confirmationAlert";
-import { UpwardTable } from "../../../../../components/UpwardTable";
 import PageHelmet from "../../../../../components/Helmet";
+import {
+  SelectInput,
+  TextAreaInput,
+  TextInput,
+} from "../../../../../components/UpwardFields";
+import SearchIcon from "@mui/icons-material/Search";
+import { DataGridViewReact } from "../../../../../components/DataGridViewReact";
+import { Loading } from "../../../../../components/Loading";
+import { Autocomplete } from "../../../Task/Accounting/PettyCash";
 
-const initialState = {
-  firstname: "",
-  lastname: "",
-  middlename: "",
-  company: "",
-  tin_no: "",
-  address: "",
-  email: "",
-  mobile: "",
-  telephone: "",
-  sub_account: "c02534ee-6d7e-40dd-a22b-bc9024fa12ca",
-  VAT_Type: "vat",
-  option: "individual",
-  entry_supplier_id: "",
-  search: "",
-  mode: "",
-};
+const clientColumn = [
+  { key: "entry_supplier_id", label: "ID", width: 130 },
+  {
+    key: "ShortName",
+    label: "Sub Account",
+    width: 120,
+  },
+  { key: "company", label: "Company", width: 200 },
+  { key: "firstname", label: "First Name", width: 200 },
+  {
+    key: "lastname",
+    label: "Last Name",
+    width: 200,
+  },
+  {
+    key: "middlename",
+    label: "Middle Name",
+    width: 200,
+  },
+  {
+    key: "mobile",
+    label: "Mobile",
+    width: 200,
+  },
 
+  {
+    key: "option",
+    label: "Option",
+    width: 130,
+  },
+  {
+    key: "tin_no",
+    label: "TIN",
+    width: 130,
+  },
+  {
+    key: "address",
+    label: "Address",
+    width: 500,
+  },
+  {
+    key: "createdAt",
+    label: "Created At",
+    width: 130,
+    hide: true,
+  },
+
+  {
+    key: "sub_account",
+    label: "sub_account",
+    width: 300,
+    hide: true,
+  },
+];
 export default function Supplier() {
-  const refParent = useRef<HTMLDivElement>(null);
-  const [state, dispatch] = useReducer(reducer, initialState);
-  const [rows, setRows] = useState([]);
   const { myAxios, user } = useContext(AuthContext);
-  const queryKey = "entry_supplier_id";
-  const queryClient = useQueryClient();
-  const table = useRef<any>(null);
+  const [option, setOption] = useState("individual");
+  const [mode, setMode] = useState("");
 
-  const {
-    data: subAccountData,
-    isLoading: subAccountLoading,
-    refetch: refetchSubAcct,
-  } = useQuery({
-    queryKey: "sub-accounts",
+  const tableRef = useRef<any>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const clientIdRef = useRef<HTMLInputElement>(null);
+  const optionRef = useRef<HTMLSelectElement>(null);
+  const firstnameRef = useRef<HTMLInputElement>(null);
+  const middleRef = useRef<HTMLInputElement>(null);
+  const lastnameRef = useRef<HTMLInputElement>(null);
+
+  const fullnameRef = useRef<HTMLTextAreaElement>(null);
+  const authorizeRepRef = useRef<HTMLInputElement>(null);
+
+  const suffixRef = useRef<HTMLInputElement>(null);
+  const _subAccount = useRef<any>(null);
+  const subAccount = useRef<HTMLSelectElement>(null);
+  const branchCodeRef = useRef("");
+  const branchRef = useRef<HTMLSelectElement>(null);
+
+  const mobileNoRef = useRef<HTMLInputElement>(null);
+  const mortgageeRef = useRef<HTMLSelectElement>(null);
+  const tinRef = useRef<HTMLInputElement>(null);
+
+  const addressRef = useRef<HTMLTextAreaElement>(null);
+  const { isLoading: loadingClientId, refetch: refetchClientId } = useQuery({
+    queryKey: "supplier-generate-id",
     queryFn: async () =>
-      await myAxios.get(`/reference/sub-account`, {
-        headers: { Authorization: `Bearer ${user?.accessToken}` },
-      }),
-    onSuccess: (res) => {
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "sub_account",
-        value: res.data?.defaultValue[0]?.Sub_Acct,
-      });
-    },
-  });
-  const { isLoading: loadingSupplierId, refetch: refetchSupplierId } = useQuery(
-    {
-      queryKey: "supplier-generate-id",
-      queryFn: async () =>
-        await myAxios.post(
-          "/reference/id-entry-generate-id",
-          { sign: "S", type: "entry supplier" },
-          {
-            headers: { Authorization: `Bearer ${user?.accessToken}` },
-          }
-        ),
-      refetchOnWindowFocus: false,
-      onSuccess: (res) => {
-        handleInputChange({
-          target: { value: res.data.generateID, name: "entry_supplier_id" },
-        });
-      },
-    }
-  );
-  const { isLoading, refetch: refetchSupplierSearch } = useQuery({
-    queryKey,
-    queryFn: async () =>
-      await myAxios.get(
-        `/reference/search-entry?entrySearch=${state.search}&entry=Supplier`,
+      await myAxios.post(
+        "/reference/id-entry-generate-id",
+        { sign: "S", type: "entry supplier" },
         {
           headers: { Authorization: `Bearer ${user?.accessToken}` },
         }
       ),
+    refetchOnWindowFocus: false,
     onSuccess: (res) => {
-      setRows((res as any)?.data.entry);
+      wait(100).then(() => {
+        if (clientIdRef.current) {
+          clientIdRef.current.value = res.data.generateID;
+        }
+      });
     },
   });
+
   const { mutate: mutateAdd, isLoading: loadingAdd } = useMutation({
-    mutationKey: queryKey,
+    mutationKey: "add-entry-supplier",
     mutationFn: async (variables: any) =>
       await myAxios.post("/reference/id-entry-supplier", variables, {
         headers: { Authorization: `Bearer ${user?.accessToken}` },
@@ -121,15 +136,15 @@ export default function Supplier() {
     onSuccess,
   });
   const { mutate: mutateEdit, isLoading: loadingEdit } = useMutation({
-    mutationKey: queryKey,
+    mutationKey: "entry-supplier-update",
     mutationFn: async (variables: any) =>
-      await myAxios.post(`/reference/entry-update?entry=Supplier`, variables, {
+      await myAxios.post(`/reference/id-entry-supplier-update`, variables, {
         headers: { Authorization: `Bearer ${user?.accessToken}` },
       }),
     onSuccess,
   });
   const { mutate: mutateDelete, isLoading: loadingDelete } = useMutation({
-    mutationKey: queryKey,
+    mutationKey: "delete-client",
     mutationFn: async (variables: any) =>
       await myAxios.post(`/reference/entry-delete?entry=Supplier`, variables, {
         headers: {
@@ -138,23 +153,61 @@ export default function Supplier() {
       }),
     onSuccess,
   });
-  const handleInputChange = (e: any) => {
-    const { name, value } = e.target;
-    const uppercase = ["company", "lastname", "middlename", "firstname"];
-    if (uppercase.includes(name)) {
-      return dispatch({
-        type: "UPDATE_FIELD",
-        field: name,
-        value: value.toUpperCase(),
+  const { isLoading: isLoadingSearch, mutate: mutateSearch } = useMutation({
+    mutationKey: "search",
+    mutationFn: async (variables: any) =>
+      await myAxios.post(
+        `/reference/search-entry?entrySearch=${searchInputRef.current?.value}&entry=Client`,
+        variables,
+        {
+          headers: { Authorization: `Bearer ${user?.accessToken}` },
+        }
+      ),
+    onSuccess: (res) => {
+      tableRef.current.setDataFormated((res as any)?.data.entry);
+    },
+  });
+  const { isLoading: subAccountLoading, refetch: refetchSubAcct } = useQuery({
+    queryKey: "sub-accounts",
+    queryFn: async () =>
+      await myAxios.get(`/reference/sub-account`, {
+        headers: { Authorization: `Bearer ${user?.accessToken}` },
+      }),
+    onSuccess: (res) => {
+      wait(100).then(() => {
+        if (_subAccount.current)
+          _subAccount.current.setDataSource(res.data?.subAccount);
+        wait(100).then(() => {
+          const data = res.data?.subAccount.filter(
+            (itm: any) => itm.Acronym === "HO"
+          );
+
+          if (subAccount.current) subAccount.current.value = data[0].ShortName;
+          branchCodeRef.current = data[0].Sub_Acct;
+        });
       });
-    }
-    dispatch({ type: "UPDATE_FIELD", field: name, value });
-  };
+    },
+  });
+
+  const mutateSearchRef = useRef(mutateSearch);
+  useEffect(() => {
+    mutateSearchRef.current({
+      search: "",
+      entry: "Supplier",
+    });
+  }, []);
 
   function onSuccess(res: any) {
     if (res.data.success) {
-      queryClient.invalidateQueries(queryKey);
-      resetModule();
+      resetField();
+      setMode("");
+      tableRef.current.setSelectedRow(null);
+      tableRef.current.resetCheckBox();
+
+      mutateSearchRef.current({
+        search: "",
+        entry: "Supplier",
+      });
       return Swal.fire({
         position: "center",
         icon: "success",
@@ -172,8 +225,8 @@ export default function Supplier() {
     });
   }
   function handleOnSave(e: any) {
-    if (state.option === "individual") {
-      if (state.firstname === "") {
+    if (optionRef.current?.value === "Individual") {
+      if (firstnameRef.current?.value === "") {
         return Swal.fire({
           position: "center",
           icon: "error",
@@ -182,7 +235,7 @@ export default function Supplier() {
           timer: 1500,
         });
       }
-      if (state.lastname === "") {
+      if (lastnameRef.current?.value === "") {
         return Swal.fire({
           position: "center",
           icon: "error",
@@ -192,17 +245,17 @@ export default function Supplier() {
         });
       }
     } else {
-      if (state.company === "") {
+      if (fullnameRef.current?.value === "") {
         return Swal.fire({
           position: "center",
           icon: "error",
-          title: "Company is required!",
+          title: "Full Name is required!",
           showConfirmButton: false,
           timer: 1500,
         });
       }
     }
-    if (state.sub_account === "") {
+    if (subAccount.current?.value === "") {
       return Swal.fire({
         position: "center",
         icon: "error",
@@ -212,89 +265,20 @@ export default function Supplier() {
       });
     }
 
-    if (state.firstname.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Firstname is too long!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-    if (state.lastname.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Lastname is too long!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-    if (state.middlename.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Middlename is too long!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-    if (state.company.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Company is too long!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-    if (state.tin_no.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Tin no. is too long!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-    if (state.address.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Address is too long!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-    if (state.email.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Email is too long!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-    if (state.mobile.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Mobile is too long!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
-    if (state.telephone.length >= 200) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Telephone is too long!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    }
+    const state = {
+      entry_supplier_id: clientIdRef.current?.value,
+      option: optionRef.current?.value,
+      firstname: firstnameRef.current?.value.toLocaleUpperCase(),
+      middlename: middleRef.current?.value.toLocaleUpperCase(),
+      lastname: lastnameRef.current?.value.toLocaleUpperCase(),
+      company: fullnameRef.current?.value.toLocaleUpperCase(),
+      sub_account: branchCodeRef.current,
+      mobile: mobileNoRef.current?.value,
+      tin_no: tinRef.current?.value,
+      address: addressRef.current?.value,
+    };
     e.preventDefault();
-    if (state.mode === "edit") {
+    if (mode === "edit") {
       codeCondfirmationAlert({
         isUpdate: true,
         cb: (userCodeConfirmation) => {
@@ -309,20 +293,517 @@ export default function Supplier() {
       });
     }
   }
-  function resetModule() {
-    setNewStateValue(dispatch, initialState);
-    table.current?.resetTableSelected();
-    wait(250).then(() => {
-      refetchSupplierSearch();
-      refetchSupplierId();
+  function resetField() {
+    wait(100).then(() => {
+      refetchClientId();
       refetchSubAcct();
+      setOption("individual");
+
+      if (optionRef.current) {
+        optionRef.current.value = "individual";
+      }
+      if (firstnameRef.current) {
+        firstnameRef.current.value = "";
+      }
+      if (middleRef.current) {
+        middleRef.current.value = "";
+      }
+      if (lastnameRef.current) {
+        lastnameRef.current.value = "";
+      }
+      if (fullnameRef.current) {
+        fullnameRef.current.value = "";
+      }
+      if (authorizeRepRef.current) {
+        authorizeRepRef.current.value = "";
+      }
+      if (suffixRef.current) {
+        suffixRef.current.value = "";
+      }
+      if (mobileNoRef.current) {
+        mobileNoRef.current.value = "";
+      }
+      if (mortgageeRef.current) {
+        mortgageeRef.current.value = "";
+      }
+      if (tinRef.current) {
+        tinRef.current.value = "";
+      }
+      if (addressRef.current) {
+        addressRef.current.value = "";
+      }
+      if (branchRef.current) {
+        branchRef.current.value = "";
+      }
+      branchCodeRef.current = "";
     });
   }
-  const width = window.innerWidth - 40;
-  const height = window.innerHeight - 140;
+
   return (
     <>
-      <PageHelmet title="ID Entry - Supplier" />
+      <PageHelmet title="ID Entry - Client" />
+      {isLoadingSearch && <Loading />}
+      <div
+        style={{
+          display: "flex",
+          columnGap: "10px",
+          marginBottom: "10px",
+        }}
+      >
+        <TextInput
+          containerStyle={{
+            width: "500px",
+          }}
+          label={{
+            title: "Search: ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "70px",
+            },
+          }}
+          input={{
+            className: "search-input-up-on-key-down",
+            type: "search",
+            onKeyDown: (e) => {
+              if (e.key === "Enter" || e.key === "NumpadEnter") {
+                e.preventDefault();
+                mutateSearch({
+                  search: e.currentTarget.value,
+                  entry: "Supplier",
+                });
+              }
+            },
+            style: { width: "100%" },
+          }}
+          icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+          onIconClick={(e) => {
+            e.preventDefault();
+            if (searchInputRef.current) {
+              mutateSearch({
+                search: searchInputRef.current.value,
+                entry: "Supplier",
+              });
+            }
+          }}
+          inputRef={searchInputRef}
+        />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            columnGap: "5px",
+            marginLeft: "10px",
+          }}
+        >
+          {mode === "" && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              id="entry-header-save-button"
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              onClick={() => {
+                refetchClientId();
+                setMode("add");
+              }}
+            >
+              New
+            </Button>
+          )}
+          <LoadingButton
+            id="save-entry-header"
+            color="primary"
+            variant="contained"
+            type="submit"
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+            }}
+            onClick={handleOnSave}
+            startIcon={<SaveIcon />}
+            disabled={mode === ""}
+            loading={loadingAdd || loadingEdit}
+          >
+            Save
+          </LoadingButton>
+
+          <LoadingButton
+            disabled={mode === ""}
+            id="save-entry-header"
+            variant="contained"
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+              backgroundColor: pink[500],
+              "&:hover": {
+                backgroundColor: pink[600],
+              },
+            }}
+            loading={loadingDelete}
+            startIcon={<DeleteIcon />}
+            onClick={() => {
+              codeCondfirmationAlert({
+                isUpdate: false,
+                cb: (userCodeConfirmation) => {
+                  mutateDelete({
+                    id: clientIdRef.current?.value,
+                    userCodeConfirmation,
+                  });
+                },
+              });
+            }}
+          >
+            Delete
+          </LoadingButton>
+          {mode !== "" && (
+            <Button
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<CloseIcon />}
+              color="error"
+              onClick={() => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, cancel it!",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    resetField();
+                    setMode("");
+                    tableRef.current.setSelectedRow(null);
+                    tableRef.current.resetCheckBox();
+                  }
+                });
+              }}
+            >
+              Cancel
+            </Button>
+          )}
+        </div>
+      </div>
+      <div
+        style={{
+          display: "flex",
+          columnGap: "20px",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            rowGap: "5px",
+            flex: 1,
+          }}
+        >
+          {loadingClientId ? (
+            <LoadingButton loading={loadingClientId} />
+          ) : (
+            <TextInput
+              label={{
+                title: "Client ID : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "130px",
+                },
+              }}
+              input={{
+                disabled: mode === "",
+                readOnly: true,
+                type: "text",
+                style: { width: "100%", height: "22px" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    optionRef.current?.focus();
+                  }
+                },
+              }}
+              inputRef={clientIdRef}
+            />
+          )}
+          <SelectInput
+            label={{
+              title: "Option : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "130px",
+              },
+            }}
+            selectRef={optionRef}
+            select={{
+              disabled: mode === "",
+              value: option,
+              style: { width: "100%", height: "22px" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  e.preventDefault();
+                  if (option === "Individual") {
+                    firstnameRef.current?.focus();
+                  } else {
+                    fullnameRef.current?.focus();
+                  }
+                }
+              },
+              onChange: (e) => {
+                setOption(e.currentTarget.value);
+              },
+            }}
+            datasource={[
+              { key: "Individual", value: "individual" },
+              { key: "Company", value: "company" },
+            ]}
+            values={"value"}
+            display={"key"}
+          />
+          {option === "individual" && (
+            <>
+              <TextInput
+                label={{
+                  title: "First Name : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "130px",
+                  },
+                }}
+                input={{
+                  disabled: mode === "",
+                  type: "text",
+                  style: {
+                    width: "100%",
+                    height: "22px",
+                    textTransform: "uppercase",
+                  },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      middleRef.current?.focus();
+                    }
+                  },
+                }}
+                inputRef={firstnameRef}
+              />
+              <TextInput
+                label={{
+                  title: "Middle Name : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "130px",
+                  },
+                }}
+                input={{
+                  disabled: mode === "",
+                  type: "text",
+                  style: {
+                    width: "100%",
+                    height: "22px",
+                    textTransform: "uppercase",
+                  },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      lastnameRef.current?.focus();
+                    }
+                  },
+                }}
+                inputRef={middleRef}
+              />
+              <TextInput
+                label={{
+                  title: "Last Name : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "130px",
+                  },
+                }}
+                input={{
+                  disabled: mode === "",
+                  type: "text",
+                  style: {
+                    width: "100%",
+                    height: "22px",
+                    textTransform: "uppercase",
+                  },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      suffixRef.current?.focus();
+                    }
+                  },
+                }}
+                inputRef={lastnameRef}
+              />
+            </>
+          )}
+
+          {option === "company" && (
+            <>
+              <TextAreaInput
+                label={{
+                  title: "Full Name : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "130px",
+                  },
+                }}
+                textarea={{
+                  disabled: mode === "",
+                  style: { width: "100%" },
+                  onKeyDown: (e) => {
+                    e.stopPropagation();
+                    if (
+                      (e.code === "NumpadEnter" && !e.shiftKey) ||
+                      (e.code === "Enter" && !e.shiftKey)
+                    ) {
+                      authorizeRepRef.current?.focus();
+                    }
+                  },
+                }}
+                _inputRef={fullnameRef}
+              />
+            </>
+          )}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            rowGap: "5px",
+            marginBottom: "40px",
+            flex: 1,
+          }}
+        >
+          {subAccountLoading ? (
+            <LoadingButton loading={subAccountLoading} />
+          ) : (
+            <Autocomplete
+              disableInput={mode === ""}
+              ref={_subAccount}
+              containerStyle={{
+                width: "100%",
+              }}
+              label={{
+                title: "Sub Account : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "110px",
+                },
+              }}
+              DisplayMember={"ShortName"}
+              DataSource={[]}
+              inputRef={subAccount}
+              input={{
+                style: {
+                  width: "100%",
+                },
+              }}
+              onChange={(selected: any, e: any) => {
+                if (subAccount.current)
+                  subAccount.current.value = selected.ShortName;
+                console.log(selected);
+
+                branchCodeRef.current = selected.Sub_Acct;
+              }}
+              onKeydown={(e: any) => {
+                if (e.key === "Enter" || e.key === "NumpadEnter") {
+                  e.preventDefault();
+                  mobileNoRef.current?.focus();
+                }
+              }}
+            />
+          )}
+          <TextInput
+            label={{
+              title: "Contact No. : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "110px",
+              },
+            }}
+            input={{
+              disabled: mode === "",
+              type: "text",
+              style: { width: "100%", height: "22px" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  mortgageeRef.current?.focus();
+                }
+              },
+            }}
+            inputRef={mobileNoRef}
+          />
+          <TextInput
+            label={{
+              title: "TIN : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "110px",
+              },
+            }}
+            input={{
+              disabled: mode === "",
+              type: "text",
+              style: { width: "100%", height: "22px" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  addressRef.current?.focus();
+                }
+              },
+            }}
+            inputRef={tinRef}
+          />
+        </div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            rowGap: "10px",
+            marginBottom: "40px",
+            flex: 1,
+          }}
+        >
+          <TextAreaInput
+            containerStyle={{
+              alignItems: "flex-start",
+            }}
+            label={{
+              title: "Address : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "110px",
+              },
+            }}
+            textarea={{
+              disabled: mode === "",
+              style: { width: "100%", height: "80px" },
+              onKeyDown: (e) => {
+                e.stopPropagation();
+                if (
+                  (e.code === "NumpadEnter" && !e.shiftKey) ||
+                  (e.code === "Enter" && !e.shiftKey)
+                ) {
+                }
+              },
+            }}
+            _inputRef={addressRef}
+          />
+        </div>
+      </div>
       <div
         style={{
           display: "flex",
@@ -330,531 +811,70 @@ export default function Supplier() {
           width: "100%",
           height: "100%",
           flex: 1,
+          marginTop:"10px"
         }}
       >
-        <Box
-          sx={(theme) => ({
-            display: "flex",
-            alignItems: "center",
-            columnGap: "20px",
-            [theme.breakpoints.down("sm")]: {
-              flexDirection: "column",
-              alignItems: "flex-start",
-              flex: 1,
-              marginBottom: "15px",
-            },
-          })}
-        >
-          <div
-            style={{
-              marginTop: "10px",
-              marginBottom: "12px",
-              width: "100%",
-            }}
-          >
-            <TextField
-              label="Search"
-              fullWidth
-              size="small"
-              type="text"
-              value={state.search}
-              name="search"
-              onChange={handleInputChange}
-              onKeyDown={(e) => {
-                if (e.code === "Enter" || e.code === "NumpadEnter") {
-                  e.preventDefault();
-                  return refetchSupplierSearch();
+        <DataGridViewReact
+          height="340px"
+          ref={tableRef}
+          rows={[]}
+          columns={clientColumn}
+          getSelectedItem={(rowSelected: any, _: any, RowIndex: any) => {
+            if (rowSelected) {
+              setMode("edit");
+              setOption(rowSelected[7].toLowerCase());
+              wait(100).then(() => {
+                if (clientIdRef.current) {
+                  clientIdRef.current.value = rowSelected[0];
                 }
-                if (e.key === "ArrowDown") {
-                  e.preventDefault();
-                  const datagridview = document.querySelector(
-                    `.grid-container`
-                  ) as HTMLDivElement;
-                  datagridview.focus();
+                if (subAccount.current) {
+                  subAccount.current.value = rowSelected[1];
                 }
-              }}
-              InputProps={{
-                style: { height: "27px", fontSize: "14px" },
-                className: "manok",
-              }}
-              sx={{
-                width: "500px",
-                height: "27px",
-                ".MuiFormLabel-root": { fontSize: "14px" },
-                ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-              }}
-            />
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              columnGap: "20px",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                columnGap: "5px",
-              }}
-            >
-              {state.mode === "" && (
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  id="entry-header-save-button"
-                  sx={{
-                    height: "30px",
-                    fontSize: "11px",
-                  }}
-                  onClick={() => {
-                    refetchSupplierId();
-                    handleInputChange({
-                      target: { value: "add", name: "mode" },
-                    });
-                  }}
-                >
-                  New
-                </Button>
-              )}
-              <LoadingButton
-                id="save-entry-header"
-                color="primary"
-                variant="contained"
-                type="submit"
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                }}
-                onClick={handleOnSave}
-                startIcon={<SaveIcon />}
-                disabled={state.mode === ""}
-                loading={loadingAdd || loadingEdit}
-              >
-                Save
-              </LoadingButton>
-              {state.mode !== "" && (
-                <Button
-                  sx={{
-                    height: "30px",
-                    fontSize: "11px",
-                  }}
-                  variant="contained"
-                  startIcon={<CloseIcon />}
-                  color="error"
-                  onClick={() => {
-                    Swal.fire({
-                      title: "Are you sure?",
-                      text: "You won't be able to revert this!",
-                      icon: "warning",
-                      showCancelButton: true,
-                      confirmButtonColor: "#3085d6",
-                      cancelButtonColor: "#d33",
-                      confirmButtonText: "Yes, cancel it!",
-                    }).then((result) => {
-                      if (result.isConfirmed) {
-                        resetModule();
-                      }
-                    });
-                  }}
-                >
-                  Cancel
-                </Button>
-              )}
+                if (fullnameRef.current) {
+                  fullnameRef.current.value = rowSelected[2];
+                }
+                if (firstnameRef.current) {
+                  firstnameRef.current.value = rowSelected[3];
+                }
+                if (lastnameRef.current) {
+                  lastnameRef.current.value = rowSelected[4];
+                }
+                if (middleRef.current) {
+                  middleRef.current.value = rowSelected[5];
+                }
+                if (mobileNoRef.current) {
+                  mobileNoRef.current.value = rowSelected[6];
+                }
+                if (optionRef.current) {
+                  optionRef.current.value = rowSelected[7]
+                    ?.toString()
+                    .toLowerCase();
+                }
 
-              <LoadingButton
-                id="save-entry-header"
-                variant="contained"
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                  backgroundColor: pink[500],
-                  "&:hover": {
-                    backgroundColor: pink[600],
-                  },
-                }}
-                loading={loadingDelete}
-                startIcon={<DeleteIcon />}
-                disabled={state.mode !== "edit"}
-                onClick={() => {
-                  codeCondfirmationAlert({
-                    isUpdate: false,
-                    cb: (userCodeConfirmation) => {
-                      mutateDelete({
-                        id: state.entry_supplier_id,
-                        userCodeConfirmation,
-                      });
-                    },
-                  });
-                }}
-              >
-                Delete
-              </LoadingButton>
-            </div>
-          </div>
-        </Box>
-        <form
-          onKeyDown={(e) => {
-            const enterList = [
-              "firstname",
-              "lastname",
-              "middlename",
-              "company",
-              "tin_no",
-              "address",
-              "email",
-              "mobile",
-              "telephone",
-              "VAT_Type",
-              "entry_supplier_id",
-            ];
-
-            if (
-              (e.code === "Enter" || e.code === "NumpadEnter") &&
-              enterList.includes((e.target as any).name)
-            ) {
-              e.preventDefault();
-              handleOnSave(e);
-            }
-          }}
-          onSubmit={handleOnSave}
-          style={{ width: "100%" }}
-          id="Form-Supplier"
-        >
-          <Box
-            sx={(theme) => ({
-              display: "flex",
-              columnGap: "15px",
-              flexDirection: "row",
-              width: "100%",
-              [theme.breakpoints.down("md")]: {
-                flexDirection: "column",
-                rowGap: "10px",
-              },
-              marginBottom: "10px",
-            })}
-          >
-            <div style={{ width: "100%" }}>
-              <Box
-                sx={(theme) => ({
-                  display: "flex",
-                  columnGap: "15px",
-                  flexDirection: "row",
-                  [theme.breakpoints.down("md")]: {
-                    flexDirection: "column",
-                    rowGap: "10px",
-                  },
-                })}
-              >
-                {loadingSupplierId ? (
-                  <LoadingButton loading={loadingSupplierId} />
-                ) : (
-                  <FormControl
-                    variant="outlined"
-                    size="small"
-                    disabled={state.mode === ""}
-                    sx={{
-                      width: "150px",
-                      ".MuiFormLabel-root": {
-                        fontSize: "14px",
-                        background: "white",
-                        zIndex: 99,
-                        padding: "0 3px",
-                      },
-                      ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                    }}
-                  >
-                    <InputLabel htmlFor="client-auto-generate-id-field">
-                      Client ID
-                    </InputLabel>
-                    <OutlinedInput
-                      sx={{
-                        height: "27px",
-                        fontSize: "14px",
-                      }}
-                      disabled={state.mode === ""}
-                      fullWidth
-                      label="Client ID"
-                      name="entry_supplier_id"
-                      value={state.entry_supplier_id}
-                      onChange={handleInputChange}
-                      readOnly={true}
-                      id="client-auto-generate-id-field"
-                      endAdornment={
-                        <InputAdornment position="end">
-                          <IconButton
-                            disabled={state.mode === ""}
-                            aria-label="search-client"
-                            color="secondary"
-                            edge="end"
-                            onClick={() => {
-                              refetchSupplierId();
-                            }}
-                          >
-                            <RestartAltIcon />
-                          </IconButton>
-                        </InputAdornment>
-                      }
-                    />
-                  </FormControl>
-                )}
-                <FormControl
-                  required
-                  size="small"
-                  sx={{
-                    flex: 1,
-                    ".MuiFormLabel-root": {
-                      fontSize: "14px",
-                      background: "white",
-                      zIndex: 99,
-                      padding: "0 3px",
-                    },
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                  }}
-                >
-                  <InputLabel id="option_id">Option</InputLabel>
-                  <Select
-                    sx={{
-                      height: "27px",
-                      fontSize: "14px",
-                    }}
-                    disabled={state.mode === ""}
-                    value={state.option}
-                    onChange={handleInputChange}
-                    labelId="option_id"
-                    label="Option"
-                    name="option"
-                  >
-                    <MenuItem value="company">Company</MenuItem>
-                    <MenuItem value="individual">Individual</MenuItem>
-                  </Select>
-                </FormControl>
-                <FormControl
-                  required
-                  size="small"
-                  sx={{
-                    flex: 1,
-                    ".MuiFormLabel-root": {
-                      fontSize: "14px",
-                      background: "white",
-                      zIndex: 99,
-                      padding: "0 3px",
-                    },
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                  }}
-                >
-                  <InputLabel id="vat-type">VAT Type</InputLabel>
-                  <Select
-                    sx={{
-                      height: "27px",
-                      fontSize: "14px",
-                    }}
-                    disabled={state.mode === ""}
-                    name="VAT_Type"
-                    value={state.VAT_Type}
-                    onChange={handleInputChange}
-                    labelId="vat-type"
-                    label="VAT Type"
-                  >
-                    <MenuItem value="vat">Vat</MenuItem>
-                    <MenuItem value="non-vat">Non Vat</MenuItem>
-                  </Select>
-                </FormControl>
-                {state.option.includes("individual") ? (
-                  <Individual
-                    state={state}
-                    handleInputChange={handleInputChange}
-                    disabled={state.mode === ""}
-                  />
-                ) : (
-                  <Company
-                    state={state}
-                    handleInputChange={handleInputChange}
-                    disabled={state.mode === ""}
-                  />
-                )}
-              </Box>
-              <Box sx={{ display: "flex", gap: "15px", marginTop: "10px" }}>
-                {/* <TextField
-                  type="email"
-                  name="email"
-                  label="Email"
-                  size="small"
-                  value={state.email}
-                  onChange={handleInputChange}
-                  disabled={state.mode === ""}
-                  InputProps={{
-                    style: { height: "27px", fontSize: "14px" },
-                  }}
-                  sx={{
-                    flex: 1,
-                    height: "27px",
-                    ".MuiFormLabel-root": { fontSize: "14px" },
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                  }}
-                /> */}
-                {/* <TextField
-                  name="mobile"
-                  label="Mobile Number"
-                  size="small"
-                  value={state.mobile}
-                  onChange={handleInputChange}
-                  disabled={state.mode === ""}
-                  InputProps={{
-                    style: { height: "27px", fontSize: "14px" },
-                    inputComponent: PhoneNumberFormat as any,
-                  }}
-                  sx={{
-                    flex: 1,
-                    height: "27px",
-                    ".MuiFormLabel-root": { fontSize: "14px" },
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                  }}
-                  placeholder="(+63) 000-000-0000"
-                /> */}
-                <TextField
-                  InputProps={{
-                    style: { height: "27px", fontSize: "14px" },
-                  }}
-                  sx={{
-                    width: "200px",
-                    height: "27px",
-                    ".MuiFormLabel-root": { fontSize: "14px" },
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                  }}
-                  type="text"
-                  name="telephone"
-                  label="Contact Number"
-                  size="small"
-                  value={state.telephone}
-                  onChange={handleInputChange}
-                  disabled={state.mode === ""}
-                  required
-                />
-                {/* <TextField
-                  name="telephone"
-                  label="Contact Number"
-                  size="small"
-                  value={state.telephone}
-                  onChange={handleInputChange}
-                  disabled={state.mode === ""}
-                  InputProps={{
-                    style: { height: "27px", fontSize: "14px" },
-                    inputComponent: TelephoneFormat as any,
-                  }}
-                  sx={{
-                    flex: 1,
-                    height: "27px",
-                    ".MuiFormLabel-root": { fontSize: "14px" },
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                  }}
-                  placeholder="0000-0000"
-                /> */}
-                {subAccountLoading ? (
-                  <LoadingButton loading={subAccountLoading} />
-                ) : (
-                  <FormControl
-                    fullWidth
-                    required
-                    size="small"
-                    sx={{
-                      width: "200px",
-                      ".MuiFormLabel-root": {
-                        fontSize: "14px",
-                        background: "white",
-                        zIndex: 99,
-                        padding: "0 3px",
-                      },
-                      ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                    }}
-                  >
-                    <InputLabel id="Sub Account">Sub Account</InputLabel>
-                    <Select
-                      sx={{
-                        height: "27px",
-                        fontSize: "14px",
-                      }}
-                      disabled={state.mode === ""}
-                      value={state.sub_account}
-                      onChange={(e) => {
-                        dispatch({
-                          type: "UPDATE_FIELD",
-                          field: "sub_account",
-                          value: e.target.value,
-                        });
-                      }}
-                      labelId="Sub Account"
-                      label="Sub Account"
-                      name="sub_account"
-                    >
-                      {subAccountData?.data.subAccount.map(
-                        (item: {
-                          Sub_Acct: string;
-                          ShortName: string;
-                          Acronym: string;
-                        }) => {
-                          return (
-                            <MenuItem key={item.Sub_Acct} value={item.Sub_Acct}>
-                              {item.ShortName}
-                            </MenuItem>
-                          );
-                        }
-                      )}
-                    </Select>
-                  </FormControl>
-                )}
-                <TextField
-                  type="address"
-                  name="address"
-                  label="Address"
-                  size="small"
-                  value={state.address}
-                  onChange={handleInputChange}
-                  disabled={state.mode === ""}
-                  InputProps={{
-                    style: { height: "27px", fontSize: "14px" },
-                  }}
-                  sx={{
-                    flex: 1,
-                    height: "27px",
-                    ".MuiFormLabel-root": { fontSize: "14px" },
-                    ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-                  }}
-                />
-              </Box>
-            </div>
-          </Box>
-        </form>
-
-        <UpwardTable
-          ref={table}
-          isLoading={isLoading || loadingDelete || loadingEdit || loadingAdd}
-          rows={rows}
-          column={supplierColumn}
-          width={width}
-          height={height}
-          dataReadOnly={true}
-          onSelectionChange={(rowSelected) => {
-            if (rowSelected.length > 0) {
-              handleInputChange({ target: { value: "edit", name: "mode" } });
-
-              setNewStateValue(dispatch, rowSelected[0]);
+                if (tinRef.current) {
+                  tinRef.current.value = rowSelected[8];
+                }
+                if (addressRef.current) {
+                  addressRef.current.value = rowSelected[9];
+                }
+                branchCodeRef.current = rowSelected[11];
+              });
             } else {
-              setNewStateValue(dispatch, initialState);
-              handleInputChange({ target: { value: "", name: "mode" } });
+              tableRef.current.setSelectedRow(null);
+              tableRef.current.resetCheckBox();
+              resetField();
+              setMode("");
               return;
             }
           }}
-          onKeyDown={(row, key) => {
-            if (key === "Delete" || key === "Backspace") {
-              const rowSelected = row[0];
+          onKeyDown={(rowSelected: any, RowIndex: any, e: any) => {
+            if (e.code === "Delete" || e.code === "Backspace") {
               wait(100).then(() => {
                 codeCondfirmationAlert({
                   isUpdate: false,
                   cb: (userCodeConfirmation) => {
                     mutateDelete({
-                      id: rowSelected.entry_supplier_id,
+                      id: rowSelected[0],
                       userCodeConfirmation,
                     });
                   },
@@ -863,190 +883,8 @@ export default function Supplier() {
               return;
             }
           }}
-          inputsearchselector=".manok"
         />
-        {/* <div
-        ref={refParent}
-        style={{
-          marginTop: "10px",
-          width: "100%",
-          position: "relative",
-          flex: 1,
-        }}
-      >
-        <Box
-          style={{
-            height: `${refParent.current?.getBoundingClientRect().height}px`,
-            width: "100%",
-            overflowX: "scroll",
-            position: "absolute",
-          }}
-        >
-          <Table
-            ref={table}
-            isLoading={isLoading || loadingDelete || loadingEdit || loadingAdd}
-            columns={supplierColumn}
-            rows={rows}
-            table_id={"entry_supplier_id"}
-            isSingleSelection={true}
-            isRowFreeze={false}
-            dataSelection={(selection, data, code) => {
-              const rowSelected = data.filter(
-                (item: any) => item.entry_supplier_id === selection[0]
-              )[0];
-              if (rowSelected === undefined || rowSelected.length <= 0) {
-                setNewStateValue(dispatch, initialState);
-                handleInputChange({ target: { value: "", name: "mode" } });
-                return;
-              }
-              handleInputChange({ target: { value: "edit", name: "mode" } });
-
-              setNewStateValue(dispatch, rowSelected);
-
-              if (code === "Delete" || code === "Backspace") {
-                wait(350).then(() => {
-                  codeCondfirmationAlert({
-                    isUpdate: false,
-                    cb: (userCodeConfirmation) => {
-                      mutateDelete({
-                        id: rowSelected.entry_supplier_id,
-                        userCodeConfirmation,
-                      });
-                    },
-                  });
-                });
-                return;
-              }
-            }}
-          />
-        </Box>
-      </div> */}
       </div>
-    </>
-  );
-}
-
-function Individual({ state, handleInputChange, disabled }: any) {
-  return (
-    <>
-      <TextField
-        InputProps={{
-          style: { height: "27px", fontSize: "14px" },
-        }}
-        sx={{
-          flex: 1,
-          height: "27px",
-          ".MuiFormLabel-root": { fontSize: "14px" },
-          ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-        }}
-        type="text"
-        name="tin_no"
-        label="TIN NO"
-        size="small"
-        value={state.tin_no}
-        onChange={handleInputChange}
-        disabled={disabled}
-      />
-      <TextField
-        InputProps={{
-          style: { height: "27px", fontSize: "14px" },
-        }}
-        sx={{
-          flex: 1,
-          height: "27px",
-          ".MuiFormLabel-root": { fontSize: "14px" },
-          ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-        }}
-        type="text"
-        name="firstname"
-        label="First Name"
-        size="small"
-        value={state.firstname}
-        onChange={handleInputChange}
-        disabled={disabled}
-        required
-      />
-      <TextField
-        InputProps={{
-          style: { height: "27px", fontSize: "14px" },
-        }}
-        sx={{
-          flex: 1,
-          height: "27px",
-          ".MuiFormLabel-root": { fontSize: "14px" },
-          ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-        }}
-        type="text"
-        name="middlename"
-        label="Middle Name"
-        size="small"
-        value={state.middlename}
-        onChange={handleInputChange}
-        disabled={disabled}
-      />
-      <TextField
-        InputProps={{
-          style: { height: "27px", fontSize: "14px" },
-        }}
-        sx={{
-          flex: 1,
-          height: "27px",
-          ".MuiFormLabel-root": { fontSize: "14px" },
-          ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-        }}
-        type="text"
-        name="lastname"
-        label="Last Name"
-        size="small"
-        value={state.lastname}
-        onChange={handleInputChange}
-        disabled={disabled}
-        required
-      />
-    </>
-  );
-}
-
-function Company({ state, handleInputChange, disabled }: any) {
-  return (
-    <>
-      <TextField
-        InputProps={{
-          style: { height: "27px", fontSize: "14px" },
-        }}
-        sx={{
-          flex: 1,
-          height: "27px",
-          ".MuiFormLabel-root": { fontSize: "14px" },
-          ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-        }}
-        type="text"
-        name="tin_no"
-        label="TIN NO"
-        size="small"
-        value={state.tin_no}
-        onChange={handleInputChange}
-        disabled={disabled}
-      />
-      <TextField
-        InputProps={{
-          style: { height: "27px", fontSize: "14px" },
-        }}
-        sx={{
-          flex: 1,
-          height: "27px",
-          ".MuiFormLabel-root": { fontSize: "14px" },
-          ".MuiFormLabel-root[data-shrink=false]": { top: "-5px" },
-        }}
-        type="Company"
-        name="company"
-        label="company"
-        size="small"
-        value={state.company}
-        onChange={handleInputChange}
-        disabled={disabled}
-        required
-      />
     </>
   );
 }
