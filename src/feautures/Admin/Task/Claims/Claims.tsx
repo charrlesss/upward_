@@ -3535,7 +3535,6 @@ export function DisplayFile({
     </div>
   );
 }
-
 export function checkFile(newFiles: Array<File>) {
   let isNotExt = false;
   const fileTypes = ["application/pdf", "image/jpg", "image/jpeg", "image/png"];

@@ -34,7 +34,6 @@ const CashDisbursement = lazy(
   () => import("../feautures/Admin/Task/Accounting/CashDisbursement")
 );
 
-
 const CheckPulloutRequest = lazy(
   () => import("../feautures/Admin/Task/Accounting/CheckPulloutRequest")
 );
@@ -158,13 +157,9 @@ const CGLPolicy = lazy(
     )
 );
 
-
-
 export default function Routers() {
   const { user } = useContext(AuthContext);
-  const department = process.env.REACT_APP_DEPARTMENT
-
-
+  const department = process.env.REACT_APP_DEPARTMENT;
 
   const PRODUCTION_REFERENCE = [
     <Route
@@ -249,7 +244,7 @@ export default function Routers() {
       path={`/${department}/dashboard/reference/sub-account`}
       element={<SubAccount />}
     />,
-  
+
     <Route
       key={`/${department}/dashboard/reference/transaction-code`}
       path={`/${department}/dashboard/reference/transaction-code`}
@@ -371,7 +366,7 @@ export default function Routers() {
       path={`/${department}/dashboard/task/accounting/check-pullout-approved`}
       element={<CheckPulloutApproved />}
     />,
- 
+
     <Route
       key={`/${department}/dashboard/task/accounting/check-postponement-request`}
       path={`/${department}/dashboard/task/accounting/check-postponement-request`}
@@ -393,7 +388,7 @@ export default function Routers() {
       element={<NominalClosing />}
     />,
   ];
-  
+
   const CLAIMS_REFERENCE: any = [];
   const CLAIMS_TASK = [
     <Route
@@ -403,15 +398,21 @@ export default function Routers() {
     />,
   ];
   const ADMIN_REFERENCE = [...PRODUCTION_REFERENCE, ...ACCOUNTING_REFERENCE];
-  
+
   const ADMIN_TASK = [...PRODUCTION_TASK, ...ACCOUNTING_TASK, ...CLAIMS_TASK];
-  
+
   const PRODUCTION_ACCOUNTING_REFERENCE = [
     ...PRODUCTION_REFERENCE,
     ...ACCOUNTING_REFERENCE,
   ];
-  const PRODUCTION_ACCOUNTING_TASK = [...PRODUCTION_TASK, ...ACCOUNTING_TASK];
-  
+  const PRODUCTION_ACCOUNTING_TASK = [
+    ...PRODUCTION_TASK,
+    ...ACCOUNTING_TASK,
+
+    // epal
+    ...CLAIMS_TASK,
+  ];
+
   const ACCOUNTING_CHECKS_TASK = [
     <Route
       key={`/${department}/dashboard/task/accounting/warehouse-checks`}
@@ -439,8 +440,6 @@ export default function Routers() {
       element={<ChekPostponementApproved />}
     />,
   ];
-
-
 
   const REF_ROUTE: {
     PRODUCTION_REFERENCE: Array<JSX.Element>;
@@ -528,7 +527,10 @@ export default function Routers() {
           <Route path="/dashboard/help/about" element={<About />} /> */}
         </Route>
 
-        <Route path={`/${department}/dashboard/report`} element={<DisplayReport />} />
+        <Route
+          path={`/${department}/dashboard/report`}
+          element={<DisplayReport />}
+        />
 
         {/* Reports */}
         <Route path={`/${department}/dashboard`} element={<RenderPage />}>
@@ -558,7 +560,10 @@ export default function Routers() {
 
   return (
     <Routes>
-      <Route path={`/${department}/login`} element={<RenderPage withHeader={false} />}>
+      <Route
+        path={`/${department}/login`}
+        element={<RenderPage withHeader={false} />}
+      >
         <Route index element={<LandingPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />

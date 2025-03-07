@@ -254,6 +254,10 @@ export default function Header() {
           path: `/${department.current}/dashboard`,
         },
         {
+          name: "Claim",
+          path: `/${department.current}/dashboard/task/claims/claims`,
+        },
+        {
           name: "Reference",
           subLinks: [
             {

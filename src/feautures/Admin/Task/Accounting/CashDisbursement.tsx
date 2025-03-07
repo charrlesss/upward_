@@ -1095,7 +1095,7 @@ export default function CashDisbursement() {
     closeModal: payToCloseModal,
   } = useUpwardTableModalSearchSafeMode({
     size: "medium",
-    link: "/task/accounting/search-pdc-policy-id",
+    link: "/task/accounting/search-pay-to",
     column: [
       { key: "Type", label: "Type", width: 130 },
       { key: "IDNo", label: "ID No.", width: 150 },
