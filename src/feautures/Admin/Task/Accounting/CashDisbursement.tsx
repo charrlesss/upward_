@@ -603,7 +603,9 @@ export default function CashDisbursement() {
         timer: 1500,
       });
     }
-    if (getTotalDebit !== getTotalCredit) {
+    
+
+    if (getTotalDebit.toFixed(2) !== getTotalCredit.toFixed(2)) {
       return Swal.fire({
         position: "center",
         icon: "warning",
