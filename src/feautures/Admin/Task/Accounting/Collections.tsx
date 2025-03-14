@@ -43,7 +43,6 @@ import { Loading } from "../../../../components/Loading";
 import { formatNumber } from "./ReturnCheck";
 import { format, isValid, parse } from "date-fns";
 
-
 export const debitColumn = [
   { key: "Payment", label: "Payment", flex: 1, width: 170 },
   {
@@ -404,7 +403,7 @@ export default function Collection() {
           dataCollection[i].Payment !== null &&
           dataCollection[i].Payment.toString() !== ""
         ) {
-          console.log(dataCollection[i])
+          console.log(dataCollection[i]);
 
           const isCash = dataCollection[i].Payment.toLowerCase() === "cash";
           debit.push({
@@ -544,24 +543,12 @@ export default function Collection() {
     onSuccess: (response) => {
       const pdfBlob = new Blob([response.data], { type: "application/pdf" });
       const pdfUrl = URL.createObjectURL(pdfBlob);
-      // window.open(pdfUrl);
-      var newTab = window.open();
-      if (newTab) {
-        newTab.document.write("<!DOCTYPE html>");
-        newTab.document.write(
-          "<html><head><title>New Tab with iframe</title></head>"
-        );
-        newTab.document.write(
-          '<body style="width:100vw;height:100vh;padding:0;margin:0;box-sizing:border-box;">'
-        );
-        newTab.document.write(
-          `<iframe style="border:none;outline:none;padding:0;margin:0" src="${pdfUrl}" width="99%" height="99%"></iframe>`
-        );
-
-        newTab.document.write("</body></html>");
-        // Optional: Close the document stream after writing
-        newTab.document.close();
-      }
+      window.open(
+        `/${
+          process.env.REACT_APP_DEPARTMENT
+        }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+        "_blank"
+      );
     },
   });
   function resetCollection() {
@@ -2439,7 +2426,6 @@ const ModalCheck = forwardRef(({ handleOnSave, handleOnClose }: any, ref) => {
                 },
               }}
               input={{
-                
                 type: "date",
                 style: { width: "200px" },
                 defaultValue: format(new Date(), "yyyy-MM-dd"),
@@ -2466,8 +2452,8 @@ const ModalCheck = forwardRef(({ handleOnSave, handleOnClose }: any, ref) => {
                 onKeyDown: (e) => {
                   if (e.code === "NumpadEnter" || e.code === "Enter") {
                     if (handleOnSave) {
-                      if(!validateDate(checkdateRef.current?.value)){
-                        return alert('Not Valid Date!')
+                      if (!validateDate(checkdateRef.current?.value)) {
+                        return alert("Not Valid Date!");
                       }
 
                       handleOnSave();
@@ -2495,8 +2481,8 @@ const ModalCheck = forwardRef(({ handleOnSave, handleOnClose }: any, ref) => {
                 }}
                 onClick={(e) => {
                   if (handleOnSave) {
-                    if(!validateDate(checkdateRef.current?.value)){
-                      return  alert('Not Valid Date!')
+                    if (!validateDate(checkdateRef.current?.value)) {
+                      return alert("Not Valid Date!");
                     }
                     handleOnSave();
                   }

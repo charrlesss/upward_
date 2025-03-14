@@ -257,9 +257,9 @@ export default function GeneralJournal() {
                 JVExp: refExplanation.current?.value,
                 generalJournal,
                 reportTitle:
-                process.env.REACT_APP_DEPARTMENT === "UMIS"
-                  ? "UPWARD MANAGEMENT INSURANCE SERVICES"
-                  : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
+                  process.env.REACT_APP_DEPARTMENT === "UMIS"
+                    ? "UPWARD MANAGEMENT INSURANCE SERVICES"
+                    : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
               });
             }
             wait(100).then(() => {
@@ -520,24 +520,13 @@ export default function GeneralJournal() {
     onSuccess: (response) => {
       const pdfBlob = new Blob([response.data], { type: "application/pdf" });
       const pdfUrl = URL.createObjectURL(pdfBlob);
-      // window.open(pdfUrl);
-      var newTab = window.open();
-      if (newTab) {
-        newTab.document.write("<!DOCTYPE html>");
-        newTab.document.write(
-          "<html><head><title>New Tab with iframe</title></head>"
-        );
-        newTab.document.write(
-          '<body style="width:100vw;height:100vh;padding:0;margin:0;box-sizing:border-box;">'
-        );
-        newTab.document.write(
-          `<iframe style="border:none;outline:none;padding:0;margin:0" src="${pdfUrl}" width="99%" height="99%"></iframe>`
-        );
 
-        newTab.document.write("</body></html>");
-        // Optional: Close the document stream after writing
-        newTab.document.close();
-      }
+      window.open(
+        `/${
+          process.env.REACT_APP_DEPARTMENT
+        }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+        "_blank"
+      );
     },
   });
 
@@ -940,7 +929,7 @@ export default function GeneralJournal() {
   function handleJobs() {
     setOpenJobs((d) => !d);
   }
- 
+
   function onCancel() {
     resetFieldRef();
     resetRowFieldRef();
@@ -1160,7 +1149,7 @@ export default function GeneralJournal() {
           flex: 1,
           padding: "10px",
           background: "#F1F1F1",
-          rowGap:"10px"
+          rowGap: "10px",
         }}
       >
         <div
@@ -1303,7 +1292,7 @@ export default function GeneralJournal() {
             >
               Jobs
             </LoadingButton>
-     
+
             <Button
               disabled={modeDefault}
               id="basic-button"
@@ -1334,9 +1323,9 @@ export default function GeneralJournal() {
                   JVExp: refExplanation.current?.value,
                   generalJournal,
                   reportTitle:
-                  process.env.REACT_APP_DEPARTMENT === "UMIS"
-                    ? "UPWARD MANAGEMENT INSURANCE SERVICES"
-                    : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
+                    process.env.REACT_APP_DEPARTMENT === "UMIS"
+                      ? "UPWARD MANAGEMENT INSURANCE SERVICES"
+                      : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
                 });
               }}
               sx={{
@@ -1352,7 +1341,6 @@ export default function GeneralJournal() {
               Print
             </Button>
           </div>
-         
         </div>
         <div
           style={{
@@ -1442,7 +1430,7 @@ export default function GeneralJournal() {
             width: "100%",
             height: "auto",
             marginTop: "10px",
-          
+
             padding: "15px",
           }}
         >
@@ -1759,11 +1747,11 @@ export default function GeneralJournal() {
             </Button>
           </div>
         </fieldset>
- 
+
         <DataGridViewReact
           containerStyle={{
-            flex:1,
-            height:"auto"
+            flex: 1,
+            height: "auto",
           }}
           ref={table}
           columns={selectedCollectionColumns}
@@ -1826,68 +1814,116 @@ export default function GeneralJournal() {
             }
           }}
         />
-               <div
+        <div
+          style={{
+            fontSize: "13px",
+            border: "1px solid #d4d4d8",
+            width: "100%",
+            display: "flex",
+            columnGap: "50px",
+            height: "30px",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            padding: "0px 10px",
+          }}
+        >
+          <div
             style={{
-              fontSize: "13px",
-              border: "1px solid #d4d4d8",
-              width: "100%",
+              margin: 0,
+              padding: 0,
+              color: "black",
               display: "flex",
-              columnGap: "50px",
-              height: "30px",
-              alignItems: "center",
-              justifyContent: "flex-end",
-              padding:"0px 10px"
+              columnGap: "10px",
+              alignItems: "flex-end",
             }}
           >
-            <div style={{ margin: 0, padding: 0, color: "black" ,display:"flex" , columnGap:"10px" ,alignItems:"flex-end"}}>
-              <div style={{ fontSize: "12px" }}>Total Rows:</div>
-              <div style={{
-                   background:"white",
-                   padding:"0px 10px",
-                   textAlign:"right",
-                   width:"100px",
-                   fontWeight:"bold"
-              }}>{monitoring.totalRow}</div>
-            </div>
-            <div style={{ margin: 0, padding: 0, color: "black" ,display:"flex" , columnGap:"10px" ,alignItems:"flex-end"}}>
-              <div style={{ fontSize: "12px" }}>Total Debit:</div>
-              <div style={{
-                   background:"white",
-                   padding:"0px 10px",
-                   textAlign:"right",
-                   width:"100px",
-                   fontWeight:"bold"
-              }}>{monitoring.totalDebit}</div>
-            </div>
-            <div style={{ margin: 0, padding: 0, color: "black" ,display:"flex" , columnGap:"10px" ,alignItems:"flex-end"}}>
-              <div style={{ fontSize: "12px" }}>Total Credit:</div>
-              <div style={{
-                   background:"white",
-                   padding:"0px 10px",
-                   textAlign:"right",
-                   width:"100px",
-                   fontWeight:"bold"
-              }}>{monitoring.totalCredit}</div>
-            </div>
-            <div style={{ margin: 0, padding: 0, color: "black" ,display:"flex" , columnGap:"10px" ,alignItems:"flex-end"}}>
-              <div style={{ fontSize: "12px" }}>Balance:</div>{" "}
-              <div
-                style={{
-                  color:
-                    parseInt(monitoring.balance.replace(/,/g, "")) !== 0
-                      ? "red"
-                      : "black",
-                      background:"white",
-                      padding:"0px 10px",
-                      textAlign:"right",
-                      width:"100px",
-                      fontWeight:"bold"
-                }}
-              >
-                {monitoring.balance}
-              </div>
+            <div style={{ fontSize: "12px" }}>Total Rows:</div>
+            <div
+              style={{
+                background: "white",
+                padding: "0px 10px",
+                textAlign: "right",
+                width: "100px",
+                fontWeight: "bold",
+              }}
+            >
+              {monitoring.totalRow}
             </div>
           </div>
+          <div
+            style={{
+              margin: 0,
+              padding: 0,
+              color: "black",
+              display: "flex",
+              columnGap: "10px",
+              alignItems: "flex-end",
+            }}
+          >
+            <div style={{ fontSize: "12px" }}>Total Debit:</div>
+            <div
+              style={{
+                background: "white",
+                padding: "0px 10px",
+                textAlign: "right",
+                width: "100px",
+                fontWeight: "bold",
+              }}
+            >
+              {monitoring.totalDebit}
+            </div>
+          </div>
+          <div
+            style={{
+              margin: 0,
+              padding: 0,
+              color: "black",
+              display: "flex",
+              columnGap: "10px",
+              alignItems: "flex-end",
+            }}
+          >
+            <div style={{ fontSize: "12px" }}>Total Credit:</div>
+            <div
+              style={{
+                background: "white",
+                padding: "0px 10px",
+                textAlign: "right",
+                width: "100px",
+                fontWeight: "bold",
+              }}
+            >
+              {monitoring.totalCredit}
+            </div>
+          </div>
+          <div
+            style={{
+              margin: 0,
+              padding: 0,
+              color: "black",
+              display: "flex",
+              columnGap: "10px",
+              alignItems: "flex-end",
+            }}
+          >
+            <div style={{ fontSize: "12px" }}>Balance:</div>{" "}
+            <div
+              style={{
+                color:
+                  parseInt(monitoring.balance.replace(/,/g, "")) !== 0
+                    ? "red"
+                    : "black",
+                background: "white",
+                padding: "0px 10px",
+                textAlign: "right",
+                width: "100px",
+                fontWeight: "bold",
+              }}
+            >
+              {monitoring.balance}
+            </div>
+          </div>
+        </div>
         <Modal open={openJobs} onClose={() => setOpenJobs(false)}>
           <Box
             sx={{

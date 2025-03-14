@@ -481,24 +481,13 @@ export default function PostDateChecks() {
     onSuccess: (response) => {
       const pdfBlob = new Blob([response.data], { type: "application/pdf" });
       const pdfUrl = URL.createObjectURL(pdfBlob);
-      // window.open(pdfUrl);
-      var newTab = window.open();
-      if (newTab) {
-        newTab.document.write("<!DOCTYPE html>");
-        newTab.document.write(
-          "<html><head><title>New Tab with iframe</title></head>"
-        );
-        newTab.document.write(
-          '<body style="width:100vw;height:100vh;padding:0;margin:0;box-sizing:border-box;">'
-        );
-        newTab.document.write(
-          `<iframe style="border:none;outline:none;padding:0;margin:0" src="${pdfUrl}" width="99%" height="99%"></iframe>`
-        );
 
-        newTab.document.write("</body></html>");
-        // Optional: Close the document stream after writing
-        newTab.document.close();
-      }
+      window.open(
+        `/${
+          process.env.REACT_APP_DEPARTMENT
+        }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+        "_blank"
+      );
     },
   });
   const clickPDCReceipt = () => {
@@ -525,8 +514,9 @@ export default function PostDateChecks() {
   const clickPDCLabeling = () => {
     const state = {
       name: clientnameRef.current?.value,
-      pno: PNoRef.current,
+      pno: pnRef.current?.value,
       ref: refNoRef.current?.value,
+      department: process.env.REACT_APP_DEPARTMENT,
     };
     mutatePrint({
       printOption: "labeling",
@@ -784,8 +774,6 @@ export default function PostDateChecks() {
   }, [handleOnSave]);
 
   const isDisableField = pdcMode === "";
-
- 
 
   return (
     <>
@@ -1690,7 +1678,6 @@ const ModalCheck = forwardRef(
             boxShadow: "3px 6px 32px -7px rgba(0,0,0,0.75)",
           }}
         >
-
           <div
             style={{
               height: "22px",
@@ -1703,7 +1690,6 @@ const ModalCheck = forwardRef(
               cursor: "grab",
             }}
             onMouseDown={handleMouseDown}
-
           >
             <span style={{ fontSize: "13px", fontWeight: "bold" }}>
               Check Details
@@ -1869,7 +1855,6 @@ const ModalCheck = forwardRef(
                       amountRef.current?.focus();
                     }
                   },
-               
                 }}
                 inputRef={checkdateRef}
               />
@@ -1916,9 +1901,9 @@ const ModalCheck = forwardRef(
                       handleOnSave();
                     }
                   },
-                  onFocus:(e)=>{
-                    e.currentTarget.select()
-                  }
+                  onFocus: (e) => {
+                    e.currentTarget.select();
+                  },
                 }}
                 inputRef={_checkcountRef}
               />

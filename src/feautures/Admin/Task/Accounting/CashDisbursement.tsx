@@ -458,28 +458,15 @@ export default function CashDisbursement() {
       );
     },
     onSuccess: (response) => {
-      console.log(response);
 
       const pdfBlob = new Blob([response.data], { type: "application/pdf" });
       const pdfUrl = URL.createObjectURL(pdfBlob);
-      // window.open(pdfUrl);
-      var newTab = window.open();
-      if (newTab) {
-        newTab.document.write("<!DOCTYPE html>");
-        newTab.document.write(
-          "<html><head><title>New Tab with iframe</title></head>"
-        );
-        newTab.document.write(
-          '<body style="width:100vw;height:100vh;padding:0;margin:0;box-sizing:border-box;">'
-        );
-        newTab.document.write(
-          `<iframe style="border:none;outline:none;padding:0;margin:0" src="${pdfUrl}" width="99%" height="99%"></iframe>`
-        );
-
-        newTab.document.write("</body></html>");
-        // Optional: Close the document stream after writing
-        newTab.document.close();
-      }
+      window.open(
+        `/${
+          process.env.REACT_APP_DEPARTMENT
+        }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+        "_blank"
+      );
     },
   });
   function handleVoid() {
@@ -603,7 +590,6 @@ export default function CashDisbursement() {
         timer: 1500,
       });
     }
-    
 
     if (getTotalDebit.toFixed(2) !== getTotalCredit.toFixed(2)) {
       return Swal.fire({
