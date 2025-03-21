@@ -82,11 +82,13 @@ export default function LandingPage() {
           window.localStorage.setItem("__policy__", "COM");
           if (res.data.user.department === "UCSMI") {
             window.localStorage.setItem("__policy_type__", "TEMP");
+            navigate(`/${process.env.REACT_APP_DEPARTMENT}/dashboard/task/accounting/post-date-checks`);
+
           }
           if (res.data.user.department === "UMIS") {
             window.localStorage.setItem("__policy_type__", "REG");
+            navigate(`/${process.env.REACT_APP_DEPARTMENT}/dashboard`);
           }
-          navigate(`/${process.env.REACT_APP_DEPARTMENT}/dashboard`);
         }
       });
     },

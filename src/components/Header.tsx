@@ -248,12 +248,156 @@ export default function Header() {
       },
     ];
     if (user?.userAccess === "PRODUCTION_ACCOUNTING") {
+      if (department.current === "UCSMI") {
+        return setMenuData([
+          {
+            name: "Reference",
+            subLinks: [
+              {
+                name: "Policy Account",
+                path: `/${department.current}/dashboard/reference/policy-account`,
+              },
+              {
+                name: "Bank",
+                path: `/${department.current}/dashboard/reference/bank`,
+              },
+              {
+                name: "Bank Account",
+                path: `/${department.current}/dashboard/reference/bank-account`,
+              },
+              {
+                name: "Booklet",
+                path: `/${department.current}/dashboard/reference/booklet`,
+              },
+              {
+                name: "Chart of Accounts",
+                path: `/${department.current}/dashboard/reference/chart-accounts`,
+              },
+              {
+                name: "Sub Account",
+                path: `/${department.current}/dashboard/reference/sub-account`,
+              },
+              {
+                name: "Transaction Code",
+                path: `/${department.current}/dashboard/reference/transaction-code`,
+              },
+              {
+                name: "ID Entry",
+                path: `/${department.current}/dashboard/reference/id-entry`,
+              },
+              {
+                name: "Subline",
+                path: `/${department.current}/dashboard/reference/subline`,
+              },
+              {
+                name: "Rates",
+                path: `/${department.current}/dashboard/reference/rates`,
+              },
+              {
+                name: "CTPL",
+                path: `/${department.current}/dashboard/reference/ctpl`,
+              },
+              {
+                name: "Petty Cash Transaction",
+                path: `/${department.current}/dashboard/reference/petty-cash-transaction`,
+              },
+              {
+                name: "Mortgagee",
+                path: `/${department.current}/dashboard/reference/mortgagee`,
+              },
+            ],
+          },
+          {
+            name: "Production",
+            subLinks: [
+              {
+                name: "Policy",
+                path: `/${department.current}/dashboard/task/production/policy/`,
+              },
+              {
+                name: "Statement of Account",
+                path: `/${department.current}/dashboard/task/production/statement-of-account`,
+              },
+            ],
+          },
+          {
+            name: "Accounting",
+            subLinks: [
+              {
+                name: "Post Dated Checks",
+                path: `/${department.current}/dashboard/task/accounting/post-date-checks`,
+              },
+              {
+                name: "Collections",
+                path: `/${department.current}/dashboard/task/accounting/collections`,
+              },
+              {
+                name: "Deposit",
+                path: `/${department.current}/dashboard/task/accounting/deposit`,
+              },
+              {
+                name: "Return Check",
+                path: `/${department.current}/dashboard/task/accounting/return-check`,
+              },
+              {
+                name: "Petty Cash",
+                path: `/${department.current}/dashboard/task/accounting/petty-cash`,
+              },
+              {
+                name: "General Journal",
+                path: `/${department.current}/dashboard/task/accounting/general-journal`,
+              },
+              {
+                name: "Cash Disbursement",
+                path: `/${department.current}/dashboard/task/accounting/cash-disbursement`,
+              },
+              {
+                name: "Treasury",
+                path: `/${department.current}/dashboard/task/accounting/warehouse-checks`,
+              },
+              {
+                name: "Check Pullout Request",
+                path: `/${department.current}/dashboard/task/accounting/check-pullout-request`,
+              },
+              {
+                name: "Check Pullout Approved",
+                path: `/${department.current}/dashboard/task/accounting/check-pullout-approved`,
+              },
+              {
+                name: "Check Postponement Request",
+                path: `/${department.current}/dashboard/task/accounting/check-postponement-request`,
+              },
+              {
+                name: "Check Postponement Approved",
+                path: `/${department.current}/dashboard/task/accounting/check-postponement-approved`,
+              },
+            ],
+          },
+          {
+            name: "Production Report",
+            subLinks: [
+              {
+                name: "Production Report",
+                path: `/${department.current}/dashboard/reports/production/production-report`,
+              },
+              {
+                name: "Renewal Notice",
+                path: `/${department.current}/dashboard/reports/production/renewal-notice`,
+              },
+            ],
+          },
+          {
+            name: "Accounting Report",
+            path: `/${department.current}/dashboard/reports/accounting/accounting-reports`,
+          },
+        ]);
+      }
       return setMenuData([
         {
           name: "Dashboard",
           path: `/${department.current}/dashboard`,
         },
-       
+
         {
           name: "Reference",
           subLinks: [
@@ -396,6 +540,129 @@ export default function Header() {
         },
       ]);
     } else if (user?.userAccess === "ACCOUNTING") {
+      if (department.current === "UCSMI") {
+        return setMenuData([
+          {
+            name: "Reference",
+            subLinks: [
+              {
+                name: "Policy Account",
+                path: `/${department.current}/dashboard/reference/policy-account`,
+              },
+              {
+                name: "Bank",
+                path: `/${department.current}/dashboard/reference/bank`,
+              },
+              {
+                name: "Bank Account",
+                path: `/${department.current}/dashboard/reference/bank-account`,
+              },
+              {
+                name: "Booklet",
+                path: `/${department.current}/dashboard/reference/booklet`,
+              },
+              {
+                name: "Chart of Accounts",
+                path: `/${department.current}/dashboard/reference/chart-accounts`,
+              },
+              {
+                name: "Sub Account",
+                path: `/${department.current}/dashboard/reference/sub-account`,
+              },
+              {
+                name: "Transaction Code",
+                path: `/${department.current}/dashboard/reference/transaction-code`,
+              },
+              {
+                name: "ID Entry",
+                path: `/${department.current}/dashboard/reference/id-entry`,
+              },
+              {
+                name: "Subline",
+                path: `/${department.current}/dashboard/reference/subline`,
+              },
+              {
+                name: "Rates",
+                path: `/${department.current}/dashboard/reference/rates`,
+              },
+              {
+                name: "CTPL",
+                path: `/${department.current}/dashboard/reference/ctpl`,
+              },
+              {
+                name: "Petty Cash Transaction",
+                path: `/${department.current}/dashboard/reference/petty-cash-transaction`,
+              },
+              {
+                name: "Mortgagee",
+                path: `/${department.current}/dashboard/reference/mortgagee`,
+              },
+            ],
+          },
+          {
+            name: "Accounting",
+            subLinks: [
+              {
+                name: "Post Dated Checks",
+                path: `/${department.current}/dashboard/task/accounting/post-date-checks`,
+              },
+              {
+                name: "Collections",
+                path: `/${department.current}/dashboard/task/accounting/collections`,
+              },
+              {
+                name: "Deposit",
+                path: `/${department.current}/dashboard/task/accounting/deposit`,
+              },
+              {
+                name: "Return Check",
+                path: `/${department.current}/dashboard/task/accounting/return-check`,
+              },
+              {
+                name: "Petty Cash",
+                path: `/${department.current}/dashboard/task/accounting/petty-cash`,
+              },
+              {
+                name: "General Journal",
+                path: `/${department.current}/dashboard/task/accounting/general-journal`,
+              },
+              {
+                name: "Cash Disbursement",
+                path: `/${department.current}/dashboard/task/accounting/cash-disbursement`,
+              },
+              {
+                name: "Treasury",
+                path: `/${department.current}/dashboard/task/accounting/warehouse-checks`,
+              },
+              {
+                name: "Check Pullout Request",
+                path: `/${department.current}/dashboard/task/accounting/check-pullout-request`,
+              },
+              {
+                name: "Check Pullout Approved",
+                path: `/${department.current}/dashboard/task/accounting/check-pullout-approved`,
+              },
+              {
+                name: "Check Postponement Request",
+                path: `/${department.current}/dashboard/task/accounting/check-postponement-request`,
+              },
+              {
+                name: "Check Postponement Approved",
+                path: `/${department.current}/dashboard/task/accounting/check-postponement-approved`,
+              },
+            ],
+          },
+          {
+            name: "Accounting Report",
+            subLinks: [
+              {
+                name: "Accounting Report",
+                path: `/${department.current}/dashboard/reports/accounting/accounting-reports`,
+              },
+            ],
+          },
+        ]);
+      }
       return setMenuData([
         {
           name: "Dashboard",
@@ -408,7 +675,10 @@ export default function Header() {
               name: "Policy Account",
               path: `/${department.current}/dashboard/reference/policy-account`,
             },
-            { name: "Bank", path: `/${department.current}/dashboard/reference/bank` },
+            {
+              name: "Bank",
+              path: `/${department.current}/dashboard/reference/bank`,
+            },
             {
               name: "Bank Account",
               path: `/${department.current}/dashboard/reference/bank-account`,
@@ -437,8 +707,14 @@ export default function Header() {
               name: "Subline",
               path: `/${department.current}/dashboard/reference/subline`,
             },
-            { name: "Rates", path: `/${department.current}/dashboard/reference/rates` },
-            { name: "CTPL", path: `/${department.current}/dashboard/reference/ctpl` },
+            {
+              name: "Rates",
+              path: `/${department.current}/dashboard/reference/rates`,
+            },
+            {
+              name: "CTPL",
+              path: `/${department.current}/dashboard/reference/ctpl`,
+            },
             {
               name: "Petty Cash Transaction",
               path: `/${department.current}/dashboard/reference/petty-cash-transaction`,
@@ -550,6 +826,97 @@ export default function Header() {
         },
       ]);
     } else if (user?.userAccess === "PRODUCTION") {
+      if (department.current === "UCSMI") {
+        return setMenuData([
+          {
+            name: "Dashboard",
+            path: `/${department.current}/dashboard`,
+          },
+          {
+            name: "Reference",
+            subLinks: [
+              {
+                name: "Policy Account",
+                path: `/${department.current}/dashboard/reference/policy-account`,
+              },
+              {
+                name: "Bank",
+                path: `/${department.current}/dashboard/reference/bank`,
+              },
+              {
+                name: "Bank Account",
+                path: `/${department.current}/dashboard/reference/bank-account`,
+              },
+              {
+                name: "Booklet",
+                path: `/${department.current}/dashboard/reference/booklet`,
+              },
+              {
+                name: "Chart of Accounts",
+                path: `/${department.current}/dashboard/reference/chart-accounts`,
+              },
+              {
+                name: "Sub Account",
+                path: `/${department.current}/dashboard/reference/sub-account`,
+              },
+              {
+                name: "Transaction Code",
+                path: `/${department.current}/dashboard/reference/transaction-code`,
+              },
+              {
+                name: "ID Entry",
+                path: `/${department.current}/dashboard/reference/id-entry`,
+              },
+              {
+                name: "Subline",
+                path: `/${department.current}/dashboard/reference/subline`,
+              },
+              {
+                name: "Rates",
+                path: `/${department.current}/dashboard/reference/rates`,
+              },
+              {
+                name: "CTPL",
+                path: `/${department.current}/dashboard/reference/ctpl`,
+              },
+              {
+                name: "Petty Cash Transaction",
+                path: `/${department.current}/dashboard/reference/petty-cash-transaction`,
+              },
+              {
+                name: "Mortgagee",
+                path: `/${department.current}/dashboard/reference/mortgagee`,
+              },
+            ],
+          },
+          {
+            name: "Production",
+            subLinks: [
+              {
+                name: "Policy",
+                path: `/${department.current}/dashboard/task/production/policy/`,
+              },
+              {
+                name: "Statement of Account",
+                path: `/${department.current}/dashboard/task/production/statement-of-account`,
+              },
+            ],
+          },
+          {
+            name: "Production Report",
+            subLinks: [
+              {
+                name: "Production Report",
+                path: `/${department.current}/dashboard/reports/production/production-report`,
+              },
+              {
+                name: "Renewal Notice",
+                path: `/${department.current}/dashboard/reports/production/renewal-notice`,
+              },
+            ],
+          },
+        ]);
+      }
       return setMenuData([
         {
           name: "Dashboard",
@@ -562,7 +929,10 @@ export default function Header() {
               name: "Policy Account",
               path: `/${department.current}/dashboard/reference/policy-account`,
             },
-            { name: "Bank", path: `/${department.current}/dashboard/reference/bank` },
+            {
+              name: "Bank",
+              path: `/${department.current}/dashboard/reference/bank`,
+            },
             {
               name: "Bank Account",
               path: `/${department.current}/dashboard/reference/bank-account`,
@@ -591,8 +961,14 @@ export default function Header() {
               name: "Subline",
               path: `/${department.current}/dashboard/reference/subline`,
             },
-            { name: "Rates", path: `/${department.current}/dashboard/reference/rates` },
-            { name: "CTPL", path: `/${department.current}/dashboard/reference/ctpl` },
+            {
+              name: "Rates",
+              path: `/${department.current}/dashboard/reference/rates`,
+            },
+            {
+              name: "CTPL",
+              path: `/${department.current}/dashboard/reference/ctpl`,
+            },
             {
               name: "Petty Cash Transaction",
               path: `/${department.current}/dashboard/reference/petty-cash-transaction`,
@@ -628,17 +1004,6 @@ export default function Header() {
               path: `/${department.current}/dashboard/reports/production/renewal-notice`,
             },
           ],
-        },
-      ]);
-    } else if (user?.userAccess === "CLAIMS") {
-      return setMenuData([
-        {
-          name: "Dashboard",
-          path: `/${department.current}/dashboard`,
-        },
-        {
-          name: "Claim",
-          path: `/${department.current}/dashboard/task/claims/claims`,
         },
       ]);
     } else {

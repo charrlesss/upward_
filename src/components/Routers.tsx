@@ -4,6 +4,8 @@ import { AuthContext } from "./AuthContext";
 import { RenderPage } from "./Layout";
 import Layout from "./Layout";
 import NotFoundPage from "../feautures/NotFoundPage";
+
+const NotFoundPageLazy = lazy(() => import("../feautures/NotFoundPage"));
 const MasterAdminDashboard = lazy(
   () => import("../feautures/MasterAdminDashboard")
 );
@@ -110,10 +112,6 @@ const StatementAccount = lazy(
   () => import("../feautures/Admin/Task/Production/StatementAccount")
 );
 
-const About = lazy(() => import("../feautures/Admin/Help/About"));
-const Index = lazy(() => import("../feautures/Admin/Help/Index"));
-const Search = lazy(() => import("../feautures/Admin/Help/Search"));
-const Content = lazy(() => import("../feautures/Admin/Help/Content"));
 const VehiclePolicy = lazy(
   () =>
     import(
@@ -509,7 +507,14 @@ export default function Routers() {
     return (
       <Routes>
         <Route path={`/${department}/dashboard`} element={<Layout />}>
-          <Route path={`/${department}/dashboard`} element={<Dashboard />} />
+          {department === "UMIS" ? (
+            <Route path={`/${department}/dashboard`} element={<Dashboard />} />
+          ) : (
+            <Route
+              path={`/${department}/dashboard`}
+              element={<NotFoundPageLazy isLazy={true} />}
+            />
+          )}
 
           {/* Reference */}
           {reference?.length > 0 &&

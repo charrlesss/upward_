@@ -5,7 +5,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../components/AuthContext";
 
-const NotFoundPage = () => {
+const NotFoundPage = ({ isLazy = false }: any) => {
   const { user } = useContext(AuthContext);
 
   const navigate = useNavigate();
@@ -23,8 +23,9 @@ const NotFoundPage = () => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        height: "100vh",
-        width: "100vw",
+        height: isLazy ? "100%" : "100vh",
+        width: isLazy ? "100%" : "100vw",
+        flex: 1,
       }}
     >
       <div style={{ textAlign: "center" }}>
@@ -46,7 +47,14 @@ const NotFoundPage = () => {
             if (user?.is_master_admin) {
               return navigate("/master-admin-dashboard");
             }
-            return navigate(`/${process.env.REACT_APP_DEPARTMENT}/dashboard`);
+
+            if (process.env.REACT_APP_DEPARTMENT === "UCSMI") {
+              return navigate(
+                `/${process.env.REACT_APP_DEPARTMENT}/dashboard/task/accounting/post-date-checks`
+              );
+            } else {
+              return navigate(`/${process.env.REACT_APP_DEPARTMENT}/dashboard`);
+            }
           }}
         >
           {isLoading ? "Loading" : "Click this button to continue"}

@@ -601,6 +601,7 @@ export default function CashDisbursement() {
       });
     }
     const tableData = tableRef.current.getData();
+    console.log(tableData)
     const cashDisbursement = tableData
       .filter((itm: any) => itm[0] !== "")
       .map((itm: any, idx: any) => {
@@ -619,11 +620,11 @@ export default function CashDisbursement() {
           vatType: itm[11],
           invoice: itm[12],
           TempID: idx,
-          IDNo: itm[14],
-          BranchCode: itm[15],
-          addres: itm[16],
-          subAcct: itm[17],
-          TC_Desc: itm[18],
+          IDNo: itm[13],
+          BranchCode: itm[14],
+          addres: itm[15],
+          subAcct: itm[16],
+          TC_Desc: itm[17],
         };
       });
     if (cashDMode === "update") {

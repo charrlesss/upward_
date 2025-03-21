@@ -349,7 +349,7 @@ export default function GeneralJournal() {
       if (refExplanation.current) {
         refExplanation.current.value = explanation;
       }
-
+      console.log(selected)
       table.current.setDataFormated(selected);
       monitor();
     },

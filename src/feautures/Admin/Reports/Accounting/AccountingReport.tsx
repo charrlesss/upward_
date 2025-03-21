@@ -56,7 +56,7 @@ export default function AccountingReport() {
 
   return (
     <>
-    <PageHelmet title={buttonList[buttonSelected].label} />
+      <PageHelmet title={buttonList[buttonSelected].label} />
       <div
         style={{
           display: "flex",
@@ -1897,19 +1897,20 @@ function FormFSReport({ link, reportTitle }: any) {
                 e.preventDefault();
               }
             },
-            onChange: (e) => {
+
+            onBlur: (e) => {
               setTitle(
                 generateTitle({
                   cmbformat: formatRef.current?.value,
                   report: reportRef.current?.value,
                   subAccount: subAccountRef.current?.value,
-                  date: validateDate(e.currentTarget.value)
-                    ? new Date(e.currentTarget.value)
-                    : new Date(),
+                  date:
+                    report === "Monthly"
+                      ? format(new Date(e.currentTarget.value), "yyyy-MM")
+                      : format(new Date(e.currentTarget.value), "yyyy-MM-dd"),
                 })
               );
             },
-            onBlur: (e) => {},
             style: { width: "calc(100% - 120px)" },
           }}
           inputRef={dateRef}
@@ -2186,14 +2187,12 @@ function FormAbsDepoReturned({ link, reportTitle }: any) {
                 e.preventDefault();
               }
             },
-            onChange: (e) => {
+            onBlur: (e) => {
               setTitle(
                 generateTitle({
                   report: reportRef.current?.value,
                   subAccount: branchRef.current?.value,
-                  date: validateDate(e.currentTarget.value)
-                    ? new Date(e.currentTarget.value)
-                    : new Date(),
+                  date: e.currentTarget.value,
                 })
               );
             },
@@ -2368,7 +2367,6 @@ function FormPostDatedCheckRegistry() {
       sort: sortRef.current?.value,
       order: orderRef.current?.value,
     });
-
   }
   function generateExcelReport() {
     mutateGenerateExcelReport({
@@ -3253,19 +3251,17 @@ function AgingAccounts({ link, reportTitle }: any) {
                 e.preventDefault();
               }
             },
-            onChange: (e) => {
+
+            onBlur: (e) => {
               setTitle(
                 generateTitle({
                   cmbformat: formatRef.current?.value,
                   report: reportRef.current?.value,
                   subAccount: subAccountRef.current?.value,
-                  date: validateDate(e.currentTarget.value)
-                    ? new Date(e.currentTarget.value)
-                    : new Date(),
+                  date: e.currentTarget.value,
                 })
               );
             },
-            onBlur: (e) => {},
             style: { width: "calc(100% - 120px)" },
           }}
           inputRef={dateRef}
