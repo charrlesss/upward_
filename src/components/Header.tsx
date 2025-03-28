@@ -1039,7 +1039,7 @@ export default function Header() {
               {/* Conditional rendering for click vs link */}
               {menuItem.path ? (
                 <Link
-                  style={{ fontSize: "14px", fontWeight: "bold" }}
+                  style={{ fontSize: "13px", fontWeight: "bold" }}
                   to={menuItem.path}
                 >
                   {menuItem.name}
@@ -1048,7 +1048,7 @@ export default function Header() {
                 <span
                   style={{
                     cursor: "pointer",
-                    fontSize: "14px",
+                    fontSize: "13px",
                     fontWeight: "bold",
                   }}
                   onClick={() => handleClick(menuItem)}

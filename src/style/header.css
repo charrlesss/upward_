@@ -15,8 +15,7 @@ header .header-ch{
 }
 .header-ch:nth-child(2){
     text-align: center;
-    font-size: 14px;
-    font-weight: bold;
+    font-size: 13px;
 }
 .header-ch:nth-child(2) span{
     color: rgb(120, 112, 62);
@@ -59,7 +58,7 @@ header .header-ch{
     padding: 5px 10px;
     display: block;
     width: 100%;
-    font-size: 14px;
+    font-size: 13px;
     text-align: center;
     cursor: pointer;
   }
@@ -112,7 +111,7 @@ header .header-ch{
     margin: 0;
     z-index: 9999;
     width: 300px;
-    font-size: 14px;
+    font-size: 13px;
   }
   
   .main-menu > li:hover .submenu,
