@@ -1043,7 +1043,7 @@ export default function GeneralJournal() {
       a.IDNo,
       (TotalDue - ifnull(b.TotalPaid,0)) as 'Amount',
       c.Mortgagee 
-    from Policy a 
+    from policy a 
       left join (
         select 
           IDNo,
@@ -1051,7 +1051,7 @@ export default function GeneralJournal() {
         from collection 
         group by IDNo
       ) b on b.IDNo = a.PolicyNo 
-      inner join VPolicy c on c.PolicyNo = a.PolicyNo 
+      inner join vpolicy c on c.PolicyNo = a.PolicyNo 
       where
       (TotalDue - ifnull(b.TotalPaid,0)) <> 0 and 
       a.PolicyType = 'TPL' and 

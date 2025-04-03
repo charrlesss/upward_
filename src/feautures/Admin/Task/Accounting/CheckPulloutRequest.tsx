@@ -90,7 +90,7 @@ export default function CheckPulloutRequest() {
 
   const LoadPNNo = useCallback(async () => {
     setPaymentTypeLoading(true);
-    const qry = `SELECT DISTINCT PNo, Name FROM PDC WHERE PDC_Status = 'Stored' order by PNo DESC`;
+    const qry = `SELECT DISTINCT PNo, Name FROM pdc WHERE PDC_Status = 'Stored' order by PNo DESC`;
     const { data: response } = await executeQueryToClientRef.current(qry);
     setPdcAtributeData(response.data);
     setPaymentTypeLoading(false);
@@ -103,7 +103,7 @@ export default function CheckPulloutRequest() {
         SELECT DISTINCT
             (RCPNo)
         FROM
-            PullOut_Request
+            pullOut_request
         WHERE
             Branch = 'HO' AND Status = 'PENDING'
         ORDER BY RCPNo
@@ -141,7 +141,7 @@ export default function CheckPulloutRequest() {
                     ifnull(c.Status,'--') as Status,
                     ifnull(c.RCPNo,'--') as RCPNO
                 FROM
-                    PDC a
+                    pdc a
                     left join pullout_request_details b on a.Check_No = b.CheckNo
 					left join pullout_request c on b.RCPNo = c.RCPNo
                 WHERE
@@ -155,7 +155,7 @@ export default function CheckPulloutRequest() {
             SELECT DISTINCT
                       Check_No
                   FROM
-                      PDC a
+                      pdc a
                       left join pullout_request_details b on a.Check_No = b.CheckNo    
                       left join pullout_request c on b.RCPNo = c.RCPNo   
                   WHERE
@@ -273,7 +273,7 @@ export default function CheckPulloutRequest() {
                                                 Select 
                                                         *,
                                                         (selecT distinct(name) from pdc where PNo =a.PNNo) as 'Name'
-                                                    From PullOut_Request a 
+                                                    From pullOut_request a 
                                                     Where Branch = 'HO' and Status = 'PENDING' and rcpno = '${e.currentTarget.value}' 
                                                     Order by RCPNo
                                                 `;

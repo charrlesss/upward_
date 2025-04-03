@@ -339,9 +339,9 @@ export default function PettyCash() {
               Chart_Account.Acct_Title,
               Chart_Account.Short
           FROM
-              Petty_Log
+             petty_log as  Petty_Log
                   LEFT JOIN
-              Chart_Account ON Petty_Log.Acct_Code = Chart_Account.Acct_Code
+             chart_account as  Chart_Account ON Petty_Log.Acct_Code = Chart_Account.Acct_Code
           WHERE
               Petty_Log.Acct_Code = '${transactionCodeRef.current}'
       `);

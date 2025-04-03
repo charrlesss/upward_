@@ -156,8 +156,8 @@ export default function Collection() {
                date_FORMAT(Check_Date,'%b. %d, %Y') AS Check_Date,
               FORMAT(CAST(REPLACE(Check_Amnt, ',', '') AS DECIMAL(10,2)), 2) AS Amount,
               CONCAT(Bank.Bank, '/', Branch) AS Bank_Branch
-            FROM PDC 
-            left join Bank  on Bank.Bank_Code = PDC.Bank
+            FROM pdc as PDC 
+            left join bank as Bank  on Bank.Bank_Code = PDC.Bank
             WHERE (
               Check_No LIKE '%${search}%' 
               OR PDC.Bank  LIKE '%${search}%' 
@@ -177,12 +177,12 @@ export default function Collection() {
               Check_No, 
               Check_Date, 
               Check_Amnt, 
-              Bank.Bank as Bank, 
-              CONCAT(Bank.Bank, '/', Branch)  AS BName, 
+              bank.Bank as Bank, 
+              CONCAT(bank.Bank, '/', Branch)  AS BName, 
               Branch, 
               Remarks 
-            FROM PDC 
-            LEFT JOIN Bank ON PDC.Bank = Bank.Bank_Code
+            FROM pdc 
+            LEFT JOIN bank  ON pdc.Bank = bank.Bank_Code
             WHERE PNo = '${pnClientRef.current.value}' AND Check_No = '${rowItm[0]}'`);
 
             const checkDetails = dt?.data.data[0];
@@ -591,7 +591,7 @@ export default function Collection() {
       );
     } else {
       const dd = await executeQueryToClient(
-        `select * from Transaction_Code LEFT JOIN Chart_Account ON Transaction_Code.Acct_Code = Chart_Account.Acct_Code WHERE Code = 'CSH'`
+        `select * from transaction_code LEFT JOIN chart_account ON transaction_code.Acct_Code = chart_account.Acct_Code WHERE Code = 'CSH'`
       );
 
       const data = {
@@ -692,7 +692,7 @@ export default function Collection() {
         );
       } else {
         const dd = await executeQueryToClient(
-          `select * from Transaction_Code LEFT JOIN Chart_Account ON Transaction_Code.Acct_Code = Chart_Account.Acct_Code WHERE Code = 'CHK'`
+          `select * from transaction_code LEFT JOIN chart_account ON transaction_code.Acct_Code = chart_account.Acct_Code WHERE Code = 'CHK'`
         );
         const data = {
           Payment: "Check",
