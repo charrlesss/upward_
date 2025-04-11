@@ -662,6 +662,8 @@ export default function MSPRPolicy() {
             disabled={mode === ""}
             ref={_policyPremiumRef}
             onComputation={(refs: any) => {
+              let percentLocGovTax = parseFloat(refs.localGovTaxRef.current.value)
+
               let txtPremiumI = parseFloat(
                 refs.sectionIRef.current?.value.toString().replace(/,/g, "")
               );
@@ -676,7 +678,7 @@ export default function MSPRPolicy() {
 
               let txtVat = txtPremium * 0.12;
               let txtDocStamp = txtPremium * 0.125;
-              let txtLocGovTax = txtPremium * 0.0075;
+              let txtLocGovTax = txtPremium * percentLocGovTax;
               let txtTotalDue =
                 txtPremium + txtVat + txtDocStamp + txtLocGovTax;
 

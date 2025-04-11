@@ -1407,7 +1407,7 @@ const ModalReturnCheckEntries = forwardRef(
       mutationKey: "load-details",
       mutationFn: async (variable: any) =>
         await myAxios.post(
-          `/task/accounting//return-check/load-entries`,
+          `/task/accounting/return-check/load-entries`,
           variable,
           {
             headers: {

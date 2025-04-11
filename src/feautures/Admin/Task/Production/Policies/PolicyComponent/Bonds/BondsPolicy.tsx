@@ -231,7 +231,7 @@ export default function BondsPolicy() {
               selected.OPosition;
           }
 
-          // periiod insurance
+          // period insurance
           if (_policyInformationRef.current.getRefs().biddingDateRef.current) {
             _policyInformationRef.current.getRefs().biddingDateRef.current.value =
               format(new Date(selected.BidDate), "yyyy-MM-dd");
@@ -750,6 +750,8 @@ export default function BondsPolicy() {
             disabled={mode === ""}
             ref={_policyPremiumRef}
             onComputation={(refs: any) => {
+              let percentLocGovTax = parseFloat(refs.localGovTaxRef.current.value)
+
               const txtInsured = parseFloat(
                 refs.insuredValueRef.current?.value.toString().replace(/,/g, "")
               );
@@ -766,7 +768,7 @@ export default function BondsPolicy() {
               let txtPremium = txtInsured * (txtPercent / 100);
               let txtVat = txtPremium * 0.12;
               let txtDocStamp = txtPremium * 0.125;
-              let txtLocGovTax = txtPremium * 0.0075;
+              let txtLocGovTax = txtPremium * percentLocGovTax;
 
               let txtTotalDue =
                 txtPremium +
@@ -1756,6 +1758,9 @@ const PolicyPremium = forwardRef((props: any, ref) => {
       }
       if (principalRef.current) {
         principalRef.current.value = "0.00";
+      }
+      if (totalDueRef.current) {
+        totalDueRef.current.value = "0.00";
       }
     },
     refEnableDisable: (disabled: boolean) => {},

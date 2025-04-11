@@ -12,7 +12,6 @@ import {
 import { useMutation, useQuery } from "react-query";
 import { AuthContext } from "../../../../components/AuthContext";
 import { Button } from "@mui/material";
-import useQueryModalTable from "../../../../hooks/useQueryModalTable";
 import LoadingButton from "@mui/lab/LoadingButton";
 import AddIcon from "@mui/icons-material/Add";
 import SaveIcon from "@mui/icons-material/Save";

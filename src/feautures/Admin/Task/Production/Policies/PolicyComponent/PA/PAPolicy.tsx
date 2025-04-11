@@ -532,10 +532,11 @@ export default function PAPolicy() {
               agentOpenModal(input);
             }}
             onComputation={(refs: any) => {
+              let percentLocGovTax = parseFloat(refs.localGovTaxRef.current.value)
               let txtPremium = parseFloat((refs.netPremiumRef.current?.value || 0).toString().replace(/,/g,''))
               let vat = txtPremium * 0.12;
               let docStamp = txtPremium * 0.125;
-              let locGovTax = txtPremium * 0.0075;
+              let locGovTax = txtPremium * percentLocGovTax;
               let totalDue = txtPremium + vat + docStamp + locGovTax;
 
               if(refs.vatRef.current){

@@ -208,33 +208,27 @@ export default function PAPolicy() {
               );
           }
           if (
-            _policyInformationRef.current.getRefs().premisesOperationsRef.current
+            _policyInformationRef.current.getRefs().premisesOperationsRef
+              .current
           ) {
             _policyInformationRef.current.getRefs().premisesOperationsRef.current.value =
               selected.Location;
           }
 
-          if (
-            _policyInformationRef.current.getRefs().addressRef.current
-          ) {
+          if (_policyInformationRef.current.getRefs().addressRef.current) {
             _policyInformationRef.current.getRefs().addressRef.current.value =
               selected.address;
           }
 
-          if (
-            _policyInformationRef.current.getRefs().blPremium.current
-          ) {
+          if (_policyInformationRef.current.getRefs().blPremium.current) {
             _policyInformationRef.current.getRefs().blPremium.current.value =
               selected.LimitA;
           }
 
-          if (
-            _policyInformationRef.current.getRefs().pdPremium.current
-          ) {
+          if (_policyInformationRef.current.getRefs().pdPremium.current) {
             _policyInformationRef.current.getRefs().pdPremium.current.value =
               selected.LimitB;
           }
-
 
           // premuim
           if (_policyInformationRef.current.getRefs().netPremiumRef.current) {
@@ -245,16 +239,32 @@ export default function PAPolicy() {
           }
 
           if (_policyInformationRef.current.getRefs().vatRef.current) {
-            _policyInformationRef.current.getRefs().vatRef.current.value = formatNumber(parseFloat((selected.Vat || 0).toString().replace(/,/g,'')) ) 
+            _policyInformationRef.current.getRefs().vatRef.current.value =
+              formatNumber(
+                parseFloat((selected.Vat || 0).toString().replace(/,/g, ""))
+              );
           }
           if (_policyInformationRef.current.getRefs().docstampRef.current) {
-            _policyInformationRef.current.getRefs().docstampRef.current.value = formatNumber(parseFloat((selected.DocStamp || 0).toString().replace(/,/g,'')) ) 
+            _policyInformationRef.current.getRefs().docstampRef.current.value =
+              formatNumber(
+                parseFloat(
+                  (selected.DocStamp || 0).toString().replace(/,/g, "")
+                )
+              );
           }
           if (_policyInformationRef.current.getRefs()._localGovTaxRef.current) {
-            _policyInformationRef.current.getRefs()._localGovTaxRef.current.value = formatNumber(parseFloat((selected.LGovTax || 0).toString().replace(/,/g,'')) ) 
+            _policyInformationRef.current.getRefs()._localGovTaxRef.current.value =
+              formatNumber(
+                parseFloat((selected.LGovTax || 0).toString().replace(/,/g, ""))
+              );
           }
           if (_policyInformationRef.current.getRefs().totalDueRef.current) {
-            _policyInformationRef.current.getRefs().totalDueRef.current.value = formatNumber(parseFloat((selected.TotalDue || 0).toString().replace(/,/g,'')) ) 
+            _policyInformationRef.current.getRefs().totalDueRef.current.value =
+              formatNumber(
+                parseFloat(
+                  (selected.TotalDue || 0).toString().replace(/,/g, "")
+                )
+              );
           }
 
           // wait(100).then(() => {
@@ -265,6 +275,7 @@ export default function PAPolicy() {
         }
       },
     });
+
   const {
     UpwardTableModalSearch: ClientUpwardTableModalSearch,
     openModal: clientOpenModal,
@@ -544,9 +555,13 @@ export default function PAPolicy() {
                 .toString()
                 .replace(/,/g, "")
             );
+
+           
+
+            let percentLocGovTax = parseFloat(refs.localGovTaxRef.current.value)
             let vat = txtPremium * 0.12;
             let docStamp = txtPremium * 0.125;
-            let locGovTax = txtPremium * 0.0075;
+            let locGovTax = txtPremium * percentLocGovTax;
             let totalDue = txtPremium + vat + docStamp + locGovTax;
 
             if (refs.vatRef.current) {
@@ -609,36 +624,36 @@ const PolicyInformation = forwardRef((props: any, ref) => {
   useImperativeHandle(ref, () => ({
     getRefsValue: () => {
       return {
-        cumputationButtonRef  :cumputationButtonRef.current?.value,
-        clientIDRef:clientIDRef.current?.value,
-        clientNameRef:clientNameRef.current?.value,
-        clientAddressRef:clientAddressRef.current?.value,
-        agentIdRef:agentIdRef.current?.value,
-        agentNameRef:agentNameRef.current?.value,
-        agentCommisionRef:agentCommisionRef.current?.value,
-        saleOfficerRef:saleOfficerRef.current?.value,
-        _accountRef:_accountRef.current?.value,
-        accountRef:accountRef.current?.value,
-        policyNoRef:policyNoRef.current?.value,
-        dateFromRef:dateFromRef.current?.value,
-        dateToRef:dateToRef.current?.value,
-        dateIssuedRef:dateIssuedRef.current?.value,
-        sumInsuredRef:sumInsuredRef.current?.value,
-        premisesOperationsRef:premisesOperationsRef.current?.value,
-        addressRef:addressRef.current?.value,
-        blPremium:blPremium.current?.value,
-        pdPremium:pdPremium.current?.value,
-        netPremiumRef:netPremiumRef.current?.value,
-        vatRef:vatRef.current?.value,
-        docstampRef:docstampRef.current?.value,
-        localGovTaxRef:localGovTaxRef.current?.value,
-        _localGovTaxRef:_localGovTaxRef.current?.value,
-        totalDueRef:totalDueRef.current?.value,
+        cumputationButtonRef: cumputationButtonRef.current?.value,
+        clientIDRef: clientIDRef.current?.value,
+        clientNameRef: clientNameRef.current?.value,
+        clientAddressRef: clientAddressRef.current?.value,
+        agentIdRef: agentIdRef.current?.value,
+        agentNameRef: agentNameRef.current?.value,
+        agentCommisionRef: agentCommisionRef.current?.value,
+        saleOfficerRef: saleOfficerRef.current?.value,
+        _accountRef: _accountRef.current?.value,
+        accountRef: accountRef.current?.value,
+        policyNoRef: policyNoRef.current?.value,
+        dateFromRef: dateFromRef.current?.value,
+        dateToRef: dateToRef.current?.value,
+        dateIssuedRef: dateIssuedRef.current?.value,
+        sumInsuredRef: sumInsuredRef.current?.value,
+        premisesOperationsRef: premisesOperationsRef.current?.value,
+        addressRef: addressRef.current?.value,
+        blPremium: blPremium.current?.value,
+        pdPremium: pdPremium.current?.value,
+        netPremiumRef: netPremiumRef.current?.value,
+        vatRef: vatRef.current?.value,
+        docstampRef: docstampRef.current?.value,
+        localGovTaxRef: localGovTaxRef.current?.value,
+        _localGovTaxRef: _localGovTaxRef.current?.value,
+        totalDueRef: totalDueRef.current?.value,
       };
     },
     getRefs: () => {
       return {
-        cumputationButtonRef      ,
+        cumputationButtonRef,
         clientIDRef,
         clientNameRef,
         clientAddressRef,
@@ -694,7 +709,6 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       if (policyNoRef.current) {
         policyNoRef.current.value = "";
       }
-    
 
       if (dateFromRef.current) {
         dateFromRef.current.value = format(new Date(), "yyyy-MM-dd");
@@ -724,7 +738,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       if (blPremium.current) {
         blPremium.current.value = "0.00";
       }
-      
+
       if (netPremiumRef.current) {
         netPremiumRef.current.value = "0.00";
       }
@@ -1313,7 +1327,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
               style: { width: "calc(100% - 150px)" },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  premisesOperationsRef.current?.focus()
+                  premisesOperationsRef.current?.focus();
                 }
               },
             }}
@@ -1339,7 +1353,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
               style: { width: "calc(100% - 150px)" },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  addressRef.current?.focus()
+                  addressRef.current?.focus();
                 }
               },
             }}
@@ -1365,8 +1379,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
               style: { width: "calc(100% - 150px)" },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  blPremium.current?.focus()
-
+                  blPremium.current?.focus();
                 }
               },
             }}
@@ -1391,7 +1404,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
               style: { width: "calc(100% - 150px)" },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  pdPremium.current?.focus()
+                  pdPremium.current?.focus();
                 }
               },
             }}
@@ -1416,8 +1429,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
               style: { width: "calc(100% - 150px)" },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  netPremiumRef.current?.focus()
-
+                  netPremiumRef.current?.focus();
                 }
               },
             }}
@@ -1485,7 +1497,6 @@ const PolicyInformation = forwardRef((props: any, ref) => {
                       _localGovTaxRef,
                       totalDueRef,
                     });
-                    
                   }
                 },
               }}
@@ -1514,7 +1525,6 @@ const PolicyInformation = forwardRef((props: any, ref) => {
                     _localGovTaxRef,
                     totalDueRef,
                   });
-                  
                 }}
               >
                 <CalculateIcon />
