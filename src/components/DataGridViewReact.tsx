@@ -561,6 +561,7 @@ const RowComponent = forwardRef(
             >
               {
                 <input
+                  type={isValidDateStrict(rowItm[colIdx]) ? "date" : "text"}
                   readOnly={true}
                   value={rowItm[colIdx]}
                   style={{
@@ -747,7 +748,6 @@ const ActionModal = forwardRef(
     ) : null;
   }
 );
-
 export const DataGridViewMultiSelectionReact = forwardRef(
   (
     {
@@ -1192,6 +1192,11 @@ export const DataGridViewMultiSelectionReact = forwardRef(
                         >
                           {
                             <input
+                              type={
+                                isValidDateStrict(rowItm[colIdx])
+                                  ? "date"
+                                  : "text"
+                              }
                               readOnly={true}
                               value={rowItm[colIdx]}
                               style={{
@@ -1279,7 +1284,6 @@ export const DataGridViewMultiSelectionReact = forwardRef(
     );
   }
 );
-
 let dataCache: any = [];
 let searchInputValueCache = "";
 export const useUpwardTableModalSearch = ({
@@ -1403,7 +1407,7 @@ export const useUpwardTableModalSearch = ({
         ></div>
 
         <div
-        ref={modalRef}
+          ref={modalRef}
           style={{
             background: "#F1F1F1",
             width: customWidth
@@ -1433,10 +1437,8 @@ export const useUpwardTableModalSearch = ({
               position: "relative",
               alignItems: "center",
               cursor: "grab",
-
             }}
             onMouseDown={handleMouseDown}
-
           >
             <span style={{ fontSize: "13px", fontWeight: "bold" }}>Search</span>
             <button
@@ -1561,7 +1563,6 @@ export const useUpwardTableModalSearch = ({
     UpwardTableModalSearch,
   };
 };
-
 let _dataCache: any = [];
 let _searchInputValueCache = "";
 export const useUpwardTableModalSearchSafeMode = ({
@@ -1628,6 +1629,7 @@ export const useUpwardTableModalSearchSafeMode = ({
           },
         })
         .then((response) => {
+          console.log(response);
           setData(response.data?.data);
           setIsLoading(false);
         })
@@ -1876,3 +1878,15 @@ export const useUpwardTableModalSearchSafeMode = ({
     searchInputRef,
   };
 };
+
+function isValidDateStrict(dateString: any) {
+  const regex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!regex.test(dateString)) return false;
+
+  const date = new Date(dateString);
+  return (
+    date instanceof Date &&
+    !isNaN(date as any) &&
+    date.toISOString().slice(0, 10) === dateString
+  );
+}

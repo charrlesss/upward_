@@ -1204,7 +1204,7 @@ export default function GeneralJournal() {
             {modeDefault && (
               <Button
                 sx={{
-                  height: "30px",
+                  height: "22px",
                   fontSize: "11px",
                 }}
                 variant="contained"
@@ -1220,7 +1220,7 @@ export default function GeneralJournal() {
             )}
             <LoadingButton
               sx={{
-                height: "30px",
+                height: "22px",
                 fontSize: "11px",
               }}
               loading={loadingGeneralJournalMutate}
@@ -1234,7 +1234,7 @@ export default function GeneralJournal() {
             {(modeAdd || modeUpdate) && (
               <LoadingButton
                 sx={{
-                  height: "30px",
+                  height: "22px",
                   fontSize: "11px",
                 }}
                 variant="contained"
@@ -1262,7 +1262,7 @@ export default function GeneralJournal() {
             )}
             <LoadingButton
               sx={{
-                height: "30px",
+                height: "22px",
                 fontSize: "11px",
                 background: deepOrange[500],
                 ":hover": {
@@ -1279,7 +1279,7 @@ export default function GeneralJournal() {
             </LoadingButton>
             <LoadingButton
               sx={{
-                height: "30px",
+                height: "22px",
                 fontSize: "11px",
                 background: brown[500],
                 ":hover": {
@@ -1329,7 +1329,7 @@ export default function GeneralJournal() {
                 });
               }}
               sx={{
-                height: "30px",
+                height: "22px",
                 fontSize: "11px",
                 color: "white",
                 backgroundColor: grey[600],

@@ -24,6 +24,7 @@ interface TextInputProps {
   onIconClick?: React.MouseEventHandler<HTMLDivElement> | undefined;
   disableIcon?: boolean;
   containerStyle?: CSSProperties;
+  containerClassName?:string
 }
 
 interface TextAreaPrps {
@@ -209,11 +210,13 @@ export function TextInput({
   disableIcon = false,
   containerStyle,
   onIconClick = (e) => {},
+  containerClassName
 }: TextInputProps) {
   const id = useId();
 
   return (
     <div
+    className={containerClassName}
       style={{
         display: "flex",
         alignItems: "center",

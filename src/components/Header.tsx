@@ -7,6 +7,10 @@ import { useQuery } from "react-query";
 import { wait } from "../lib/wait";
 import Swal from "sweetalert2";
 import axios, { AxiosInstance } from "axios";
+import MenuIcon from "@mui/icons-material/Menu";
+import { IconButton } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import { Loading } from "./Loading";
 
 async function Logout(myAxios: AxiosInstance, user: User | null) {
   return await myAxios.get("logout", {
@@ -26,6 +30,8 @@ export default function Header() {
   const [menuData, setMenuData] = useState<Array<any>>([]);
   const location = useLocation();
   const navigate = useNavigate();
+
+  const [showSidebar, setShowSidebar] = useState(false);
 
   const { refetch, isLoading } = useQuery({
     queryKey: "logout",
@@ -94,6 +100,13 @@ export default function Header() {
   const handleSubLinkClick = () => {
     // Close submenu after clicking any sublink
     setOpenMenu(null);
+  };
+
+  const handleMobileClick = (menuItem: any, e: any) => {
+    if (!menuItem.path && menuItem.subLinks) {
+      // Toggle submenu display on click
+      setOpenMenu(openMenu === menuItem.name ? null : menuItem.name);
+    }
   };
 
   useEffect(() => {
@@ -1031,53 +1044,55 @@ export default function Header() {
   }, []);
 
   return (
-    <header>
-      <nav ref={menuRef} className="menu header-ch">
-        <ul className="main-menu">
-          {menuData.map((menuItem: any, index: any) => (
-            <li key={index} onMouseEnter={() => handleMouseEnter(menuItem)}>
-              {/* Conditional rendering for click vs link */}
-              {menuItem.path ? (
-                <Link
-                  style={{ fontSize: "13px", fontWeight: "bold" }}
-                  to={menuItem.path}
-                >
-                  {menuItem.name}
-                </Link>
-              ) : (
-                <span
-                  style={{
-                    cursor: "pointer",
-                    fontSize: "13px",
-                    fontWeight: "bold",
-                  }}
-                  onClick={() => handleClick(menuItem)}
-                >
-                  {menuItem.name}
-                </span>
-              )}
+    <>
+      {isLoading && <Loading />}
+      <header id="desk-header">
+        <nav ref={menuRef} className="menu header-ch">
+          <ul className="main-menu">
+            {menuData.map((menuItem: any, index: any) => (
+              <li key={index} onMouseEnter={() => handleMouseEnter(menuItem)}>
+                {/* Conditional rendering for click vs link */}
+                {menuItem.path ? (
+                  <Link
+                    style={{ fontSize: "13px", fontWeight: "bold" }}
+                    to={menuItem.path}
+                  >
+                    {menuItem.name}
+                  </Link>
+                ) : (
+                  <span
+                    style={{
+                      cursor: "pointer",
+                      fontSize: "13px",
+                      fontWeight: "bold",
+                    }}
+                    onClick={() => handleClick(menuItem)}
+                  >
+                    {menuItem.name}
+                  </span>
+                )}
 
-              {/* Show submenu based on hover or click */}
-              {menuItem.subLinks && openMenu === menuItem.name && (
-                <ul className="submenu">
-                  {menuItem.subLinks.map((subLink: any, subIndex: any) => (
-                    <li
-                      key={subIndex}
-                      style={{
-                        background:
-                          subLink.path === location.pathname ? "#555" : "",
-                      }}
-                    >
-                      <Link to={subLink.path} onClick={handleSubLinkClick}>
-                        {subLink.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </li>
-          ))}
-          {/* {user?.username === "gina"
+                {/* Show submenu based on hover or click */}
+                {menuItem.subLinks && openMenu === menuItem.name && (
+                  <ul className="submenu">
+                    {menuItem.subLinks.map((subLink: any, subIndex: any) => (
+                      <li
+                        key={subIndex}
+                        style={{
+                          background:
+                            subLink.path === location.pathname ? "#555" : "",
+                        }}
+                      >
+                        <Link to={subLink.path} onClick={handleSubLinkClick}>
+                          {subLink.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ))}
+            {/* {user?.username === "gina"
             ? user?.userAccess !== "PRODUCTION" &&
               user?.userAccess !== "CLAIMS" && (
                 <li>
@@ -1094,63 +1109,207 @@ export default function Header() {
                 </li>
               )
             : null} */}
-        </ul>
-      </nav>
+          </ul>
+        </nav>
 
-      <div
-        className="header-ch"
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          alignItems: "center",
-          columnGap: "10px",
-        }}
-      >
-        <div className="profile-sub-menu">
-          <span>{user?.department}</span>
-        </div>
         <div
-          ref={menuUserRef}
+          className="header-ch"
           style={{
-            position: "relative",
             display: "flex",
+            justifyContent: "flex-end",
             alignItems: "center",
+            columnGap: "10px",
           }}
         >
-          <AccountCircle
-            color="info"
+          <div className="profile-sub-menu">
+            <span>{user?.department}</span>
+          </div>
+          <div
+            ref={menuUserRef}
+            style={{
+              position: "relative",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <AccountCircle
+              color="info"
+              sx={{
+                cursor: "pointer",
+              }}
+              onClick={() => {
+                setOpenUserMenu((d) => !d);
+              }}
+            />
+            {openUserMenu && (
+              <ul className="user-menu">
+                <li>
+                  <span>Profile</span>
+                </li>
+                <li>
+                  <span
+                    onClick={() => {
+                      handleLogout();
+                    }}
+                  >
+                    Logout
+                  </span>
+                </li>
+              </ul>
+            )}
+          </div>
+          <Clock />
+        </div>
+      </header>
+
+      <header className="mobile-header">
+        <IconButton
+          onClick={() => {
+            setShowSidebar(true);
+          }}
+        >
+          <MenuIcon />
+        </IconButton>
+        <div
+          className="header-ch"
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
+            columnGap: "10px",
+          }}
+        >
+          <div className="profile-sub-menu">
+            <span>{user?.department}</span>
+          </div>
+          <div
+            ref={menuUserRef}
+            style={{
+              position: "relative",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <AccountCircle
+              color="info"
+              sx={{
+                cursor: "pointer",
+              }}
+              onClick={() => {
+                setOpenUserMenu((d) => !d);
+              }}
+            />
+            {openUserMenu && (
+              <ul className="user-menu">
+                <li>
+                  <span>Profile</span>
+                </li>
+                <li>
+                  <span
+                    onClick={() => {
+                      handleLogout();
+                    }}
+                  >
+                    Logout
+                  </span>
+                </li>
+              </ul>
+            )}
+          </div>
+          <Clock />
+        </div>
+      </header>
+      {showSidebar && (
+        <div
+          className="sidebar-shadow"
+          onClick={() => setShowSidebar(false)}
+        ></div>
+      )}
+      {showSidebar && (
+        <div className="sidebar mh">
+          <IconButton
             sx={{
-              cursor: "pointer",
+              position: "absolute",
+              top: "0px",
+              right: "5px",
             }}
             onClick={() => {
-              setOpenUserMenu((d) => !d);
+              setShowSidebar(false);
             }}
-          />
-          {openUserMenu && (
-            <ul className="user-menu">
-              <li>
-                <span>Profile</span>
-              </li>
-              <li>
-                <span
-                  onClick={() => {
-                    handleLogout();
+          >
+            <CloseIcon />
+          </IconButton>
+          <nav ref={menuRef} className="menu header-ch">
+            <ul className="main-menu mobile">
+              {menuData.map((menuItem: any, index: any) => (
+                <li
+                  key={index}
+                  onMouseEnter={() => handleMouseEnter(menuItem)}
+                  style={{
+                    padding: "5px 0px",
+                    background:
+                      window.location.pathname === menuItem.path
+                        ? "#e5e5e7"
+                        : "transparent",
                   }}
                 >
-                  Logout
-                </span>
-              </li>
+                  {/* Conditional rendering for click vs link */}
+                  {menuItem.path ? (
+                    <Link
+                      style={{ fontSize: "14px", fontWeight: "bold" }}
+                      to={menuItem.path}
+                      onClick={(e) => {
+                        setShowSidebar(false);
+                        document
+                          .querySelectorAll(".main-menu.mobile li")
+                          .forEach((li) => {
+                            li.classList.remove("active");
+                          });
+                        e.currentTarget.parentElement?.classList.add("active");
+                      }}
+                    >
+                      {menuItem.name}
+                    </Link>
+                  ) : (
+                    <span
+                      style={{
+                        cursor: "pointer",
+                        fontSize: "14px",
+                        fontWeight: "bold",
+                        color:"rgb(58, 58, 58)"
+                      }}
+                      onClick={(e) => handleMobileClick(menuItem, e)}
+                    >
+                      {menuItem.name}
+                    </span>
+                  )}
+
+                  {/* Show submenu based on hover or click */}
+                  {menuItem.subLinks && openMenu === menuItem.name && (
+                    <ul className="submenu">
+                      {menuItem.subLinks.map((subLink: any, subIndex: any) => (
+                        <li
+                          key={subIndex}
+                          style={{
+                            background:
+                              subLink.path === location.pathname ? "#555" : "",
+                          }}
+                        >
+                          <Link to={subLink.path} onClick={handleSubLinkClick}>
+                            {subLink.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              ))}
+            
             </ul>
-          )}
-        </div>
-        <Clock />
-      </div>
-      {isLoading && (
-        <div className="loading-component">
-          <div className="loader"></div>
+          </nav>
         </div>
       )}
-    </header>
+    </>
   );
 }
 

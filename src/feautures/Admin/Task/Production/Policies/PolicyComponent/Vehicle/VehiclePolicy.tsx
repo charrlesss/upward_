@@ -127,14 +127,14 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
     },
     onSuccess(response) {
       wait(100).then(() => {
-        if(subAccountRef_.current)
-        subAccountRef_.current.setDataSource(response.data?.data);
+        if (subAccountRef_.current)
+          subAccountRef_.current.setDataSource(response.data?.data);
         wait(100).then(() => {
           if (subAccountRef.current) subAccountRef.current.value = "HO";
         });
       });
     },
-    refetchOnWindowFocus:false
+    refetchOnWindowFocus: false,
   });
   const {
     UpwardTableModalSearch: PolicySearchUpwardTableModalSearch,
@@ -535,7 +535,9 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           >
             Policy Premium
           </Button>
- {isLoading ? <>Laoding...</> :
+          {isLoading ? (
+            <>Laoding...</>
+          ) : (
             <SelectInput
               ref={subAccountRef_}
               label={{
@@ -558,8 +560,8 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
               datasource={[]}
               values={"Acronym"}
               display={"Acronym"}
-            />}
-          
+            />
+          )}
         </div>
       </div>
       {policyType === "REG" ? (
@@ -609,7 +611,6 @@ const COMRegular = forwardRef(
       openModal: clientOpenModal,
       closeModal: clientCloseModal,
     } = useUpwardTableModalSearchSafeMode({
-      
       link: "/task/production/search-client-by-id-or-name",
       column: [
         { key: "IDNo", label: "ID No", width: 120 },
@@ -2076,7 +2077,7 @@ const COMTemporary = forwardRef(
           }
         });
       },
-      refetchOnWindowFocus:false
+      refetchOnWindowFocus: false,
     });
     useImperativeHandle(ref, () => ({
       handleOnSave: (mode: string) => {
@@ -2089,7 +2090,7 @@ const COMTemporary = forwardRef(
         }
 
         if (mode === "edit") {
-          console.log(_policyInformationRef.current.getRefsValue())
+          console.log(_policyInformationRef.current.getRefsValue());
           codeCondfirmationAlert({
             isUpdate: true,
             cb: (userCodeConfirmation) => {
@@ -3891,15 +3892,15 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
 
   useImperativeHandle(ref, () => ({
     getRefsValue: () => {
-      if(policy === 'TPL'){
-        if(bodyInjuryRef.current){
-          bodyInjuryRef.current.value = '0.00'
+      if (policy === "TPL") {
+        if (bodyInjuryRef.current) {
+          bodyInjuryRef.current.value = "0.00";
         }
-        if(propertyDamageRef.current){
-          propertyDamageRef.current.value = '0.00'
+        if (propertyDamageRef.current) {
+          propertyDamageRef.current.value = "0.00";
         }
-        if(personalAccidentRef.current){
-          personalAccidentRef.current.value = '0.00'
+        if (personalAccidentRef.current) {
+          personalAccidentRef.current.value = "0.00";
         }
       }
       return {
@@ -4050,11 +4051,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
     },
     requiredField: () => {
       if (policy === "TPL") {
-        if (premiumPaidRef.current?.value === "0.00") {
-          premiumPaidRef.current.focus();
-          alert("Premium Paid is Required!");
-          return true;
-        } else if (dinomination.current?.value === "") {
+        if (dinomination.current?.value === "") {
           dinomination.current.focus();
           alert("Denomination is Required!");
           return true;
@@ -4074,7 +4071,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
           authorizedRepairLimitRef.current.focus();
           alert("Authorized Repair Limit Required!");
           return true;
-        }  else if (estimatedValueSchedVehicleRef.current?.value === "0.00") {
+        } else if (estimatedValueSchedVehicleRef.current?.value === "0.00") {
           estimatedValueSchedVehicleRef.current.focus();
           alert("Estimated Value of Schedule Vehicle Required!");
           return true;
@@ -5001,7 +4998,7 @@ const PolicyPremium = forwardRef((props: any, ref) => {
       }
     },
     requiredField: () => {
-      if (totalDueRef.current?.value === "0.00") {
+      if (totalDueRef.current?.value === "0.00" && policy === "COM") {
         totalDueRef.current.focus();
         alert("Total Due is Required!");
         return true;

@@ -96,7 +96,7 @@ header .header-ch{
   
   .main-menu > li > a:hover,
   .main-menu > li > span:hover {
-    color: #565656;
+    color: #565656 !important;
   }
   
   /* Submenu styling */

@@ -798,6 +798,7 @@ export default function PostDateChecks() {
         <Loading />
       )}
       <div
+        className="pdc-main"
         style={{
           width: "100%",
           height: "100%",
@@ -806,6 +807,7 @@ export default function PostDateChecks() {
           backgroundColor: "#F1F1F1",
           flexDirection: "column",
           display: "flex",
+          boxSizing: "border-box",
         }}
       >
         <Box
@@ -813,12 +815,7 @@ export default function PostDateChecks() {
             display: "flex",
             alignItems: "center",
             columnGap: "20px",
-            [theme.breakpoints.down("sm")]: {
-              flexDirection: "column",
-              alignItems: "flex-start",
-              flex: 1,
-              marginBottom: "15px",
-            },
+            boxSizing: "border-box",
           })}
         >
           <div
@@ -827,9 +824,12 @@ export default function PostDateChecks() {
               alignItems: "center",
               columnGap: "5px",
               marginBottom: "15px",
+              boxSizing: "border-box",
+              width: "100%",
             }}
           >
             <TextInput
+              containerClassName="pdc-search-input"
               label={{
                 title: "Search: ",
                 style: {
@@ -839,7 +839,7 @@ export default function PostDateChecks() {
                 },
               }}
               input={{
-                className: "search-input-up-on-key-down",
+                className: "search-input-up-on-key-down ",
                 type: "search",
                 onKeyDown: (e) => {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
@@ -857,132 +857,143 @@ export default function PostDateChecks() {
               }}
               inputRef={searchInputRef}
             />
-            {pdcMode === "" && (
-              <Button
+            <div
+              className="pdc-desktop-buttons"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                columnGap: "5px",
+              }}
+            >
+              {pdcMode === "" && (
+                <Button
+                  sx={{
+                    height: "22px",
+                    fontSize: "11px",
+                  }}
+                  variant="contained"
+                  startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+                  id="entry-header-save-button"
+                  color="primary"
+                  onClick={() => {
+                    setPdcMode("add");
+                  }}
+                >
+                  New
+                </Button>
+              )}
+              <LoadingButton
                 sx={{
-                  height: "30px",
+                  height: "22px",
                   fontSize: "11px",
                 }}
+                ref={savePDCButtonRef}
+                id="save-entry-header"
+                color="success"
+                variant="contained"
+                type="submit"
+                onClick={handleOnSave}
+                disabled={pdcMode === ""}
+                loading={loadingAddNew}
+                startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
+              >
+                Save
+              </LoadingButton>
+              {(pdcMode === "add" || pdcMode === "update") && (
+                <Button
+                  sx={{
+                    height: "22px",
+                    fontSize: "11px",
+                  }}
+                  variant="contained"
+                  startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
+                  onClick={() => {
+                    Swal.fire({
+                      title: "Are you sure?",
+                      text: "You won't be able to revert this!",
+                      icon: "warning",
+                      showCancelButton: true,
+                      confirmButtonColor: "#3085d6",
+                      cancelButtonColor: "#d33",
+                      confirmButtonText: "Yes, cancel it!",
+                    }).then((result) => {
+                      if (result.isConfirmed) {
+                        resetPDC();
+                      }
+                    });
+                  }}
+                  color="error"
+                >
+                  Cancel
+                </Button>
+              )}
+              <Button
+                sx={{
+                  height: "22px",
+                  fontSize: "11px",
+                }}
+                disabled={pdcMode === ""}
                 variant="contained"
                 startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
-                id="entry-header-save-button"
-                color="primary"
                 onClick={() => {
-                  setPdcMode("add");
-                }}
-              >
-                New
-              </Button>
-            )}
-            <LoadingButton
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-              }}
-              ref={savePDCButtonRef}
-              id="save-entry-header"
-              color="success"
-              variant="contained"
-              type="submit"
-              onClick={handleOnSave}
-              disabled={pdcMode === ""}
-              loading={loadingAddNew}
-              startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
-            >
-              Save
-            </LoadingButton>
-            {(pdcMode === "add" || pdcMode === "update") && (
-              <Button
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                }}
-                variant="contained"
-                startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
-                onClick={() => {
-                  Swal.fire({
-                    title: "Are you sure?",
-                    text: "You won't be able to revert this!",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#3085d6",
-                    cancelButtonColor: "#d33",
-                    confirmButtonText: "Yes, cancel it!",
-                  }).then((result) => {
-                    if (result.isConfirmed) {
-                      resetPDC();
+                  wait(100).then(() => {
+                    const tableRows = tableRef.current.getDataFormatted();
+                    const getLastCheck_No: any =
+                      tableRows[tableRows.length - 1];
+                    if (modalCheckRef.current.getRefs().checknoRef.current) {
+                      modalCheckRef.current.getRefs().checknoRef.current.value =
+                        incrementCheckNo(getLastCheck_No?.Check_No);
                     }
-                  });
-                }}
-                color="error"
-              >
-                Cancel
-              </Button>
-            )}
-            <Button
-              sx={{
-                height: "30px",
-                fontSize: "11px",
-              }}
-              disabled={pdcMode === ""}
-              variant="contained"
-              startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
-              onClick={() => {
-                wait(100).then(() => {
-                  const tableRows = tableRef.current.getDataFormatted();
-                  const getLastCheck_No: any = tableRows[tableRows.length - 1];
-                  if (modalCheckRef.current.getRefs().checknoRef.current) {
-                    modalCheckRef.current.getRefs().checknoRef.current.value =
-                      incrementCheckNo(getLastCheck_No?.Check_No);
-                  }
-                  tableRef.current.setSelectedRow(null);
-                  tableRef.current.resetCheckBox();
+                    tableRef.current.setSelectedRow(null);
+                    tableRef.current.resetCheckBox();
 
-                  setHasSelectedRow(null);
-                  modalCheckRef.current.getRefs().checknoRef.current?.focus();
-                });
-                modalCheckRef.current?.showModal();
-              }}
-              ref={addRefButton}
-            >
-              Add Check
-            </Button>
-            <div>
-              <Button
-                disabled={pdcMode !== "update"}
-                id="basic-button"
-                aria-controls={open ? "basic-menu" : undefined}
-                aria-haspopup="true"
-                aria-expanded={open ? "true" : undefined}
-                onClick={handleClick}
-                sx={{
-                  height: "30px",
-                  fontSize: "11px",
-                  color: "white",
-                  backgroundColor: grey[600],
-                  "&:hover": {
-                    backgroundColor: grey[700],
-                  },
+                    setHasSelectedRow(null);
+                    modalCheckRef.current.getRefs().checknoRef.current?.focus();
+                  });
+                  modalCheckRef.current?.showModal();
                 }}
+                ref={addRefButton}
               >
-                Print
+                Add Check
               </Button>
-              <Menu
-                id="basic-menu"
-                anchorEl={anchorEl}
-                open={open}
-                onClose={handleClose}
-                MenuListProps={{
-                  "aria-labelledby": "basic-button",
-                }}
-              >
-                <MenuItem onClick={clickPDCReceipt}>PDC Receipt</MenuItem>
-                <MenuItem onClick={clickPDCLabeling}>PDC Labeling</MenuItem>
-              </Menu>
+              <div>
+                <Button
+                  disabled={pdcMode !== "update"}
+                  id="basic-button"
+                  aria-controls={open ? "basic-menu" : undefined}
+                  aria-haspopup="true"
+                  aria-expanded={open ? "true" : undefined}
+                  onClick={handleClick}
+                  sx={{
+                    height: "22px",
+                    fontSize: "11px",
+                    color: "white",
+                    backgroundColor: grey[600],
+                    "&:hover": {
+                      backgroundColor: grey[700],
+                    },
+                  }}
+                >
+                  Print
+                </Button>
+                <Menu
+                  id="basic-menu"
+                  anchorEl={anchorEl}
+                  open={open}
+                  onClose={handleClose}
+                  MenuListProps={{
+                    "aria-labelledby": "basic-button",
+                  }}
+                >
+                  <MenuItem onClick={clickPDCReceipt}>PDC Receipt</MenuItem>
+                  <MenuItem onClick={clickPDCLabeling}>PDC Labeling</MenuItem>
+                </Menu>
+              </div>
             </div>
           </div>
         </Box>
-        <form
+       <form
+          className="pdc-form"
           onKeyDown={(e) => {
             if (e.code === "Enter" || e.code === "NumpadEnter") {
               e.preventDefault();
@@ -993,19 +1004,16 @@ export default function PostDateChecks() {
             marginBottom: "20px",
           }}
         >
-          <Box
-            sx={(theme) => ({
+          <div
+            style={{
               display: "flex",
               columnGap: "15px",
               flexDirection: "row",
-              [theme.breakpoints.down("md")]: {
-                flexDirection: "column",
-                rowGap: "10px",
-              },
-            })}
+            }}
           >
-            <Box
-              sx={{
+            <div
+              className="pdc-form-holder-content"
+              style={{
                 display: "flex",
                 gap: "10px",
                 width: "100%",
@@ -1025,6 +1033,7 @@ export default function PostDateChecks() {
                 }
               >
                 <div
+                className="pdc-form-holder-content-fieldset-div"
                   style={{
                     display: "flex",
                     gap: "15px",
@@ -1063,7 +1072,11 @@ export default function PostDateChecks() {
                           }}
                         />
                       }
-                      disableIcon={isDisableField}
+                      disableIcon={pdcMode !== "add"}
+                      onIconClick={(e) => {
+                        e.preventDefault();
+                        refetchNewRefNumber();
+                      }}
                     />
                   )}
 
@@ -1245,10 +1258,10 @@ export default function PostDateChecks() {
                   </Button>
                 </div>
               </fieldset>
-            </Box>
-          </Box>
-        </form>
-        <DataGridViewReact
+            </div>
+          </div>
+        </form> 
+        {/*   {/* <DataGridViewReact
           containerStyle={{
             flex: 1,
             height: "auto",
@@ -1505,6 +1518,140 @@ export default function PostDateChecks() {
                 </div>
               </div>
             </div>
+          </div>
+        </div> */}
+
+        <div
+          className="pdc-mobile-buttons"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            columnGap: "5px",
+            justifyContent: "center",
+          }}
+        >
+          {pdcMode === "" && (
+            <Button
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+              id="entry-header-save-button"
+              color="primary"
+              onClick={() => {
+                setPdcMode("add");
+              }}
+            >
+              New
+            </Button>
+          )}
+          <LoadingButton
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+            }}
+            ref={savePDCButtonRef}
+            id="save-entry-header"
+            color="success"
+            variant="contained"
+            type="submit"
+            onClick={handleOnSave}
+            disabled={pdcMode === ""}
+            loading={loadingAddNew}
+            startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
+          >
+            Save
+          </LoadingButton>
+          {(pdcMode === "add" || pdcMode === "update") && (
+            <Button
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
+              onClick={() => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, cancel it!",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    resetPDC();
+                  }
+                });
+              }}
+              color="error"
+            >
+              Cancel
+            </Button>
+          )}
+          <Button
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+            }}
+            disabled={pdcMode === ""}
+            variant="contained"
+            startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+            onClick={() => {
+              wait(100).then(() => {
+                const tableRows = tableRef.current.getDataFormatted();
+                const getLastCheck_No: any = tableRows[tableRows.length - 1];
+                if (modalCheckRef.current.getRefs().checknoRef.current) {
+                  modalCheckRef.current.getRefs().checknoRef.current.value =
+                    incrementCheckNo(getLastCheck_No?.Check_No);
+                }
+                tableRef.current.setSelectedRow(null);
+                tableRef.current.resetCheckBox();
+
+                setHasSelectedRow(null);
+                modalCheckRef.current.getRefs().checknoRef.current?.focus();
+              });
+              modalCheckRef.current?.showModal();
+            }}
+            ref={addRefButton}
+          >
+            Add Check
+          </Button>
+          <div>
+            <Button
+              disabled={pdcMode !== "update"}
+              id="basic-button"
+              aria-controls={open ? "basic-menu" : undefined}
+              aria-haspopup="true"
+              aria-expanded={open ? "true" : undefined}
+              onClick={handleClick}
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+                color: "white",
+                backgroundColor: grey[600],
+                "&:hover": {
+                  backgroundColor: grey[700],
+                },
+              }}
+            >
+              Print
+            </Button>
+            <Menu
+              id="basic-menu"
+              anchorEl={anchorEl}
+              open={open}
+              onClose={handleClose}
+              MenuListProps={{
+                "aria-labelledby": "basic-button",
+              }}
+            >
+              <MenuItem onClick={clickPDCReceipt}>PDC Receipt</MenuItem>
+              <MenuItem onClick={clickPDCLabeling}>PDC Labeling</MenuItem>
+            </Menu>
           </div>
         </div>
       </div>

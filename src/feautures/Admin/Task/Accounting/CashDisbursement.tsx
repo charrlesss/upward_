@@ -255,6 +255,7 @@ export default function CashDisbursement() {
       });
     },
   });
+
   const {
     mutate: getSearchSelectedCashDisbursement,
     isLoading: loadingGetSearchSelectedCashDisbursement,
@@ -1227,7 +1228,7 @@ export default function CashDisbursement() {
             {cashDMode === "" && (
               <Button
                 sx={{
-                  height: "30px",
+                  height: "22px",
                   fontSize: "11px",
                 }}
                 variant="contained"
@@ -1243,7 +1244,7 @@ export default function CashDisbursement() {
             )}
             <LoadingButton
               sx={{
-                height: "30px",
+                height: "22px",
                 fontSize: "11px",
               }}
               loading={loadingCashDisbursementMutate}
@@ -1257,7 +1258,7 @@ export default function CashDisbursement() {
             {cashDMode !== "" && (
               <LoadingButton
                 sx={{
-                  height: "30px",
+                  height: "22px",
                   fontSize: "11px",
                 }}
                 variant="contained"
@@ -1285,7 +1286,7 @@ export default function CashDisbursement() {
             )}
             <LoadingButton
               sx={{
-                height: "30px",
+                height: "22px",
                 fontSize: "11px",
                 background: deepOrange[500],
                 ":hover": {
@@ -1307,7 +1308,7 @@ export default function CashDisbursement() {
               aria-haspopup="true"
               onClick={handleClickPrint}
               sx={{
-                height: "30px",
+                height: "22px",
                 fontSize: "11px",
                 color: "white",
                 backgroundColor: grey[600],
@@ -1667,7 +1668,7 @@ export default function CashDisbursement() {
                 style: {
                   fontSize: "12px",
                   fontWeight: "bold",
-                  width: "95px",
+                  width: "105px",
                 },
               }}
               input={{
@@ -1779,7 +1780,7 @@ export default function CashDisbursement() {
                 style: {
                   fontSize: "12px",
                   fontWeight: "bold",
-                  width: "95px",
+                  width: "105px",
                 },
               }}
               input={{
@@ -1898,7 +1899,7 @@ export default function CashDisbursement() {
                 style: {
                   fontSize: "12px",
                   fontWeight: "bold",
-                  width: "95px",
+                  width: "105px",
                 },
               }}
               input={{
@@ -1996,7 +1997,7 @@ export default function CashDisbursement() {
                 style: {
                   fontSize: "12px",
                   fontWeight: "bold",
-                  width: "95px",
+                  width: "105px",
                 },
               }}
               input={{
@@ -2040,6 +2041,8 @@ export default function CashDisbursement() {
           columns={columns}
           height="280px"
           getSelectedItem={(rowItm: any) => {
+            resetRowField();
+
             if (rowItm) {
               if (rowItm[0] === "1.01.10") {
                 if (refCheckNo.current) {

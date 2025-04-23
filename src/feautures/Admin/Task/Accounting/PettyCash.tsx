@@ -5,6 +5,7 @@ import {
   useEffect,
   forwardRef,
   useImperativeHandle,
+  useId,
 } from "react";
 import { Button } from "@mui/material";
 import LoadingButton from "@mui/lab/LoadingButton";
@@ -90,6 +91,7 @@ export default function PettyCash() {
   const explanationRef = useRef<HTMLInputElement>(null);
 
   const accountRef = useRef<HTMLInputElement>(null);
+  const _accountRef = useRef<any>(null);
   const usageRef = useRef<HTMLInputElement>(null);
   const amountRef = useRef<HTMLInputElement>(null);
   const vatRef = useRef<HTMLSelectElement>(null);
@@ -194,17 +196,23 @@ export default function PettyCash() {
       tableRef.current.setDataFormated(loadPettyCash);
     },
   });
-  const { isLoading: laodPettyCashTransaction, data: dataCashTransaction } =
-    useQuery({
-      queryKey: "load-transcation",
-      queryFn: async () =>
-        await myAxios.get(`/task/accounting/load-transcation`, {
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
-        }),
-      refetchOnWindowFocus: false,
-    });
+  const { isLoading: laodPettyCashTransaction } = useQuery({
+    queryKey: "load-transcation",
+    queryFn: async () =>
+      await myAxios.get(`/task/accounting/load-transcation`, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      }),
+
+    onSuccess(res) {
+      wait(100).then(() => {
+        if (_accountRef.current)
+          _accountRef.current.setDataSource(res.data.laodTranscation);
+      });
+    },
+    refetchOnWindowFocus: false,
+  });
 
   function handleOnSave() {
     if (payeeRef.current && payeeRef.current.value === "") {
@@ -290,6 +298,30 @@ export default function PettyCash() {
     }
   }
   async function handleAddTransaction() {
+    if (transactionCodeRef.current === "") {
+      return Swal.fire({
+        position: "center",
+        icon: "warning",
+        title: "Transaction not found!",
+        timer: 1500,
+      }).then(() => {
+        wait(300).then(() => {
+          accountRef.current?.focus();
+        });
+      });
+    }
+    if (transactionShortRef.current === "") {
+      return Swal.fire({
+        position: "center",
+        icon: "warning",
+        title: "Transaction not found!",
+        timer: 1500,
+      }).then(() => {
+        wait(300).then(() => {
+          accountRef.current?.focus();
+        });
+      });
+    }
     if (accountRef.current && accountRef.current.value === "") {
       return Swal.fire({
         position: "center",
@@ -438,7 +470,6 @@ export default function PettyCash() {
     }
     return "0.00";
   }
-
   const {
     UpwardTableModalSearch: PettyCashUpwardTableModalSearch,
     openModal: pettyCashOpenModal,
@@ -475,7 +506,6 @@ export default function PettyCash() {
       }
     },
   });
-
   const {
     UpwardTableModalSearch: ClientUpwardTableModalSearch,
     openModal: clientOpenModal,
@@ -600,7 +630,7 @@ export default function PettyCash() {
           {pettyCashMode === "" && (
             <Button
               sx={{
-                height: "30px",
+                height: "22px",
                 fontSize: "11px",
               }}
               variant="contained"
@@ -615,7 +645,7 @@ export default function PettyCash() {
           )}
           <LoadingButton
             sx={{
-              height: "30px",
+              height: "22px",
               fontSize: "11px",
             }}
             id="save-entry-header"
@@ -632,7 +662,7 @@ export default function PettyCash() {
           {pettyCashMode !== "" && (
             <Button
               sx={{
-                height: "30px",
+                height: "22px",
                 fontSize: "11px",
               }}
               variant="contained"
@@ -705,6 +735,7 @@ export default function PettyCash() {
                   refetchettyCashIdGenerator();
                 }}
                 inputRef={refNoRef}
+                disableIcon={pettyCashMode !== "add"}
               />
             )}
             <TextInput
@@ -803,10 +834,10 @@ export default function PettyCash() {
             {laodPettyCashTransaction ? (
               <LoadingButton loading={laodPettyCashTransaction} />
             ) : (
-              <Autocomplete
-                containerStyle={{
-                  width: "100%",
-                }}
+              <AutoCompletePro
+                ref={_accountRef}
+                inputRef={accountRef}
+                disableInput={isDisableField}
                 label={{
                   title: "Transaction : ",
                   style: {
@@ -815,21 +846,18 @@ export default function PettyCash() {
                     width: "80px",
                   },
                 }}
-                DisplayMember={"Purpose"}
-                DataSource={dataCashTransaction?.data.laodTranscation}
-                disableInput={isDisableField}
-                inputRef={accountRef}
-                input={{
-                  style: {
-                    width: "100%",
-                    flex: 1,
-                  },
-                }}
-                onChange={(selected: any, e: any) => {
-                  if (accountRef.current)
-                    accountRef.current.value = selected.Purpose;
-                  transactionCodeRef.current = selected.Acct_Code;
-                  transactionShortRef.current = selected.Short;
+                onChange={(e: any, selected: any) => {
+                  if (selected) {
+                    if (accountRef.current)
+                      accountRef.current.value = selected.Purpose;
+                    transactionCodeRef.current = selected.Acct_Code;
+                    transactionShortRef.current = selected.Short;
+                  } else {
+                    if (accountRef.current)
+                      accountRef.current.value = e.currentTarget.value;
+                    transactionCodeRef.current = "";
+                    transactionShortRef.current = "";
+                  }
                 }}
                 onKeydown={(e: any) => {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
@@ -837,7 +865,45 @@ export default function PettyCash() {
                     usageRef.current?.focus();
                   }
                 }}
+                containerStyle={{
+                  width: "450px",
+                }}
               />
+              // <Autocomplete
+              //   containerStyle={{
+              //     width: "100%",
+              //   }}
+              //   label={{
+              //     title: "Transaction : ",
+              //     style: {
+              //       fontSize: "12px",
+              //       fontWeight: "bold",
+              //       width: "80px",
+              //     },
+              //   }}
+              //   DisplayMember={"Purpose"}
+              //   DataSource={dataCashTransaction?.data.laodTranscation}
+              //   disableInput={isDisableField}
+              //   inputRef={accountRef}
+              //   input={{
+              //     style: {
+              //       width: "100%",
+              //       flex: 1,
+              //     },
+              //   }}
+              //   onChange={(selected: any, e: any) => {
+              //     if (accountRef.current)
+              //       accountRef.current.value = selected.Purpose;
+              //     transactionCodeRef.current = selected.Acct_Code;
+              //     transactionShortRef.current = selected.Short;
+              //   }}
+              //   onKeydown={(e: any) => {
+              //     if (e.key === "Enter" || e.key === "NumpadEnter") {
+              //       e.preventDefault();
+              //       usageRef.current?.focus();
+              //     }
+              //   }}
+              // />
             )}
             <div
               style={{
@@ -1529,6 +1595,57 @@ export const AutocompleteNumber = forwardRef(
         `}
         </style>
       </div>
+    );
+  }
+);
+
+export const AutoCompletePro = forwardRef(
+  (
+    { containerStyle, label, inputRef, onChange, onKeydown, disableInput }: any,
+    ref
+  ) => {
+    const listid = useId();
+    const [options, setOptions] = useState<Array<any>>([]);
+
+    // Handle selection
+    const handleChange = (e: any) => {
+      const value = e.target.value;
+
+      // Find the matching object
+      const match = options.find((item: any) => item.Purpose === value);
+      onChange(e, match);
+    };
+
+    useImperativeHandle(ref, () => ({
+      setDataSource: (data: Array<any>) => {
+        setOptions(data);
+      },
+    }));
+
+    return (
+      <>
+        <TextInput
+          containerStyle={containerStyle}
+          label={label}
+          input={{
+            disabled: disableInput,
+            list: listid,
+            type: "text",
+            onChange: handleChange,
+            onKeyDown: onKeydown,
+            style: {
+              width: "calc(100% - 80px)",
+            },
+          }}
+          inputRef={inputRef}
+        />
+
+        <datalist id={listid}>
+          {options.map((item: any, index) => (
+            <option key={index} value={item.Purpose} />
+          ))}
+        </datalist>
+      </>
     );
   }
 );

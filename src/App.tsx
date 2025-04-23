@@ -4,6 +4,7 @@ import Routers from "./components/Routers";
 import useAxios from "./hooks/useAxios";
 import { useQuery } from "react-query";
 import { Loading } from "./components/Loading";
+import './style/mobile.view.css'
 
 function App() {
   const [user, setUser] = useState(null);

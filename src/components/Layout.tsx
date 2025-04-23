@@ -1,5 +1,5 @@
-import { Suspense,  } from "react";
-import { Outlet,  } from "react-router-dom";
+import { Suspense } from "react";
+import { Outlet } from "react-router-dom";
 import Box from "@mui/material/Box";
 import CssBaseline from "@mui/material/CssBaseline";
 import "../style/laoding.css";
@@ -40,6 +40,7 @@ export default function Layout() {
         display: "flex",
         flexDirection: "column",
         height: "100vh",
+        boxSizing: "border-box",
       }}
     >
       <CssBaseline />
@@ -53,12 +54,9 @@ export default function Layout() {
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          [theme.breakpoints.down("md")]: {
-            paddingLeft: "300px",
-          },
         })}
       >
-        <Suspense fallback={<Loading/>}>
+        <Suspense fallback={<Loading />}>
           <Outlet />
         </Suspense>
       </Box>
@@ -73,28 +71,26 @@ export function RenderPage({ withHeader = true }: any) {
         display: "flex",
         flexDirection: "column",
         height: "100vh",
+        boxSizing: "border-box",
       }}
     >
       <CssBaseline />
       {withHeader && <Header />}
-        <Box
-          id="page-content"
-          sx={(theme) => ({
-            width: "100%",
-            height: "100%",
-            position: "relative",
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            [theme.breakpoints.down("md")]: {
-              paddingLeft: "300px",
-            },
-          })}
-        >
-          <Suspense fallback={<Loading  />}>
-            <Outlet />
-          </Suspense>
-        </Box>
+      <Box
+        id="page-content"
+        sx={(theme) => ({
+          width: "100%",
+          height: "100%",
+          position: "relative",
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+        })}
+      >
+        <Suspense fallback={<Loading />}>
+          <Outlet />
+        </Suspense>
+      </Box>
     </Box>
   );
 }

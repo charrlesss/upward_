@@ -1287,13 +1287,12 @@ export default function Collection() {
                     }
                   },
                 }}
+                disableIcon={collectionMode !== "add"}
                 inputRef={ornoRef}
                 icon={<RestartAltIcon sx={{ fontSize: "18px" }} />}
                 onIconClick={(e) => {
                   e.preventDefault();
-                  if (faoRef.current) {
-                    refetchNewOR();
-                  }
+                  refetchNewOR();
                 }}
               />
             )}

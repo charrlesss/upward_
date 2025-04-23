@@ -103,7 +103,7 @@ export default function CheckPulloutRequest() {
         SELECT DISTINCT
             (RCPNo)
         FROM
-            pullOut_request
+            pullout_request
         WHERE
             Branch = 'HO' AND Status = 'PENDING'
         ORDER BY RCPNo
@@ -273,7 +273,7 @@ export default function CheckPulloutRequest() {
                                                 Select 
                                                         *,
                                                         (selecT distinct(name) from pdc where PNo =a.PNNo) as 'Name'
-                                                    From pullOut_request a 
+                                                    From pullout_request a 
                                                     Where Branch = 'HO' and Status = 'PENDING' and rcpno = '${e.currentTarget.value}' 
                                                     Order by RCPNo
                                                 `;

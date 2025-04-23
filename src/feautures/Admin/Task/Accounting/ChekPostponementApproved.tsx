@@ -31,7 +31,7 @@ const columns = [
   { key: "OldDepositDate", label: "Old Deposit Date", width: 200 },
   { key: "NewDate", label: "New Deposit Date", width: 200 },
   { key: "Penalty", label: "Penalty", width: 120 },
-  { key: "Datediff", label: "Datediff", width: 120 },
+  { key: "Datediff", label: "Number of Days", width: 120 },
   { key: "Reason", label: "Reason", width: 200 },
 ];
 
@@ -647,7 +647,7 @@ export default function ChekPostponementApproved() {
                 fontWeight: "bold",
               }}
             >
-              Name of Bank && Branch / Date && Time of deposit :
+              Name of Bank & Branch / Date & Time of deposit :
             </label>
             <TextAreaInput
               label={{
