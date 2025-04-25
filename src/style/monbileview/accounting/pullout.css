@@ -1,0 +1,29 @@
+@media (max-width: 768px) {
+  .main {
+    position: relative;
+    box-sizing: border-box;
+    justify-content: flex-start !important;
+    align-items: flex-start !important;
+    overflow: hidden !important;
+  }
+  .content {
+    width: 100% !important;
+    flex: 1 !important;
+    height: 90% !important;
+    box-shadow: none !important;
+  }
+  .custom-input {
+    width: 100% !important;
+    margin-left: 0px !important;
+  }
+  .custom-input label {
+    width: 100px !important;
+    margin: 0 !important;
+  }
+  .custom-input input {
+    width: calc(100% - 100px) !important;
+  }
+  .auto-complete-container{
+    width: 100% !important;
+  }
+}

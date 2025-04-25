@@ -15,6 +15,7 @@ import ReactDOMServer from "react-dom/server";
 import { AuthContext } from "./AuthContext";
 import { Loading } from "./Loading";
 import ReactDOM from "react-dom";
+import '../style/datagridview.css'
 
 export const DataGridViewReact = forwardRef(
   (
@@ -183,6 +184,7 @@ export const DataGridViewReact = forwardRef(
           }
         />
         <div
+        className="table-datagridview-main"
           ref={parentElementRef}
           style={{
             width: "100%",
@@ -1407,6 +1409,7 @@ export const useUpwardTableModalSearch = ({
         ></div>
 
         <div
+          className="modal-table-datagridview"
           ref={modalRef}
           style={{
             background: "#F1F1F1",
@@ -1718,6 +1721,7 @@ export const useUpwardTableModalSearchSafeMode = ({
           ></div>
 
           <div
+            className="modal-table-datagridview"
             ref={modalRef}
             style={{
               background: "#F1F1F1",

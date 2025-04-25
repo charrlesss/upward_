@@ -40,6 +40,7 @@ import {
 } from "../../../../components/DataGridViewReact";
 import { Loading } from "../../../../components/Loading";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
+import "../../../../style/monbileview/accounting/pdc.css";
 
 export const reducer = (state: any, action: any) => {
   switch (action.type) {
@@ -808,6 +809,7 @@ export default function PostDateChecks() {
           flexDirection: "column",
           display: "flex",
           boxSizing: "border-box",
+          marginBottom: "20px",
         }}
       >
         <Box
@@ -992,7 +994,7 @@ export default function PostDateChecks() {
             </div>
           </div>
         </Box>
-       <form
+        <form
           className="pdc-form"
           onKeyDown={(e) => {
             if (e.code === "Enter" || e.code === "NumpadEnter") {
@@ -1033,7 +1035,7 @@ export default function PostDateChecks() {
                 }
               >
                 <div
-                className="pdc-form-holder-content-fieldset-div"
+                  className="pdc-form-holder-content-fieldset-div"
                   style={{
                     display: "flex",
                     gap: "15px",
@@ -1043,12 +1045,13 @@ export default function PostDateChecks() {
                     <LoadingButton loading={newRefNumberLoading} />
                   ) : (
                     <TextInput
+                      containerClassName="pdc-reference-no-input"
                       label={{
-                        title: "Reference No.",
+                        title: "Ref No.",
                         style: {
                           fontSize: "12px",
                           fontWeight: "bold",
-                          width: "100px",
+                          width: "85px",
                         },
                       }}
                       input={{
@@ -1081,12 +1084,13 @@ export default function PostDateChecks() {
                   )}
 
                   <TextInput
+                    containerClassName="pdc-date-input"
                     label={{
                       title: "Date : ",
                       style: {
                         fontSize: "12px",
                         fontWeight: "bold",
-                        width: "50px",
+                        width: "85px",
                       },
                     }}
                     input={{
@@ -1110,7 +1114,7 @@ export default function PostDateChecks() {
                     style: {
                       fontSize: "12px",
                       fontWeight: "bold",
-                      width: "100px",
+                      width: "85px",
                     },
                   }}
                   textarea={{
@@ -1140,24 +1144,28 @@ export default function PostDateChecks() {
                     border: "1px solid #cbd5e1",
                     borderRadius: "5px",
                     flexDirection: "column",
+                    boxSizing: "border-box",
                   } as any
                 }
               >
                 <div
+                  className="pdc-form-holder-content-fieldset-div"
                   style={{
                     width: "100%",
                     flex: 1,
                     display: "flex",
                     gap: "15px",
+                    boxSizing: "border-box",
                   }}
                 >
                   <TextInput
+                    containerClassName="pdc-pn-client-id-input"
                     label={{
                       title: "PN/Client ID : ",
                       style: {
                         fontSize: "12px",
                         fontWeight: "bold",
-                        width: "100px",
+                        width: "85px",
                       },
                     }}
                     input={{
@@ -1190,14 +1198,13 @@ export default function PostDateChecks() {
                     }}
                     disableIcon={isDisableField}
                   />
-
                   <TextInput
                     label={{
                       title: "Branch : ",
                       style: {
                         fontSize: "12px",
                         fontWeight: "bold",
-                        width: "70px",
+                        width: "85px",
                       },
                     }}
                     input={{
@@ -1215,15 +1222,17 @@ export default function PostDateChecks() {
                 </div>
 
                 <div
+                  className="pdc-form-holder-content-fieldset-div"
                   style={{ width: "100%", display: "flex", columnGap: "10px" }}
                 >
                   <TextAreaInput
+                    containerClassName="pdc-client-name-input"
                     label={{
-                      title: "Clients Name : ",
+                      title: "Client Name : ",
                       style: {
                         fontSize: "12px",
                         fontWeight: "bold",
-                        width: "100px",
+                        width: "85px",
                       },
                     }}
                     textarea={{
@@ -1260,8 +1269,8 @@ export default function PostDateChecks() {
               </fieldset>
             </div>
           </div>
-        </form> 
-        {/*   {/* <DataGridViewReact
+        </form>
+        <DataGridViewReact
           containerStyle={{
             flex: 1,
             height: "auto",
@@ -1373,7 +1382,6 @@ export default function PostDateChecks() {
             }
           }}
         />
-
         <div
           style={{
             display: showModal ? "flex" : "none",
@@ -1519,8 +1527,7 @@ export default function PostDateChecks() {
               </div>
             </div>
           </div>
-        </div> */}
-
+        </div>
         <div
           className="pdc-mobile-buttons"
           style={{
@@ -1528,6 +1535,7 @@ export default function PostDateChecks() {
             alignItems: "center",
             columnGap: "5px",
             justifyContent: "center",
+            zIndex: 999,
           }}
         >
           {pdcMode === "" && (
@@ -1618,7 +1626,7 @@ export default function PostDateChecks() {
             }}
             ref={addRefButton}
           >
-            Add Check
+            Check
           </Button>
           <div>
             <Button
@@ -1808,6 +1816,7 @@ const ModalCheck = forwardRef(
           }}
         ></div>
         <div
+          className="modal-add-check"
           ref={modalRef}
           style={{
             height: blick ? "202px" : "200px",
@@ -1861,6 +1870,7 @@ const ModalCheck = forwardRef(
             </button>
           </div>
           <div
+            className="main-content"
             style={{
               flex: 1,
               background: "#F1F1F1",
@@ -1869,6 +1879,7 @@ const ModalCheck = forwardRef(
             }}
           >
             <div
+              className="first-content"
               style={{
                 width: "55%",
                 display: "flex",
@@ -1974,6 +1985,7 @@ const ModalCheck = forwardRef(
               />
             </div>
             <div
+              className="second-content"
               style={{
                 width: "45%",
                 display: "flex",
@@ -2055,6 +2067,7 @@ const ModalCheck = forwardRef(
                 inputRef={_checkcountRef}
               />
               <div
+              className="modal-add-check-buttons"
                 style={{
                   display: "flex",
                   columnGap: "10px",

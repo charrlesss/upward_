@@ -31,6 +31,7 @@ import PageHelmet from "../../../../components/Helmet";
 import SearchIcon from "@mui/icons-material/Search";
 import { useUpwardTableModalSearchSafeMode } from "../../../../components/DataGridViewReact";
 import { formatNumber } from "./ReturnCheck";
+import "../../../../style/monbileview/accounting/deposit.css";
 
 const defaultCashBreakDown = [
   { value1: "1,000.00", value2: "", value3: "0.00" },
@@ -185,7 +186,6 @@ const selectedCollectionColumns = [
   { key: "Short", label: "Short", hide: true },
 ];
 
-
 const selectedCollectionForDeposit = [
   {
     key: "Bank",
@@ -203,7 +203,7 @@ const selectedCollectionForDeposit = [
     width: 300,
     type: "number",
   },
-]
+];
 export const reducer = (state: any, action: any) => {
   switch (action.type) {
     case "UPDATE_FIELD":
@@ -439,7 +439,7 @@ export default function Deposit() {
         const check = res.data.data.checks;
         const cash_breakdown = res.data.data.cash_breakdown;
 
-        console.log(cash_breakdown)
+        console.log(cash_breakdown);
         setCashCollection([]);
         setCheckCollection([]);
         setSelectedRows([]);
@@ -838,11 +838,12 @@ export default function Deposit() {
       <DepositUpwardTableModalSearch />
       <BankUpwardTableModalSearch />
       <div
+        className="main"
         style={{
           display: "flex",
           flexDirection: "column",
           width: "100%",
-          height: "100%",
+          height: "auto",
           flex: 1,
           padding: "5px",
           background: "#F1F1F1",
@@ -857,6 +858,7 @@ export default function Deposit() {
           }}
         >
           <TextInput
+            containerClassName="search-input"
             label={{
               title: "Search: ",
               style: {
@@ -884,82 +886,94 @@ export default function Deposit() {
             }}
             inputRef={inputSearchRef}
           />
-          {disabledFields && (
-            <Button
-              sx={{
-                height: "22px",
-                fontSize: "11px",
-              }}
-              variant="contained"
-              startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
-              id="entry-header-save-button"
-              onClick={() => {
-                setDepositMode("add");
-              }}
-            >
-              New
-            </Button>
-          )}
-          <LoadingButton
-            sx={{
-              height: "22px",
-              fontSize: "11px",
+          <div
+            className="deposit-desktop-buttons"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              columnGap: "10px",
             }}
-            id="save-entry-header"
-            color="primary"
-            variant="contained"
-            type="submit"
-            onClick={handleOnSave}
-            disabled={disabledFields}
-            startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
-            loading={updateDepositMutationLoading || addDepositMutationLoading}
           >
-            Save
-          </LoadingButton>
-          {!disabledFields && (
-            <Button
+            {disabledFields && (
+              <Button
+                sx={{
+                  height: "22px",
+                  fontSize: "11px",
+                }}
+                variant="contained"
+                startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+                id="entry-header-save-button"
+                onClick={() => {
+                  setDepositMode("add");
+                }}
+              >
+                New
+              </Button>
+            )}
+            <LoadingButton
               sx={{
                 height: "22px",
                 fontSize: "11px",
               }}
+              id="save-entry-header"
+              color="primary"
               variant="contained"
-              startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
-              color="error"
-              onClick={() => {
-                Swal.fire({
-                  title: "Are you sure?",
-                  text: "You won't be able to revert this!",
-                  icon: "warning",
-                  showCancelButton: true,
-                  confirmButtonColor: "#3085d6",
-                  cancelButtonColor: "#d33",
-                  confirmButtonText: "Yes, cancel it!",
-                }).then((result) => {
-                  if (result.isConfirmed) {
-                    wait(100).then(() => {
-                      resetTables();
-                      resetRefs();
-                      setTableRowsInputValue(defaultCashBreakDown);
-                      setSelectedRows([]);
-                      setCollectionForDeposit([]);
-                      setSelectedRowsCashIndex([]);
-                      setSelectedRowsCheckedIndex([]);
-
-                      refetchCashCollection();
-                      refetchCheckCollection();
-                      RefetchDepositSlipCode();
-                      setDepositMode("");
-                      goTo(0);
-                    });
-                  }
-                });
-              }}
+              type="submit"
+              onClick={handleOnSave}
+              disabled={disabledFields}
+              startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
+              loading={
+                updateDepositMutationLoading || addDepositMutationLoading
+              }
             >
-              Cancel
-            </Button>
-          )}
+              Save
+            </LoadingButton>
+            {!disabledFields && (
+              <Button
+                sx={{
+                  height: "22px",
+                  fontSize: "11px",
+                }}
+                variant="contained"
+                startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
+                color="error"
+                onClick={() => {
+                  Swal.fire({
+                    title: "Are you sure?",
+                    text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Yes, cancel it!",
+                  }).then((result) => {
+                    if (result.isConfirmed) {
+                      wait(100).then(() => {
+                        resetTables();
+                        resetRefs();
+                        setTableRowsInputValue(defaultCashBreakDown);
+                        setSelectedRows([]);
+                        setCollectionForDeposit([]);
+                        setSelectedRowsCashIndex([]);
+                        setSelectedRowsCheckedIndex([]);
+
+                        refetchCashCollection();
+                        refetchCheckCollection();
+                        RefetchDepositSlipCode();
+                        setDepositMode("");
+                        goTo(0);
+                      });
+                    }
+                  });
+                }}
+              >
+                Cancel
+              </Button>
+            )}
+          </div>
         </div>
         <form
+          className="layer-one"
           onKeyDown={(e) => {
             if (e.code === "Enter" || e.code === "NumpadEnter") {
               e.preventDefault();
@@ -975,6 +989,7 @@ export default function Deposit() {
             "Loading..."
           ) : (
             <TextInput
+              containerClassName="custom-input"
               label={{
                 title: "Slip Code: ",
                 style: {
@@ -998,6 +1013,7 @@ export default function Deposit() {
             />
           )}
           <TextInput
+            containerClassName="custom-input"
             label={{
               title: "Deposit Date: ",
               style: {
@@ -1016,6 +1032,7 @@ export default function Deposit() {
             inputRef={refDateDepo}
           />
           <TextInput
+            containerClassName="custom-input"
             label={{
               title: "Bank Account: ",
               style: {
@@ -1051,8 +1068,8 @@ export default function Deposit() {
             }}
             disableIcon={disabledFields}
           />
-
           <TextInput
+            containerClassName="custom-input"
             label={{
               title: "Account Name: ",
               style: {
@@ -1086,6 +1103,7 @@ export default function Deposit() {
                 setActiveTab(tab.id);
                 setButtonPosition(el.currentTarget.getBoundingClientRect());
               }}
+              className="deposit-buttons"
               style={{
                 width: "auto",
                 fontSize: "11px",
@@ -1202,7 +1220,89 @@ export default function Deposit() {
             ))}
           </div>
         </DepositContext.Provider>
+        <div
+          className="deposit-mobile-buttons"
+          style={{
+            display: "none",
+            alignItems: "center",
+            columnGap: "10px",
+          }}
+        >
+          {disabledFields && (
+            <Button
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+              id="entry-header-save-button"
+              onClick={() => {
+                setDepositMode("add");
+              }}
+            >
+              New
+            </Button>
+          )}
+          <LoadingButton
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+            }}
+            id="save-entry-header"
+            color="primary"
+            variant="contained"
+            type="submit"
+            onClick={handleOnSave}
+            disabled={disabledFields}
+            startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
+            loading={updateDepositMutationLoading || addDepositMutationLoading}
+          >
+            Save
+          </LoadingButton>
+          {!disabledFields && (
+            <Button
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
+              color="error"
+              onClick={() => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, cancel it!",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    wait(100).then(() => {
+                      resetTables();
+                      resetRefs();
+                      setTableRowsInputValue(defaultCashBreakDown);
+                      setSelectedRows([]);
+                      setCollectionForDeposit([]);
+                      setSelectedRowsCashIndex([]);
+                      setSelectedRowsCheckedIndex([]);
 
+                      refetchCashCollection();
+                      refetchCheckCollection();
+                      RefetchDepositSlipCode();
+                      setDepositMode("");
+                      goTo(0);
+                    });
+                  }
+                });
+              }}
+            >
+              Cancel
+            </Button>
+          )}
+        </div>
         {(loadingSearchByDepositSlip ||
           updateDepositMutationLoading ||
           addDepositMutationLoading) && (
@@ -1254,9 +1354,10 @@ function CashCollection() {
       }}
     >
       <DepositTable
+        className="cash-collection"
         containerStyle={{
           flex: 1,
-          height:"100%",
+          height: "100%",
         }}
         disbaleTable={disabledFields}
         ref={cashTable}
@@ -1305,7 +1406,7 @@ function CheckCollection() {
     selectedTable,
     depositMode,
   } = useContext(DepositContext);
- 
+
   let selectedDataTotal = 0;
   return (
     <div
@@ -1317,9 +1418,10 @@ function CheckCollection() {
       }}
     >
       <DepositTable
+        className="check-collection"
         containerStyle={{
           flex: 1,
-          height:"100%",
+          height: "100%",
         }}
         disbaleTable={disabledFields}
         ref={checkTable}
@@ -1387,8 +1489,6 @@ function SelectedCollection() {
     setTotalCheck,
   } = useContext(DepositContext);
 
-  
-
   return (
     <div
       style={{
@@ -1399,9 +1499,10 @@ function SelectedCollection() {
       }}
     >
       <DepositTableSelected
-         containerStyle={{
+        className={"selected-collection"}
+        containerStyle={{
           flex: 1,
-          height:"100%",
+          height: "100%",
         }}
         ref={selectedTable}
         columns={selectedCollectionColumns}
@@ -1518,6 +1619,7 @@ function CollectionForDeposit() {
 
   return (
     <div
+      className="collection-for-deposit"
       style={{
         display: "flex",
         gap: "10px",
@@ -1536,7 +1638,7 @@ function CollectionForDeposit() {
       >
         <legend>Checks</legend>
         <DepositTableSelected
-        
+          className={"collection-for-deposit-table-checks"}
           isTableSelectable={false}
           ref={collectionCheckTable}
           width="100%"
@@ -1766,7 +1868,7 @@ function TrComponent({ value1, value2, value3, idx }: any) {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             });
-            
+
             setInput3(valueFor3);
 
             updateTableRowsInput(
@@ -1822,6 +1924,7 @@ const DepositTable = forwardRef(
       getSelectedItem,
       disbaleTable = false,
       containerStyle,
+      className
     }: any,
     ref
   ) => {
@@ -1833,12 +1936,10 @@ const DepositTable = forwardRef(
 
     const totalRowWidth = column.reduce((a: any, b: any) => a + b.width, 0);
 
-
     const [columnHeader, setColumnHeader] = useState(
       columns.filter((itm: any) => !itm.hide)
     );
     const [hoveredColumn, setHoveredColumn] = useState(null);
-
 
     useEffect(() => {
       if (columns.length > 0) {
@@ -1888,7 +1989,6 @@ const DepositTable = forwardRef(
       },
     }));
 
-
     const startResize = (index: any, e: any) => {
       e.preventDefault();
       e.stopPropagation();
@@ -1897,7 +1997,6 @@ const DepositTable = forwardRef(
       const startWidth = columnHeader[index].width;
 
       const doDrag = (moveEvent: any) => {
-
         const newWidth = startWidth + (moveEvent.clientX - startX);
         const updatedColumns = [...columnHeader];
         updatedColumns[index].width = newWidth > 50 ? newWidth : 50; // Set minimum column width
@@ -1922,6 +2021,7 @@ const DepositTable = forwardRef(
     return (
       <Fragment>
         <div
+        className={className}
           ref={parentElementRef}
           style={{
             width: "100%",
@@ -1984,7 +2084,7 @@ const DepositTable = forwardRef(
                             colItm.type === "number" ? "center" : "left",
                         }}
                       >
-                          <div
+                        <div
                           key={idx}
                           className={` ${
                             hoveredColumn === idx ? `highlight-column` : ""
@@ -2157,7 +2257,8 @@ const DepositTableSelected = forwardRef(
       getSelectedItem,
       disbaleTable = false,
       isTableSelectable = true,
-      containerStyle
+      containerStyle,
+      className,
     }: any,
     ref
   ) => {
@@ -2167,13 +2268,10 @@ const DepositTableSelected = forwardRef(
     const [selectedRow, setSelectedRow] = useState<any>(0);
     const totalRowWidth = column.reduce((a: any, b: any) => a + b.width, 0);
 
-
     const [columnHeader, setColumnHeader] = useState(
       columns.filter((itm: any) => !itm.hide)
     );
     const [hoveredColumn, setHoveredColumn] = useState(null);
-
-
 
     useEffect(() => {
       if (columns.length > 0) {
@@ -2214,7 +2312,6 @@ const DepositTableSelected = forwardRef(
       },
     }));
 
-
     const startResize = (index: any, e: any) => {
       e.preventDefault();
       e.stopPropagation();
@@ -2223,7 +2320,6 @@ const DepositTableSelected = forwardRef(
       const startWidth = columnHeader[index].width;
 
       const doDrag = (moveEvent: any) => {
-
         const newWidth = startWidth + (moveEvent.clientX - startX);
         const updatedColumns = [...columnHeader];
         updatedColumns[index].width = newWidth > 50 ? newWidth : 50; // Set minimum column width
@@ -2248,6 +2344,7 @@ const DepositTableSelected = forwardRef(
     return (
       <Fragment>
         <div
+          className={className}
           ref={parentElementRef}
           style={{
             width: "100%",
@@ -2259,7 +2356,7 @@ const DepositTableSelected = forwardRef(
             boxShadow: `inset -2px -2px 0 #ffffff, 
                       inset 2px 2px 0 #808080`,
             background: "#dcdcdc",
-            ...containerStyle
+            ...containerStyle,
           }}
         >
           <div

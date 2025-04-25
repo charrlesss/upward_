@@ -1,0 +1,131 @@
+.pdc-main .pdc-mobile-buttons {
+  display: none !important;
+}
+@media (max-width: 768px) {
+  .pdc-main {
+    box-sizing: border-box;
+  }
+  .pdc-main .pdc-desktop-buttons {
+    display: none !important;
+  }
+  .pdc-main .pdc-mobile-buttons {
+    display: flex !important;
+  }
+  .pdc-main .pdc-search-input {
+    width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  .pdc-main .pdc-mobile-buttons {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #F1F1F1;
+    padding: 5px 0px;
+
+  }
+  .pdc-main .pdc-form-holder-content {
+    flex-direction: column !important;
+  }
+  .pdc-main
+    .pdc-form-holder-content
+    fieldset:nth-child(1)
+    .pdc-form-holder-content-fieldset-div {
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    row-gap: 5px !important;
+    align-items: flex-start !important;
+  }
+  .pdc-main
+    .pdc-form-holder-content
+    fieldset:nth-child(1)
+    .pdc-form-holder-content-fieldset-div
+    .pdc-reference-no-input
+    input {
+    width: calc(100% - 85px) !important;
+  }
+
+  .pdc-main
+    .pdc-form-holder-content
+    fieldset:nth-child(1)
+    .pdc-form-holder-content-fieldset-div
+    .pdc-date-input
+    input {
+    width: calc(100% - 85px) !important;
+  }
+
+  .pdc-main
+    .pdc-form-holder-content
+    fieldset:nth-child(2)
+    .pdc-form-holder-content-fieldset-div {
+    width: 100% !important;
+    flex: 1 !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    row-gap: 5px !important;
+    align-items: flex-start !important;
+  }
+
+  .pdc-main
+    .pdc-form-holder-content
+    fieldset:nth-child(2)
+    .pdc-form-holder-content-fieldset-div
+    .pdc-pn-client-id-input {
+    width: 100% !important;
+  }
+  .pdc-main
+    .pdc-form-holder-content
+    fieldset:nth-child(2)
+    .pdc-form-holder-content-fieldset-div
+    .pdc-client-name-input {
+    width: 100% !important;
+  }
+
+  .pdc-main
+    .pdc-form-holder-content
+    fieldset:nth-child(2)
+    .pdc-form-holder-content-fieldset-div
+    .pdc-pn-client-id-input
+    input {
+    width: calc(100% - 85px) !important;
+  }
+  .pdc-main
+    .pdc-form-holder-content
+    fieldset:nth-child(2)
+    .pdc-form-holder-content-fieldset-div
+    .pdc-client-name-input
+    textarea {
+    width: calc(100% - 85px) !important;
+  }
+  .modal-add-check {
+    width: 100% !important;
+    height: 80% !important;
+    top: 15px !important;
+    left: 0 !important;
+    transform: none !important;
+  }
+  .modal-add-check  .main-content{
+    flex-direction: column !important;
+  }
+  .modal-add-check  .main-content div:nth-child(1){
+    width: 100% !important;
+  }
+  .modal-add-check  .main-content div:nth-child(1)   div label{
+    width: 90px !important;
+  }
+  .modal-add-check  .main-content div:nth-child(1)   div input{
+    width: calc(100% - 90px) !important;
+  }
+  .modal-add-check  .main-content div:nth-child(1)   div textarea{
+    width: calc(100% - 90px) !important;
+  }
+  .modal-add-check  .main-content div:nth-child(2){
+    width: 100% !important;
+  }
+  .modal-add-check  .main-content div:nth-child(2) .modal-add-check-buttons{
+    position: absolute !important;
+    bottom:  -75px !important;
+    z-index: 99;
+  }
+}

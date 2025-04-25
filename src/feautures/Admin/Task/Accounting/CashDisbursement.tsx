@@ -41,6 +41,7 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import { Loading } from "../../../../components/Loading";
 import SearchIcon from "@mui/icons-material/Search";
+import "../../../../style/monbileview/accounting/cashdisbursement.css";
 
 const initialState = {
   sub_refNo: "",
@@ -459,7 +460,6 @@ export default function CashDisbursement() {
       );
     },
     onSuccess: (response) => {
-
       const pdfBlob = new Blob([response.data], { type: "application/pdf" });
       const pdfUrl = URL.createObjectURL(pdfBlob);
       window.open(
@@ -602,7 +602,7 @@ export default function CashDisbursement() {
       });
     }
     const tableData = tableRef.current.getData();
-    console.log(tableData)
+    console.log(tableData);
     const cashDisbursement = tableData
       .filter((itm: any) => itm[0] !== "")
       .map((itm: any, idx: any) => {
@@ -1156,12 +1156,16 @@ export default function CashDisbursement() {
       <PageHelmet title="Cash Disbursement" />
 
       <div
+        className="main"
         style={{
           background: "#F1F1F1",
           padding: "5px",
           flex: 1,
           display: "flex",
           flexDirection: "column",
+          position: "relative",
+          width: "100%",
+          height: "auto",
         }}
       >
         <div
@@ -1169,6 +1173,7 @@ export default function CashDisbursement() {
             display: "flex",
             alignItems: "center",
             columnGap: "5px",
+            width: "100%",
           }}
         >
           <div
@@ -1176,12 +1181,14 @@ export default function CashDisbursement() {
               display: "flex",
               alignItems: "center",
               columnGap: "5px",
+              width: "100%",
             }}
           >
             {/* {isLoadingSearchCashDisbursement ? (
               <LoadingButton loading={isLoadingSearchCashDisbursement} />
             ) : ( */}
             <TextInput
+              containerClassName="search-input"
               label={{
                 title: "Search: ",
                 style: {
@@ -1225,104 +1232,114 @@ export default function CashDisbursement() {
             />
             {/* )} */}
 
-            {cashDMode === "" && (
-              <Button
-                sx={{
-                  height: "22px",
-                  fontSize: "11px",
-                }}
-                variant="contained"
-                startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
-                id="entry-header-save-button"
-                onClick={() => {
-                  setCashDMode("add");
-                }}
-                color="primary"
-              >
-                New
-              </Button>
-            )}
-            <LoadingButton
-              sx={{
-                height: "22px",
-                fontSize: "11px",
+            <div
+              className="cash-disbursement-desktop-buttons"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                columnGap: "10px",
               }}
-              loading={loadingCashDisbursementMutate}
-              disabled={cashDMode === ""}
-              onClick={handleOnSave}
-              color="success"
-              variant="contained"
             >
-              Save
-            </LoadingButton>
-            {cashDMode !== "" && (
+              {cashDMode === "" && (
+                <Button
+                  sx={{
+                    height: "22px",
+                    fontSize: "11px",
+                  }}
+                  variant="contained"
+                  startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+                  id="entry-header-save-button"
+                  onClick={() => {
+                    setCashDMode("add");
+                  }}
+                  color="primary"
+                >
+                  New
+                </Button>
+              )}
               <LoadingButton
                 sx={{
                   height: "22px",
                   fontSize: "11px",
                 }}
-                variant="contained"
-                startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
-                color="error"
-                onClick={() => {
-                  Swal.fire({
-                    title: "Are you sure?",
-                    text: "You won't be able to revert this!",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#3085d6",
-                    cancelButtonColor: "#d33",
-                    confirmButtonText: "Yes, cancel it!",
-                  }).then((result) => {
-                    if (result.isConfirmed) {
-                      resetAll();
-                    }
-                  });
-                }}
+                loading={loadingCashDisbursementMutate}
                 disabled={cashDMode === ""}
+                onClick={handleOnSave}
+                color="success"
+                variant="contained"
               >
-                Cancel
+                Save
               </LoadingButton>
-            )}
-            <LoadingButton
-              sx={{
-                height: "22px",
-                fontSize: "11px",
-                background: deepOrange[500],
-                ":hover": {
-                  background: deepOrange[600],
-                },
-              }}
-              onClick={handleVoid}
-              loading={loadingVoidCashDisbursement}
-              disabled={cashDMode !== "update"}
-              variant="contained"
-              startIcon={<NotInterestedIcon sx={{ width: 20, height: 20 }} />}
-            >
-              Void
-            </LoadingButton>
-            <LoadingButton
-              loading={isLoadingPrint}
-              disabled={cashDMode !== "update"}
-              id="basic-button"
-              aria-haspopup="true"
-              onClick={handleClickPrint}
-              sx={{
-                height: "22px",
-                fontSize: "11px",
-                color: "white",
-                backgroundColor: grey[600],
-                "&:hover": {
-                  backgroundColor: grey[700],
-                },
-              }}
-            >
-              Print
-            </LoadingButton>
+              {cashDMode !== "" && (
+                <LoadingButton
+                  sx={{
+                    height: "22px",
+                    fontSize: "11px",
+                  }}
+                  variant="contained"
+                  startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
+                  color="error"
+                  onClick={() => {
+                    Swal.fire({
+                      title: "Are you sure?",
+                      text: "You won't be able to revert this!",
+                      icon: "warning",
+                      showCancelButton: true,
+                      confirmButtonColor: "#3085d6",
+                      cancelButtonColor: "#d33",
+                      confirmButtonText: "Yes, cancel it!",
+                    }).then((result) => {
+                      if (result.isConfirmed) {
+                        resetAll();
+                      }
+                    });
+                  }}
+                  disabled={cashDMode === ""}
+                >
+                  Cancel
+                </LoadingButton>
+              )}
+              <LoadingButton
+                sx={{
+                  height: "22px",
+                  fontSize: "11px",
+                  background: deepOrange[500],
+                  ":hover": {
+                    background: deepOrange[600],
+                  },
+                }}
+                onClick={handleVoid}
+                loading={loadingVoidCashDisbursement}
+                disabled={cashDMode !== "update"}
+                variant="contained"
+                startIcon={<NotInterestedIcon sx={{ width: 20, height: 20 }} />}
+              >
+                Void
+              </LoadingButton>
+              <LoadingButton
+                loading={isLoadingPrint}
+                disabled={cashDMode !== "update"}
+                id="basic-button"
+                aria-haspopup="true"
+                onClick={handleClickPrint}
+                sx={{
+                  height: "22px",
+                  fontSize: "11px",
+                  color: "white",
+                  backgroundColor: grey[600],
+                  "&:hover": {
+                    backgroundColor: grey[700],
+                  },
+                }}
+              >
+                Print
+              </LoadingButton>
+            </div>
           </div>
         </div>
         <div style={{ display: "flex", marginBottom: "10px" }}>
           <fieldset
+            className="layer-one"
             style={{
               border: "1px solid #cbd5e1",
               borderRadius: "5px",
@@ -1348,6 +1365,7 @@ export default function CashDisbursement() {
                 <LoadingButton loading={loadingGeneralJournalGenerator} />
               ) : (
                 <TextInput
+                  containerClassName="custom-input"
                   label={{
                     title: "Reference:   CV- ",
                     style: {
@@ -1379,6 +1397,7 @@ export default function CashDisbursement() {
                 />
               )}
               <TextInput
+                containerClassName="custom-input"
                 label={{
                   title: "Date : ",
                   style: {
@@ -1418,6 +1437,7 @@ export default function CashDisbursement() {
               }}
             >
               <TextInput
+                containerClassName="custom-input"
                 label={{
                   title: "Explanation : ",
                   style: {
@@ -1448,6 +1468,7 @@ export default function CashDisbursement() {
                 inputRef={expRef}
               />
               <TextAreaInput
+                containerClassName="custom-input"
                 label={{
                   title: "Particulars : ",
                   style: {
@@ -1480,6 +1501,7 @@ export default function CashDisbursement() {
             </div>
           </fieldset>
           <fieldset
+            className="desktop-monitoring"
             style={{
               border: "1px solid #cbd5e1",
               borderRadius: "5px",
@@ -1607,6 +1629,7 @@ export default function CashDisbursement() {
           </fieldset>
         </div>
         <fieldset
+          className="layer-two"
           style={{
             border: "1px solid #cbd5e1",
             borderRadius: "5px",
@@ -1618,12 +1641,14 @@ export default function CashDisbursement() {
           }}
         >
           <div
+            className="layer-two-main-div-container"
             style={{
               display: "flex",
               gap: "40px",
             }}
           >
             <TextInput
+              containerClassName="custom-input"
               label={{
                 title: "Code : ",
                 style: {
@@ -1663,6 +1688,7 @@ export default function CashDisbursement() {
               disableIcon={isDisableField}
             />
             <TextInput
+              containerClassName="custom-input"
               label={{
                 title: "Account Name : ",
                 style: {
@@ -1685,6 +1711,7 @@ export default function CashDisbursement() {
               inputRef={refAccountName}
             />
             <TextInput
+              containerClassName="custom-input"
               label={{
                 title: "Sub Account : ",
                 style: {
@@ -1707,6 +1734,7 @@ export default function CashDisbursement() {
               inputRef={refSubAccount}
             />
             <TextInput
+              containerClassName="custom-input"
               label={{
                 title: "I.D : ",
                 style: {
@@ -1747,6 +1775,7 @@ export default function CashDisbursement() {
             />
           </div>
           <div
+            className="layer-two-main-div-container"
             style={{
               display: "flex",
               gap: "40px",
@@ -1754,6 +1783,7 @@ export default function CashDisbursement() {
             }}
           >
             <TextFormatedInput
+              containerClassName="custom-input"
               label={{
                 title: "Debit : ",
                 style: {
@@ -1775,6 +1805,7 @@ export default function CashDisbursement() {
               inputRef={refDebit}
             />
             <TextFormatedInput
+              containerClassName="custom-input"
               label={{
                 title: "Credit : ",
                 style: {
@@ -1804,6 +1835,7 @@ export default function CashDisbursement() {
               inputRef={refCredit}
             />
             <TextInput
+              containerClassName="custom-input"
               label={{
                 title: "Check No. : ",
                 style: {
@@ -1825,6 +1857,7 @@ export default function CashDisbursement() {
               inputRef={refCheckNo}
             />
             <TextInput
+              containerClassName="custom-input"
               label={{
                 title: "Check Date : ",
                 style: {
@@ -1848,6 +1881,7 @@ export default function CashDisbursement() {
             />
           </div>
           <div
+            className="layer-two-main-div-container"
             style={{
               display: "flex",
               gap: "40px",
@@ -1855,6 +1889,7 @@ export default function CashDisbursement() {
             }}
           >
             <TextInput
+              containerClassName="custom-input"
               label={{
                 title: "TC : ",
                 style: {
@@ -1894,6 +1929,7 @@ export default function CashDisbursement() {
               disableIcon={isDisableField}
             />
             <TextInput
+              containerClassName="custom-input"
               label={{
                 title: "Remarks : ",
                 style: {
@@ -1922,6 +1958,7 @@ export default function CashDisbursement() {
               inputRef={refRemarks}
             />
             <TextInput
+              containerClassName="custom-input"
               label={{
                 title: "Pay To: ",
                 style: {
@@ -1960,6 +1997,7 @@ export default function CashDisbursement() {
             />
           </div>
           <div
+            className="layer-two-main-div-container"
             style={{
               display: "flex",
               gap: "40px",
@@ -1967,6 +2005,7 @@ export default function CashDisbursement() {
             }}
           >
             <SelectInput
+              containerClassName="custom-input"
               label={{
                 title: "Vat Type : ",
                 style: {
@@ -1992,6 +2031,7 @@ export default function CashDisbursement() {
               display={"key"}
             />
             <TextInput
+              containerClassName="custom-input"
               label={{
                 title: "OR/Invoice No. : ",
                 style: {
@@ -2015,6 +2055,7 @@ export default function CashDisbursement() {
             />
 
             <Button
+              className="button-transaction"
               disabled={isDisableField}
               sx={{
                 height: "22px",
@@ -2036,13 +2077,12 @@ export default function CashDisbursement() {
           containerStyle={{
             flex: 1,
             height: "auto",
+            minHeight: "200px",
           }}
           ref={tableRef}
           columns={columns}
           height="280px"
           getSelectedItem={(rowItm: any) => {
-            resetRowField();
-
             if (rowItm) {
               if (rowItm[0] === "1.01.10") {
                 if (refCheckNo.current) {
@@ -2202,6 +2242,236 @@ export default function CashDisbursement() {
             return null;
           }}
         />
+        <fieldset
+          className="mobile-monitoring"
+          style={{
+            border: "1px solid #cbd5e1",
+            borderRadius: "5px",
+            position: "relative",
+            width: "400px",
+            height: "auto",
+            display: "flex",
+            marginTop: "10px",
+            gap: "10px",
+            padding: "15px",
+          }}
+        >
+          <div
+            style={{
+              alignItems: "center",
+              display: "flex",
+              textAlign: "center",
+              width: "100px",
+            }}
+          >
+            <p
+              style={{
+                margin: 0,
+                padding: 0,
+                color: "black",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <span style={{ fontSize: "12px" }}>Total Rows:</span>{" "}
+              <strong>{totalRow}</strong>
+            </p>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-around",
+              flexDirection: "column",
+              flex: 1,
+            }}
+          >
+            <div
+              style={{
+                margin: 0,
+                padding: 0,
+                color: "black",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: "12px",
+                  width: "80px",
+                  padding: 0,
+                  margin: 0,
+                }}
+              >
+                Total Debit:
+              </p>
+              <strong>
+                {getTotalDebit.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </strong>
+            </div>
+            <div
+              style={{
+                margin: 0,
+                padding: 0,
+                color: "black",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: "12px",
+                  width: "80px",
+                  padding: 0,
+                  margin: 0,
+                }}
+              >
+                Total Credit:
+              </p>
+              <strong>
+                {getTotalCredit.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </strong>
+            </div>
+            <div
+              style={{
+                margin: 0,
+                padding: 0,
+                color: "black",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: "12px",
+                  width: "80px",
+                  padding: 0,
+                  margin: 0,
+                }}
+              >
+                Balance:
+              </p>
+              <strong
+                style={{
+                  color: getTotalDebit - getTotalCredit > 0 ? "red" : "black",
+                }}
+              >
+                {(getTotalDebit - getTotalCredit).toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </strong>
+            </div>
+          </div>
+        </fieldset>
+        <div
+          className="cash-disbursement-mobile-buttons"
+          style={{
+            display: "none",
+            alignItems: "center",
+            columnGap: "10px",
+          }}
+        >
+          {cashDMode === "" && (
+            <Button
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+              id="entry-header-save-button"
+              onClick={() => {
+                setCashDMode("add");
+              }}
+              color="primary"
+            >
+              New
+            </Button>
+          )}
+          <LoadingButton
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+            }}
+            loading={loadingCashDisbursementMutate}
+            disabled={cashDMode === ""}
+            onClick={handleOnSave}
+            color="success"
+            variant="contained"
+          >
+            Save
+          </LoadingButton>
+          {cashDMode !== "" && (
+            <LoadingButton
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
+              color="error"
+              onClick={() => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, cancel it!",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    resetAll();
+                  }
+                });
+              }}
+              disabled={cashDMode === ""}
+            >
+              Cancel
+            </LoadingButton>
+          )}
+          <LoadingButton
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+              background: deepOrange[500],
+              ":hover": {
+                background: deepOrange[600],
+              },
+            }}
+            onClick={handleVoid}
+            loading={loadingVoidCashDisbursement}
+            disabled={cashDMode !== "update"}
+            variant="contained"
+            startIcon={<NotInterestedIcon sx={{ width: 20, height: 20 }} />}
+          >
+            Void
+          </LoadingButton>
+          <LoadingButton
+            loading={isLoadingPrint}
+            disabled={cashDMode !== "update"}
+            id="basic-button"
+            aria-haspopup="true"
+            onClick={handleClickPrint}
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+              color: "white",
+              backgroundColor: grey[600],
+              "&:hover": {
+                backgroundColor: grey[700],
+              },
+            }}
+          >
+            Print
+          </LoadingButton>
+        </div>
       </div>
       <ChartAccountUpwardTableModalSearch />
       <PayToUpwardTableModalSearch />

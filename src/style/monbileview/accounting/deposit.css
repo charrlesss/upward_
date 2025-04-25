@@ -1,0 +1,68 @@
+.deposit-mobile-buttons {
+  display: none !important;
+}
+@media (max-width: 768px) {
+  .main {
+    margin-bottom: 100px !important;
+  }
+  .deposit-desktop-buttons {
+    display: none !important;
+  }
+
+  .deposit-mobile-buttons {
+    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #f1f1f1;
+    justify-content: center;
+    z-index: 9999;
+    padding: 5px 0px;
+  }
+  .search-input {
+    width: 100% !important;
+  }
+  .search-input input {
+    width: calc(100% - 50px) !important;
+  }
+  .layer-one {
+    flex-direction: column;
+  }
+  .layer-one .custom-input {
+    width: 100%;
+  }
+  .layer-one .custom-input label {
+    width: 100px !important;
+  }
+  .layer-one .custom-input input {
+    width: calc(100% - 100px) !important;
+  }
+  .deposit-buttons {
+    font-size: 8.5px !important;
+  }
+  .collection-for-deposit {
+    flex-direction: column;
+  }
+  .collection-for-deposit fieldset:nth-child(1) .collection-for-deposit-table-checks {
+    height: 200px !important;
+  }
+  .collection-for-deposit fieldset:nth-child(1) {
+    width: 100% !important;
+    height: auto !important;
+  }
+  .collection-for-deposit fieldset:nth-child(2) {
+    width: 100% !important;
+  }
+  .selected-collection{
+    height: 200px !important;
+  }
+  .check-collection{
+    height: 200px !important;
+  }
+  .cash-collection{
+    height: 200px !important;
+  }
+
+
+}

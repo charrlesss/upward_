@@ -1,0 +1,109 @@
+.collection-mobile-buttons {
+  display: none !important;
+}
+@media (max-width: 768px) {
+  .main {
+    margin-bottom: 100px !important;
+  }
+  .collection-desktop-buttons {
+    display: none !important;
+  }
+
+  .collection-mobile-buttons {
+    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #f1f1f1;
+    justify-content: center;
+    z-index: 9999;
+    padding: 5px 0px;
+
+  }
+  .search-input {
+    width: 100% !important;
+  }
+  .search-input input {
+    width: calc(100% - 50px) !important;
+  }
+  .layer-one {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    row-gap: 5px !important;
+    margin-top: 10px;
+  }
+  .layer-one .layer-content {
+    width: 100% !important;
+  }
+  .layer-one .layer-content .custom-input {
+    width: 100% !important;
+  }
+  .layer-one .layer-content .custom-input label {
+    width: 100px !important;
+  }
+  .layer-one .layer-content .custom-input input {
+    width: calc(100% - 100px) !important;
+  }
+  .main-container-controller.first {
+    height: auto !important;
+  }
+  .main-container-controller.second {
+    height: auto !important;
+  }
+  .container-controller {
+    flex-direction: column !important;
+  }
+  .main-container-controller .first-content {
+    width: 100% !important;
+  }
+  .main-container-controller .first-content .add-chk-button {
+    margin-top: 5px !important;
+  }
+  .main-container-controller .second-content {
+    width: 100% !important;
+    margin-bottom: 50px;
+  }
+  .table-datagridview-main {
+    min-height: 140px !important;
+  }
+
+
+  .modal-add-check {
+    width: 100% !important;
+    height: 70% !important;
+    top: 25px !important;
+    left: 0 !important;
+    transform: none !important;
+  }
+  .modal-add-check  .main-content{
+    flex-direction: column !important;
+  }
+  .modal-add-check  .main-content div:nth-child(1){
+    width: 100% !important;
+  }
+  .modal-add-check  .main-content div:nth-child(1)   div label{
+    width: 90px !important;
+  }
+  .modal-add-check  .main-content div:nth-child(1)   div input{
+    width: calc(100% - 90px) !important;
+  }
+  .modal-add-check  .main-content div:nth-child(1)   div textarea{
+    width: calc(100% - 90px) !important;
+  }
+  .modal-add-check  .main-content div:nth-child(2){
+    width: 100% !important;
+  }
+  .modal-add-check  .main-content div:nth-child(2) div label{
+    width: 90px !important;
+  }
+  .modal-add-check  .main-content div:nth-child(2) div input{
+    width: calc(100% - 90px) !important;
+  }
+  .modal-add-check  .main-content div:nth-child(2) .modal-add-check-buttons{
+    position: absolute !important;
+    bottom:  -75px !important;
+    z-index: 99;
+  }
+}

@@ -1,0 +1,66 @@
+.cash-disbursement-mobile-buttons {
+  display: none !important;
+}
+.mobile-monitoring {
+  display: none !important;
+}
+@media (max-width: 768px) {
+  .main {
+    padding-bottom: 40px !important;
+  }
+  .cash-disbursement-desktop-buttons {
+    display: none !important;
+  }
+  .cash-disbursement-mobile-buttons {
+    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #f1f1f1;
+    justify-content: center;
+    z-index: 999;
+    padding: 5px 0px;
+  }
+  .search-input {
+    width: 100% !important;
+  }
+  .search-input input {
+    width: calc(100% - 50px) !important;
+  }
+  .layer-one {
+    flex-direction: column !important ;
+    gap: none !important;
+    row-gap: 10px !important;
+  }
+  .layer-two {
+    flex-direction: column !important ;
+  }
+  .layer-two-main-div-container {
+    flex-direction: column !important;
+    row-gap: 10px !important;
+  }
+  .button-transaction {
+    width: 100% !important;
+  }
+  .custom-input {
+    width: 100% !important;
+  }
+  .custom-input label {
+    width: 100px !important;
+  }
+  .custom-input input {
+    width: calc(100% - 100px) !important;
+  }
+
+  .desktop-monitoring {
+    display: none !important;
+  }
+  .mobile-monitoring {
+    display: flex !important;
+    width: 100% !important;
+  }
+  .mobile-monitoring div {
+    font-size: 11px !important;
+  }
+}

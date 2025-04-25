@@ -42,6 +42,7 @@ import {
 import { Loading } from "../../../../components/Loading";
 import { formatNumber } from "./ReturnCheck";
 import { format, isValid, parse } from "date-fns";
+import "../../../../style/monbileview/accounting/collection.css";
 
 export const debitColumn = [
   { key: "Payment", label: "Payment", flex: 1, width: 170 },
@@ -1132,10 +1133,12 @@ export default function Collection() {
 
   return (
     <div
+      className="main"
       style={{
-        height: "100%",
+        height: "auto",
         width: "100%",
         background: "#F1F1F1",
+        // border:"1px solid red"
       }}
     >
       <SearchCollectionUpwardTableModalSearch />
@@ -1177,6 +1180,7 @@ export default function Collection() {
           }}
         >
           <TextInput
+            containerClassName="search-input"
             containerStyle={{ width: "550px" }}
             label={{
               title: "Search: ",
@@ -1205,44 +1209,53 @@ export default function Collection() {
             }}
             inputRef={searchRef}
           />
-          <IconButton
-            aria-label="add"
-            size="small"
-            color="info"
-            onClick={handleOnAdd}
+          <div
+            className="collection-desktop-buttons"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              columnGap: "10px",
+            }}
           >
-            <AddIcon />
-          </IconButton>
-          <IconButton
-            disabled={disableFields}
-            aria-label="save"
-            size="small"
-            color="success"
-            onClick={handleOnSave}
-          >
-            <SaveIcon />
-          </IconButton>
-          <IconButton
-            disabled={collectionMode !== "update"}
-            aria-label="print"
-            size="small"
-            color="secondary"
-            onClick={handleOnPrint}
-          >
-            <LocalPrintshopIcon />
-          </IconButton>
-
-          <IconButton
-            disabled={disableFields}
-            aria-label="print"
-            size="small"
-            color="error"
-            onClick={handleOnClose}
-          >
-            <CloseIcon />
-          </IconButton>
+            <IconButton
+              aria-label="add"
+              size="small"
+              color="info"
+              onClick={handleOnAdd}
+            >
+              <AddIcon />
+            </IconButton>
+            <IconButton
+              disabled={disableFields}
+              aria-label="save"
+              size="small"
+              color="success"
+              onClick={handleOnSave}
+            >
+              <SaveIcon />
+            </IconButton>
+            <IconButton
+              disabled={collectionMode !== "update"}
+              aria-label="print"
+              size="small"
+              color="secondary"
+              onClick={handleOnPrint}
+            >
+              <LocalPrintshopIcon />
+            </IconButton>
+            <IconButton
+              disabled={disableFields}
+              aria-label="print"
+              size="small"
+              color="error"
+              onClick={handleOnClose}
+            >
+              <CloseIcon />
+            </IconButton>
+          </div>
         </div>
         <div
+          className="layer-one"
           style={{
             flex: 1,
             border: "1px solid #64748b",
@@ -1254,6 +1267,7 @@ export default function Collection() {
           }}
         >
           <div
+            className="layer-content"
             style={{
               display: "flex",
               flexDirection: "column",
@@ -1265,6 +1279,7 @@ export default function Collection() {
               <LoadingButton loading={NewORNoLoading} />
             ) : (
               <TextInput
+                containerClassName="custom-input"
                 containerStyle={{
                   width: "320px",
                 }}
@@ -1297,6 +1312,7 @@ export default function Collection() {
               />
             )}
             <TextInput
+              containerClassName="custom-input"
               label={{
                 title: "Date : ",
                 style: {
@@ -1320,6 +1336,7 @@ export default function Collection() {
             />
           </div>
           <div
+            className="layer-content"
             style={{
               display: "flex",
               flexDirection: "column",
@@ -1328,6 +1345,7 @@ export default function Collection() {
             }}
           >
             <TextInput
+              containerClassName="custom-input"
               containerStyle={{
                 width: "60%",
               }}
@@ -1359,6 +1377,7 @@ export default function Collection() {
               inputRef={pnClientRef}
             />
             <TextInput
+              containerClassName="custom-input"
               label={{
                 title: "Client Name : ",
                 style: {
@@ -1381,8 +1400,9 @@ export default function Collection() {
           </div>
         </div>
       </div>
-      <div style={{ height: "5px" }}></div>
+      <div style={{ height: "10px" }}></div>
       <ContentContainer
+        containerClassName="first"
         title={"Particulars (Debit)"}
         firstContent={
           <div
@@ -1485,7 +1505,7 @@ export default function Collection() {
                 input={{
                   disabled: paymentType === "CHK" || disableFields,
                   type: "text",
-                  style: { flex: 1 },
+                  style: { width: "calc(100% - 100px)" },
                   onKeyDown: (e) => {
                     if (e.code === "NumpadEnter" || e.code === "Enter") {
                       buttonCshSave.current?.click();
@@ -1516,10 +1536,11 @@ export default function Collection() {
                   }
                 }}
               >
-                <ForwardIcon sx={{ fontSize: "22px" }} />
+                <ForwardIcon sx={{ fontSize: "20px" }} />
               </button>
             </div>
             <Button
+              className="add-chk-button"
               ref={buttonCheckList}
               disabled={paymentType === "CSH"}
               startIcon={<AddIcon />}
@@ -1553,6 +1574,7 @@ export default function Collection() {
               rows={[]}
               containerStyle={{
                 height: "auto",
+                minHeight: "130px",
                 flex: 1,
               }}
               getSelectedItem={async (rowItm: any) => {
@@ -1669,8 +1691,9 @@ export default function Collection() {
           }
           `}
       />
-      <div style={{ height: "5px" }}></div>
+      <div style={{ height: "10px" }}></div>
       <ContentContainer
+        containerClassName="second"
         title={"Particulars Breakdown (Credit)"}
         firstContent={
           <div
@@ -2059,6 +2082,50 @@ export default function Collection() {
             }
         `}
       />
+      <div
+        className="collection-mobile-buttons"
+        style={{
+          display: "none",
+          alignItems: "center",
+          columnGap: "10px",
+        }}
+      >
+        <IconButton
+          aria-label="add"
+          size="small"
+          color="info"
+          onClick={handleOnAdd}
+        >
+          <AddIcon />
+        </IconButton>
+        <IconButton
+          disabled={disableFields}
+          aria-label="save"
+          size="small"
+          color="success"
+          onClick={handleOnSave}
+        >
+          <SaveIcon />
+        </IconButton>
+        <IconButton
+          disabled={collectionMode !== "update"}
+          aria-label="print"
+          size="small"
+          color="secondary"
+          onClick={handleOnPrint}
+        >
+          <LocalPrintshopIcon />
+        </IconButton>
+        <IconButton
+          disabled={disableFields}
+          aria-label="print"
+          size="small"
+          color="error"
+          onClick={handleOnClose}
+        >
+          <CloseIcon />
+        </IconButton>
+      </div>
     </div>
   );
 }
@@ -2068,18 +2135,21 @@ export const ContentContainer = ({
   secondContent,
   title,
   contentStyle,
+  containerClassName,
 }: any) => {
   return (
     <div
+      className={`main-container-controller  ${containerClassName}`}
       style={{
         width: "100%",
-        height: "38%",
+        height: "auto",
         display: "flex",
         padding: "5px",
       }}
     >
       <style>{contentStyle}</style>
       <div
+        className="container-controller"
         style={{
           flex: 1,
           display: "flex",
@@ -2102,6 +2172,7 @@ export const ContentContainer = ({
           {title}
         </span>
         <div
+          className="first-content"
           style={{
             width: "30%",
             height: "100%",
@@ -2112,6 +2183,7 @@ export const ContentContainer = ({
           {firstContent}
         </div>
         <div
+          className="second-content"
           style={{
             width: "70%",
             height: "100%",
@@ -2238,6 +2310,7 @@ const ModalCheck = forwardRef(({ handleOnSave, handleOnClose }: any, ref) => {
         }}
       ></div>
       <div
+        className="modal-add-check"
         style={{
           height: blick ? "202px" : "200px",
           width: blick ? "60.3%" : "60%",
@@ -2288,6 +2361,7 @@ const ModalCheck = forwardRef(({ handleOnSave, handleOnClose }: any, ref) => {
           </button>
         </div>
         <div
+          className="main-content"
           style={{
             flex: 1,
             background: "#F1F1F1",
@@ -2463,6 +2537,7 @@ const ModalCheck = forwardRef(({ handleOnSave, handleOnClose }: any, ref) => {
               inputRef={amountRef}
             />
             <div
+              className="modal-add-check-buttons"
               style={{
                 display: "flex",
                 columnGap: "10px",

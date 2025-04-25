@@ -24,6 +24,7 @@ import { AuthContext } from "../../../../components/AuthContext";
 import { Loading } from "../../../../components/Loading";
 import { wait } from "@testing-library/user-event/dist/utils";
 import PageHelmet from "../../../../components/Helmet";
+import "../../../../style/monbileview/accounting/warehouse.css";
 
 const warehouseColumn = [
   { key: "PNo", label: "PN No.", width: 150 },
@@ -451,9 +452,11 @@ export default function WarehouseChecks() {
 
   return (
     <div
+      className="main"
       style={{
         padding: "10px",
         flex: 1,
+        position: "relative",
       }}
     >
       <PageHelmet title="Treasury" />
@@ -471,9 +474,15 @@ export default function WarehouseChecks() {
         }}
       >
         <div
-          style={{ display: "flex", columnGap: "10px", alignItems: "center" }}
+          className="first-layer"
+          style={{
+            display: "flex",
+            columnGap: "10px",
+            alignItems: "center",
+          }}
         >
           <SelectInput
+            containerClassName="custom-input"
             label={{
               title: "PDC Status: ",
               style: {
@@ -517,6 +526,7 @@ export default function WarehouseChecks() {
             display={"key"}
           />
           <SelectInput
+            containerClassName="custom-input"
             label={{
               title: "Remarks: ",
               style: {
@@ -550,104 +560,125 @@ export default function WarehouseChecks() {
             values={"key"}
             display={"key"}
           />
-          <Button
-            disabled={warehouseMode === "add"}
-            sx={{
-              height: "23px",
-              fontSize: "11px",
-              marginLeft: "10px",
-            }}
-            variant="contained"
-            color="info"
-            onClick={onClickNew}
-          >
-            New
-          </Button>
-          <Button
-            disabled={warehouseMode !== "add"}
-            sx={{
-              height: "23px",
-              fontSize: "11px",
-            }}
-            variant="contained"
-            color="error"
-            onClick={onClickCancel}
-          >
-            Cancel
-          </Button>
+          <div className="desktop-ctions-buttons">
+            <Button
+              disabled={warehouseMode === "add"}
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+                marginLeft: "10px",
+              }}
+              variant="contained"
+              color="info"
+              onClick={onClickNew}
+            >
+              New
+            </Button>
+            <Button
+              disabled={warehouseMode !== "add"}
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              color="error"
+              onClick={onClickCancel}
+            >
+              Cancel
+            </Button>
+          </div>
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", columnGap: "10px" }}>
+        <div
+          className="second-layer"
+          style={{ display: "flex", justifyContent: "space-between" }}
+        >
+          <div
+            className="first-content"
+            style={{ display: "flex", columnGap: "10px" }}
+          >
             <div
+              className="search-client-checks"
               style={{
                 display: "flex",
-                columnGap: "3px",
                 alignItems: "center",
+                columnGap: "5px",
               }}
             >
-              <SelectInput
-                label={{
-                  title: "Search: ",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "80px",
-                  },
+              <div
+                style={{
+                  display: "flex",
+                  columnGap: "3px",
+                  alignItems: "center",
                 }}
-                selectRef={refSearch}
-                select={{
-                  disabled: true,
-                  style: { width: "190px", height: "22px" },
-                  defaultValue: "",
-                  onKeyDown: (e) => {
-                    if (e.code === "NumpadEnter" || e.code === "Enter") {
-                      e.preventDefault();
-                    }
-                  },
-                }}
-                datasource={[
-                  { key: "", value: "" },
-                  { key: "Policy", value: "PNo" },
-                  { key: "ID No.", value: "IDNo" },
-                  { key: "Bank", value: "Bank" },
-                ]}
-                values={"value"}
-                display={"key"}
-              />
-              <IconButton size="small" onClick={tsbOpen_Click}>
-                <ManageSearchIcon />
-              </IconButton>
-            </div>
-            <div style={{ display: "flex", columnGap: "10px" }}>
-              <TextInput
-                label={{
-                  title: "",
-                  style: {
-                    display: "none",
-                  },
-                }}
-                input={{
-                  disabled: true,
-                  type: "text",
-                  style: { width: "235px", height: "22px" },
-                  onKeyDown: (e) => {
-                    if (e.code === "NumpadEnter" || e.code === "Enter") {
-                      tsbSearch_Click();
-                    }
-                  },
-                }}
-                inputRef={refIDS}
-              />
-              <IconButton size="small" onClick={tsbSearch_Click}>
-                <ManageSearchIcon />
-              </IconButton>
+              >
+                <SelectInput
+                  containerClassName="custom-input"
+                  label={{
+                    title: "Search: ",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "80px",
+                    },
+                  }}
+                  selectRef={refSearch}
+                  select={{
+                    disabled: true,
+                    style: { width: "190px", height: "22px" },
+                    defaultValue: "",
+                    onKeyDown: (e) => {
+                      if (e.code === "NumpadEnter" || e.code === "Enter") {
+                        e.preventDefault();
+                      }
+                    },
+                  }}
+                  datasource={[
+                    { key: "", value: "" },
+                    { key: "Policy", value: "PNo" },
+                    { key: "ID No.", value: "IDNo" },
+                    { key: "Bank", value: "Bank" },
+                  ]}
+                  values={"value"}
+                  display={"key"}
+                />
+                <IconButton size="small" onClick={tsbOpen_Click}>
+                  <ManageSearchIcon />
+                </IconButton>
+              </div>
+              <div style={{ display: "flex", columnGap: "10px" }}>
+                <TextInput
+                  containerClassName="custom-input search-special"
+                  label={{
+                    title: "",
+                    style: {
+                      display: "none",
+                    },
+                  }}
+                  input={{
+                    disabled: true,
+                    type: "text",
+                    style: { width: "235px", height: "22px" },
+                    onKeyDown: (e) => {
+                      if (e.code === "NumpadEnter" || e.code === "Enter") {
+                        tsbSearch_Click();
+                      }
+                    },
+                  }}
+                  inputRef={refIDS}
+                />
+                <IconButton size="small" onClick={tsbSearch_Click}>
+                  <ManageSearchIcon />
+                </IconButton>
+              </div>
             </div>
             <div
+              className="buttons-search-client-container"
               style={{
                 display: "flex",
                 columnGap: "8px",
                 borderLeft: "1px solid #64748b",
                 paddingLeft: "10px",
+                alignItems: "center",
               }}
             >
               <IconButton size="small" onClick={hanldeOnSave}>
@@ -656,10 +687,32 @@ export default function WarehouseChecks() {
               <IconButton size="small" color="primary">
                 <AssessmentIcon />
               </IconButton>
+              <Button
+                className="check-for-pull-out-mobile"
+                sx={{
+                  height: "23px",
+                  fontSize: "11px",
+                  marginLeft: "10px",
+                  bgcolor: grey[600],
+                  "&:hover": {
+                    bgcolor: grey[700],
+                  },
+                }}
+                variant="contained"
+                onClick={() => {
+                  modalCheckRef.current?.showModal();
+                  wait(100).then(() => {
+                    modalCheckRef.current?.mutate();
+                  });
+                }}
+              >
+                Check for pull-out
+              </Button>
             </div>
           </div>
-          <div>
+          <div className="second-content">
             <Button
+              className="check-for-pull-out-desktop"
               sx={{
                 height: "23px",
                 fontSize: "11px",
@@ -829,6 +882,33 @@ export default function WarehouseChecks() {
           modalCheckRef.current.closeDelay();
         }}
       />
+      <div className="mobile-ctions-buttons">
+        <Button
+          disabled={warehouseMode === "add"}
+          sx={{
+            height: "23px",
+            fontSize: "11px",
+            marginLeft: "10px",
+          }}
+          variant="contained"
+          color="info"
+          onClick={onClickNew}
+        >
+          New
+        </Button>
+        <Button
+          disabled={warehouseMode !== "add"}
+          sx={{
+            height: "23px",
+            fontSize: "11px",
+          }}
+          variant="contained"
+          color="error"
+          onClick={onClickCancel}
+        >
+          Cancel
+        </Button>
+      </div>
     </div>
   );
 }
@@ -952,6 +1032,7 @@ const ModalCheck = forwardRef(
         ></div>
         {isLoading && <Loading />}
         <div
+        className="modal-pullout"
           ref={modalRef}
           style={{
             height: blick ? "402px" : "400px",

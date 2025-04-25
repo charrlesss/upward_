@@ -1,0 +1,66 @@
+.general-journal-mobile-buttons {
+    display: none !important;
+  }
+  @media (max-width: 768px) {
+    .main {
+      padding-bottom: 40px !important;
+    }
+    .general-journal-desktop-buttons {
+      display: none !important;
+    }
+  
+    .general-journal-mobile-buttons {
+      display: flex !important;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: #f1f1f1;
+      justify-content: center;
+      z-index: 999;
+      padding: 5px 0px;
+    }
+    .search-input {
+      width: 100% !important;
+    }
+    .search-input input {
+      width: calc(100% - 50px) !important;
+    }
+    .layer-one {
+      flex-direction: column !important ;
+      gap: none !important;
+      row-gap: 10px !important;
+    }
+    .layer-two {
+      flex-direction: column !important ;
+    }
+    .layer-two-main-div-container {
+      flex-direction: column !important;
+      row-gap: 10px !important;
+    }
+    .button-transaction{
+      width: 100% !important;
+    }
+    .footer-table{
+        flex-wrap: wrap !important;
+        height: auto !important;
+        display: grid !important;
+        grid-template-columns: repeat(2 ,1fr) !important;
+        column-gap: 5px !important;
+        align-items: center;
+    }
+    .footer-table div{
+        font-size: 11px !important;
+
+    }
+    .custom-input {
+      width: 100% !important;
+    }
+    .custom-input label {
+      width: 100px !important;
+    }
+    .custom-input input {
+      width: calc(100% - 100px) !important;
+    }
+  }
+  

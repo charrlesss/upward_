@@ -1,15 +1,14 @@
 import { LoadingButton } from "@mui/lab";
-import { useContext, useRef, useState } from "react";
+import { useContext, useRef } from "react";
 import { useMutation, useQuery } from "react-query";
 import { AuthContext } from "../../../../components/AuthContext";
-import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
 import { SelectInput, TextInput } from "../../../../components/UpwardFields";
 import { DataGridViewMultiSelectionReact } from "../../../../components/DataGridViewReact";
 import { Button } from "@mui/material";
-import { wait } from "@testing-library/user-event/dist/utils";
 import Swal from "sweetalert2";
 import { Loading } from "../../../../components/Loading";
 import PageHelmet from "../../../../components/Helmet";
+import "../../../../style/monbileview/accounting/pullout.css";
 
 const column = [
   {
@@ -57,8 +56,7 @@ export default function CheckPulloutApproved() {
           },
         }
       ),
-      refetchOnWindowFocus: false,
-
+    refetchOnWindowFocus: false,
   });
 
   const { isLoading: isLoadingLoadDetails, mutate: mutateDetails } =
@@ -166,6 +164,7 @@ export default function CheckPulloutApproved() {
 
   return (
     <div
+      className="main"
       style={{
         flex: "1",
         display: "flex",
@@ -179,6 +178,7 @@ export default function CheckPulloutApproved() {
         <Loading />
       )}
       <div
+        className="content"
         style={{
           padding: "10px",
           width: "62%",
@@ -187,11 +187,13 @@ export default function CheckPulloutApproved() {
           boxShadow: "1px 1px 2px 2px black",
           display: "flex",
           flexDirection: "column",
+          boxSizing: "border-box",
         }}
       >
         <div
           style={{
             height: "auto",
+            boxSizing: "border-box",
           }}
         >
           {isLoadingLoadRequestNumber ? (
@@ -204,6 +206,7 @@ export default function CheckPulloutApproved() {
               }}
             >
               <SelectInput
+                containerClassName="custom-input"
                 label={{
                   title: "RCP No.  : ",
                   style: {
@@ -240,6 +243,7 @@ export default function CheckPulloutApproved() {
           )}
 
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
               marginBottom: "8px",
@@ -262,6 +266,7 @@ export default function CheckPulloutApproved() {
           />
 
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
               marginBottom: "8px",
@@ -283,6 +288,7 @@ export default function CheckPulloutApproved() {
             inputRef={nameRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
               marginBottom: "8px",
@@ -327,6 +333,7 @@ export default function CheckPulloutApproved() {
           }}
         >
           <TextInput
+            containerClassName="custom-input"
             label={{
               title: "Authentication Code:",
               style: {

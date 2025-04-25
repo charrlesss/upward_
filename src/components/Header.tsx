@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import "../style/header.css";
 import { AuthContext, User } from "./AuthContext";
 import AccountCircle from "@mui/icons-material/AccountCircle";
-import { useQuery } from "react-query";
+import { useMutation, useQuery } from "react-query";
 import { wait } from "../lib/wait";
 import Swal from "sweetalert2";
 import axios, { AxiosInstance } from "axios";
@@ -27,17 +27,27 @@ export default function Header() {
   const [openUserMenu, setOpenUserMenu] = useState(false);
   const menuRef = useRef<any>(null); // Reference to the menu container
   const menuUserRef = useRef<any>(null); // Reference to the menu container
+
+  const [openMenuMobile, setOpenMenuMobile] = useState(null);
+  const [openUserMenuMobile, setOpenUserMenuMobile] = useState(false);
+  const menuMobileRef = useRef<any>(null); // Reference to the menu container
+  const menuUserMobileRef = useRef<any>(null); // Reference to the menu container
+
   const [menuData, setMenuData] = useState<Array<any>>([]);
   const location = useLocation();
   const navigate = useNavigate();
 
   const [showSidebar, setShowSidebar] = useState(false);
 
-  const { refetch, isLoading } = useQuery({
-    queryKey: "logout",
-    queryFn: async () =>
-      wait(1200).then(async () => await Logout(myAxios, user)),
-    enabled: false,
+  const { mutate: mutateLogout, isLoading: isLoadingLogout } = useMutation({
+    mutationKey: "logout",
+    mutationFn: async (variables:any) => {
+      return await myAxios.post("/logout",variables, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      });
+    },
     onSuccess: (res) => {
       if (res.data.success) {
         setOpenUserMenu(false);
@@ -66,20 +76,7 @@ export default function Header() {
       confirmButtonText: "Yes, logout it!",
     }).then((result) => {
       if (result.isConfirmed) {
-        axios
-          .get("http://localhost:7624/close-report", {
-            withCredentials: true,
-          })
-          .then((res) => {
-            if (!res.data.success) {
-              alert(res.data.message);
-            }
-          })
-          .catch(console.log);
-
-        setTimeout(() => {
-          refetch();
-        }, 500);
+        mutateLogout({});
       }
     });
   };
@@ -89,23 +86,27 @@ export default function Header() {
       return; // Ignore hover if no direct path and has sublinks
     }
     setOpenMenu(menuItem.name);
+    setOpenMenuMobile(menuItem.name);
   };
 
   const handleClick = (menuItem: any) => {
     if (!menuItem.path && menuItem.subLinks) {
       // Toggle submenu display on click
       setOpenMenu(openMenu === menuItem.name ? null : menuItem.name);
+      setOpenMenuMobile(openMenu === menuItem.name ? null : menuItem.name);
     }
   };
   const handleSubLinkClick = () => {
     // Close submenu after clicking any sublink
     setOpenMenu(null);
+    setOpenMenuMobile(null)
   };
 
   const handleMobileClick = (menuItem: any, e: any) => {
     if (!menuItem.path && menuItem.subLinks) {
       // Toggle submenu display on click
       setOpenMenu(openMenu === menuItem.name ? null : menuItem.name);
+      setOpenMenuMobile(openMenu === menuItem.name ? null : menuItem.name);
     }
   };
 
@@ -1043,9 +1044,28 @@ export default function Header() {
     };
   }, []);
 
+  // Add event listener to handle clicks outside the menu
+  useEffect(() => {
+    const handleClickOutside = (e: any) => {
+      if (menuMobileRef.current && !menuMobileRef.current.contains(e.target)) {
+        setOpenMenuMobile(null);
+      }
+
+      if (menuUserMobileRef.current && !menuUserMobileRef.current.contains(e.target)) {
+        setOpenUserMenuMobile(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+
+    // Cleanup the event listener on component unmount
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
     <>
-      {isLoading && <Loading />}
+      {isLoadingLogout && <Loading />}
       <header id="desk-header">
         <nav ref={menuRef} className="menu header-ch">
           <ul className="main-menu">
@@ -1092,23 +1112,6 @@ export default function Header() {
                 )}
               </li>
             ))}
-            {/* {user?.username === "gina"
-            ? user?.userAccess !== "PRODUCTION" &&
-              user?.userAccess !== "CLAIMS" && (
-                <li>
-                  <span
-                    style={{
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      fontWeight: "bold",
-                    }}
-                    onClick={openReport}
-                  >
-                    Accounting Report Deskop App
-                  </span>
-                </li>
-              )
-            : null} */}
           </ul>
         </nav>
 
@@ -1138,7 +1141,7 @@ export default function Header() {
                 cursor: "pointer",
               }}
               onClick={() => {
-                setOpenUserMenu((d) => !d);
+                setOpenUserMenu((d) => true);
               }}
             />
             {openUserMenu && (
@@ -1148,7 +1151,7 @@ export default function Header() {
                 </li>
                 <li>
                   <span
-                    onClick={() => {
+                    onClick={(e) => {
                       handleLogout();
                     }}
                   >
@@ -1183,7 +1186,7 @@ export default function Header() {
             <span>{user?.department}</span>
           </div>
           <div
-            ref={menuUserRef}
+            ref={menuUserMobileRef}
             style={{
               position: "relative",
               display: "flex",
@@ -1196,10 +1199,10 @@ export default function Header() {
                 cursor: "pointer",
               }}
               onClick={() => {
-                setOpenUserMenu((d) => !d);
+                setOpenUserMenuMobile((d) => !d);
               }}
             />
-            {openUserMenu && (
+            {openUserMenuMobile && (
               <ul className="user-menu">
                 <li>
                   <span>Profile</span>
@@ -1239,7 +1242,7 @@ export default function Header() {
           >
             <CloseIcon />
           </IconButton>
-          <nav ref={menuRef} className="menu header-ch">
+          <nav ref={menuMobileRef} className="menu header-ch">
             <ul className="main-menu mobile">
               {menuData.map((menuItem: any, index: any) => (
                 <li
@@ -1276,7 +1279,7 @@ export default function Header() {
                         cursor: "pointer",
                         fontSize: "14px",
                         fontWeight: "bold",
-                        color:"rgb(58, 58, 58)"
+                        color: "rgb(58, 58, 58)",
                       }}
                       onClick={(e) => handleMobileClick(menuItem, e)}
                     >
@@ -1285,7 +1288,7 @@ export default function Header() {
                   )}
 
                   {/* Show submenu based on hover or click */}
-                  {menuItem.subLinks && openMenu === menuItem.name && (
+                  {menuItem.subLinks && openMenuMobile === menuItem.name && (
                     <ul className="submenu">
                       {menuItem.subLinks.map((subLink: any, subIndex: any) => (
                         <li
@@ -1304,7 +1307,6 @@ export default function Header() {
                   )}
                 </li>
               ))}
-            
             </ul>
           </nav>
         </div>

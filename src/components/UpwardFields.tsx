@@ -24,7 +24,7 @@ interface TextInputProps {
   onIconClick?: React.MouseEventHandler<HTMLDivElement> | undefined;
   disableIcon?: boolean;
   containerStyle?: CSSProperties;
-  containerClassName?:string
+  containerClassName?: string;
 }
 
 interface TextAreaPrps {
@@ -36,6 +36,7 @@ interface TextAreaPrps {
   onIconClick?: React.MouseEventHandler<HTMLDivElement> | undefined;
   disableIcon?: boolean;
   containerStyle?: CSSProperties;
+  containerClassName?: string;
 }
 
 interface TextFormatedInputProps extends TextInputProps {
@@ -53,6 +54,7 @@ export function TextFormatedInput({
   onChange = (e) => {},
   onBlur = (e) => {},
   containerStyle,
+  containerClassName,
 }: TextFormatedInputProps) {
   // const [inputValue, setInputValue] = useState('');
   const id = useId();
@@ -138,6 +140,7 @@ export function TextFormatedInput({
 
   return (
     <div
+      className={containerClassName}
       style={{
         display: "flex",
         alignItems: "center",
@@ -171,10 +174,9 @@ export function TextFormatedInput({
           handleBlur(e);
           onBlur(e);
         }} // Add .00 on blur
-        onFocus={(e)=>{
-          e.currentTarget.select()
-          if(input && input.onFocus)
-          input.onFocus(e)
+        onFocus={(e) => {
+          e.currentTarget.select();
+          if (input && input.onFocus) input.onFocus(e);
         }}
       />
       {icon && iconPosition === "end" && (
@@ -210,13 +212,13 @@ export function TextInput({
   disableIcon = false,
   containerStyle,
   onIconClick = (e) => {},
-  containerClassName
+  containerClassName,
 }: TextInputProps) {
   const id = useId();
 
   return (
     <div
-    className={containerClassName}
+      className={containerClassName}
       style={{
         display: "flex",
         alignItems: "center",
@@ -238,23 +240,31 @@ export function TextInput({
         {...input}
         onBlur={(e) => {
           if (input.type === "month") {
-            if(!isValidDate(`${e.currentTarget.value}-01`)){
-              alert(`Invalid ${label.title?.replace(/:/g, "").trim()}!, Resetting date.`)
-              e.currentTarget.value = format(new Date(),'yyyy-MM')
-              wait(100).then(()=>{
-                inputRef?.current?.focus()
-              })
-              return
+            if (!isValidDate(`${e.currentTarget.value}-01`)) {
+              alert(
+                `Invalid ${label.title
+                  ?.replace(/:/g, "")
+                  .trim()}!, Resetting date.`
+              );
+              e.currentTarget.value = format(new Date(), "yyyy-MM");
+              wait(100).then(() => {
+                inputRef?.current?.focus();
+              });
+              return;
             }
           }
           if (input.type === "date") {
-            if(!isValidDate(e.currentTarget.value)){
-                 alert(`Invalid ${label.title?.replace(/:/g, "").trim()}!, Resetting date.`)
-                  e.currentTarget.value = format(new Date(),'yyyy-MM-dd')
-                  wait(100).then(()=>{
-                    inputRef?.current?.focus()
-                  })
-                  return
+            if (!isValidDate(e.currentTarget.value)) {
+              alert(
+                `Invalid ${label.title
+                  ?.replace(/:/g, "")
+                  .trim()}!, Resetting date.`
+              );
+              e.currentTarget.value = format(new Date(), "yyyy-MM-dd");
+              wait(100).then(() => {
+                inputRef?.current?.focus();
+              });
+              return;
             }
           }
           if (input && input.onBlur) input.onBlur(e);
@@ -289,6 +299,7 @@ export function TextInput({
 }
 
 export function TextAreaInput({
+  containerClassName,
   textarea,
   label,
   _inputRef,
@@ -302,6 +313,7 @@ export function TextAreaInput({
 
   return (
     <div
+      className={containerClassName}
       style={{
         display: "flex",
         alignItems: "center",
@@ -360,6 +372,7 @@ export const SelectInput = forwardRef(
       values = "",
       display = "",
       containerStyle,
+      containerClassName,
     }: {
       selectRef?: React.RefObject<HTMLSelectElement>;
       labelRef?: React.RefObject<HTMLLabelElement>;
@@ -369,6 +382,7 @@ export const SelectInput = forwardRef(
       values: string;
       display: string;
       containerStyle?: React.CSSProperties | undefined;
+      containerClassName?: string;
     },
     ref: any
   ) => {
@@ -386,6 +400,7 @@ export const SelectInput = forwardRef(
 
     return (
       <div
+        className={containerClassName}
         style={{
           display: "flex",
           height: "18px",
@@ -439,7 +454,7 @@ export function ButtonField({
         ref={buttonRetRef}
         style={{
           ...button.style,
-          cursor:"pointer",
+          cursor: "pointer",
           background: !disabled ? "transparent" : "#f1f1f1",
         }}
         className="tooltip-button"

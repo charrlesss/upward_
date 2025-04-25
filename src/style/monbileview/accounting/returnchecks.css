@@ -1,0 +1,121 @@
+.return-checks-mobile-buttons {
+  display: none !important;
+}
+@media (max-width: 768px) {
+  .main {
+    margin-bottom: 70px !important;
+  }
+  .return-checks-desktop-buttons {
+    display: none !important;
+  }
+
+  .return-checks-mobile-buttons {
+    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #f1f1f1;
+    justify-content: center;
+    z-index: 999;
+    padding: 5px 0px;
+  }
+  .search-input {
+    width: 100% !important;
+  }
+  .search-input input {
+    width: calc(100% - 50px) !important;
+  }
+  .layer-one {
+    padding: 10px !important;
+  }
+  .layer-one .content {
+    flex-direction: column;
+    row-gap: 5px;
+  }
+  .layer-one .custom-input {
+    width: 100% !important;
+  }
+  .layer-one .custom-input label {
+    width: 100px !important;
+  }
+  .layer-one .custom-input input {
+    width: calc(100% - 100px) !important;
+  }
+  .return-checks-buttons {
+    font-size: 8.5px !important;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+  .total-container input {
+    width: 150px !important;
+    justify-content: flex-start;
+    font-size: 11px !important;
+  }
+  .modal-accounting-entry-shadow{
+    z-index: 9999 !important;
+    background-color: rgba(51, 50, 50, 0.308) !important;
+
+  }
+  .modal-accounting-entry {
+    width: 99vw !important;
+    height: 70vh !important;
+    left: 0px !important;
+    right: 0px !important;
+    top: 0px !important;
+    bottom: 0px !important;
+    transform: none !important;
+    z-index: 99999;
+    background-color: white;
+    box-sizing: border-box;
+    padding: 5px !important;
+  }
+  .modal-accounting-entry {
+    border: 1px solid red;
+    top: 0% !important;
+    left: 50% !important;
+    transform: translate(-50%, -27%) !important;
+    z-index: 99999 !important;
+  }
+  .modal-accounting-entry .modal-content {
+    flex-direction: column;
+  }
+  .modal-accounting-entry .modal-layer-one {
+    flex-direction: column;
+    width: 100% !important;
+    row-gap: 5px;
+  }
+  .modal-accounting-entry .modal-layer-two {
+    width: 100% !important;
+  }
+  .modal-accounting-entry .modal-layer-two .content {
+    flex-direction: column;
+    width: 100% !important;
+    flex: 1 !important;
+    row-gap: 5px;
+  }
+  .modal-accounting-entry .custom-input {
+    width: 100% !important;
+  }
+  .modal-accounting-entry .custom-input label {
+    width: 100px !important;
+  }
+  .modal-accounting-entry .custom-input input {
+    width: calc(100% - 100px) !important;
+  }
+  .modal-accounting-entry .modal-buttons {
+    flex-direction: row !important;
+    column-gap: 10px;
+    width: 100% !important;
+    margin-bottom: 5px;
+  }
+  .modal-accounting-entry .modal-buttons button {
+    height: 30px !important;
+  }
+  .button-tittle{
+    display: none !important;
+  }
+  .modal-title {
+    font-size: 10px !important;
+  }
+}

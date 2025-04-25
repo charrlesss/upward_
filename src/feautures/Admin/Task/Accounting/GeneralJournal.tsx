@@ -36,8 +36,6 @@ import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../../lib/confirmationAlert";
-
-import { flushSync } from "react-dom";
 import SaveIcon from "@mui/icons-material/Save";
 import {
   SelectInput,
@@ -56,7 +54,7 @@ import {
 import { Loading } from "../../../../components/Loading";
 import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
 import SearchIcon from "@mui/icons-material/Search";
-
+import "../../../../style/monbileview/accounting/generaljournal.css";
 const initialState = {
   totalDebit: "",
   totalCredit: "",
@@ -349,7 +347,7 @@ export default function GeneralJournal() {
       if (refExplanation.current) {
         refExplanation.current.value = explanation;
       }
-      console.log(selected)
+      console.log(selected);
       table.current.setDataFormated(selected);
       monitor();
     },
@@ -1141,15 +1139,17 @@ export default function GeneralJournal() {
         loadingVoidGeneralJournalMutate ||
         isLoadingPrint) && <Loading />}
       <div
+        className="main"
         style={{
           display: "flex",
           flexDirection: "column",
           width: "100%",
-          height: "100%",
+          height: "auto",
           flex: 1,
           padding: "10px",
           background: "#F1F1F1",
           rowGap: "10px",
+          position: "relative",
         }}
       >
         <div
@@ -1164,9 +1164,11 @@ export default function GeneralJournal() {
               display: "flex",
               alignItems: "center",
               columnGap: "5px",
+              width: "100%",
             }}
           >
             <TextInput
+              containerClassName="search-input"
               label={{
                 title: "Search: ",
                 style: {
@@ -1201,148 +1203,158 @@ export default function GeneralJournal() {
               }}
               inputRef={inputSearchRef}
             />
-            {modeDefault && (
-              <Button
-                sx={{
-                  height: "22px",
-                  fontSize: "11px",
-                }}
-                variant="contained"
-                startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
-                id="entry-header-save-button"
-                onClick={() => {
-                  setMode("add");
-                }}
-                color="primary"
-              >
-                New
-              </Button>
-            )}
-            <LoadingButton
-              sx={{
-                height: "22px",
-                fontSize: "11px",
+
+            <div
+              className="general-journal-desktop-buttons"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                columnGap: "10px",
               }}
-              loading={loadingGeneralJournalMutate}
-              disabled={modeDefault}
-              onClick={handleOnSave}
-              color="success"
-              variant="contained"
             >
-              Save
-            </LoadingButton>
-            {(modeAdd || modeUpdate) && (
+              {modeDefault && (
+                <Button
+                  sx={{
+                    height: "22px",
+                    fontSize: "11px",
+                  }}
+                  variant="contained"
+                  startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+                  id="entry-header-save-button"
+                  onClick={() => {
+                    setMode("add");
+                  }}
+                  color="primary"
+                >
+                  New
+                </Button>
+              )}
               <LoadingButton
                 sx={{
                   height: "22px",
                   fontSize: "11px",
                 }}
+                loading={loadingGeneralJournalMutate}
+                disabled={modeDefault}
+                onClick={handleOnSave}
+                color="success"
                 variant="contained"
-                startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
-                color="error"
+              >
+                Save
+              </LoadingButton>
+              {(modeAdd || modeUpdate) && (
+                <LoadingButton
+                  sx={{
+                    height: "22px",
+                    fontSize: "11px",
+                  }}
+                  variant="contained"
+                  startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
+                  color="error"
+                  onClick={() => {
+                    Swal.fire({
+                      title: "Are you sure?",
+                      text: "You won't be able to revert this!",
+                      icon: "warning",
+                      showCancelButton: true,
+                      confirmButtonColor: "#3085d6",
+                      cancelButtonColor: "#d33",
+                      confirmButtonText: "Yes, cancel it!",
+                    }).then((result) => {
+                      if (result.isConfirmed) {
+                        onCancel();
+                      }
+                    });
+                  }}
+                  disabled={modeDefault}
+                >
+                  Cancel
+                </LoadingButton>
+              )}
+              <LoadingButton
+                sx={{
+                  height: "22px",
+                  fontSize: "11px",
+                  background: deepOrange[500],
+                  ":hover": {
+                    background: deepOrange[600],
+                  },
+                }}
+                onClick={handleVoid}
+                loading={loadingVoidGeneralJournalMutate}
+                disabled={modeDefault}
+                variant="contained"
+                startIcon={<NotInterestedIcon sx={{ width: 20, height: 20 }} />}
+              >
+                Void
+              </LoadingButton>
+              <LoadingButton
+                sx={{
+                  height: "22px",
+                  fontSize: "11px",
+                  background: brown[500],
+                  ":hover": {
+                    background: brown[600],
+                  },
+                }}
+                onClick={handleJobs}
+                variant="contained"
+                startIcon={<CardTravelIcon sx={{ width: 20, height: 20 }} />}
+              >
+                Jobs
+              </LoadingButton>
+              <Button
+                disabled={modeDefault}
+                id="basic-button"
+                aria-haspopup="true"
                 onClick={() => {
-                  Swal.fire({
-                    title: "Are you sure?",
-                    text: "You won't be able to revert this!",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#3085d6",
-                    cancelButtonColor: "#d33",
-                    confirmButtonText: "Yes, cancel it!",
-                  }).then((result) => {
-                    if (result.isConfirmed) {
-                      onCancel();
-                    }
+                  const data = table.current.getData();
+                  const generalJournal: any = data.map((itm: any) => {
+                    return {
+                      code: itm[0],
+                      acctName: itm[1],
+                      subAcctName: itm[2],
+                      ClientName: itm[3],
+                      debit: itm[4],
+                      credit: itm[5],
+                      TC_Code: itm[6],
+                      remarks: itm[7],
+                      vatType: itm[8],
+                      invoice: itm[9],
+                      TempID: itm[10],
+                      IDNo: itm[11],
+                      BranchCode: itm[12],
+                    };
+                  });
+
+                  mutatePrint({
+                    JVNo: refRefNo.current?.value,
+                    JVDate: refDate.current?.value,
+                    JVExp: refExplanation.current?.value,
+                    generalJournal,
+                    reportTitle:
+                      process.env.REACT_APP_DEPARTMENT === "UMIS"
+                        ? "UPWARD MANAGEMENT INSURANCE SERVICES"
+                        : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
                   });
                 }}
-                disabled={modeDefault}
+                sx={{
+                  height: "22px",
+                  fontSize: "11px",
+                  color: "white",
+                  backgroundColor: grey[600],
+                  "&:hover": {
+                    backgroundColor: grey[700],
+                  },
+                }}
               >
-                Cancel
-              </LoadingButton>
-            )}
-            <LoadingButton
-              sx={{
-                height: "22px",
-                fontSize: "11px",
-                background: deepOrange[500],
-                ":hover": {
-                  background: deepOrange[600],
-                },
-              }}
-              onClick={handleVoid}
-              loading={loadingVoidGeneralJournalMutate}
-              disabled={modeDefault}
-              variant="contained"
-              startIcon={<NotInterestedIcon sx={{ width: 20, height: 20 }} />}
-            >
-              Void
-            </LoadingButton>
-            <LoadingButton
-              sx={{
-                height: "22px",
-                fontSize: "11px",
-                background: brown[500],
-                ":hover": {
-                  background: brown[600],
-                },
-              }}
-              onClick={handleJobs}
-              variant="contained"
-              startIcon={<CardTravelIcon sx={{ width: 20, height: 20 }} />}
-            >
-              Jobs
-            </LoadingButton>
-
-            <Button
-              disabled={modeDefault}
-              id="basic-button"
-              aria-haspopup="true"
-              onClick={() => {
-                const data = table.current.getData();
-                const generalJournal: any = data.map((itm: any) => {
-                  return {
-                    code: itm[0],
-                    acctName: itm[1],
-                    subAcctName: itm[2],
-                    ClientName: itm[3],
-                    debit: itm[4],
-                    credit: itm[5],
-                    TC_Code: itm[6],
-                    remarks: itm[7],
-                    vatType: itm[8],
-                    invoice: itm[9],
-                    TempID: itm[10],
-                    IDNo: itm[11],
-                    BranchCode: itm[12],
-                  };
-                });
-
-                mutatePrint({
-                  JVNo: refRefNo.current?.value,
-                  JVDate: refDate.current?.value,
-                  JVExp: refExplanation.current?.value,
-                  generalJournal,
-                  reportTitle:
-                    process.env.REACT_APP_DEPARTMENT === "UMIS"
-                      ? "UPWARD MANAGEMENT INSURANCE SERVICES"
-                      : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
-                });
-              }}
-              sx={{
-                height: "22px",
-                fontSize: "11px",
-                color: "white",
-                backgroundColor: grey[600],
-                "&:hover": {
-                  backgroundColor: grey[700],
-                },
-              }}
-            >
-              Print
-            </Button>
+                Print
+              </Button>
+            </div>
           </div>
         </div>
         <div
+          className="layer-one"
           style={{
             position: "relative",
             width: "100%",
@@ -1357,6 +1369,7 @@ export default function GeneralJournal() {
             <LoadingButton loading={loadingGeneralJournalGenerator} />
           ) : (
             <TextInput
+              containerClassName="custom-input"
               label={{
                 title: "Ref. No. : ",
                 style: {
@@ -1379,6 +1392,7 @@ export default function GeneralJournal() {
             />
           )}
           <TextInput
+            containerClassName="custom-input"
             label={{
               title: "Date : ",
               style: {
@@ -1401,6 +1415,7 @@ export default function GeneralJournal() {
             inputRef={refDate}
           />
           <TextInput
+            containerClassName="custom-input"
             label={{
               title: "Explanation : ",
               style: {
@@ -1423,6 +1438,7 @@ export default function GeneralJournal() {
           />
         </div>
         <fieldset
+          className="layer-two"
           style={{
             border: "1px solid #cbd5e1",
             borderRadius: "5px",
@@ -1435,12 +1451,14 @@ export default function GeneralJournal() {
           }}
         >
           <div
+            className="layer-two-main-div-container"
             style={{
               display: "flex",
               gap: "10px",
             }}
           >
             <TextInput
+              containerClassName="custom-input "
               label={{
                 title: "Code : ",
                 style: {
@@ -1480,6 +1498,7 @@ export default function GeneralJournal() {
               disableIcon={modeDefault}
             />
             <TextInput
+              containerClassName="custom-input "
               label={{
                 title: "Account Name : ",
                 style: {
@@ -1501,8 +1520,8 @@ export default function GeneralJournal() {
               }}
               inputRef={refAccountName}
             />
-
             <TextInput
+              containerClassName="custom-input "
               label={{
                 title: "Sub Account : ",
                 style: {
@@ -1524,8 +1543,8 @@ export default function GeneralJournal() {
               }}
               inputRef={refSubAccount}
             />
-
             <TextInput
+              containerClassName="custom-input "
               label={{
                 title: "I.D : ",
                 style: {
@@ -1566,6 +1585,7 @@ export default function GeneralJournal() {
             />
           </div>
           <div
+            className="layer-two-main-div-container"
             style={{
               display: "flex",
               gap: "10px",
@@ -1573,6 +1593,7 @@ export default function GeneralJournal() {
             }}
           >
             <TextFormatedInput
+              containerClassName="custom-input "
               label={{
                 title: "Debit : ",
                 style: {
@@ -1594,6 +1615,7 @@ export default function GeneralJournal() {
               inputRef={refDebit}
             />
             <TextFormatedInput
+              containerClassName="custom-input "
               label={{
                 title: "Credit : ",
                 style: {
@@ -1615,6 +1637,7 @@ export default function GeneralJournal() {
               inputRef={refCredit}
             />
             <TextInput
+              containerClassName="custom-input "
               label={{
                 title: "TC : ",
                 style: {
@@ -1654,6 +1677,7 @@ export default function GeneralJournal() {
               disableIcon={modeDefault}
             />
             <TextInput
+              containerClassName="custom-input "
               label={{
                 title: "Remarks : ",
                 style: {
@@ -1676,6 +1700,7 @@ export default function GeneralJournal() {
             />
           </div>
           <div
+            className="layer-two-main-div-container"
             style={{
               display: "flex",
               gap: "10px",
@@ -1683,6 +1708,7 @@ export default function GeneralJournal() {
             }}
           >
             <SelectInput
+              containerClassName="custom-input "
               label={{
                 title: "Vat Type : ",
                 style: {
@@ -1708,6 +1734,7 @@ export default function GeneralJournal() {
               display={"key"}
             />
             <TextInput
+              containerClassName="custom-input "
               label={{
                 title: "OR/Invoice No. : ",
                 style: {
@@ -1752,6 +1779,7 @@ export default function GeneralJournal() {
           containerStyle={{
             flex: 1,
             height: "auto",
+            minHeight: "200px",
           }}
           ref={table}
           columns={selectedCollectionColumns}
@@ -1815,6 +1843,7 @@ export default function GeneralJournal() {
           }}
         />
         <div
+          className="footer-table"
           style={{
             fontSize: "13px",
             border: "1px solid #d4d4d8",
@@ -2106,6 +2135,154 @@ export default function GeneralJournal() {
             </div>
           </Box>
         </Modal>
+
+        <div
+          className="general-journal-mobile-buttons"
+          style={{
+            display: "none",
+            alignItems: "center",
+            columnGap: "10px",
+          }}
+        >
+          {modeDefault && (
+            <Button
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+              id="entry-header-save-button"
+              onClick={() => {
+                setMode("add");
+              }}
+              color="primary"
+            >
+              New
+            </Button>
+          )}
+          <LoadingButton
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+            }}
+            loading={loadingGeneralJournalMutate}
+            disabled={modeDefault}
+            onClick={handleOnSave}
+            color="success"
+            variant="contained"
+          >
+            Save
+          </LoadingButton>
+          {(modeAdd || modeUpdate) && (
+            <LoadingButton
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
+              color="error"
+              onClick={() => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, cancel it!",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    onCancel();
+                  }
+                });
+              }}
+              disabled={modeDefault}
+            >
+              Cancel
+            </LoadingButton>
+          )}
+          <LoadingButton
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+              background: deepOrange[500],
+              ":hover": {
+                background: deepOrange[600],
+              },
+            }}
+            onClick={handleVoid}
+            loading={loadingVoidGeneralJournalMutate}
+            disabled={modeDefault}
+            variant="contained"
+            startIcon={<NotInterestedIcon sx={{ width: 20, height: 20 }} />}
+          >
+            Void
+          </LoadingButton>
+          <LoadingButton
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+              background: brown[500],
+              ":hover": {
+                background: brown[600],
+              },
+            }}
+            onClick={handleJobs}
+            variant="contained"
+            startIcon={<CardTravelIcon sx={{ width: 20, height: 20 }} />}
+          >
+            Jobs
+          </LoadingButton>
+          <Button
+            disabled={modeDefault}
+            id="basic-button"
+            aria-haspopup="true"
+            onClick={() => {
+              const data = table.current.getData();
+              const generalJournal: any = data.map((itm: any) => {
+                return {
+                  code: itm[0],
+                  acctName: itm[1],
+                  subAcctName: itm[2],
+                  ClientName: itm[3],
+                  debit: itm[4],
+                  credit: itm[5],
+                  TC_Code: itm[6],
+                  remarks: itm[7],
+                  vatType: itm[8],
+                  invoice: itm[9],
+                  TempID: itm[10],
+                  IDNo: itm[11],
+                  BranchCode: itm[12],
+                };
+              });
+
+              mutatePrint({
+                JVNo: refRefNo.current?.value,
+                JVDate: refDate.current?.value,
+                JVExp: refExplanation.current?.value,
+                generalJournal,
+                reportTitle:
+                  process.env.REACT_APP_DEPARTMENT === "UMIS"
+                    ? "UPWARD MANAGEMENT INSURANCE SERVICES"
+                    : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
+              });
+            }}
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+              color: "white",
+              backgroundColor: grey[600],
+              "&:hover": {
+                backgroundColor: grey[700],
+              },
+            }}
+          >
+            Print
+          </Button>
+        </div>
       </div>
     </>
   );

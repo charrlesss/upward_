@@ -12,6 +12,7 @@ import { wait } from "@testing-library/user-event/dist/utils";
 import Swal from "sweetalert2";
 import { Loading } from "../../../../components/Loading";
 import PageHelmet from "../../../../components/Helmet";
+import "../../../../style/monbileview/accounting/pullout.css";
 
 const column = [
   {
@@ -216,6 +217,7 @@ export default function CheckPulloutRequest() {
 
   return (
     <div
+      className="main"
       style={{
         flex: "1",
         display: "flex",
@@ -227,6 +229,7 @@ export default function CheckPulloutRequest() {
       <PageHelmet title="Pullout Request" />
       {isLoadingSavePulloutRequest && <Loading />}
       <div
+        className="content"
         style={{
           padding: "10px",
           width: "62%",
@@ -253,6 +256,7 @@ export default function CheckPulloutRequest() {
                 }}
               >
                 <SelectInput
+                  containerClassName="custom-input"
                   ref={_rcpnRefParent}
                   label={{
                     title: "RCP No.  : ",
@@ -309,6 +313,7 @@ export default function CheckPulloutRequest() {
             ))}
           {(flag === "" || flag === "add") && (
             <TextInput
+              containerClassName="custom-input"
               containerStyle={{
                 width: "50%",
                 marginBottom: "8px",
@@ -337,6 +342,7 @@ export default function CheckPulloutRequest() {
             <LoadingButton loading={paymentTypeLoading} />
           ) : (
             <div
+              className="auto-complete-container"
               style={{
                 width: "50%",
                 marginBottom: "8px",
@@ -381,7 +387,10 @@ export default function CheckPulloutRequest() {
           {paymentTypeLoading ? (
             <LoadingButton loading={paymentTypeLoading} />
           ) : (
-            <div style={{ width: "50%", marginBottom: "8px" }}>
+            <div
+              className="auto-complete-container"
+              style={{ width: "50%", marginBottom: "8px" }}
+            >
               <Autocomplete
                 disableInput={flag === "" || flag === "edit"}
                 label={{
@@ -419,6 +428,7 @@ export default function CheckPulloutRequest() {
             </div>
           )}
           <SelectInput
+            containerClassName="custom-input"
             label={{
               title: "Reason : ",
               style: {

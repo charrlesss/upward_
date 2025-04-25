@@ -27,6 +27,7 @@ import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../../lib/confirmationAlert";
+import "../../../../style/monbileview/accounting/returnchecks.css";
 
 export default function ReturnCheck() {
   const { user, myAxios } = useContext(AuthContext);
@@ -359,11 +360,12 @@ export default function ReturnCheck() {
         isLoadingReturnChecksSearchSelectedSave ||
         isLoadingReturnChecksUpdate) && <Loading />}
       <div
+        className="main"
         style={{
           display: "flex",
           flexDirection: "column",
           width: "100%",
-          height: "100%",
+          height: "auto",
           flex: 1,
           padding: "5px",
           background: "#F1F1F1",
@@ -378,6 +380,7 @@ export default function ReturnCheck() {
           }}
         >
           <TextInput
+            containerClassName="search-input"
             label={{
               title: "Search: ",
               style: {
@@ -405,6 +408,170 @@ export default function ReturnCheck() {
             }}
             inputRef={inputSearchRef}
           />
+          <div
+            className="return-checks-desktop-buttons"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              columnGap: "10px",
+            }}
+          >
+            {mode === "" && (
+              <Button
+                sx={{
+                  height: "22px",
+                  fontSize: "11px",
+                }}
+                variant="contained"
+                startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+                id="entry-header-save-button"
+                onClick={() => {
+                  setMode("add");
+                }}
+              >
+                New
+              </Button>
+            )}
+            {mode !== "" && (
+              <Button
+                sx={{
+                  height: "22px",
+                  fontSize: "11px",
+                }}
+                id="save-entry-header"
+                color="primary"
+                variant="contained"
+                type="submit"
+                startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
+                onClick={handleOnSave}
+              >
+                Save
+              </Button>
+            )}
+            <Button
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              disabled={mode === ""}
+              variant="contained"
+              startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
+              color="error"
+              onClick={() => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, cancel it!",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    wait(100).then(() => {
+                      resetReturnChecks();
+                    });
+                  }
+                });
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+        <div
+          className="layer-one"
+          style={{
+            display: "flex",
+            width: "100%",
+            padding: "10px 40px",
+            flexDirection: "column",
+            rowGap: "10px",
+            border: "1px solid #64748b",
+            marginBottom: "10px",
+          }}
+        >
+          <div
+            className="content"
+            style={{
+              display: "flex",
+              columnGap: "200px",
+            }}
+          >
+            <TextInput
+              containerClassName="custom-input"
+              label={{
+                title: "Ref No.: ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
+              }}
+              input={{
+                disabled: mode === "",
+                // readOnly: true,
+                className: "ref_no",
+                type: "text",
+                style: { width: "200px" },
+                defaultValue: "",
+              }}
+              inputRef={refNoRef}
+              icon={<AutorenewIcon sx={{ fontSize: "18px" }} />}
+              onIconClick={(e) => {
+                e.preventDefault();
+                // RefetchDepositSlipCode();
+              }}
+            />
+            <TextInput
+              containerClassName="custom-input"
+              label={{
+                title: "Date : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "70px",
+                },
+              }}
+              input={{
+                disabled: mode === "",
+                defaultValue: format(new Date(), "yyyy-MM-dd"),
+                className: "date",
+                type: "date",
+                style: { width: "200px" },
+              }}
+              inputRef={refDate}
+            />
+          </div>
+          <TextInput
+            containerClassName="custom-input"
+            label={{
+              title: "Explanation : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "100px",
+              },
+            }}
+            input={{
+              disabled: mode === "",
+              className: "exp",
+              type: "text",
+              style: { width: "670px" },
+              defaultValue: "Returned Checks",
+            }}
+            inputRef={refExp}
+          />
+        </div>
+        <TabPage ref={returnCheckComponentRef} mode={mode} />
+        <div
+          className="return-checks-mobile-buttons"
+          style={{
+            display: "none",
+            alignItems: "center",
+            columnGap: "10px",
+          }}
+        >
           {mode === "" && (
             <Button
               sx={{
@@ -467,87 +634,8 @@ export default function ReturnCheck() {
             Cancel
           </Button>
         </div>
-        <div
-          style={{
-            display: "flex",
-            width: "100%",
-            padding: "10px 40px",
-            flexDirection: "column",
-            rowGap: "10px",
-            border: "1px solid #64748b",
-            marginBottom: "10px",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              columnGap: "200px",
-            }}
-          >
-            <TextInput
-              label={{
-                title: "Ref No.: ",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "100px",
-                },
-              }}
-              input={{
-                disabled: mode === "",
-                // readOnly: true,
-                className: "ref_no",
-                type: "text",
-                style: { width: "200px" },
-                defaultValue: "",
-              }}
-              inputRef={refNoRef}
-              icon={<AutorenewIcon sx={{ fontSize: "18px" }} />}
-              onIconClick={(e) => {
-                e.preventDefault();
-                // RefetchDepositSlipCode();
-              }}
-            />
-            <TextInput
-              label={{
-                title: "Date : ",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "70px",
-                },
-              }}
-              input={{
-                disabled: mode === "",
-                defaultValue: format(new Date(), "yyyy-MM-dd"),
-                className: "date",
-                type: "date",
-                style: { width: "200px" },
-              }}
-              inputRef={refDate}
-            />
-          </div>
-          <TextInput
-            label={{
-              title: "Explanation : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-              },
-            }}
-            input={{
-              disabled: mode === "",
-              className: "exp",
-              type: "text",
-              style: { width: "670px" },
-              defaultValue: "Returned Checks",
-            }}
-            inputRef={refExp}
-          />
-        </div>
-        <TabPage ref={returnCheckComponentRef} mode={mode} />
       </div>
+
       <SearchReturnCheckUpwardTableModalSearch />
     </>
   );
@@ -623,6 +711,7 @@ const TabPage = forwardRef(({ mode }: any, ref) => {
       <div style={{ display: "flex" }}>
         {tabs.map((tab, index) => (
           <button
+            className="return-checks-buttons"
             ref={(el) => (buttonsRef.current[index] = el)}
             key={tab.id}
             onClick={(el) => {
@@ -713,6 +802,7 @@ const TabPage = forwardRef(({ mode }: any, ref) => {
           </div>
         ))}
         <div
+          className="total-container"
           style={{
             display: "flex",
             justifyContent: "space-between",
@@ -1027,6 +1117,7 @@ const SelectCheck = forwardRef(
             rows={[]}
             containerStyle={{
               height: "auto",
+              minHeight: "200px",
               flex: 1,
             }}
             getSelectedItem={(rowItm: any) => {
@@ -1240,6 +1331,7 @@ const SelectedCheckToBeReturned = forwardRef(
           containerStyle={{
             height: "auto",
             flex: 1,
+            minHeight: "200px",
           }}
           getSelectedItem={(rowItm: any) => {
             if (rowItm) {
@@ -1312,6 +1404,7 @@ const AccountingEntry = forwardRef((props: any, ref) => {
           containerStyle={{
             height: "auto",
             flex: 1,
+            minHeight: "200px",
           }}
           getSelectedItem={(rowItm: any) => {
             if (rowItm) {
@@ -1333,6 +1426,7 @@ const AccountingEntry = forwardRef((props: any, ref) => {
         />
       </div>
       <div
+        className="total-container"
         style={{
           display: "flex",
           width: "100%",
@@ -1374,12 +1468,9 @@ const AccountingEntry = forwardRef((props: any, ref) => {
 });
 const ModalReturnCheckEntries = forwardRef(
   ({ handleConfirm, handleCancel, hasSelectedRow }: any, ref) => {
-
     const modalRef = useRef<HTMLDivElement>(null);
     const isMoving = useRef(false);
     const offset = useRef({ x: 0, y: 0 });
-
-
 
     const { user, myAxios } = useContext(AuthContext);
     const table = useRef<any>(null);
@@ -1550,6 +1641,7 @@ const ModalReturnCheckEntries = forwardRef(
       <>
         {isLoadingEntries && <Loading />}
         <div
+          className="modal-accounting-entry-shadow"
           style={{
             position: "fixed",
             top: 0,
@@ -1567,7 +1659,8 @@ const ModalReturnCheckEntries = forwardRef(
           }}
         ></div>
         <div
-        ref={modalRef}
+          className="modal-accounting-entry"
+          ref={modalRef}
           style={{
             height: blick ? "402px" : "400px",
             width: blick ? "60.3%" : "60%",
@@ -1594,11 +1687,13 @@ const ModalReturnCheckEntries = forwardRef(
               position: "relative",
               alignItems: "center",
               cursor: "grab",
-
             }}
             onMouseDown={handleMouseDown}
           >
-            <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+            <span
+              className="modal-title"
+              style={{ fontSize: "13px", fontWeight: "bold" }}
+            >
               Return Detail and Accounting Entry (Check No.: {checkNo})
             </span>
             <button
@@ -1635,6 +1730,7 @@ const ModalReturnCheckEntries = forwardRef(
                 columnGap: "5px",
                 height: "auto",
               }}
+              className="modal-content"
             >
               <div
                 style={{
@@ -1669,6 +1765,7 @@ const ModalReturnCheckEntries = forwardRef(
                     Return Detail
                   </span>
                   <div
+                    className="modal-layer-one"
                     style={{
                       display: "flex",
                       columnGap: "50px",
@@ -1686,7 +1783,7 @@ const ModalReturnCheckEntries = forwardRef(
                       }}
                       selectRef={refReturnReason}
                       select={{
-                        style: { flex: 1, height: "22px" },
+                        style: { width: "calc(85% - 100px)", height: "22px" },
                         defaultValue: "",
                       }}
                       datasource={[
@@ -1706,23 +1803,8 @@ const ModalReturnCheckEntries = forwardRef(
                       values={"value"}
                       display={"key"}
                     />
-                    {/* <TextInput
-                      label={{
-                        title: "Return Reason : ",
-                        style: {
-                          fontSize: "12px",
-                          fontWeight: "bold",
-                          width: "100px",
-                        },
-                      }}
-                      input={{
-                        className: "ref_no",
-                        type: "text",
-                        style: { width: "200px" },
-                      }}
-                      inputRef={refReturnReason}
-                    /> */}
                     <TextInput
+                      containerClassName="custom-input"
                       label={{
                         title: "Return Date : ",
                         style: {
@@ -1765,6 +1847,7 @@ const ModalReturnCheckEntries = forwardRef(
                     Credit Entry
                   </span>
                   <div
+                    className="modal-layer-two"
                     style={{
                       display: "flex",
                       flexDirection: "column",
@@ -1773,12 +1856,14 @@ const ModalReturnCheckEntries = forwardRef(
                     }}
                   >
                     <div
+                      className="content"
                       style={{
                         display: "flex",
                         columnGap: "50px",
                       }}
                     >
                       <TextInput
+                        containerClassName="custom-input"
                         label={{
                           title: "Account Name : ",
                           style: {
@@ -1796,6 +1881,7 @@ const ModalReturnCheckEntries = forwardRef(
                         inputRef={refAccountName}
                       />
                       <TextInput
+                        containerClassName="custom-input"
                         label={{
                           title: "Account ID : ",
                           style: {
@@ -1814,12 +1900,14 @@ const ModalReturnCheckEntries = forwardRef(
                       />
                     </div>
                     <div
+                      className="content"
                       style={{
                         display: "flex",
                         columnGap: "50px",
                       }}
                     >
                       <TextInput
+                        containerClassName="custom-input"
                         label={{
                           title: "Amount : ",
                           style: {
@@ -1837,6 +1925,7 @@ const ModalReturnCheckEntries = forwardRef(
                         inputRef={refAmount}
                       />
                       <TextInput
+                        containerClassName="custom-input"
                         label={{
                           title: "Sub Account : ",
                           style: {
@@ -1858,6 +1947,7 @@ const ModalReturnCheckEntries = forwardRef(
                 </div>
               </div>
               <div
+                className="modal-buttons"
                 style={{
                   width: "100px",
                   display: "flex",
@@ -1944,6 +2034,7 @@ const ModalReturnCheckEntries = forwardRef(
                     </svg>
                   </span>
                   <span
+                    className="button-tittle"
                     style={{
                       position: "absolute",
                       top: "25px",
@@ -2006,6 +2097,7 @@ const ModalReturnCheckEntries = forwardRef(
                     </svg>
                   </span>
                   <span
+                    className="button-tittle"
                     style={{
                       position: "absolute",
                       top: "25px",
@@ -2087,7 +2179,9 @@ const BlinkingButton = ({ onClick, style, children }: any) => {
   return (
     <>
       <button
-        className={`${uniClass} ${isBlinking ? "blinking" : ""}`}
+        className={`${uniClass} ${
+          isBlinking ? "blinking" : ""
+        } blinking-button-access-class`}
         onClick={handleClick}
         style={style}
       >

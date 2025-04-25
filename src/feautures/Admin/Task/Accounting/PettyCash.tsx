@@ -16,7 +16,6 @@ import Swal from "sweetalert2";
 import { AuthContext } from "../../../../components/AuthContext";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { useMutation, useQuery } from "react-query";
-import useQueryModalTable from "../../../../hooks/useQueryModalTable";
 import { wait } from "../../../../lib/wait";
 import {
   codeCondfirmationAlert,
@@ -36,7 +35,7 @@ import { Loading } from "../../../../components/Loading";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { flushSync } from "react-dom";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
-
+import "../../../../style/monbileview/accounting/pettycash.css";
 export const reducer = (state: any, action: any) => {
   switch (action.type) {
     case "UPDATE_FIELD":
@@ -574,14 +573,16 @@ export default function PettyCash() {
       <PettyCashUpwardTableModalSearch />
       <ClientUpwardTableModalSearch />
       <div
+        className="main"
         style={{
           display: "flex",
           flexDirection: "column",
           width: "100%",
-          height: "100%",
+          height: "auto",
           flex: 1,
           padding: "5px",
           background: "#F1F1F1",
+          position: "relative",
         }}
       >
         <div
@@ -593,6 +594,7 @@ export default function PettyCash() {
           }}
         >
           <TextInput
+            containerClassName="search-input"
             label={{
               title: "Search: ",
               style: {
@@ -627,68 +629,78 @@ export default function PettyCash() {
             }}
             inputRef={inputSearchRef}
           />
-          {pettyCashMode === "" && (
-            <Button
-              sx={{
-                height: "22px",
-                fontSize: "11px",
-              }}
-              variant="contained"
-              startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
-              id="entry-header-save-button"
-              onClick={() => {
-                setPettyCashMode("add");
-              }}
-            >
-              New
-            </Button>
-          )}
-          <LoadingButton
-            sx={{
-              height: "22px",
-              fontSize: "11px",
+          <div
+            className="petty-cash-desktop-buttons"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              columnGap: "10px",
             }}
-            id="save-entry-header"
-            color="primary"
-            variant="contained"
-            type="submit"
-            onClick={handleOnSave}
-            disabled={pettyCashMode === ""}
-            startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
-            loading={loadingAddUpdatePettyCash}
           >
-            {pettyCashMode === "edit" ? "Update" : "Save"}
-          </LoadingButton>
-          {pettyCashMode !== "" && (
-            <Button
+            {pettyCashMode === "" && (
+              <Button
+                sx={{
+                  height: "22px",
+                  fontSize: "11px",
+                }}
+                variant="contained"
+                startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+                id="entry-header-save-button"
+                onClick={() => {
+                  setPettyCashMode("add");
+                }}
+              >
+                New
+              </Button>
+            )}
+            <LoadingButton
               sx={{
                 height: "22px",
                 fontSize: "11px",
               }}
+              id="save-entry-header"
+              color="primary"
               variant="contained"
-              startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
-              color="error"
-              onClick={() => {
-                Swal.fire({
-                  title: "Are you sure?",
-                  text: "You won't be able to revert this!",
-                  icon: "warning",
-                  showCancelButton: true,
-                  confirmButtonColor: "#3085d6",
-                  cancelButtonColor: "#d33",
-                  confirmButtonText: "Yes, cancel it!",
-                }).then((result) => {
-                  if (result.isConfirmed) {
-                    resetPettyCash();
-                  }
-                });
-              }}
+              type="submit"
+              onClick={handleOnSave}
+              disabled={pettyCashMode === ""}
+              startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
+              loading={loadingAddUpdatePettyCash}
             >
-              Cancel
-            </Button>
-          )}
+              {pettyCashMode === "edit" ? "Update" : "Save"}
+            </LoadingButton>
+            {pettyCashMode !== "" && (
+              <Button
+                sx={{
+                  height: "22px",
+                  fontSize: "11px",
+                }}
+                variant="contained"
+                startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
+                color="error"
+                onClick={() => {
+                  Swal.fire({
+                    title: "Are you sure?",
+                    text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Yes, cancel it!",
+                  }).then((result) => {
+                    if (result.isConfirmed) {
+                      resetPettyCash();
+                    }
+                  });
+                }}
+              >
+                Cancel
+              </Button>
+            )}
+          </div>
         </div>
         <div
+          className="layer-one"
           style={{
             display: "flex",
             flexDirection: "row",
@@ -710,6 +722,7 @@ export default function PettyCash() {
               <LoadingButton loading={loadingPettyCashIdGenerator} />
             ) : (
               <TextInput
+                containerClassName="custom-input"
                 label={{
                   title: "Ref. No. : ",
                   style: {
@@ -739,6 +752,7 @@ export default function PettyCash() {
               />
             )}
             <TextInput
+              containerClassName="custom-input"
               label={{
                 title: "Deposit Date: ",
                 style: {
@@ -771,6 +785,7 @@ export default function PettyCash() {
             }}
           >
             <TextInput
+              containerClassName="custom-input"
               label={{
                 title: "Payee : ",
                 style: {
@@ -792,6 +807,7 @@ export default function PettyCash() {
               inputRef={payeeRef}
             />
             <TextInput
+              containerClassName="custom-input"
               label={{
                 title: "Explanation : ",
                 style: {
@@ -815,6 +831,7 @@ export default function PettyCash() {
           </div>
         </div>
         <div
+          className="layer-two"
           style={{
             display: "flex",
             flexDirection: "row",
@@ -825,6 +842,7 @@ export default function PettyCash() {
           }}
         >
           <div
+            className="layer-two-main-div"
             style={{
               display: "flex",
               flexDirection: "column",
@@ -906,12 +924,14 @@ export default function PettyCash() {
               // />
             )}
             <div
+              className="layer-two-main-div-container"
               style={{
                 display: "flex",
                 columnGap: "20px",
               }}
             >
               <TextInput
+                containerClassName="custom-input"
                 label={{
                   title: "Usage : ",
                   style: {
@@ -952,6 +972,7 @@ export default function PettyCash() {
                 }}
               >
                 <label
+                  className="petty-cash-amount-label"
                   style={{
                     fontSize: "12px",
                     fontWeight: "bold",
@@ -961,6 +982,7 @@ export default function PettyCash() {
                   Amount :
                 </label>
                 <NumericFormat
+                  className="petty-cash-amount-input"
                   disabled={isDisableField}
                   getInputRef={amountRef}
                   decimalScale={2}
@@ -986,12 +1008,14 @@ export default function PettyCash() {
               </div>
             </div>
             <div
+              className="layer-two-main-div-container"
               style={{
                 display: "flex",
                 columnGap: "20px",
               }}
             >
               <SelectInput
+                containerClassName="custom-input"
                 containerStyle={{
                   fontSize: "12px",
                   fontWeight: "bold",
@@ -1025,6 +1049,7 @@ export default function PettyCash() {
                 selectRef={vatRef}
               />
               <TextInput
+                containerClassName="custom-input"
                 label={{
                   title: "Invoice : ",
                   style: {
@@ -1047,6 +1072,7 @@ export default function PettyCash() {
                 inputRef={invoiceRef}
               />
               <Button
+                className="button-transaction"
                 disabled={isDisableField}
                 color="success"
                 variant="contained"
@@ -1066,7 +1092,7 @@ export default function PettyCash() {
             </div>
           </div>
         </div>
-        <br />
+        <div style={{ height: "5px" }}></div>
         <DataGridViewReact
           containerStyle={{
             flex: 1,
@@ -1130,6 +1156,75 @@ export default function PettyCash() {
             }
           }}
         />
+        <div
+          className="petty-cash-mobile-buttons"
+          style={{
+            display: "none",
+            alignItems: "center",
+            columnGap: "10px",
+          }}
+        >
+          {pettyCashMode === "" && (
+            <Button
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+              id="entry-header-save-button"
+              onClick={() => {
+                setPettyCashMode("add");
+              }}
+            >
+              New
+            </Button>
+          )}
+          <LoadingButton
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+            }}
+            id="save-entry-header"
+            color="primary"
+            variant="contained"
+            type="submit"
+            onClick={handleOnSave}
+            disabled={pettyCashMode === ""}
+            startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
+            loading={loadingAddUpdatePettyCash}
+          >
+            {pettyCashMode === "edit" ? "Update" : "Save"}
+          </LoadingButton>
+          {pettyCashMode !== "" && (
+            <Button
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
+              color="error"
+              onClick={() => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, cancel it!",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    resetPettyCash();
+                  }
+                });
+              }}
+            >
+              Cancel
+            </Button>
+          )}
+        </div>
       </div>
     </>
   );
@@ -1236,6 +1331,7 @@ export const Autocomplete = forwardRef(
     return (
       <div style={{ width: "100%" }}>
         <TextInput
+          containerClassName="custom-input"
           containerStyle={containerStyle}
           label={label}
           input={{
@@ -1625,6 +1721,7 @@ export const AutoCompletePro = forwardRef(
     return (
       <>
         <TextInput
+          containerClassName="custom-input"
           containerStyle={containerStyle}
           label={label}
           input={{
