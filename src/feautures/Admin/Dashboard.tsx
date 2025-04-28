@@ -151,10 +151,33 @@ export default function Dashboard() {
           height: "100%",
           padding: "5px",
           background: "#F1F1F1",
+          // rowGap:"0px"
         }}
       >
         <PageHelmet title={"Dashboard"} />
-        <div style={{ display: "flex" }}>
+        <div
+          className="mobile-title"
+          style={{
+            borderTop: "1px solid #64748b",
+            borderRight: "1px solid #64748b",
+            display: "none",
+            justifyContent: "center",
+            alignItems: "center",
+            background: "#3EA1E2",
+            color: "white",
+            padding: "5px",
+            margin: 0,
+          }}
+        >
+          RENEWAL NOTICE
+        </div>
+        <div
+          style={{
+            display: "flex",
+            padding: 0,
+            margin: 0,
+          }}
+        >
           {tabs.map((tab, index) => (
             <button
               ref={(el) => (buttonsRef.current[index] = el)}
@@ -205,6 +228,7 @@ export default function Dashboard() {
             </button>
           ))}
           <div
+            className="desktop-title"
             style={{
               flex: 1,
               borderTop: "1px solid #64748b",
@@ -212,8 +236,8 @@ export default function Dashboard() {
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              background:"#3EA1E2",
-              color:"white"
+              background: "#3EA1E2",
+              color: "white",
             }}
           >
             RENEWAL NOTICE

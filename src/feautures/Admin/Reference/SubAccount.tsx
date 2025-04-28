@@ -19,12 +19,13 @@ import { TextInput } from "../../../components/UpwardFields";
 import SearchIcon from "@mui/icons-material/Search";
 import { DataGridViewReact } from "../../../components/DataGridViewReact";
 import { Loading } from "../../../components/Loading";
+import "../../../style/monbileview/reference/reference.css";
 
 export const bankColumn = [
   { key: "Acronym", label: "Acronym", width: 200 },
   { key: "ShortName", label: "ShortName", width: 500 },
   { key: "Description", label: "Description", width: 200 },
-  { key: "Sub_Acct", label: "", width: 0,hide:true },
+  { key: "Sub_Acct", label: "", width: 0, hide: true },
 ];
 
 export default function SubAccount() {
@@ -36,7 +37,7 @@ export default function SubAccount() {
   const acronmyRef = useRef<HTMLInputElement>(null);
   const shortnameRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLInputElement>(null);
-  const subAcctRef = useRef('');
+  const subAcctRef = useRef("");
 
   const { mutate: mutateSearch, isLoading: loadingSearch } = useMutation({
     mutationKey: "search-sub-account",
@@ -153,7 +154,7 @@ export default function SubAccount() {
     if (descriptionRef.current) {
       descriptionRef.current.value = "";
     }
-    subAcctRef.current =  "";
+    subAcctRef.current = "";
   }
 
   function onSuccess(res: any) {
@@ -196,6 +197,7 @@ export default function SubAccount() {
           height: "100%",
           flex: 1,
           padding: "5px",
+          position: "relative",
         }}
       >
         <div
@@ -208,6 +210,7 @@ export default function SubAccount() {
           }}
         >
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "550px",
               marginRight: "20px",
@@ -253,6 +256,241 @@ export default function SubAccount() {
             }}
             inputRef={inputSearchRef}
           />
+          <div
+            className="button-action-desktop"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              columnGap: "8px",
+            }}
+          >
+            {mode === "" && (
+              <Button
+                style={{
+                  height: "22px",
+                  fontSize: "11px",
+                }}
+                variant="contained"
+                startIcon={<AddIcon />}
+                id="entry-header-save-button"
+                onClick={() => {
+                  setMode("add");
+                }}
+              >
+                New
+              </Button>
+            )}
+            <LoadingButton
+              style={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              id="save-entry-header"
+              color="primary"
+              variant="contained"
+              type="submit"
+              sx={{
+                height: "30px",
+                fontSize: "11px",
+              }}
+              onClick={handleOnSave}
+              startIcon={<SaveIcon />}
+              disabled={mode === ""}
+              loading={loadingAdd || loadingEdit}
+            >
+              Save
+            </LoadingButton>
+            {mode !== "" && (
+              <Button
+                style={{
+                  height: "22px",
+                  fontSize: "11px",
+                }}
+                variant="contained"
+                startIcon={<CloseIcon />}
+                color="error"
+                onClick={() => {
+                  Swal.fire({
+                    title: "Are you sure?",
+                    text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Yes, cancel it!",
+                  }).then((result) => {
+                    if (result.isConfirmed) {
+                      resetModule();
+                      setMode("");
+                      tableRef.current.setSelectedRow(null);
+                      tableRef.current.resetCheckBox();
+                    }
+                  });
+                }}
+              >
+                Cancel
+              </Button>
+            )}
+            <LoadingButton
+              id="save-entry-header"
+              variant="contained"
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+                backgroundColor: pink[500],
+                "&:hover": {
+                  backgroundColor: pink[600],
+                },
+              }}
+              loading={loadingDelete}
+              startIcon={<DeleteIcon />}
+              disabled={mode !== "edit"}
+              onClick={() => {
+                codeCondfirmationAlert({
+                  isUpdate: false,
+                  title: "Confirmation",
+                  saveTitle: "Confirm",
+                  text: `Are you sure you want to delete '${acronmyRef.current?.value}'?`,
+                  cb: (userCodeConfirmation) => {
+                    mutateDelete({
+                      Sub_Acct: subAcctRef.current,
+                      userCodeConfirmation,
+                    });
+                  },
+                });
+              }}
+            >
+              Delete
+            </LoadingButton>
+          </div>
+        </div>
+
+        <fieldset
+          className="container-max-width"
+          style={{
+            // border: "1px solid black",
+            padding: "5px",
+            width: "590px",
+            rowGap: "5px",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <TextInput
+            containerClassName="custom-input"
+            label={{
+              title: "Acronym : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "100px",
+              },
+            }}
+            input={{
+              disabled: mode === "",
+              type: "text",
+              style: { width: "500px" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  e.preventDefault();
+                  shortnameRef.current?.focus();
+                }
+              },
+            }}
+            inputRef={acronmyRef}
+          />
+          <TextInput
+            containerClassName="custom-input"
+            label={{
+              title: "Short Name : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "100px",
+              },
+            }}
+            input={{
+              disabled: mode === "",
+              type: "text",
+              style: { width: "500px" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  descriptionRef.current?.focus();
+
+                  e.preventDefault();
+                }
+              },
+            }}
+            inputRef={shortnameRef}
+          />
+          <TextInput
+            containerClassName="custom-input"
+            label={{
+              title: "Description : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "100px",
+              },
+            }}
+            input={{
+              disabled: mode === "",
+              type: "text",
+              style: { width: "500px" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  e.preventDefault();
+                }
+              },
+            }}
+            inputRef={descriptionRef}
+          />
+        </fieldset>
+
+        <div
+          style={{
+            marginTop: "10px",
+            width: "100%",
+            position: "relative",
+            flex: 1,
+            display: "flex",
+          }}
+        >
+          <DataGridViewReact
+            containerStyle={{
+              flex: 1,
+              height: "auto",
+            }}
+            ref={tableRef}
+            columns={bankColumn}
+            height="280px"
+            getSelectedItem={(rowItm: any) => {
+              if (rowItm) {
+                setMode("edit");
+                if (acronmyRef.current) {
+                  acronmyRef.current.value = rowItm[0];
+                }
+                if (shortnameRef.current) {
+                  shortnameRef.current.value = rowItm[1];
+                }
+                if (descriptionRef.current) {
+                  descriptionRef.current.value = rowItm[2];
+                }
+                subAcctRef.current = rowItm[3];
+              } else {
+                resetModule();
+              }
+            }}
+          />
+        </div>
+        <div
+          className="button-action-mobile"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            columnGap: "8px",
+          }}
+        >
           {mode === "" && (
             <Button
               style={{
@@ -352,124 +590,7 @@ export default function SubAccount() {
             Delete
           </LoadingButton>
         </div>
-
-        <fieldset
-          style={{
-            // border: "1px solid black",
-            padding: "5px",
-            width: "590px",
-            rowGap: "5px",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <TextInput
-            label={{
-              title: "Acronym : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-              },
-            }}
-            input={{
-              disabled: mode === "",
-              type: "text",
-              style: { width: "500px" },
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  e.preventDefault();
-                  shortnameRef.current?.focus();
-                }
-              },
-            }}
-            inputRef={acronmyRef}
-          />
-          <TextInput
-            label={{
-              title: "Short Name : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-              },
-            }}
-            input={{
-              disabled: mode === "",
-              type: "text",
-              style: { width: "500px" },
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  descriptionRef.current?.focus();
-
-                  e.preventDefault();
-                }
-              },
-            }}
-            inputRef={shortnameRef}
-          />
-          <TextInput
-            label={{
-              title: "Description : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-              },
-            }}
-            input={{
-              disabled: mode === "",
-              type: "text",
-              style: { width: "500px" },
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  e.preventDefault();
-                }
-              },
-            }}
-            inputRef={descriptionRef}
-          />
-       
-        </fieldset>
-
-        <div
-          style={{
-            marginTop: "10px",
-            width: "100%",
-            position: "relative",
-            flex: 1,
-            display: "flex",
-          }}
-        >
-          <DataGridViewReact
-            containerStyle={{
-              flex: 1,
-              height: "auto",
-            }}
-            ref={tableRef}
-            columns={bankColumn}
-            height="280px"
-            getSelectedItem={(rowItm: any) => {
-              if (rowItm) {
-                setMode("edit");
-                if (acronmyRef.current) {
-                  acronmyRef.current.value = rowItm[0];
-                }
-                if (shortnameRef.current) {
-                  shortnameRef.current.value = rowItm[1];
-                }
-                if (descriptionRef.current) {
-                  descriptionRef.current.value = rowItm[2];
-                }
-                subAcctRef.current =  rowItm[3];
-              } else {
-                resetModule();
-              }
-            }}
-          />
-        </div>
       </div>
     </>
   );
 }
-

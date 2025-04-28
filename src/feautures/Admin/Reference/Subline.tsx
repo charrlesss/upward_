@@ -20,6 +20,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import { DataGridViewReact } from "../../../components/DataGridViewReact";
 import { Loading } from "../../../components/Loading";
 import { Autocomplete } from "../Task/Accounting/PettyCash";
+import "../../../style/monbileview/reference/reference.css";
 
 export const bankColumn = [
   { key: "Line", label: "Line", width: 120 },
@@ -179,6 +180,7 @@ export default function Subline() {
           height: "100%",
           flex: 1,
           padding: "5px",
+          position: "relative",
         }}
       >
         <div
@@ -191,6 +193,7 @@ export default function Subline() {
           }}
         >
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "550px",
               marginRight: "20px",
@@ -236,6 +239,231 @@ export default function Subline() {
             }}
             inputRef={inputSearchRef}
           />
+          <div
+            className="button-action-desktop"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              columnGap: "8px",
+            }}
+          >
+            {mode === "" && (
+              <Button
+                style={{
+                  height: "22px",
+                  fontSize: "11px",
+                }}
+                variant="contained"
+                startIcon={<AddIcon />}
+                id="entry-header-save-button"
+                onClick={() => {
+                  setMode("add");
+                }}
+              >
+                New
+              </Button>
+            )}
+            <LoadingButton
+              style={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              id="save-entry-header"
+              color="primary"
+              variant="contained"
+              type="submit"
+              sx={{
+                height: "30px",
+                fontSize: "11px",
+              }}
+              onClick={handleOnSave}
+              startIcon={<SaveIcon />}
+              disabled={mode === ""}
+              loading={loadingAdd || loadingEdit}
+            >
+              Save
+            </LoadingButton>
+            {mode !== "" && (
+              <Button
+                style={{
+                  height: "22px",
+                  fontSize: "11px",
+                }}
+                variant="contained"
+                startIcon={<CloseIcon />}
+                color="error"
+                onClick={() => {
+                  Swal.fire({
+                    title: "Are you sure?",
+                    text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Yes, cancel it!",
+                  }).then((result) => {
+                    if (result.isConfirmed) {
+                      resetModule();
+                      setMode("");
+                      tableRef.current.setSelectedRow(null);
+                      tableRef.current.resetCheckBox();
+                    }
+                  });
+                }}
+              >
+                Cancel
+              </Button>
+            )}
+            <LoadingButton
+              id="save-entry-header"
+              variant="contained"
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+                backgroundColor: pink[500],
+                "&:hover": {
+                  backgroundColor: pink[600],
+                },
+              }}
+              loading={loadingDelete}
+              startIcon={<DeleteIcon />}
+              disabled={mode !== "edit"}
+              onClick={() => {
+                codeCondfirmationAlert({
+                  isUpdate: false,
+                  title: "Confirmation",
+                  saveTitle: "Confirm",
+                  text: `Are you sure you want to delete '${sublineRef.current?.value}'?`,
+                  cb: (userCodeConfirmation) => {
+                    mutateDelete({
+                      ID: refId.current,
+                      userCodeConfirmation,
+                    });
+                  },
+                });
+              }}
+            >
+              Delete
+            </LoadingButton>
+          </div>
+        </div>
+
+        <fieldset
+          className="container-max-width"
+          style={{
+            // border: "1px solid black",
+            padding: "5px",
+            width: "590px",
+            rowGap: "5px",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <Autocomplete
+            label={{
+              title: "Line : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "100px",
+              },
+            }}
+            input={{
+              id: "auto-solo-collection",
+              style: {
+                width: "100%",
+                flex: 1,
+              },
+            }}
+            width={"100%"}
+            DisplayMember={"Line"}
+            DataSource={[
+              { Line: "Vehicle" },
+              { Line: "Fire" },
+              { Line: "Marine" },
+              { Line: "Bonds" },
+              { Line: "MSPR" },
+              { Line: "PA" },
+              { Line: "CGL" },
+            ]}
+            disableInput={mode === ""}
+            inputRef={lineRef}
+            onChange={(selected: any, e: any) => {
+              if (lineRef.current) lineRef.current.value = selected.Line;
+            }}
+            onKeydown={(e: any) => {
+              if (e.key === "Enter" || e.key === "NumpadEnter") {
+                e.preventDefault();
+                sublineRef.current?.focus();
+              }
+            }}
+          />
+          <TextInput
+            containerClassName="custom-input"
+            label={{
+              title: "Type : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "100px",
+              },
+            }}
+            input={{
+              disabled: mode === "",
+              type: "text",
+              style: { width: "500px" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  e.preventDefault();
+                }
+              },
+            }}
+            inputRef={sublineRef}
+          />
+        </fieldset>
+
+        <div
+          style={{
+            marginTop: "10px",
+            width: "100%",
+            position: "relative",
+            flex: 1,
+            display: "flex",
+          }}
+        >
+          <DataGridViewReact
+            containerStyle={{
+              flex: 1,
+              height: "auto",
+            }}
+            ref={tableRef}
+            columns={bankColumn}
+            height="280px"
+            getSelectedItem={(rowItm: any) => {
+              if (rowItm) {
+                setMode("edit");
+                if (lineRef.current) {
+                  lineRef.current.value = rowItm[0];
+                }
+                if (sublineRef.current) {
+                  sublineRef.current.value = rowItm[1];
+                }
+                refId.current = rowItm[2];
+              } else {
+                resetModule();
+              }
+            }}
+          />
+        </div>
+
+        <div
+          className="button-action-mobile"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            columnGap: "8px",
+          }}
+        >
           {mode === "" && (
             <Button
               style={{
@@ -334,112 +562,6 @@ export default function Subline() {
           >
             Delete
           </LoadingButton>
-        </div>
-
-        <fieldset
-          style={{
-            // border: "1px solid black",
-            padding: "5px",
-            width: "590px",
-            rowGap: "5px",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <Autocomplete
-            label={{
-              title: "Line : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-              },
-            }}
-            input={{
-              id: "auto-solo-collection",
-              style: {
-                width: "100%",
-                flex: 1,
-              },
-            }}
-            width={"100%"}
-            DisplayMember={"Line"}
-            DataSource={[
-              { Line: "Vehicle" },
-              { Line: "Fire" },
-              { Line: "Marine" },
-              { Line: "Bonds" },
-              { Line: "MSPR" },
-              { Line: "PA" },
-              { Line: "CGL" },
-            ]}
-            disableInput={mode === ""}
-            inputRef={lineRef}
-            onChange={(selected: any, e: any) => {
-              if (lineRef.current) lineRef.current.value = selected.Line;
-            }}
-            onKeydown={(e: any) => {
-              if (e.key === "Enter" || e.key === "NumpadEnter") {
-                e.preventDefault();
-                sublineRef.current?.focus();
-              }
-            }}
-          />
-          <TextInput
-            label={{
-              title: "Type : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-              },
-            }}
-            input={{
-              disabled: mode === "",
-              type: "text",
-              style: { width: "500px" },
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  e.preventDefault();
-                }
-              },
-            }}
-            inputRef={sublineRef}
-          />
-        </fieldset>
-
-        <div
-          style={{
-            marginTop: "10px",
-            width: "100%",
-            position: "relative",
-            flex: 1,
-            display: "flex",
-          }}
-        >
-          <DataGridViewReact
-            containerStyle={{
-              flex: 1,
-              height: "auto",
-            }}
-            ref={tableRef}
-            columns={bankColumn}
-            height="280px"
-            getSelectedItem={(rowItm: any) => {
-              if (rowItm) {
-                setMode("edit");
-                if (lineRef.current) {
-                  lineRef.current.value = rowItm[0];
-                }
-                if (sublineRef.current) {
-                  sublineRef.current.value = rowItm[1];
-                }
-                refId.current = rowItm[2];
-              } else {
-                resetModule();
-              }
-            }}
-          />
         </div>
       </div>
     </>

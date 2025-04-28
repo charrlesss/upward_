@@ -22,6 +22,7 @@ import { Button } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { grey } from "@mui/material/colors";
 import PageHelmet from "../../../../components/Helmet";
+import "../../../../style/monbileview/accounting/checkpostponement.css";
 
 const columns = [
   { key: "ln", label: "#", width: 40 },
@@ -78,7 +79,6 @@ export default function ChekPostponementApproved() {
       });
     },
     refetchOnWindowFocus: false,
-
   });
   // load details
   const { isLoading: isLoadingDetails, mutate: mutateDetails } = useMutation({
@@ -276,6 +276,7 @@ export default function ChekPostponementApproved() {
       />
       {/* ===========  first field  =========== */}
       <div
+        className="second-field"
         style={{
           position: "relative",
           padding: "12px",
@@ -296,6 +297,7 @@ export default function ChekPostponementApproved() {
           Account Informations
         </span>
         <div
+          className="first-field"
           style={{
             display: "flex",
             columnGap: "50px",
@@ -305,6 +307,7 @@ export default function ChekPostponementApproved() {
             <LoadingButton loading={isLoadingLoadROCNo} />
           ) : (
             <SelectInput
+              containerClassName="custom-input"
               ref={_RPCDNoRef}
               label={{
                 title: "RPCD no. :",
@@ -339,8 +342,8 @@ export default function ChekPostponementApproved() {
               display={"RPCDNo"}
             />
           )}
-
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
               marginBottom: "8px",
@@ -366,12 +369,14 @@ export default function ChekPostponementApproved() {
           />
         </div>
         <div
+          className="first-field"
           style={{
             display: "flex",
             columnGap: "50px",
           }}
         >
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
               marginBottom: "8px",
@@ -396,6 +401,7 @@ export default function ChekPostponementApproved() {
             inputRef={PNNoRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
               marginBottom: "8px",
@@ -470,12 +476,14 @@ export default function ChekPostponementApproved() {
           Fees and Charges
         </span>
         <div
+          className="first-field"
           style={{
             display: "flex",
             columnGap: "50px",
           }}
         >
           <div
+            className="first-field"
             style={{
               flex: 1,
               display: "flex",
@@ -484,6 +492,7 @@ export default function ChekPostponementApproved() {
             }}
           >
             <TextFormatedInput
+              containerClassName="custom-input"
               label={{
                 title: "Holding Fees :",
                 style: {
@@ -508,6 +517,7 @@ export default function ChekPostponementApproved() {
               inputRef={HoldingFeesRef}
             />
             <TextFormatedInput
+              containerClassName="custom-input"
               label={{
                 title: "Penalty Charge :",
                 style: {
@@ -532,6 +542,7 @@ export default function ChekPostponementApproved() {
               inputRef={PenaltyChargeRef}
             />
             <TextFormatedInput
+              containerClassName="custom-input"
               label={{
                 title: "Surplus:",
                 style: {
@@ -556,6 +567,7 @@ export default function ChekPostponementApproved() {
               inputRef={SurplusRef}
             />
             <SelectInput
+              containerClassName="custom-input"
               label={{
                 title: "Deducted to:",
                 style: {
@@ -588,6 +600,7 @@ export default function ChekPostponementApproved() {
               display={"key"}
             />
             <TextFormatedInput
+              containerClassName="custom-input"
               label={{
                 title: "Total :",
                 style: {
@@ -614,6 +627,7 @@ export default function ChekPostponementApproved() {
           </div>
           <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
             <SelectInput
+              containerClassName="custom-input how-to-be-paid"
               label={{
                 title: "How to be paid :",
                 style: {
@@ -650,6 +664,7 @@ export default function ChekPostponementApproved() {
               Name of Bank & Branch / Date & Time of deposit :
             </label>
             <TextAreaInput
+              containerClassName="custom-input "
               label={{
                 title: "",
                 style: {

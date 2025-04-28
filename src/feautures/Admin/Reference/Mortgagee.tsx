@@ -31,6 +31,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import { DataGridViewReact } from "../../../components/DataGridViewReact";
 import { Loading } from "../../../components/Loading";
 import { Autocomplete } from "../Task/Accounting/PettyCash";
+import "../../../style/monbileview/reference/reference.css";
 
 export const bankColumn = [
   { key: "Policy", label: "Policy", width: 120 },
@@ -240,6 +241,7 @@ export default function Bank() {
           height: "100%",
           flex: 1,
           padding: "5px",
+          position: "relative",
         }}
       >
         <div
@@ -252,6 +254,7 @@ export default function Bank() {
           }}
         >
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "550px",
               marginRight: "20px",
@@ -297,107 +300,117 @@ export default function Bank() {
             }}
             inputRef={inputSearchRef}
           />
-          {mode === "" && (
-            <Button
-              style={{
-                height: "22px",
-                fontSize: "11px",
-              }}
-              variant="contained"
-              startIcon={<AddIcon />}
-              id="entry-header-save-button"
-              onClick={() => {
-                setMode("add");
-              }}
-            >
-              New
-            </Button>
-          )}
-          <LoadingButton
+          <div
+            className="button-action-desktop"
             style={{
-              height: "22px",
-              fontSize: "11px",
+              display: "flex",
+              alignItems: "center",
+              columnGap: "8px",
             }}
-            id="save-entry-header"
-            color="primary"
-            variant="contained"
-            type="submit"
-            sx={{
-              height: "30px",
-              fontSize: "11px",
-            }}
-            onClick={handleOnSave}
-            startIcon={<SaveIcon />}
-            disabled={mode === ""}
-            loading={loadingAdd || loadingEdit}
           >
-            Save
-          </LoadingButton>
-          {mode !== "" && (
-            <Button
+            {mode === "" && (
+              <Button
+                style={{
+                  height: "22px",
+                  fontSize: "11px",
+                }}
+                variant="contained"
+                startIcon={<AddIcon />}
+                id="entry-header-save-button"
+                onClick={() => {
+                  setMode("add");
+                }}
+              >
+                New
+              </Button>
+            )}
+            <LoadingButton
               style={{
                 height: "22px",
                 fontSize: "11px",
               }}
+              id="save-entry-header"
+              color="primary"
               variant="contained"
-              startIcon={<CloseIcon />}
-              color="error"
+              type="submit"
+              sx={{
+                height: "30px",
+                fontSize: "11px",
+              }}
+              onClick={handleOnSave}
+              startIcon={<SaveIcon />}
+              disabled={mode === ""}
+              loading={loadingAdd || loadingEdit}
+            >
+              Save
+            </LoadingButton>
+            {mode !== "" && (
+              <Button
+                style={{
+                  height: "22px",
+                  fontSize: "11px",
+                }}
+                variant="contained"
+                startIcon={<CloseIcon />}
+                color="error"
+                onClick={() => {
+                  Swal.fire({
+                    title: "Are you sure?",
+                    text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Yes, cancel it!",
+                  }).then((result) => {
+                    if (result.isConfirmed) {
+                      resetModule();
+                      setMode("");
+                      tableRef.current.setSelectedRow(null);
+                      tableRef.current.resetCheckBox();
+                    }
+                  });
+                }}
+              >
+                Cancel
+              </Button>
+            )}
+            <LoadingButton
+              id="save-entry-header"
+              variant="contained"
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+                backgroundColor: pink[500],
+                "&:hover": {
+                  backgroundColor: pink[600],
+                },
+              }}
+              loading={loadingDelete}
+              startIcon={<DeleteIcon />}
+              disabled={mode !== "edit"}
               onClick={() => {
-                Swal.fire({
-                  title: "Are you sure?",
-                  text: "You won't be able to revert this!",
-                  icon: "warning",
-                  showCancelButton: true,
-                  confirmButtonColor: "#3085d6",
-                  cancelButtonColor: "#d33",
-                  confirmButtonText: "Yes, cancel it!",
-                }).then((result) => {
-                  if (result.isConfirmed) {
-                    resetModule();
-                    setMode("");
-                    tableRef.current.setSelectedRow(null);
-                    tableRef.current.resetCheckBox();
-                  }
+                codeCondfirmationAlert({
+                  isUpdate: false,
+                  title: "Confirmation",
+                  saveTitle: "Confirm",
+                  text: `Are you sure you want to delete '${policyRef.current?.value}'?`,
+                  cb: (userCodeConfirmation) => {
+                    mutateDelete({
+                      Mortgagee: mortgageeRef.current?.value,
+                      userCodeConfirmation,
+                    });
+                  },
                 });
               }}
             >
-              Cancel
-            </Button>
-          )}
-          <LoadingButton
-            id="save-entry-header"
-            variant="contained"
-            sx={{
-              height: "22px",
-              fontSize: "11px",
-              backgroundColor: pink[500],
-              "&:hover": {
-                backgroundColor: pink[600],
-              },
-            }}
-            loading={loadingDelete}
-            startIcon={<DeleteIcon />}
-            disabled={mode !== "edit"}
-            onClick={() => {
-              codeCondfirmationAlert({
-                isUpdate: false,
-                title: "Confirmation",
-                saveTitle: "Confirm",
-                text: `Are you sure you want to delete '${policyRef.current?.value}'?`,
-                cb: (userCodeConfirmation) => {
-                  mutateDelete({
-                    Mortgagee: mortgageeRef.current?.value,
-                    userCodeConfirmation,
-                  });
-                },
-              });
-            }}
-          >
-            Delete
-          </LoadingButton>
+              Delete
+            </LoadingButton>
+          </div>
         </div>
 
         <fieldset
+          className="container-max-width"
           style={{
             // border: "1px solid black",
             padding: "5px",
@@ -506,6 +519,113 @@ export default function Bank() {
               }
             }}
           />
+        </div>
+        <div
+          className="button-action-mobile"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            columnGap: "8px",
+          }}
+        >
+          {mode === "" && (
+            <Button
+              style={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<AddIcon />}
+              id="entry-header-save-button"
+              onClick={() => {
+                setMode("add");
+              }}
+            >
+              New
+            </Button>
+          )}
+          <LoadingButton
+            style={{
+              height: "22px",
+              fontSize: "11px",
+            }}
+            id="save-entry-header"
+            color="primary"
+            variant="contained"
+            type="submit"
+            sx={{
+              height: "30px",
+              fontSize: "11px",
+            }}
+            onClick={handleOnSave}
+            startIcon={<SaveIcon />}
+            disabled={mode === ""}
+            loading={loadingAdd || loadingEdit}
+          >
+            Save
+          </LoadingButton>
+          {mode !== "" && (
+            <Button
+              style={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<CloseIcon />}
+              color="error"
+              onClick={() => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, cancel it!",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    resetModule();
+                    setMode("");
+                    tableRef.current.setSelectedRow(null);
+                    tableRef.current.resetCheckBox();
+                  }
+                });
+              }}
+            >
+              Cancel
+            </Button>
+          )}
+          <LoadingButton
+            id="save-entry-header"
+            variant="contained"
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+              backgroundColor: pink[500],
+              "&:hover": {
+                backgroundColor: pink[600],
+              },
+            }}
+            loading={loadingDelete}
+            startIcon={<DeleteIcon />}
+            disabled={mode !== "edit"}
+            onClick={() => {
+              codeCondfirmationAlert({
+                isUpdate: false,
+                title: "Confirmation",
+                saveTitle: "Confirm",
+                text: `Are you sure you want to delete '${policyRef.current?.value}'?`,
+                cb: (userCodeConfirmation) => {
+                  mutateDelete({
+                    Mortgagee: mortgageeRef.current?.value,
+                    userCodeConfirmation,
+                  });
+                },
+              });
+            }}
+          >
+            Delete
+          </LoadingButton>
         </div>
       </div>
     </>

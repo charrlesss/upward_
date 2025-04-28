@@ -30,7 +30,7 @@ import { TextInput } from "../../../components/UpwardFields";
 import SearchIcon from "@mui/icons-material/Search";
 import { DataGridViewReact } from "../../../components/DataGridViewReact";
 import { Loading } from "../../../components/Loading";
-
+import "../../../style/monbileview/reference/reference.css";
 
 export const bankColumn = [
   { key: "Bank_Code", label: "Bank Code", width: 120 },
@@ -158,7 +158,7 @@ export default function Bank() {
       tableRef.current.resetCheckBox();
       mutateSearchRef.current({ search: "" });
       resetModule();
-      setMode('')
+      setMode("");
       return Swal.fire({
         position: "center",
         icon: "success",
@@ -192,9 +192,11 @@ export default function Bank() {
           height: "100%",
           flex: 1,
           padding: "5px",
+          position: "relative",
         }}
       >
         <div
+          className="clear-layout"
           style={{
             marginTop: "10px",
             marginBottom: "12px",
@@ -204,9 +206,9 @@ export default function Bank() {
           }}
         >
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "550px",
-              marginRight: "20px",
             }}
             label={{
               title: "Search: ",
@@ -249,6 +251,234 @@ export default function Bank() {
             }}
             inputRef={inputSearchRef}
           />
+          <div
+            className="button-action-desktop"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              columnGap: "8px",
+            }}
+          >
+            {mode === "" && (
+              <Button
+                style={{
+                  height: "22px",
+                  fontSize: "11px",
+                }}
+                variant="contained"
+                startIcon={<AddIcon />}
+                id="entry-header-save-button"
+                onClick={() => {
+                  setMode("add");
+                }}
+              >
+                New
+              </Button>
+            )}
+            <LoadingButton
+              style={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              id="save-entry-header"
+              color="primary"
+              variant="contained"
+              type="submit"
+              sx={{
+                height: "30px",
+                fontSize: "11px",
+              }}
+              onClick={handleOnSave}
+              startIcon={<SaveIcon />}
+              disabled={mode === ""}
+              loading={loadingAdd || loadingEdit}
+            >
+              Save
+            </LoadingButton>
+            {mode !== "" && (
+              <Button
+                style={{
+                  height: "22px",
+                  fontSize: "11px",
+                }}
+                variant="contained"
+                startIcon={<CloseIcon />}
+                color="error"
+                onClick={() => {
+                  Swal.fire({
+                    title: "Are you sure?",
+                    text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Yes, cancel it!",
+                  }).then((result) => {
+                    if (result.isConfirmed) {
+                      resetModule();
+                      setMode("");
+                      tableRef.current.setSelectedRow(null);
+                      tableRef.current.resetCheckBox();
+                    }
+                  });
+                }}
+              >
+                Cancel
+              </Button>
+            )}
+            <LoadingButton
+              id="save-entry-header"
+              variant="contained"
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+                backgroundColor: pink[500],
+                "&:hover": {
+                  backgroundColor: pink[600],
+                },
+              }}
+              loading={loadingDelete}
+              startIcon={<DeleteIcon />}
+              disabled={mode !== "edit"}
+              onClick={() => {
+                codeCondfirmationAlert({
+                  isUpdate: false,
+                  title: "Confirmation",
+                  saveTitle: "Confirm",
+                  text: `Are you sure you want to delete '${bankNameRef.current?.value}'?`,
+                  cb: (userCodeConfirmation) => {
+                    mutateDelete({
+                      Bank_Code: bankCodeRef.current?.value,
+                      userCodeConfirmation,
+                    });
+                  },
+                });
+              }}
+            >
+              Delete
+            </LoadingButton>
+          </div>
+        </div>
+
+        <fieldset
+          className="container-max-width"
+          style={{
+            border: "1px solid black",
+            padding: "5px",
+            width: "590px",
+            rowGap: "5px",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <legend
+            style={{ color: "black", fontSize: "13px", fontWeight: "bold" }}
+          >
+            Bank Details
+          </legend>
+          <div
+            className="container-fields-custom"
+            style={{
+              display: "flex",
+              width: "590px",
+              justifyContent: "space-between",
+            }}
+          >
+            <TextInput
+              containerClassName="custom-input"
+              label={{
+                title: "Account Code: ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "95px",
+                },
+              }}
+              input={{
+                disabled: mode === "",
+                type: "text",
+                style: { width: "300px" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    e.preventDefault();
+                  }
+                },
+              }}
+              inputRef={bankCodeRef}
+            />
+            <CheckBoxLabel
+              gridRow={1}
+              inputRef={inactiveRef}
+              label="Mark as Inactive"
+            />
+          </div>
+          <TextInput
+            containerClassName="custom-input"
+            label={{
+              title: "Bank Name : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "95px",
+              },
+            }}
+            input={{
+              disabled: mode === "",
+              type: "text",
+              style: { width: "500px" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  e.preventDefault();
+                }
+              },
+            }}
+            inputRef={bankNameRef}
+          />
+        </fieldset>
+
+        <div
+          style={{
+            marginTop: "10px",
+            width: "100%",
+            position: "relative",
+            flex: 1,
+            display: "flex",
+          }}
+        >
+          <DataGridViewReact
+            containerStyle={{
+              flex: 1,
+              height: "auto",
+            }}
+            ref={tableRef}
+            columns={bankColumn}
+            height="280px"
+            getSelectedItem={(rowItm: any) => {
+              if (rowItm) {
+                setMode("edit");
+                if (bankCodeRef.current) {
+                  bankCodeRef.current.value = rowItm[0];
+                }
+                if (bankNameRef.current) {
+                  bankNameRef.current.value = rowItm[1];
+                }
+                if (inactiveRef.current) {
+                  inactiveRef.current.checked = rowItm[2] !== "YES";
+                }
+              } else {
+                resetModule();
+              }
+            }}
+          />
+        </div>
+        <div
+          className="button-action-mobile"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            columnGap: "8px",
+          }}
+        >
           {mode === "" && (
             <Button
               style={{
@@ -258,7 +488,6 @@ export default function Bank() {
               variant="contained"
               startIcon={<AddIcon />}
               id="entry-header-save-button"
-            
               onClick={() => {
                 setMode("add");
               }}
@@ -307,7 +536,7 @@ export default function Bank() {
                 }).then((result) => {
                   if (result.isConfirmed) {
                     resetModule();
-                    setMode('')
+                    setMode("");
                     tableRef.current.setSelectedRow(null);
                     tableRef.current.resetCheckBox();
                   }
@@ -349,114 +578,6 @@ export default function Bank() {
             Delete
           </LoadingButton>
         </div>
-
-        <fieldset
-          style={{
-            border: "1px solid black",
-            padding: "5px",
-            width: "590px",
-            rowGap: "5px",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <legend
-            style={{ color: "black", fontSize: "13px", fontWeight: "bold" }}
-          >
-            Bank Details
-          </legend>
-          <div
-            style={{
-              display: "flex",
-              width: "590px",
-              justifyContent: "space-between",
-            }}
-          >
-            <TextInput
-              label={{
-                title: "Account Code: ",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "95px",
-                },
-              }}
-              input={{
-                disabled: mode === "" ,
-                type: "text",
-                style: { width: "300px" },
-                onKeyDown: (e) => {
-                  if (e.code === "NumpadEnter" || e.code === "Enter") {
-                    e.preventDefault();
-                  }
-                },
-              }}
-              inputRef={bankCodeRef}
-            />
-            <CheckBoxLabel
-              gridRow={1}
-              inputRef={inactiveRef}
-              label="Mark as Inactive"
-            />
-          </div>
-          <TextInput
-            label={{
-              title: "Bank Name : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "95px",
-              },
-            }}
-            input={{
-              disabled: mode === "" ,
-              type: "text",
-              style: { width: "500px" },
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  e.preventDefault();
-                }
-              },
-            }}
-            inputRef={bankNameRef}
-          />
-        </fieldset>
-
-        <div
-          style={{
-            marginTop: "10px",
-            width: "100%",
-            position: "relative",
-            flex: 1,
-            display: "flex",
-          }}
-        >
-          <DataGridViewReact
-            containerStyle={{
-              flex: 1,
-              height: "auto",
-            }}
-            ref={tableRef}
-            columns={bankColumn}
-            height="280px"
-            getSelectedItem={(rowItm: any) => {
-              if (rowItm) {
-                setMode('edit')
-                if (bankCodeRef.current) {
-                  bankCodeRef.current.value = rowItm[0];
-                }
-                if (bankNameRef.current) {
-                  bankNameRef.current.value = rowItm[1];
-                }
-                if (inactiveRef.current) {
-                  inactiveRef.current.checked = rowItm[2] !== "YES";
-                }
-              } else {
-                resetModule();
-              }
-            }}
-          />
-        </div>
       </div>
     </>
   );
@@ -494,4 +615,3 @@ const CheckBoxLabel = ({
     </div>
   );
 };
-

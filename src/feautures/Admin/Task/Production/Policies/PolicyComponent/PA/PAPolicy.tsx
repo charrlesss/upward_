@@ -96,15 +96,11 @@ export default function PAPolicy() {
           }
         );
       }
-      return await myAxios.post(
-        "/task/production/add-pa-policy",
-        variables,
-        {
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
-        }
-      );
+      return await myAxios.post("/task/production/add-pa-policy", variables, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      });
     },
     onSuccess: async (res) => {
       if (res.data.success) {
@@ -194,7 +190,6 @@ export default function PAPolicy() {
               selected.PolicyNo;
           }
 
-
           // periiod insurance
           if (_policyInformationRef.current.getRefs().dateFromRef.current) {
             _policyInformationRef.current.getRefs().dateFromRef.current.value =
@@ -212,37 +207,53 @@ export default function PAPolicy() {
           // insured unit
           if (_policyInformationRef.current.getRefs().sumInsuredRef.current) {
             _policyInformationRef.current.getRefs().sumInsuredRef.current.value =
-            formatNumber(parseFloat(selected.sumInsured.toString().replace(/,/g,'')));
+              formatNumber(
+                parseFloat(selected.sumInsured.toString().replace(/,/g, ""))
+              );
           }
           if (
-            _policyInformationRef.current.getRefs().propertyInsuredRef
-              .current
+            _policyInformationRef.current.getRefs().propertyInsuredRef.current
           ) {
             _policyInformationRef.current.getRefs().propertyInsuredRef.current.value =
               selected.Location;
           }
 
-
           // premuim
           if (_policyInformationRef.current.getRefs().netPremiumRef.current) {
             _policyInformationRef.current.getRefs().netPremiumRef.current.value =
-              formatNumber(parseFloat(selected.TotalPremium.toString().replace(/,/g,'')));
+              formatNumber(
+                parseFloat(selected.TotalPremium.toString().replace(/,/g, ""))
+              );
           }
-
 
           if (_policyInformationRef.current.getRefs().vatRef.current) {
-            _policyInformationRef.current.getRefs().vatRef.current.value = formatNumber(parseFloat((selected.Vat || 0).toString().replace(/,/g,'')) ) 
+            _policyInformationRef.current.getRefs().vatRef.current.value =
+              formatNumber(
+                parseFloat((selected.Vat || 0).toString().replace(/,/g, ""))
+              );
           }
           if (_policyInformationRef.current.getRefs().docstampRef.current) {
-            _policyInformationRef.current.getRefs().docstampRef.current.value = formatNumber(parseFloat((selected.DocStamp || 0).toString().replace(/,/g,'')) ) 
+            _policyInformationRef.current.getRefs().docstampRef.current.value =
+              formatNumber(
+                parseFloat(
+                  (selected.DocStamp || 0).toString().replace(/,/g, "")
+                )
+              );
           }
           if (_policyInformationRef.current.getRefs()._localGovTaxRef.current) {
-            _policyInformationRef.current.getRefs()._localGovTaxRef.current.value = formatNumber(parseFloat((selected.LGovTax || 0).toString().replace(/,/g,'')) ) 
+            _policyInformationRef.current.getRefs()._localGovTaxRef.current.value =
+              formatNumber(
+                parseFloat((selected.LGovTax || 0).toString().replace(/,/g, ""))
+              );
           }
           if (_policyInformationRef.current.getRefs().totalDueRef.current) {
-            _policyInformationRef.current.getRefs().totalDueRef.current.value = formatNumber(parseFloat((selected.TotalDue || 0).toString().replace(/,/g,'')) ) 
+            _policyInformationRef.current.getRefs().totalDueRef.current.value =
+              formatNumber(
+                parseFloat(
+                  (selected.TotalDue || 0).toString().replace(/,/g, "")
+                )
+              );
           }
-        
 
           // wait(100).then(() => {
           //   _policyInformationRef.current
@@ -371,9 +382,7 @@ export default function PAPolicy() {
   });
 
   function handleSave() {
-    if (
-      _policyInformationRef.current.requiredField() 
-    ) {
+    if (_policyInformationRef.current.requiredField()) {
       return;
     }
 
@@ -459,100 +468,184 @@ export default function PAPolicy() {
             }}
             inputRef={searchRef}
           />
-          <Button
-            sx={{
-              height: "23px",
-              fontSize: "11px",
-            }}
-            disabled={mode === "add" || mode === "edit"}
-            size="small"
-            color="primary"
-            onClick={() => {
-              setMode("add");
-            }}
-            variant="contained"
-            startIcon={<AddBoxIcon />}
-          >
-            New
-          </Button>
-          <Button
-            variant="contained"
-            color="success"
-            startIcon={<SaveAsIcon />}
-            disabled={mode === ""}
-            size="small"
-            onClick={handleSave}
-            sx={{
-              height: "23px",
-              fontSize: "11px",
+          <div
+            className="button-action-desktop"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              columnGap: "8px",
             }}
           >
-            Save
-          </Button>
-          <Button
-            sx={{
-              height: "23px",
-              fontSize: "11px",
-            }}
-            variant="contained"
-            color="error"
-            startIcon={<CloseIcon />}
-            disabled={mode === ""}
-            size="small"
-            onClick={() => {
-              Swal.fire({
-                title: "Are you sure?",
-                text: "You won't be able to revert this!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, cencel it!",
-                cancelButtonText: "No",
-              }).then((result) => {
-                if (result.isConfirmed) {
-                  setMode("");
-                  _policyInformationRef.current.resetRefs();
-                }
-              });
-            }}
-          >
-            Cancel
-          </Button>
+            <Button
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+              }}
+              disabled={mode === "add" || mode === "edit"}
+              size="small"
+              color="primary"
+              onClick={() => {
+                setMode("add");
+              }}
+              variant="contained"
+              startIcon={<AddBoxIcon />}
+            >
+              New
+            </Button>
+            <Button
+              variant="contained"
+              color="success"
+              startIcon={<SaveAsIcon />}
+              disabled={mode === ""}
+              size="small"
+              onClick={handleSave}
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+              }}
+            >
+              Save
+            </Button>
+            <Button
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              color="error"
+              startIcon={<CloseIcon />}
+              disabled={mode === ""}
+              size="small"
+              onClick={() => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, cencel it!",
+                  cancelButtonText: "No",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    setMode("");
+                    _policyInformationRef.current.resetRefs();
+                  }
+                });
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
         </div>
         <PolicyInformation
-            myAxios={myAxios}
-            user={user}
-            disabled={mode === ""}
-            ref={_policyInformationRef}
-            clientSearch={(input: string) => {
-              clientOpenModal(input);
-            }}
-            agentSearch={(input: string) => {
-              agentOpenModal(input);
-            }}
-            onComputation={(refs: any) => {
-              let percentLocGovTax = parseFloat(refs.localGovTaxRef.current.value)
-              let txtPremium = parseFloat((refs.netPremiumRef.current?.value || 0).toString().replace(/,/g,''))
-              let vat = txtPremium * 0.12;
-              let docStamp = txtPremium * 0.125;
-              let locGovTax = txtPremium * percentLocGovTax;
-              let totalDue = txtPremium + vat + docStamp + locGovTax;
+          myAxios={myAxios}
+          user={user}
+          disabled={mode === ""}
+          ref={_policyInformationRef}
+          clientSearch={(input: string) => {
+            clientOpenModal(input);
+          }}
+          agentSearch={(input: string) => {
+            agentOpenModal(input);
+          }}
+          onComputation={(refs: any) => {
+            let percentLocGovTax = parseFloat(
+              refs.localGovTaxRef.current.value
+            );
+            let txtPremium = parseFloat(
+              (refs.netPremiumRef.current?.value || 0)
+                .toString()
+                .replace(/,/g, "")
+            );
+            let vat = txtPremium * 0.12;
+            let docStamp = txtPremium * 0.125;
+            let locGovTax = txtPremium * percentLocGovTax;
+            let totalDue = txtPremium + vat + docStamp + locGovTax;
 
-              if(refs.vatRef.current){
-                refs.vatRef.current.value = formatNumber(vat)
+            if (refs.vatRef.current) {
+              refs.vatRef.current.value = formatNumber(vat);
+            }
+            if (refs.docstampRef.current) {
+              refs.docstampRef.current.value = formatNumber(docStamp);
+            }
+            if (refs._localGovTaxRef.current) {
+              refs._localGovTaxRef.current.value = formatNumber(locGovTax);
+            }
+            if (refs.totalDueRef.current) {
+              refs.totalDueRef.current.value = formatNumber(totalDue);
+            }
+          }}
+        />
+      </div>
+      <div
+        className="button-action-mobile"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          columnGap: "8px",
+        }}
+      >
+        <Button
+          sx={{
+            height: "23px",
+            fontSize: "11px",
+          }}
+          disabled={mode === "add" || mode === "edit"}
+          size="small"
+          color="primary"
+          onClick={() => {
+            setMode("add");
+          }}
+          variant="contained"
+          startIcon={<AddBoxIcon />}
+        >
+          New
+        </Button>
+        <Button
+          variant="contained"
+          color="success"
+          startIcon={<SaveAsIcon />}
+          disabled={mode === ""}
+          size="small"
+          onClick={handleSave}
+          sx={{
+            height: "23px",
+            fontSize: "11px",
+          }}
+        >
+          Save
+        </Button>
+        <Button
+          sx={{
+            height: "23px",
+            fontSize: "11px",
+          }}
+          variant="contained"
+          color="error"
+          startIcon={<CloseIcon />}
+          disabled={mode === ""}
+          size="small"
+          onClick={() => {
+            Swal.fire({
+              title: "Are you sure?",
+              text: "You won't be able to revert this!",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Yes, cencel it!",
+              cancelButtonText: "No",
+            }).then((result) => {
+              if (result.isConfirmed) {
+                setMode("");
+                _policyInformationRef.current.resetRefs();
               }
-              if(refs.docstampRef.current){
-                refs.docstampRef.current.value = formatNumber(docStamp)
-              }
-              if(refs._localGovTaxRef.current){
-                refs._localGovTaxRef.current.value = formatNumber(locGovTax)
-              }
-              if(refs.totalDueRef.current){
-                refs.totalDueRef.current.value = formatNumber(totalDue)
-              }
-            }}
-          />
+            });
+          }}
+        >
+          Cancel
+        </Button>
       </div>
     </>
   );
@@ -586,7 +679,6 @@ const PolicyInformation = forwardRef((props: any, ref) => {
   const sumInsuredRef = useRef<HTMLInputElement>(null);
   const propertyInsuredRef = useRef<HTMLTextAreaElement>(null);
 
-
   // premuim
   const netPremiumRef = useRef<HTMLInputElement>(null);
   const vatRef = useRef<HTMLInputElement>(null);
@@ -595,37 +687,36 @@ const PolicyInformation = forwardRef((props: any, ref) => {
   const _localGovTaxRef = useRef<HTMLInputElement>(null);
   const totalDueRef = useRef<HTMLInputElement>(null);
 
-
   useImperativeHandle(ref, () => ({
     getRefsValue: () => {
       return {
-        clientIDRef:clientIDRef.current?.value       ,
-        clientNameRef:clientNameRef.current?.value,
-        clientAddressRef:clientAddressRef.current?.value,
-        agentIdRef:agentIdRef.current?.value,
-        agentNameRef:agentNameRef.current?.value,
-        agentCommisionRef:agentCommisionRef.current?.value,
-        saleOfficerRef:saleOfficerRef.current?.value,
-        _accountRef:_accountRef.current?.value,
-        accountRef:accountRef.current?.value,
-        policyNoRef:policyNoRef.current?.value,
-        locationRef:locationRef.current?.value,
-        dateFromRef:dateFromRef.current?.value,
-        dateToRef:dateToRef.current?.value,
-        dateIssuedRef:dateIssuedRef.current?.value,
-        sumInsuredRef:sumInsuredRef.current?.value,
-        propertyInsuredRef:propertyInsuredRef.current?.value,
-        netPremiumRef:netPremiumRef.current?.value,
-        vatRef:vatRef.current?.value,
-        docstampRef:docstampRef.current?.value,
-        localGovTaxRef:localGovTaxRef.current?.value,
-        _localGovTaxRef:_localGovTaxRef.current?.value,
-        totalDueRef:totalDueRef.current?.value
+        clientIDRef: clientIDRef.current?.value,
+        clientNameRef: clientNameRef.current?.value,
+        clientAddressRef: clientAddressRef.current?.value,
+        agentIdRef: agentIdRef.current?.value,
+        agentNameRef: agentNameRef.current?.value,
+        agentCommisionRef: agentCommisionRef.current?.value,
+        saleOfficerRef: saleOfficerRef.current?.value,
+        _accountRef: _accountRef.current?.value,
+        accountRef: accountRef.current?.value,
+        policyNoRef: policyNoRef.current?.value,
+        locationRef: locationRef.current?.value,
+        dateFromRef: dateFromRef.current?.value,
+        dateToRef: dateToRef.current?.value,
+        dateIssuedRef: dateIssuedRef.current?.value,
+        sumInsuredRef: sumInsuredRef.current?.value,
+        propertyInsuredRef: propertyInsuredRef.current?.value,
+        netPremiumRef: netPremiumRef.current?.value,
+        vatRef: vatRef.current?.value,
+        docstampRef: docstampRef.current?.value,
+        localGovTaxRef: localGovTaxRef.current?.value,
+        _localGovTaxRef: _localGovTaxRef.current?.value,
+        totalDueRef: totalDueRef.current?.value,
       };
     },
     getRefs: () => {
       return {
-        clientIDRef       ,
+        clientIDRef,
         clientNameRef,
         clientAddressRef,
         agentIdRef,
@@ -647,7 +738,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
         localGovTaxRef,
         _localGovTaxRef,
         totalDueRef,
-        cumputationButtonRef
+        cumputationButtonRef,
       };
     },
     resetRefs: () => {
@@ -694,13 +785,11 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       }
 
       if (sumInsuredRef.current) {
-        sumInsuredRef.current.value = '0.00';
+        sumInsuredRef.current.value = "0.00";
       }
       if (propertyInsuredRef.current) {
-        propertyInsuredRef.current.value = '';
+        propertyInsuredRef.current.value = "";
       }
-
-   
 
       if (netPremiumRef.current) {
         netPremiumRef.current.value = "0.00";
@@ -721,7 +810,6 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       if (totalDueRef.current) {
         totalDueRef.current.value = "0.00";
       }
-      
     },
     refEnableDisable: (disabled: boolean, department: string) => {
       if (accountRef.current) {
@@ -764,9 +852,6 @@ const PolicyInformation = forwardRef((props: any, ref) => {
         dateIssuedRef.current.disabled = disabled;
       }
 
-
-   
-
       if (netPremiumRef.current) {
         netPremiumRef.current.disabled = disabled;
       }
@@ -808,6 +893,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
 
   return (
     <div
+      className="main-field-container"
       style={{
         display: "flex",
         flexDirection: "column",
@@ -818,6 +904,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
     >
       {/* First Field*/}
       <div
+        className="container-fields"
         style={{
           display: "flex",
           columnGap: "15px",
@@ -825,6 +912,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       >
         {/* Insurer Information*/}
         <div
+          className="container-max-width"
           style={{
             width: "50%",
             border: "1px solid #9ca3af",
@@ -850,6 +938,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             Insurer Information
           </span>
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "70%",
             }}
@@ -879,6 +968,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={clientIDRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "90%",
             }}
@@ -902,6 +992,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={clientNameRef}
           />
           <TextAreaInput
+            containerClassName="custom-input"
             label={{
               title: "Address",
               style: {
@@ -922,6 +1013,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
         </div>
         {/* Agent Information*/}
         <div
+          className="container-max-width"
           style={{
             width: "50%",
             border: "1px solid #9ca3af",
@@ -947,6 +1039,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             Agent Information
           </span>
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "70%",
             }}
@@ -976,6 +1069,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={agentIdRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "90%",
             }}
@@ -999,6 +1093,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={agentNameRef}
           />
           <TextFormatedInput
+            containerClassName="custom-input"
             label={{
               title: "Commission:",
               style: {
@@ -1023,6 +1118,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={agentCommisionRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "100%",
             }}
@@ -1049,6 +1145,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       </div>
       {/* Second Field*/}
       <div
+        className="container-fields"
         style={{
           display: "flex",
           columnGap: "15px",
@@ -1056,6 +1153,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       >
         {/* Marine Policy*/}
         <div
+          className="container-max-width"
           style={{
             width: "50%",
             border: "1px solid #9ca3af",
@@ -1081,6 +1179,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             Marine Policy
           </span>
           <SelectInput
+            containerClassName="custom-input"
             ref={_accountRef}
             label={{
               title: "Account:",
@@ -1110,6 +1209,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             display={"Account"}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "90%",
             }}
@@ -1136,6 +1236,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
         </div>
         {/* Period of Insurance*/}
         <div
+          className="container-max-width"
           style={{
             width: "50%",
             border: "1px solid #9ca3af",
@@ -1161,6 +1262,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             Period of Insurance
           </span>
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
             }}
@@ -1186,6 +1288,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={dateFromRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
             }}
@@ -1211,6 +1314,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={dateToRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
             }}
@@ -1240,6 +1344,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       {/* Last Field*/}
       {/* Insured Unit*/}
       <div
+        className="container-fields"
         style={{
           width: "100%",
           border: "1px solid #9ca3af",
@@ -1248,18 +1353,25 @@ const PolicyInformation = forwardRef((props: any, ref) => {
           position: "relative",
           display: "flex",
           rowGap: "5px",
-          columnGap:"10px"
+          columnGap: "10px",
         }}
       >
-        <div style={{ flex: 1 ,rowGap:"5px" ,display:"flex", flexDirection:"column"}}>
-        <TextFormatedInput
+        <div
+          style={{
+            flex: 1,
+            rowGap: "5px",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <TextFormatedInput
+            containerClassName="custom-input"
             label={{
               title: "Sum Insured :",
               style: {
                 fontSize: "12px",
                 fontWeight: "bold",
                 width: "150px",
-      
               },
             }}
             containerStyle={{
@@ -1279,10 +1391,11 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={sumInsuredRef}
           />
           <TextAreaInput
+            containerClassName="custom-input "
             containerStyle={{
               width: "100%",
-              justifyContent:"flex-start",
-              alignItems:"flex-start"
+              justifyContent: "flex-start",
+              alignItems: "flex-start",
             }}
             label={{
               title: "Property Insured :",
@@ -1295,7 +1408,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             textarea={{
               disabled: props.disabled,
               rows: 10,
-              style: { width: "calc(100% - 150px)"},
+              style: { width: "calc(100% - 150px)" },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
                   netPremiumRef.current?.focus();
@@ -1315,7 +1428,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             display: "flex",
             flexDirection: "column",
             rowGap: "5px",
-            flex:1
+            flex: 1,
           }}
         >
           <span
@@ -1400,7 +1513,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
               </IconButton>
             </div>
           </div>
-        
+
           <TextFormatedInput
             label={{
               title: "Vat:",

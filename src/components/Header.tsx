@@ -1262,6 +1262,7 @@ export default function Header() {
                       style={{ fontSize: "14px", fontWeight: "bold" }}
                       to={menuItem.path}
                       onClick={(e) => {
+                        alert('qweqwe')
                         setShowSidebar(false);
                         document
                           .querySelectorAll(".main-menu.mobile li")

@@ -193,7 +193,6 @@ export default function MSPRPolicy() {
             _policyInformationRef.current.getRefs().policyNoRef.current.value =
               selected.PolicyNo;
           }
-      
 
           // periiod insurance
           if (_policyInformationRef.current.getRefs().dateFromRef.current) {
@@ -210,83 +209,134 @@ export default function MSPRPolicy() {
           }
 
           // insured unit
-          if (_policyInformationRef.current.getRefs().premisesAddressRef.current) {
+          if (
+            _policyInformationRef.current.getRefs().premisesAddressRef.current
+          ) {
             _policyInformationRef.current.getRefs().premisesAddressRef.current.value =
               selected.Location;
           }
 
-          if (_policyInformationRef.current.getRefs().moneyRoutesFromRef.current) {
+          if (
+            _policyInformationRef.current.getRefs().moneyRoutesFromRef.current
+          ) {
             _policyInformationRef.current.getRefs().moneyRoutesFromRef.current.value =
               selected.OriginPoint;
           }
           if (
-            _policyInformationRef.current.getRefs().safeStrongroomDescRef.current
+            _policyInformationRef.current.getRefs().safeStrongroomDescRef
+              .current
           ) {
             _policyInformationRef.current.getRefs().safeStrongroomDescRef.current.value =
               selected.Saferoom;
           }
-          if (_policyInformationRef.current.getRefs().moneyRoutesToRef.current) {
+          if (
+            _policyInformationRef.current.getRefs().moneyRoutesToRef.current
+          ) {
             _policyInformationRef.current.getRefs().moneyRoutesToRef.current.value =
               selected.DestinationPoint;
           }
-          if (_policyInformationRef.current.getRefs().methodTransportationRef.current) {
+          if (
+            _policyInformationRef.current.getRefs().methodTransportationRef
+              .current
+          ) {
             _policyInformationRef.current.getRefs().methodTransportationRef.current.value =
               selected.Method;
           }
 
-          if (_policyInformationRef.current.getRefs().guardsMinimumNumberRef.current) {
+          if (
+            _policyInformationRef.current.getRefs().guardsMinimumNumberRef
+              .current
+          ) {
             _policyInformationRef.current.getRefs().guardsMinimumNumberRef.current.value =
-              formatNumber(parseFloat(selected.Guard.toString().replace(/,/g,'')));
+              formatNumber(
+                parseFloat(selected.Guard.toString().replace(/,/g, ""))
+              );
           }
-          if (_policyInformationRef.current.getRefs().messengerMaximumNumberRef.current) {
+          if (
+            _policyInformationRef.current.getRefs().messengerMaximumNumberRef
+              .current
+          ) {
             _policyInformationRef.current.getRefs().messengerMaximumNumberRef.current.value =
-              formatNumber(parseFloat(selected.Messenger.toString().replace(/,/g,'')));
+              formatNumber(
+                parseFloat(selected.Messenger.toString().replace(/,/g, ""))
+              );
           }
-          
 
           // premiums
           if (_policyPremiumRef.current.getRefs().sectionIRef.current) {
             _policyPremiumRef.current.getRefs().sectionIRef.current.value =
-              formatNumber(parseFloat(selected.SecI.toString().replace(/,/g,'')));
+              formatNumber(
+                parseFloat(selected.SecI.toString().replace(/,/g, ""))
+              );
           }
           if (_policyPremiumRef.current.getRefs().sectionIBRef.current) {
             _policyPremiumRef.current.getRefs().sectionIBRef.current.value =
-              formatNumber(parseFloat(selected.SecIB.toString().replace(/,/g,'')));
+              formatNumber(
+                parseFloat(selected.SecIB.toString().replace(/,/g, ""))
+              );
           }
           if (_policyPremiumRef.current.getRefs().sectionIIRef.current) {
             _policyPremiumRef.current.getRefs().sectionIIRef.current.value =
-              formatNumber(parseFloat(selected.SecII.toString().replace(/,/g,'')));
+              formatNumber(
+                parseFloat(selected.SecII.toString().replace(/,/g, ""))
+              );
           }
 
           if (_policyPremiumRef.current.getRefs().premium1Ref.current) {
             _policyPremiumRef.current.getRefs().premium1Ref.current.value =
-              formatNumber(parseFloat(selected.SecIPremium.toString().replace(/,/g,'')));
+              formatNumber(
+                parseFloat(selected.SecIPremium.toString().replace(/,/g, ""))
+              );
           }
           if (_policyPremiumRef.current.getRefs().premium2Ref.current) {
             _policyPremiumRef.current.getRefs().premium2Ref.current.value =
-              formatNumber(parseFloat(selected.SecIPremiumB.toString().replace(/,/g,'')));
+              formatNumber(
+                parseFloat(selected.SecIPremiumB.toString().replace(/,/g, ""))
+              );
           }
           if (_policyPremiumRef.current.getRefs().premium3Ref.current) {
             _policyPremiumRef.current.getRefs().premium3Ref.current.value =
-              formatNumber(parseFloat(selected.SecIIPremium.toString().replace(/,/g,'')));
+              formatNumber(
+                parseFloat(selected.SecIIPremium.toString().replace(/,/g, ""))
+              );
           }
 
-
           if (_policyPremiumRef.current.getRefs().netPremiumRef.current) {
-            _policyPremiumRef.current.getRefs().netPremiumRef.current.value = formatNumber(parseFloat((selected.TotalPremium || 0).toString().replace(/,/g,'')) ) 
+            _policyPremiumRef.current.getRefs().netPremiumRef.current.value =
+              formatNumber(
+                parseFloat(
+                  (selected.TotalPremium || 0).toString().replace(/,/g, "")
+                )
+              );
           }
 
           if (_policyPremiumRef.current.getRefs().vatRef.current) {
-            _policyPremiumRef.current.getRefs().vatRef.current.value = formatNumber(parseFloat((selected.Vat || 0).toString().replace(/,/g,'')) ) 
+            _policyPremiumRef.current.getRefs().vatRef.current.value =
+              formatNumber(
+                parseFloat((selected.Vat || 0).toString().replace(/,/g, ""))
+              );
           }
           if (_policyPremiumRef.current.getRefs().docstampRef.current) {
-            _policyPremiumRef.current.getRefs().docstampRef.current.value = formatNumber(parseFloat((selected.DocStamp || 0).toString().replace(/,/g,'')) ) 
+            _policyPremiumRef.current.getRefs().docstampRef.current.value =
+              formatNumber(
+                parseFloat(
+                  (selected.DocStamp || 0).toString().replace(/,/g, "")
+                )
+              );
           }
           if (_policyPremiumRef.current.getRefs()._localGovTaxRef.current) {
-            _policyPremiumRef.current.getRefs()._localGovTaxRef.current.value = formatNumber(parseFloat((selected.LGovTax || 0).toString().replace(/,/g,'')) ) 
+            _policyPremiumRef.current.getRefs()._localGovTaxRef.current.value =
+              formatNumber(
+                parseFloat((selected.LGovTax || 0).toString().replace(/,/g, ""))
+              );
           }
           if (_policyPremiumRef.current.getRefs().totalDueRef.current) {
-            _policyPremiumRef.current.getRefs().totalDueRef.current.value = formatNumber(parseFloat((selected.TotalDue || 0).toString().replace(/,/g,'')) ) 
+            _policyPremiumRef.current.getRefs().totalDueRef.current.value =
+              formatNumber(
+                parseFloat(
+                  (selected.TotalDue || 0).toString().replace(/,/g, "")
+                )
+              );
           }
 
           // wait(100).then(() => {
@@ -507,70 +557,82 @@ export default function MSPRPolicy() {
             }}
             inputRef={searchRef}
           />
-          <Button
-            sx={{
-              height: "23px",
-              fontSize: "11px",
-            }}
-            disabled={mode === "add" || mode === "edit"}
-            size="small"
-            color="primary"
-            onClick={() => {
-              setMode("add");
-            }}
-            variant="contained"
-            startIcon={<AddBoxIcon />}
-          >
-            New
-          </Button>
-          <Button
-            variant="contained"
-            color="success"
-            startIcon={<SaveAsIcon />}
-            disabled={mode === ""}
-            size="small"
-            onClick={handleSave}
-            sx={{
-              height: "23px",
-              fontSize: "11px",
+          <div
+            className="button-action-desktop"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              columnGap: "8px",
             }}
           >
-            Save
-          </Button>
-          <Button
-            sx={{
-              height: "23px",
-              fontSize: "11px",
-            }}
-            variant="contained"
-            color="error"
-            startIcon={<CloseIcon />}
-            disabled={mode === ""}
-            size="small"
-            onClick={() => {
-              Swal.fire({
-                title: "Are you sure?",
-                text: "You won't be able to revert this!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, cencel it!",
-                cancelButtonText: "No",
-              }).then((result) => {
-                if (result.isConfirmed) {
-                  setMode("");
-                  _policyInformationRef.current.resetRefs();
-                  _policyPremiumRef.current.resetRefs();
-                }
-              });
-            }}
-          >
-            Cancel
-          </Button>
+            <Button
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+              }}
+              disabled={mode === "add" || mode === "edit"}
+              size="small"
+              color="primary"
+              onClick={() => {
+                setMode("add");
+              }}
+              variant="contained"
+              startIcon={<AddBoxIcon />}
+            >
+              New
+            </Button>
+            <Button
+              variant="contained"
+              color="success"
+              startIcon={<SaveAsIcon />}
+              disabled={mode === ""}
+              size="small"
+              onClick={handleSave}
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+              }}
+            >
+              Save
+            </Button>
+            <Button
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              color="error"
+              startIcon={<CloseIcon />}
+              disabled={mode === ""}
+              size="small"
+              onClick={() => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, cencel it!",
+                  cancelButtonText: "No",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    setMode("");
+                    _policyInformationRef.current.resetRefs();
+                    _policyPremiumRef.current.resetRefs();
+                  }
+                });
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
         </div>
         <div style={{ display: "flex", columnGap: "7px", marginBottom: "6px" }}>
-          <div style={{ display: "flex", columnGap: "2px" }}>
+          <div
+            className="desktop-choices-buttons"
+            style={{ display: "flex", columnGap: "2px" }}
+          >
             <Button
               // disabled={selectedPage === 0}
               sx={{
@@ -630,6 +692,69 @@ export default function MSPRPolicy() {
               display={"Acronym"}
             />
           </div>
+          <div
+            className="mobile-choices-buttons"
+            style={{ display: "flex", columnGap: "5px", alignItems: "center" }}
+          >
+            <Button
+              // disabled={selectedPage === 0}
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+                background: selectedPage === 0 ? blue[700] : grey[700],
+                "&:hover": {
+                  background: selectedPage === 0 ? blue[800] : grey[800],
+                },
+              }}
+              variant="contained"
+              onClick={() => {
+                setSelectedPage(0);
+              }}
+            >
+              Information
+            </Button>
+            <Button
+              // disabled={selectedPage === 2}
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+
+                background: selectedPage === 2 ? blue[700] : grey[700],
+                "&:hover": {
+                  background: selectedPage === 2 ? blue[800] : grey[800],
+                },
+              }}
+              onClick={() => {
+                setSelectedPage(2);
+              }}
+              variant="contained"
+            >
+              Premium
+            </Button>
+            <SelectInput
+              ref={subAccountRef_}
+              label={{
+                title: "Sub Account :",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                  display: "none",
+                },
+              }}
+              selectRef={subAccountRef}
+              select={{
+                style: { flex: 1, height: "22px" },
+                defaultValue: "HO",
+              }}
+              containerStyle={{
+                flex: 2,
+              }}
+              datasource={[]}
+              values={"Acronym"}
+              display={"Acronym"}
+            />
+          </div>
         </div>
         <div
           style={{
@@ -662,7 +787,9 @@ export default function MSPRPolicy() {
             disabled={mode === ""}
             ref={_policyPremiumRef}
             onComputation={(refs: any) => {
-              let percentLocGovTax = parseFloat(refs.localGovTaxRef.current.value)
+              let percentLocGovTax = parseFloat(
+                refs.localGovTaxRef.current.value
+              );
 
               let txtPremiumI = parseFloat(
                 refs.sectionIRef.current?.value.toString().replace(/,/g, "")
@@ -700,6 +827,76 @@ export default function MSPRPolicy() {
             }}
           />
         </div>
+      </div>
+      <div
+        className="button-action-mobile"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          columnGap: "8px",
+        }}
+      >
+        <Button
+          sx={{
+            height: "23px",
+            fontSize: "11px",
+          }}
+          disabled={mode === "add" || mode === "edit"}
+          size="small"
+          color="primary"
+          onClick={() => {
+            setMode("add");
+          }}
+          variant="contained"
+          startIcon={<AddBoxIcon />}
+        >
+          New
+        </Button>
+        <Button
+          variant="contained"
+          color="success"
+          startIcon={<SaveAsIcon />}
+          disabled={mode === ""}
+          size="small"
+          onClick={handleSave}
+          sx={{
+            height: "23px",
+            fontSize: "11px",
+          }}
+        >
+          Save
+        </Button>
+        <Button
+          sx={{
+            height: "23px",
+            fontSize: "11px",
+          }}
+          variant="contained"
+          color="error"
+          startIcon={<CloseIcon />}
+          disabled={mode === ""}
+          size="small"
+          onClick={() => {
+            Swal.fire({
+              title: "Are you sure?",
+              text: "You won't be able to revert this!",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Yes, cencel it!",
+              cancelButtonText: "No",
+            }).then((result) => {
+              if (result.isConfirmed) {
+                setMode("");
+                _policyInformationRef.current.resetRefs();
+                _policyPremiumRef.current.resetRefs();
+              }
+            });
+          }}
+        >
+          Cancel
+        </Button>
       </div>
     </>
   );
@@ -931,6 +1128,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
 
   return (
     <div
+      className="main-field-container"
       style={{
         display: "flex",
         flexDirection: "column",
@@ -941,6 +1139,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
     >
       {/* First Field*/}
       <div
+        className="container-fields"
         style={{
           display: "flex",
           columnGap: "15px",
@@ -948,6 +1147,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       >
         {/* Insurer Information*/}
         <div
+          className="container-max-width"
           style={{
             width: "50%",
             border: "1px solid #9ca3af",
@@ -973,6 +1173,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             Insurer Information
           </span>
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "70%",
             }}
@@ -1002,6 +1203,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={clientIDRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "90%",
             }}
@@ -1025,6 +1227,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={clientNameRef}
           />
           <TextAreaInput
+            containerClassName="custom-input"
             label={{
               title: "Address",
               style: {
@@ -1045,6 +1248,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
         </div>
         {/* Agent Information*/}
         <div
+          className="container-max-width"
           style={{
             width: "50%",
             border: "1px solid #9ca3af",
@@ -1070,6 +1274,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             Agent Information
           </span>
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "70%",
             }}
@@ -1099,6 +1304,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={agentIdRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "90%",
             }}
@@ -1122,6 +1328,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={agentNameRef}
           />
           <TextFormatedInput
+            containerClassName="custom-input"
             label={{
               title: "Commission:",
               style: {
@@ -1146,6 +1353,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={agentCommisionRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "100%",
             }}
@@ -1172,6 +1380,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       </div>
       {/* Second Field*/}
       <div
+        className="container-fields"
         style={{
           display: "flex",
           columnGap: "15px",
@@ -1179,6 +1388,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       >
         {/* MSPR Policy*/}
         <div
+          className="container-max-width"
           style={{
             width: "50%",
             border: "1px solid #9ca3af",
@@ -1204,6 +1414,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             MSPR Policy
           </span>
           <SelectInput
+            containerClassName="custom-input"
             ref={_accountRef}
             label={{
               title: "Account:",
@@ -1233,6 +1444,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             display={"Account"}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "90%",
             }}
@@ -1259,6 +1471,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
         </div>
         {/* Period of Insurance*/}
         <div
+          className="container-max-width"
           style={{
             width: "50%",
             border: "1px solid #9ca3af",
@@ -1284,6 +1497,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             Period of Insurance
           </span>
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
             }}
@@ -1309,6 +1523,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={dateFromRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
             }}
@@ -1334,6 +1549,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={dateToRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
             }}
@@ -1363,6 +1579,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       {/* Last Field*/}
       {/* Insured Unit*/}
       <div
+        className="container-fields"
         style={{
           width: "100%",
           border: "1px solid #9ca3af",
@@ -1387,8 +1604,12 @@ const PolicyInformation = forwardRef((props: any, ref) => {
         >
           Insured Unit
         </span>
-        <div style={{ display: "flex", columnGap: "100px" }}>
+        <div
+          className="container-fields"
+          style={{ display: "flex", columnGap: "100px" }}
+        >
           <TextAreaInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
             }}
@@ -1413,6 +1634,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             _inputRef={premisesAddressRef}
           />
           <TextAreaInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
             }}
@@ -1437,8 +1659,12 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             _inputRef={moneyRoutesFromRef}
           />
         </div>
-        <div style={{ display: "flex", columnGap: "100px" }}>
+        <div
+          className="container-fields"
+          style={{ display: "flex", columnGap: "100px" }}
+        >
           <TextAreaInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
             }}
@@ -1463,6 +1689,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             _inputRef={safeStrongroomDescRef}
           />
           <TextAreaInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
             }}
@@ -1487,8 +1714,12 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             _inputRef={moneyRoutesToRef}
           />
         </div>
-        <div style={{ display: "flex", columnGap: "100px" }}>
+        <div
+          className="container-fields"
+          style={{ display: "flex", columnGap: "100px" }}
+        >
           <TextAreaInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
             }}
@@ -1512,8 +1743,9 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             }}
             _inputRef={methodTransportationRef}
           />
-          <div style={{ width: "50%" }}>
+          <div className="container-max-width" style={{ width: "50%" }}>
             <TextFormatedInput
+              containerClassName="custom-input"
               label={{
                 title: "Guards Minimum Number :",
                 style: {
@@ -1540,6 +1772,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
               inputRef={guardsMinimumNumberRef}
             />
             <TextFormatedInput
+              containerClassName="custom-input"
               label={{
                 title: "Messenger Maximum Number :",
                 style: {
@@ -1591,18 +1824,18 @@ const PolicyPremium = forwardRef((props: any, ref) => {
   useImperativeHandle(ref, () => ({
     getRefsValue: () => {
       return {
-        sectionIRef:sectionIRef.current?.value,
-        sectionIBRef:sectionIBRef.current?.value,
-        sectionIIRef:sectionIIRef.current?.value,
-        premium1Ref:premium1Ref.current?.value,
-        premium2Ref:premium2Ref.current?.value,
-        premium3Ref:premium3Ref.current?.value,
-        netPremiumRef:netPremiumRef.current?.value,
-        vatRef:vatRef.current?.value,
-        docstampRef:docstampRef.current?.value,
-        localGovTaxRef:localGovTaxRef.current?.value,
-        _localGovTaxRef:_localGovTaxRef.current?.value,
-        totalDueRef:totalDueRef.current?.value,
+        sectionIRef: sectionIRef.current?.value,
+        sectionIBRef: sectionIBRef.current?.value,
+        sectionIIRef: sectionIIRef.current?.value,
+        premium1Ref: premium1Ref.current?.value,
+        premium2Ref: premium2Ref.current?.value,
+        premium3Ref: premium3Ref.current?.value,
+        netPremiumRef: netPremiumRef.current?.value,
+        vatRef: vatRef.current?.value,
+        docstampRef: docstampRef.current?.value,
+        localGovTaxRef: localGovTaxRef.current?.value,
+        _localGovTaxRef: _localGovTaxRef.current?.value,
+        totalDueRef: totalDueRef.current?.value,
       };
     },
     getRefs: () => {
@@ -1619,7 +1852,7 @@ const PolicyPremium = forwardRef((props: any, ref) => {
         localGovTaxRef,
         _localGovTaxRef,
         totalDueRef,
-        cumputationButtonRef
+        cumputationButtonRef,
       };
     },
     resetRefs: () => {
@@ -1642,7 +1875,6 @@ const PolicyPremium = forwardRef((props: any, ref) => {
       if (premium3Ref.current) {
         premium3Ref.current.value = "0.00";
       }
-
 
       if (netPremiumRef.current) {
         netPremiumRef.current.value = "0.00";
@@ -1687,7 +1919,6 @@ const PolicyPremium = forwardRef((props: any, ref) => {
         premium3Ref.current.disabled = disabled;
       }
 
-
       if (netPremiumRef.current) {
         netPremiumRef.current.disabled = disabled;
       }
@@ -1729,6 +1960,7 @@ const PolicyPremium = forwardRef((props: any, ref) => {
       }}
     >
       <div
+        className="premuim-content-container"
         style={{
           height: "100%",
           width: "75%",
@@ -1741,6 +1973,7 @@ const PolicyPremium = forwardRef((props: any, ref) => {
       >
         {/* first layer */}
         <div
+          className="container-max-width "
           style={{
             border: "1px solid #9ca3af",
             width: "60%",
@@ -1764,8 +1997,12 @@ const PolicyPremium = forwardRef((props: any, ref) => {
           <div
             style={{ display: "flex", flexDirection: "column", rowGap: "5px" }}
           >
-            <div style={{ display: "flex", columnGap: "20px" }}>
+            <div
+              className="container-fields-tpl"
+              style={{ display: "flex", columnGap: "20px" }}
+            >
               <TextFormatedInput
+                containerClassName="custom-input-adjust-label"
                 label={{
                   title: "Section I Insurance :",
                   style: {
@@ -1791,6 +2028,7 @@ const PolicyPremium = forwardRef((props: any, ref) => {
                 inputRef={sectionIRef}
               />
               <TextFormatedInput
+                containerClassName="custom-input-adjust-label"
                 label={{
                   title: "Premium :",
                   style: {
@@ -1816,8 +2054,12 @@ const PolicyPremium = forwardRef((props: any, ref) => {
                 inputRef={premium1Ref}
               />
             </div>
-            <div style={{ display: "flex", columnGap: "20px" }}>
+            <div
+              className="container-fields-tpl"
+              style={{ display: "flex", columnGap: "20px" }}
+            >
               <TextFormatedInput
+                containerClassName="custom-input-adjust-label"
                 label={{
                   title: "Section IB Insurance :",
                   style: {
@@ -1843,6 +2085,7 @@ const PolicyPremium = forwardRef((props: any, ref) => {
                 inputRef={sectionIBRef}
               />
               <TextFormatedInput
+                containerClassName="custom-input-adjust-label"
                 label={{
                   title: "Premium :",
                   style: {
@@ -1868,8 +2111,12 @@ const PolicyPremium = forwardRef((props: any, ref) => {
                 inputRef={premium2Ref}
               />
             </div>
-            <div style={{ display: "flex", columnGap: "20px" }}>
+            <div
+              className="container-fields-tpl"
+              style={{ display: "flex", columnGap: "20px" }}
+            >
               <TextFormatedInput
+                containerClassName="custom-input-adjust-label"
                 label={{
                   title: "Section II Insurance :",
                   style: {
@@ -1895,6 +2142,7 @@ const PolicyPremium = forwardRef((props: any, ref) => {
                 inputRef={sectionIIRef}
               />
               <TextFormatedInput
+                containerClassName="custom-input-adjust-label"
                 label={{
                   title: "Premium :",
                   style: {
@@ -1924,6 +2172,7 @@ const PolicyPremium = forwardRef((props: any, ref) => {
         </div>
         {/* second layer */}
         <div
+          className="container-max-width"
           style={{
             border: "1px solid #9ca3af",
             width: "40%",

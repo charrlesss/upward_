@@ -5,7 +5,7 @@ import {
   forwardRef,
   useImperativeHandle,
 } from "react";
-import {Button, IconButton } from "@mui/material";
+import { Button, IconButton } from "@mui/material";
 import { blue, grey } from "@mui/material/colors";
 import { AuthContext } from "../../../../../../../components/AuthContext";
 import { useQuery, useMutation } from "react-query";
@@ -25,9 +25,7 @@ import {
 } from "../../../../../../../components/UpwardFields";
 import CalculateIcon from "@mui/icons-material/Calculate";
 import { formatNumber } from "../../../../Accounting/ReturnCheck";
-import {
-  Autocomplete
-} from "../../../../Accounting/PettyCash";
+import { Autocomplete } from "../../../../Accounting/PettyCash";
 import { wait } from "../../../../../../../lib/wait";
 import { format } from "date-fns";
 import SearchIcon from "@mui/icons-material/Search";
@@ -35,6 +33,7 @@ import SaveAsIcon from "@mui/icons-material/SaveAs";
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import { Loading } from "../../../../../../../components/Loading";
 import { useUpwardTableModalSearchSafeMode } from "../../../../../../../components/DataGridViewReact";
+import "../../../../../../../style/monbileview/production/production.css";
 
 export default function FirePolicy() {
   const { myAxios, user } = useContext(AuthContext);
@@ -63,8 +62,7 @@ export default function FirePolicy() {
           ._occupancyRef.current.setDataSource(response.data?.occupancy);
       });
     },
-    refetchOnWindowFocus:false
-
+    refetchOnWindowFocus: false,
   });
 
   const { isLoading: isLoadingAccount } = useQuery({
@@ -83,8 +81,7 @@ export default function FirePolicy() {
           ._accountRef.current.setDataSource(response.data?.account);
       });
     },
-    refetchOnWindowFocus:false
-
+    refetchOnWindowFocus: false,
   });
   const { isLoading: isLoadingMortgagee } = useQuery({
     queryKey: "mortgagee",
@@ -102,10 +99,9 @@ export default function FirePolicy() {
           .mortgageeSelect_.current.setDataSource(response.data?.mortgagee);
       });
     },
-    refetchOnWindowFocus:false
-
+    refetchOnWindowFocus: false,
   });
-  const { isLoading:isLoadingSubAccount } = useQuery({
+  const { isLoading: isLoadingSubAccount } = useQuery({
     queryKey: "sub-account",
     queryFn: () => {
       return myAxios.get("/task/production/sub-account", {
@@ -116,14 +112,14 @@ export default function FirePolicy() {
     },
     onSuccess(response) {
       wait(100).then(() => {
-        if(subAccountRef_.current)
-        subAccountRef_.current.setDataSource(response.data?.data);
+        if (subAccountRef_.current)
+          subAccountRef_.current.setDataSource(response.data?.data);
         wait(100).then(() => {
           if (subAccountRef.current) subAccountRef.current.value = "HO";
         });
       });
     },
-    refetchOnWindowFocus:false
+    refetchOnWindowFocus: false,
   });
 
   const { mutate: mutateAddUpdate, isLoading: loadingAddUpdate } = useMutation({
@@ -148,10 +144,9 @@ export default function FirePolicy() {
     },
     onSuccess: async (res) => {
       if (res.data.success) {
-
         setMode("");
-        _policyInformationRef.current.resetRefs()
-        _policyPremiumRef.current.resetRefs()
+        _policyInformationRef.current.resetRefs();
+        _policyPremiumRef.current.resetRefs();
 
         return Swal.fire({
           position: "center",
@@ -255,62 +250,104 @@ export default function FirePolicy() {
 
           // insured unit
           if (_policyInformationRef.current.getRefs().locationRiskRef.current) {
-            _policyInformationRef.current.getRefs().locationRiskRef.current.value = selected.Location
+            _policyInformationRef.current.getRefs().locationRiskRef.current.value =
+              selected.Location;
           }
           if (_policyInformationRef.current.getRefs().occupancyRef.current) {
-            _policyInformationRef.current.getRefs().occupancyRef.current.value = selected.Occupancy
+            _policyInformationRef.current.getRefs().occupancyRef.current.value =
+              selected.Occupancy;
           }
-          if (_policyInformationRef.current.getRefs().propertyInsuredRef.current) {
-            _policyInformationRef.current.getRefs().propertyInsuredRef.current.value = selected.PropertyInsured
+          if (
+            _policyInformationRef.current.getRefs().propertyInsuredRef.current
+          ) {
+            _policyInformationRef.current.getRefs().propertyInsuredRef.current.value =
+              selected.PropertyInsured;
           }
           if (_policyInformationRef.current.getRefs().boundariesRef.current) {
-            _policyInformationRef.current.getRefs().boundariesRef.current.value = selected.Boundaries
+            _policyInformationRef.current.getRefs().boundariesRef.current.value =
+              selected.Boundaries;
           }
           if (_policyInformationRef.current.getRefs().constructionRef.current) {
-            _policyInformationRef.current.getRefs().constructionRef.current.value = selected.Constraction
+            _policyInformationRef.current.getRefs().constructionRef.current.value =
+              selected.Constraction;
           }
 
           // mortgagee
           if (_policyPremiumRef.current.getRefs().mortgageeSelect.current) {
-            _policyPremiumRef.current.getRefs().mortgageeSelect.current.value = selected.Mortgage
+            _policyPremiumRef.current.getRefs().mortgageeSelect.current.value =
+              selected.Mortgage;
           }
           if (_policyPremiumRef.current.getRefs().warrientiesRef.current) {
-            _policyPremiumRef.current.getRefs().warrientiesRef.current.value = selected.Warranties
+            _policyPremiumRef.current.getRefs().warrientiesRef.current.value =
+              selected.Warranties;
           }
 
           // Premiums
           if (_policyPremiumRef.current.getRefs().insuredValueRef.current) {
-            _policyPremiumRef.current.getRefs().insuredValueRef.current.value = formatNumber(parseFloat((selected.InsuredValue || 0).toString().replace(/,/g,'')) )
+            _policyPremiumRef.current.getRefs().insuredValueRef.current.value =
+              formatNumber(
+                parseFloat(
+                  (selected.InsuredValue || 0).toString().replace(/,/g, "")
+                )
+              );
           }
 
           if (_policyPremiumRef.current.getRefs().percentageRef.current) {
-            _policyPremiumRef.current.getRefs().percentageRef.current.value = formatNumber(parseFloat((selected.Percentage || 0).toString().replace(/,/g,'')) ) 
+            _policyPremiumRef.current.getRefs().percentageRef.current.value =
+              formatNumber(
+                parseFloat(
+                  (selected.Percentage || 0).toString().replace(/,/g, "")
+                )
+              );
           }
 
           if (_policyPremiumRef.current.getRefs().totalPremiumRef.current) {
-            _policyPremiumRef.current.getRefs().totalPremiumRef.current.value = formatNumber(parseFloat((selected.TotalPremium || 0).toString().replace(/,/g,'')) ) 
+            _policyPremiumRef.current.getRefs().totalPremiumRef.current.value =
+              formatNumber(
+                parseFloat(
+                  (selected.TotalPremium || 0).toString().replace(/,/g, "")
+                )
+              );
           }
 
           if (_policyPremiumRef.current.getRefs().vatRef.current) {
-            _policyPremiumRef.current.getRefs().vatRef.current.value = formatNumber(parseFloat((selected.Vat || 0).toString().replace(/,/g,'')) ) 
+            _policyPremiumRef.current.getRefs().vatRef.current.value =
+              formatNumber(
+                parseFloat((selected.Vat || 0).toString().replace(/,/g, ""))
+              );
           }
           if (_policyPremiumRef.current.getRefs().docstampRef.current) {
-            _policyPremiumRef.current.getRefs().docstampRef.current.value = formatNumber(parseFloat((selected.DocStamp || 0).toString().replace(/,/g,'')) ) 
+            _policyPremiumRef.current.getRefs().docstampRef.current.value =
+              formatNumber(
+                parseFloat(
+                  (selected.DocStamp || 0).toString().replace(/,/g, "")
+                )
+              );
           }
           if (_policyPremiumRef.current.getRefs()._localGovTaxRef.current) {
-            _policyPremiumRef.current.getRefs()._localGovTaxRef.current.value = formatNumber(parseFloat((selected.LGovTax || 0).toString().replace(/,/g,'')) ) 
+            _policyPremiumRef.current.getRefs()._localGovTaxRef.current.value =
+              formatNumber(
+                parseFloat((selected.LGovTax || 0).toString().replace(/,/g, ""))
+              );
           }
           if (_policyPremiumRef.current.getRefs().fsTaxRef.current) {
-            _policyPremiumRef.current.getRefs().fsTaxRef.current.value = formatNumber(parseFloat((selected.FireTax || 0).toString().replace(/,/g,'')) ) 
+            _policyPremiumRef.current.getRefs().fsTaxRef.current.value =
+              formatNumber(
+                parseFloat((selected.FireTax || 0).toString().replace(/,/g, ""))
+              );
           }
           if (_policyPremiumRef.current.getRefs().totalDueRef.current) {
-            _policyPremiumRef.current.getRefs().totalDueRef.current.value = formatNumber(parseFloat((selected.TotalDue || 0).toString().replace(/,/g,'')) ) 
+            _policyPremiumRef.current.getRefs().totalDueRef.current.value =
+              formatNumber(
+                parseFloat(
+                  (selected.TotalDue || 0).toString().replace(/,/g, "")
+                )
+              );
           }
 
-        //  wait(100).then(()=>{
-        //   _policyPremiumRef.current.getRefs().cumputationButtonRef.current.click()
-        //  })
-          
+          //  wait(100).then(()=>{
+          //   _policyPremiumRef.current.getRefs().cumputationButtonRef.current.click()
+          //  })
         }
       },
     });
@@ -425,7 +462,7 @@ export default function FirePolicy() {
     ],
     getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
       if (rowItm) {
-        setMode('edit')
+        setMode("edit");
         mutateSelectedSearch({ policyNo: rowItm[1] });
         searchFireCloseModal();
       }
@@ -526,70 +563,82 @@ export default function FirePolicy() {
             }}
             inputRef={searchRef}
           />
-          <Button
-            sx={{
-              height: "23px",
-              fontSize: "11px",
-            }}
-            disabled={mode === "add" || mode === "edit"}
-            size="small"
-            color="primary"
-            onClick={() => {
-              setMode("add");
-            }}
-            variant="contained"
-            startIcon={<AddBoxIcon />}
-          >
-            New
-          </Button>
-          <Button
-            variant="contained"
-            color="success"
-            startIcon={<SaveAsIcon />}
-            disabled={mode === ""}
-            size="small"
-            onClick={handleSave}
-            sx={{
-              height: "23px",
-              fontSize: "11px",
+          <div
+            className="button-action-desktop"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              columnGap: "8px",
             }}
           >
-            Save
-          </Button>
-          <Button
-            sx={{
-              height: "23px",
-              fontSize: "11px",
-            }}
-            variant="contained"
-            color="error"
-            startIcon={<CloseIcon />}
-            disabled={mode === ""}
-            size="small"
-            onClick={() => {
-              Swal.fire({
-                title: "Are you sure?",
-                text: "You won't be able to revert this!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, cencel it!",
-                cancelButtonText: "No",
-              }).then((result) => {
-                if (result.isConfirmed) {
-                  setMode("");
-                  _policyInformationRef.current.resetRefs()
-                  _policyPremiumRef.current.resetRefs()
-                }
-              });
-            }}
-          >
-            Cancel
-          </Button>
+            <Button
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+              }}
+              disabled={mode === "add" || mode === "edit"}
+              size="small"
+              color="primary"
+              onClick={() => {
+                setMode("add");
+              }}
+              variant="contained"
+              startIcon={<AddBoxIcon />}
+            >
+              New
+            </Button>
+            <Button
+              variant="contained"
+              color="success"
+              startIcon={<SaveAsIcon />}
+              disabled={mode === ""}
+              size="small"
+              onClick={handleSave}
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+              }}
+            >
+              Save
+            </Button>
+            <Button
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              color="error"
+              startIcon={<CloseIcon />}
+              disabled={mode === ""}
+              size="small"
+              onClick={() => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, cencel it!",
+                  cancelButtonText: "No",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    setMode("");
+                    _policyInformationRef.current.resetRefs();
+                    _policyPremiumRef.current.resetRefs();
+                  }
+                });
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
         </div>
         <div style={{ display: "flex", columnGap: "7px", marginBottom: "6px" }}>
-          <div style={{ display: "flex", columnGap: "2px" }}>
+          <div
+            className="desktop-choices-buttons"
+            style={{ display: "flex", columnGap: "2px" }}
+          >
             <Button
               // disabled={selectedPage === 0}
               sx={{
@@ -643,6 +692,69 @@ export default function FirePolicy() {
               containerStyle={{
                 flex: 2,
                 marginLeft: "20px",
+              }}
+              datasource={[]}
+              values={"Acronym"}
+              display={"Acronym"}
+            />
+          </div>
+          <div
+            className="mobile-choices-buttons"
+            style={{ display: "flex", columnGap: "5px", alignItems: "center" }}
+          >
+            <Button
+              // disabled={selectedPage === 0}
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+                background: selectedPage === 0 ? blue[700] : grey[700],
+                "&:hover": {
+                  background: selectedPage === 0 ? blue[800] : grey[800],
+                },
+              }}
+              variant="contained"
+              onClick={() => {
+                setSelectedPage(0);
+              }}
+            >
+              Information
+            </Button>
+            <Button
+              // disabled={selectedPage === 2}
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+
+                background: selectedPage === 2 ? blue[700] : grey[700],
+                "&:hover": {
+                  background: selectedPage === 2 ? blue[800] : grey[800],
+                },
+              }}
+              onClick={() => {
+                setSelectedPage(2);
+              }}
+              variant="contained"
+            >
+              Premium
+            </Button>
+            <SelectInput
+              ref={subAccountRef_}
+              label={{
+                title: "Sub Account :",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                  display: "none",
+                },
+              }}
+              selectRef={subAccountRef}
+              select={{
+                style: { flex: 1, height: "22px" },
+                defaultValue: "HO",
+              }}
+              containerStyle={{
+                flex: 2,
               }}
               datasource={[]}
               values={"Acronym"}
@@ -720,6 +832,76 @@ export default function FirePolicy() {
             }}
           />
         </div>
+      </div>
+      <div
+        className="button-action-mobile"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          columnGap: "8px",
+        }}
+      >
+        <Button
+          sx={{
+            height: "23px",
+            fontSize: "11px",
+          }}
+          disabled={mode === "add" || mode === "edit"}
+          size="small"
+          color="primary"
+          onClick={() => {
+            setMode("add");
+          }}
+          variant="contained"
+          startIcon={<AddBoxIcon />}
+        >
+          New
+        </Button>
+        <Button
+          variant="contained"
+          color="success"
+          startIcon={<SaveAsIcon />}
+          disabled={mode === ""}
+          size="small"
+          onClick={handleSave}
+          sx={{
+            height: "23px",
+            fontSize: "11px",
+          }}
+        >
+          Save
+        </Button>
+        <Button
+          sx={{
+            height: "23px",
+            fontSize: "11px",
+          }}
+          variant="contained"
+          color="error"
+          startIcon={<CloseIcon />}
+          disabled={mode === ""}
+          size="small"
+          onClick={() => {
+            Swal.fire({
+              title: "Are you sure?",
+              text: "You won't be able to revert this!",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Yes, cencel it!",
+              cancelButtonText: "No",
+            }).then((result) => {
+              if (result.isConfirmed) {
+                setMode("");
+                _policyInformationRef.current.resetRefs();
+                _policyPremiumRef.current.resetRefs();
+              }
+            });
+          }}
+        >
+          Cancel
+        </Button>
       </div>
     </>
   );
@@ -846,8 +1028,6 @@ const PolicyInformation = forwardRef((props: any, ref) => {
         dateIssuedRef.current.value = format(new Date(), "yyyy-MM-dd");
       }
 
-    
-
       if (locationRiskRef.current) {
         locationRiskRef.current.value = "";
       }
@@ -947,6 +1127,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
 
   return (
     <div
+      className="main-field-container"
       style={{
         display: "flex",
         flexDirection: "column",
@@ -957,6 +1138,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
     >
       {/* First Field*/}
       <div
+        className="container-fields"
         style={{
           display: "flex",
           columnGap: "15px",
@@ -964,6 +1146,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       >
         {/* Insurer Information*/}
         <div
+          className="container-max-width"
           style={{
             width: "50%",
             border: "1px solid #9ca3af",
@@ -989,6 +1172,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             Insurer Information
           </span>
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "70%",
             }}
@@ -1018,6 +1202,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={clientIDRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "90%",
             }}
@@ -1041,6 +1226,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={clientNameRef}
           />
           <TextAreaInput
+            containerClassName="custom-input"
             label={{
               title: "Address",
               style: {
@@ -1061,6 +1247,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
         </div>
         {/* Agent Information*/}
         <div
+          className="container-max-width"
           style={{
             width: "50%",
             border: "1px solid #9ca3af",
@@ -1085,7 +1272,9 @@ const PolicyInformation = forwardRef((props: any, ref) => {
           >
             Agent Information
           </span>
+
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "70%",
             }}
@@ -1115,6 +1304,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={agentIdRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "90%",
             }}
@@ -1138,6 +1328,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={agentNameRef}
           />
           <TextFormatedInput
+            containerClassName="custom-input"
             label={{
               title: "Commission:",
               style: {
@@ -1162,6 +1353,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={agentCommisionRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "100%",
             }}
@@ -1188,6 +1380,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       </div>
       {/* Second Field*/}
       <div
+        className="container-fields"
         style={{
           display: "flex",
           columnGap: "15px",
@@ -1195,6 +1388,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       >
         {/* Fire Policy*/}
         <div
+          className="container-max-width"
           style={{
             width: "50%",
             border: "1px solid #9ca3af",
@@ -1220,6 +1414,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             Fire Policy
           </span>
           <SelectInput
+            containerClassName="custom-input"
             ref={_accountRef}
             label={{
               title: "Account:",
@@ -1249,6 +1444,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             display={"Account"}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "90%",
             }}
@@ -1274,6 +1470,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
           />
 
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "90%",
             }}
@@ -1300,6 +1497,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
         </div>
         {/* Period of Insurance*/}
         <div
+          className="container-max-width"
           style={{
             width: "50%",
             border: "1px solid #9ca3af",
@@ -1325,6 +1523,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             Period of Insurance
           </span>
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
             }}
@@ -1350,6 +1549,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={dateFromRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
             }}
@@ -1375,6 +1575,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={dateToRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
             }}
@@ -1404,6 +1605,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       {/* Last Field*/}
       {/* Insured Unit*/}
       <div
+        className="container-fields"
         style={{
           width: "100%",
           border: "1px solid #9ca3af",
@@ -1412,7 +1614,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
           position: "relative",
           display: "flex",
           flexDirection: "column",
-          rowGap: "5px",
+          rowGap: "10px",
         }}
       >
         <span
@@ -1428,8 +1630,15 @@ const PolicyInformation = forwardRef((props: any, ref) => {
         >
           Insured Unit
         </span>
-        <div style={{ display: "flex", columnGap: "100px" }}>
+        <div
+          className="container-fields-tpl"
+          style={{
+            display: "flex",
+            columnGap: "100px",
+          }}
+        >
           <TextAreaInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
             }}
@@ -1454,11 +1663,13 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             _inputRef={locationRiskRef}
           />
           <div
+            className="container-max-width"
             style={{
               width: "50%",
             }}
           >
             <SelectInput
+              containerClassName="custom-select"
               ref={_occupancyRef}
               label={{
                 title: "Occupancy :",
@@ -1489,8 +1700,12 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             />
           </div>
         </div>
-        <div style={{ display: "flex", columnGap: "100px" }}>
+        <div
+          className="container-fields-tpl"
+          style={{ display: "flex", columnGap: "100px" }}
+        >
           <TextAreaInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
             }}
@@ -1515,6 +1730,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             _inputRef={propertyInsuredRef}
           />
           <TextAreaInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
             }}
@@ -1539,8 +1755,12 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             _inputRef={boundariesRef}
           />
         </div>
-        <div style={{ display: "flex", columnGap: "100px" }}>
+        <div
+          className="container-fields-tpl"
+          style={{ display: "flex", columnGap: "100px" }}
+        >
           <TextAreaInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "100%",
             }}
@@ -1569,7 +1789,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
   );
 });
 const PolicyPremium = forwardRef((props: any, ref) => {
-  const cumputationButtonRef = useRef<HTMLButtonElement>(null)
+  const cumputationButtonRef = useRef<HTMLButtonElement>(null);
   const mortgageeSelect_ = useRef<any>(null);
   const mortgageeSelect = useRef<HTMLSelectElement>(null);
 
@@ -1717,6 +1937,7 @@ const PolicyPremium = forwardRef((props: any, ref) => {
       }}
     >
       <div
+        className="premuim-content-container"
         style={{
           height: "100%",
           width: "65%",
@@ -1729,6 +1950,7 @@ const PolicyPremium = forwardRef((props: any, ref) => {
       >
         {/* first layer */}
         <div
+          className="container-max-width"
           style={{
             border: "1px solid #9ca3af",
             width: "60%",
@@ -1752,6 +1974,7 @@ const PolicyPremium = forwardRef((props: any, ref) => {
           </span>
           {/* firt layer */}
           <div
+            className="desktop-content-premium"
             style={{
               width: "140px",
               display: "flex",
@@ -1790,6 +2013,7 @@ const PolicyPremium = forwardRef((props: any, ref) => {
               Warranties:
             </label>
           </div>
+
           {/* second layer */}
           <div
             style={{
@@ -1800,6 +2024,18 @@ const PolicyPremium = forwardRef((props: any, ref) => {
               rowGap: "10px",
             }}
           >
+            <div className="mobile-content-premium">
+              <label
+                htmlFor="mortgagee"
+                style={{
+                  fontSize: "12px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                }}
+              >
+                Mortgagee:
+              </label>
+            </div>
             <div>
               <Autocomplete
                 disableInput={props.disabled}
@@ -1835,7 +2071,18 @@ const PolicyPremium = forwardRef((props: any, ref) => {
                 }}
               />
             </div>
-
+            <div className="mobile-content-premium">
+              <label
+                htmlFor="warranties"
+                style={{
+                  fontSize: "12px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                }}
+              >
+                Warranties:
+              </label>
+            </div>
             <div
               style={{
                 height: "150px",
@@ -1870,6 +2117,7 @@ const PolicyPremium = forwardRef((props: any, ref) => {
         </div>
         {/* second layer */}
         <div
+          className="container-max-width"
           style={{
             border: "1px solid #9ca3af",
             width: "40%",
@@ -1975,7 +2223,7 @@ const PolicyPremium = forwardRef((props: any, ref) => {
               }}
             >
               <IconButton
-              ref={cumputationButtonRef}
+                ref={cumputationButtonRef}
                 size="small"
                 color="info"
                 onClick={() => {
@@ -2192,4 +2440,3 @@ const PolicyPremium = forwardRef((props: any, ref) => {
     </div>
   );
 });
-

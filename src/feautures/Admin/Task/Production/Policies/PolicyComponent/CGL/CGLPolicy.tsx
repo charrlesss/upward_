@@ -477,66 +477,75 @@ export default function PAPolicy() {
             }}
             inputRef={searchRef}
           />
-          <Button
-            sx={{
-              height: "23px",
-              fontSize: "11px",
-            }}
-            disabled={mode === "add" || mode === "edit"}
-            size="small"
-            color="primary"
-            onClick={() => {
-              setMode("add");
-            }}
-            variant="contained"
-            startIcon={<AddBoxIcon />}
-          >
-            New
-          </Button>
-          <Button
-            variant="contained"
-            color="success"
-            startIcon={<SaveAsIcon />}
-            disabled={mode === ""}
-            size="small"
-            onClick={handleSave}
-            sx={{
-              height: "23px",
-              fontSize: "11px",
+          <div
+            className="button-action-desktop"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              columnGap: "8px",
             }}
           >
-            Save
-          </Button>
-          <Button
-            sx={{
-              height: "23px",
-              fontSize: "11px",
-            }}
-            variant="contained"
-            color="error"
-            startIcon={<CloseIcon />}
-            disabled={mode === ""}
-            size="small"
-            onClick={() => {
-              Swal.fire({
-                title: "Are you sure?",
-                text: "You won't be able to revert this!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, cencel it!",
-                cancelButtonText: "No",
-              }).then((result) => {
-                if (result.isConfirmed) {
-                  setMode("");
-                  _policyInformationRef.current.resetRefs();
-                }
-              });
-            }}
-          >
-            Cancel
-          </Button>
+            <Button
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+              }}
+              disabled={mode === "add" || mode === "edit"}
+              size="small"
+              color="primary"
+              onClick={() => {
+                setMode("add");
+              }}
+              variant="contained"
+              startIcon={<AddBoxIcon />}
+            >
+              New
+            </Button>
+            <Button
+              variant="contained"
+              color="success"
+              startIcon={<SaveAsIcon />}
+              disabled={mode === ""}
+              size="small"
+              onClick={handleSave}
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+              }}
+            >
+              Save
+            </Button>
+            <Button
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              color="error"
+              startIcon={<CloseIcon />}
+              disabled={mode === ""}
+              size="small"
+              onClick={() => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, cencel it!",
+                  cancelButtonText: "No",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    setMode("");
+                    _policyInformationRef.current.resetRefs();
+                  }
+                });
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
         </div>
         <PolicyInformation
           myAxios={myAxios}
@@ -556,9 +565,9 @@ export default function PAPolicy() {
                 .replace(/,/g, "")
             );
 
-           
-
-            let percentLocGovTax = parseFloat(refs.localGovTaxRef.current.value)
+            let percentLocGovTax = parseFloat(
+              refs.localGovTaxRef.current.value
+            );
             let vat = txtPremium * 0.12;
             let docStamp = txtPremium * 0.125;
             let locGovTax = txtPremium * percentLocGovTax;
@@ -578,6 +587,75 @@ export default function PAPolicy() {
             }
           }}
         />
+      </div>
+      <div
+        className="button-action-mobile"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          columnGap: "8px",
+        }}
+      >
+        <Button
+          sx={{
+            height: "23px",
+            fontSize: "11px",
+          }}
+          disabled={mode === "add" || mode === "edit"}
+          size="small"
+          color="primary"
+          onClick={() => {
+            setMode("add");
+          }}
+          variant="contained"
+          startIcon={<AddBoxIcon />}
+        >
+          New
+        </Button>
+        <Button
+          variant="contained"
+          color="success"
+          startIcon={<SaveAsIcon />}
+          disabled={mode === ""}
+          size="small"
+          onClick={handleSave}
+          sx={{
+            height: "23px",
+            fontSize: "11px",
+          }}
+        >
+          Save
+        </Button>
+        <Button
+          sx={{
+            height: "23px",
+            fontSize: "11px",
+          }}
+          variant="contained"
+          color="error"
+          startIcon={<CloseIcon />}
+          disabled={mode === ""}
+          size="small"
+          onClick={() => {
+            Swal.fire({
+              title: "Are you sure?",
+              text: "You won't be able to revert this!",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Yes, cencel it!",
+              cancelButtonText: "No",
+            }).then((result) => {
+              if (result.isConfirmed) {
+                setMode("");
+                _policyInformationRef.current.resetRefs();
+              }
+            });
+          }}
+        >
+          Cancel
+        </Button>
       </div>
     </>
   );
@@ -857,6 +935,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
 
   return (
     <div
+      className="main-field-container"
       style={{
         display: "flex",
         flexDirection: "column",
@@ -867,6 +946,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
     >
       {/* First Field*/}
       <div
+        className="container-fields"
         style={{
           display: "flex",
           columnGap: "15px",
@@ -874,6 +954,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       >
         {/* Insurer Information*/}
         <div
+          className="container-max-width"
           style={{
             width: "50%",
             border: "1px solid #9ca3af",
@@ -899,6 +980,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             Insurer Information
           </span>
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "70%",
             }}
@@ -928,6 +1010,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={clientIDRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "90%",
             }}
@@ -951,6 +1034,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={clientNameRef}
           />
           <TextAreaInput
+            containerClassName="custom-input"
             label={{
               title: "Address",
               style: {
@@ -971,6 +1055,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
         </div>
         {/* Agent Information*/}
         <div
+          className="container-max-width"
           style={{
             width: "50%",
             border: "1px solid #9ca3af",
@@ -996,6 +1081,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             Agent Information
           </span>
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "70%",
             }}
@@ -1025,6 +1111,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={agentIdRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "90%",
             }}
@@ -1048,6 +1135,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={agentNameRef}
           />
           <TextFormatedInput
+            containerClassName="custom-input"
             label={{
               title: "Commission:",
               style: {
@@ -1072,6 +1160,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={agentCommisionRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "100%",
             }}
@@ -1098,6 +1187,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       </div>
       {/* Second Field*/}
       <div
+        className="container-fields"
         style={{
           display: "flex",
           columnGap: "15px",
@@ -1105,6 +1195,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       >
         {/* Marine Policy*/}
         <div
+          className="container-max-width"
           style={{
             width: "50%",
             border: "1px solid #9ca3af",
@@ -1130,6 +1221,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             Marine Policy
           </span>
           <SelectInput
+            containerClassName="custom-input"
             ref={_accountRef}
             label={{
               title: "Account:",
@@ -1159,6 +1251,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             display={"Account"}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "90%",
             }}
@@ -1185,6 +1278,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
         </div>
         {/* Period of Insurance*/}
         <div
+          className="container-max-width"
           style={{
             width: "50%",
             border: "1px solid #9ca3af",
@@ -1210,6 +1304,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             Period of Insurance
           </span>
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
             }}
@@ -1235,6 +1330,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={dateFromRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
             }}
@@ -1260,6 +1356,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={dateToRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
             }}
@@ -1289,6 +1386,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       {/* Last Field*/}
       {/* Insured Unit*/}
       <div
+        className="container-fields"
         style={{
           width: "100%",
           border: "1px solid #9ca3af",
@@ -1296,7 +1394,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
           padding: "20px",
           position: "relative",
           display: "flex",
-          rowGap: "5px",
+          rowGap: "15px",
           columnGap: "10px",
         }}
       >
@@ -1309,6 +1407,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
           }}
         >
           <TextFormatedInput
+            containerClassName="custom-input"
             label={{
               title: "Sum Insured :",
               style: {
@@ -1334,6 +1433,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={sumInsuredRef}
           />
           <TextAreaInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "100%",
               justifyContent: "flex-start",
@@ -1360,6 +1460,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             _inputRef={premisesOperationsRef}
           />
           <TextAreaInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "100%",
               justifyContent: "flex-start",
@@ -1386,6 +1487,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             _inputRef={addressRef}
           />
           <TextFormatedInput
+            containerClassName="custom-input"
             label={{
               title: "BL Premium :",
               style: {
@@ -1411,6 +1513,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={blPremium}
           />
           <TextFormatedInput
+            containerClassName="custom-input"
             label={{
               title: "PD Premium :",
               style: {

@@ -2,15 +2,20 @@ import { Box, Chip, Divider } from "@mui/material";
 import { blue } from "@mui/material/colors";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import useUrlParams from "../../../../../hooks/useUrlParams";
+import "../../../../../style/monbileview/production/production.css";
 
 export default function Policy() {
   return (
-    <div style={{
-      flex: 1,
-      padding: "5px",
-      msFlexDirection: "column",
-      background: "#F1F1F1",
-    }}>
+    <div
+      className="main"
+      style={{
+        flex: 1,
+        padding: "5px",
+        msFlexDirection: "column",
+        background: "#F1F1F1",
+        position: "relative",
+      }}
+    >
       <ChipsButton />
       <Outlet />
     </div>
@@ -59,26 +64,19 @@ function ChipsButton() {
   const location = useLocation();
   const navigate = useNavigate();
   function handleClick(e: any, link: string) {
-    navigate(
-      link +
-      `?drawer=${searchParams.get("drawer")}`
-    );
+    navigate(link + `?drawer=${searchParams.get("drawer")}`);
   }
 
   return (
-    <Box
-      sx={(theme) => ({
+    <div
+      className="button-chips-container"
+      style={{
         display: "flex",
         columnGap: "5px",
         height: "35px",
         alignItems: "center",
-        [theme.breakpoints.down("md")]: {
-          flexWrap: "wrap",
-          width: "100%",
-          gap: "5px",
-          marginBottom: "10px",
-        },
-      })}
+        position: "relative",
+      }}
     >
       {chips.map((item, idx) => {
         const selected = item.link === location.pathname;
@@ -98,6 +96,6 @@ function ChipsButton() {
           />
         );
       })}
-    </Box>
+    </div>
   );
 }

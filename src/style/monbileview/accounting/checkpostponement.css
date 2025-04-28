@@ -1,0 +1,54 @@
+.mobile-action-buttons {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .desktop-action-buttons {
+    display: none !important;
+  }
+
+  .mobile-action-buttons {
+    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #f1f1f1;
+    justify-content: center !important;
+    z-index: 9999;
+    padding: 5px 0px;
+  }
+
+  .first-field {
+    flex-direction: column; 
+    width: 100% !important;
+    row-gap: 10px !important;
+  }
+  .second-field{
+    display: flex;
+    flex-direction: column;
+    row-gap: 10px !important;
+  }
+
+  .first-field.reason {
+    margin-bottom: 10px;
+  }
+
+  .custom-input {
+    width: 100% !important;
+    margin-bottom: 0px !important;
+  }
+  .custom-input label {
+    width: 100px !important;
+  }
+  .custom-input input {
+    width: calc(100% - 100px) !important;
+  }
+
+  .custom-input.how-to-be-paid {
+    margin-bottom: 10px !important;
+  }
+  .add-height{
+    display: inline-block;
+  }
+}

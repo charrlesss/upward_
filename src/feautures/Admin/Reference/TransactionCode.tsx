@@ -19,6 +19,7 @@ import { TextInput } from "../../../components/UpwardFields";
 import SearchIcon from "@mui/icons-material/Search";
 import { DataGridViewReact } from "../../../components/DataGridViewReact";
 import { Loading } from "../../../components/Loading";
+import "../../../style/monbileview/reference/reference.css";
 
 export const bankColumn = [
   { key: "Code", label: "Transaction Code", width: 200 },
@@ -40,11 +41,15 @@ export default function TransactionCode() {
   const { mutate: mutateSearch, isLoading: loadingSearch } = useMutation({
     mutationKey: "search-transaction-code",
     mutationFn: async (variables: any) => {
-      return await myAxios.post("/reference/search-transaction-code", variables, {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      });
+      return await myAxios.post(
+        "/reference/search-transaction-code",
+        variables,
+        {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }
+      );
     },
     onSuccess: (response) => {
       if (response.data.success) {
@@ -71,22 +76,30 @@ export default function TransactionCode() {
   const { mutate: mutateEdit, isLoading: loadingEdit } = useMutation({
     mutationKey: "edit",
     mutationFn: async (variables: any) => {
-      return await myAxios.post("/reference/update-transaction-code", variables, {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      });
+      return await myAxios.post(
+        "/reference/update-transaction-code",
+        variables,
+        {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }
+      );
     },
     onSuccess,
   });
   const { mutate: mutateDelete, isLoading: loadingDelete } = useMutation({
     mutationKey: "delete",
     mutationFn: async (variables: any) => {
-      return await myAxios.post("/reference/delete-transaction-code", variables, {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      });
+      return await myAxios.post(
+        "/reference/delete-transaction-code",
+        variables,
+        {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }
+      );
     },
     onSuccess,
   });
@@ -197,6 +210,7 @@ export default function TransactionCode() {
           height: "100%",
           flex: 1,
           padding: "5px",
+          position:"relative"
         }}
       >
         <div
@@ -209,6 +223,7 @@ export default function TransactionCode() {
           }}
         >
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "550px",
               marginRight: "20px",
@@ -254,6 +269,249 @@ export default function TransactionCode() {
             }}
             inputRef={inputSearchRef}
           />
+          <div
+            className="button-action-desktop"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              columnGap: "8px",
+            }}
+          >
+            {mode === "" && (
+              <Button
+                style={{
+                  height: "22px",
+                  fontSize: "11px",
+                }}
+                variant="contained"
+                startIcon={<AddIcon />}
+                id="entry-header-save-button"
+                onClick={() => {
+                  setMode("add");
+                }}
+              >
+                New
+              </Button>
+            )}
+            <LoadingButton
+              style={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              id="save-entry-header"
+              color="primary"
+              variant="contained"
+              type="submit"
+              sx={{
+                height: "30px",
+                fontSize: "11px",
+              }}
+              onClick={handleOnSave}
+              startIcon={<SaveIcon />}
+              disabled={mode === ""}
+              loading={loadingAdd || loadingEdit}
+            >
+              Save
+            </LoadingButton>
+            {mode !== "" && (
+              <Button
+                style={{
+                  height: "22px",
+                  fontSize: "11px",
+                }}
+                variant="contained"
+                startIcon={<CloseIcon />}
+                color="error"
+                onClick={() => {
+                  Swal.fire({
+                    title: "Are you sure?",
+                    text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Yes, cancel it!",
+                  }).then((result) => {
+                    if (result.isConfirmed) {
+                      resetModule();
+                      setMode("");
+                      tableRef.current.setSelectedRow(null);
+                      tableRef.current.resetCheckBox();
+                    }
+                  });
+                }}
+              >
+                Cancel
+              </Button>
+            )}
+            <LoadingButton
+              id="save-entry-header"
+              variant="contained"
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+                backgroundColor: pink[500],
+                "&:hover": {
+                  backgroundColor: pink[600],
+                },
+              }}
+              loading={loadingDelete}
+              startIcon={<DeleteIcon />}
+              disabled={mode !== "edit"}
+              onClick={() => {
+                codeCondfirmationAlert({
+                  isUpdate: false,
+                  title: "Confirmation",
+                  saveTitle: "Confirm",
+                  text: `Are you sure you want to delete '${transactionCodeRef.current?.value}'?`,
+                  cb: (userCodeConfirmation) => {
+                    mutateDelete({
+                      Code: transactionCodeRef.current?.value,
+                      userCodeConfirmation,
+                    });
+                  },
+                });
+              }}
+            >
+              Delete
+            </LoadingButton>
+          </div>
+        </div>
+
+        <fieldset
+          className="container-max-width"
+          style={{
+            // border: "1px solid black",
+            padding: "5px",
+            width: "590px",
+            rowGap: "5px",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <TextInput
+            containerClassName="custom-input"
+            label={{
+              title: "Transaction  Code : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "100px",
+              },
+            }}
+            input={{
+              disabled: mode === "",
+              type: "text",
+              style: { width: "500px" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  e.preventDefault();
+                  descriptionRef.current?.focus();
+                }
+              },
+            }}
+            inputRef={transactionCodeRef}
+          />
+          <TextInput
+            containerClassName="custom-input"
+            label={{
+              title: "Description : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "100px",
+              },
+            }}
+            input={{
+              disabled: mode === "",
+              type: "text",
+              style: { width: "500px" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  accountRef.current?.focus();
+
+                  e.preventDefault();
+                }
+              },
+            }}
+            inputRef={descriptionRef}
+          />
+          <TextInput
+            containerClassName="custom-input"
+            label={{
+              title: "Account : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "100px",
+              },
+            }}
+            input={{
+              disabled: mode === "",
+              type: "text",
+              style: { width: "500px" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  e.preventDefault();
+                  inactiveRef.current?.focus();
+                }
+              },
+            }}
+            inputRef={accountRef}
+          />
+          <CheckBoxLabel
+            gridRow={1}
+            inputRef={inactiveRef}
+            label="Mark as Inactive"
+          />
+        </fieldset>
+
+        <div
+          style={{
+            marginTop: "10px",
+            width: "100%",
+            position: "relative",
+            flex: 1,
+            display: "flex",
+          }}
+        >
+          <DataGridViewReact
+            containerStyle={{
+              flex: 1,
+              height: "auto",
+            }}
+            ref={tableRef}
+            columns={bankColumn}
+            height="280px"
+            getSelectedItem={(rowItm: any) => {
+              if (rowItm) {
+                setMode("edit");
+                if (transactionCodeRef.current) {
+                  transactionCodeRef.current.value = rowItm[0];
+                }
+                if (descriptionRef.current) {
+                  descriptionRef.current.value = rowItm[1];
+                }
+                if (accountRef.current) {
+                  accountRef.current.value = rowItm[2];
+                }
+                if (inactiveRef.current) {
+                  inactiveRef.current.checked = rowItm[3] == "YES";
+                }
+              } else {
+                resetModule();
+              }
+            }}
+          />
+        </div>
+        <div
+          className="button-action-mobile"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            columnGap: "8px",
+          }}
+        >
           {mode === "" && (
             <Button
               style={{
@@ -353,129 +611,6 @@ export default function TransactionCode() {
             Delete
           </LoadingButton>
         </div>
-
-        <fieldset
-          style={{
-            // border: "1px solid black",
-            padding: "5px",
-            width: "590px",
-            rowGap: "5px",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <TextInput
-            label={{
-              title: "Transaction  Code : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-              },
-            }}
-            input={{
-              disabled: mode === "",
-              type: "text",
-              style: { width: "500px" },
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  e.preventDefault();
-                  descriptionRef.current?.focus();
-                }
-              },
-            }}
-            inputRef={transactionCodeRef}
-          />
-          <TextInput
-            label={{
-              title: "Description : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-              },
-            }}
-            input={{
-              disabled: mode === "",
-              type: "text",
-              style: { width: "500px" },
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  accountRef.current?.focus();
-
-                  e.preventDefault();
-                }
-              },
-            }}
-            inputRef={descriptionRef}
-          />
-          <TextInput
-            label={{
-              title: "Account : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-              },
-            }}
-            input={{
-              disabled: mode === "",
-              type: "text",
-              style: { width: "500px" },
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  e.preventDefault();
-                  inactiveRef.current?.focus();
-                }
-              },
-            }}
-            inputRef={accountRef}
-          />
-          <CheckBoxLabel
-            gridRow={1}
-            inputRef={inactiveRef}
-            label="Mark as Inactive"
-          />
-        </fieldset>
-
-        <div
-          style={{
-            marginTop: "10px",
-            width: "100%",
-            position: "relative",
-            flex: 1,
-            display: "flex",
-          }}
-        >
-          <DataGridViewReact
-            containerStyle={{
-              flex: 1,
-              height: "auto",
-            }}
-            ref={tableRef}
-            columns={bankColumn}
-            height="280px"
-            getSelectedItem={(rowItm: any) => {
-              if (rowItm) {
-                setMode("edit");
-                if (transactionCodeRef.current) {
-                  transactionCodeRef.current.value = rowItm[0];
-                }
-                if (descriptionRef.current) {
-                  descriptionRef.current.value = rowItm[1];
-                }
-                if (accountRef.current) {
-                  accountRef.current.value = rowItm[2];
-                }
-                if (inactiveRef.current) {
-                  inactiveRef.current.checked = rowItm[3] == 'YES';
-                }
-              } else {
-                resetModule();
-              }
-            }}
-          />
-        </div>
       </div>
     </>
   );
@@ -513,4 +648,3 @@ const CheckBoxLabel = ({
     </div>
   );
 };
-

@@ -21,6 +21,7 @@ import { Loading } from "../../../../components/Loading";
 import Swal from "sweetalert2";
 import PageHelmet from "../../../../components/Helmet";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
+import "../../../../style/monbileview/accounting/checkpostponement.css";
 
 const columns = [
   { key: "ln", label: "#", width: 40 },
@@ -565,6 +566,7 @@ export default function ChekPostponementRequest() {
       <PNNoUpwardTableModalSearch />
       <PageHelmet title="Check Postponement Request" />
       <div
+        className="main"
         style={{
           padding: "10px",
           background: "#F1F1F1",
@@ -577,6 +579,7 @@ export default function ChekPostponementRequest() {
           isLoadingEdit) && <Loading />}
         {/* ===========  first field  =========== */}
         <div
+        className="second-field"
           style={{
             position: "relative",
             padding: "12px",
@@ -598,6 +601,7 @@ export default function ChekPostponementRequest() {
             Account Informations
           </span>
           <div
+            className="first-field"
             style={{
               display: "flex",
               columnGap: "50px",
@@ -638,6 +642,7 @@ export default function ChekPostponementRequest() {
               <LoadingButton loading={isLoadingLoadAutoIdData} />
             ) : (
               <TextInput
+                containerClassName="custom-input"
                 containerStyle={{
                   width: "50%",
                   marginBottom: "8px",
@@ -662,8 +667,8 @@ export default function ChekPostponementRequest() {
                 inputRef={RPCDNoRef}
               />
             )}
-
             <TextInput
+              containerClassName="custom-input"
               containerStyle={{
                 width: "50%",
                 marginBottom: "8px",
@@ -689,12 +694,14 @@ export default function ChekPostponementRequest() {
             />
           </div>
           <div
+            className="first-field"
             style={{
               display: "flex",
               columnGap: "50px",
             }}
           >
             <TextInput
+              containerClassName="custom-input"
               containerStyle={{
                 width: "50%",
                 marginBottom: "8px",
@@ -728,6 +735,7 @@ export default function ChekPostponementRequest() {
               inputRef={PNNoRef}
             />
             <TextInput
+              containerClassName="custom-input"
               containerStyle={{
                 width: "50%",
                 marginBottom: "8px",
@@ -755,6 +763,7 @@ export default function ChekPostponementRequest() {
         </div>
         {/* ===========  second field  =========== */}
         <div
+        className="second-field"
           style={{
             position: "relative",
             padding: "12px",
@@ -774,6 +783,7 @@ export default function ChekPostponementRequest() {
             Check Details :
           </span>
           <div
+            className="first-field"
             style={{
               display: "flex",
               columnGap: "50px",
@@ -783,6 +793,7 @@ export default function ChekPostponementRequest() {
               <LoadingButton loading={isLoadingChecks} />
             ) : (
               <SelectInput
+                containerClassName="custom-input"
                 ref={_CheckNoRef}
                 label={{
                   title: "Check No. :",
@@ -814,6 +825,7 @@ export default function ChekPostponementRequest() {
               />
             )}
             <TextInput
+              containerClassName="custom-input"
               containerStyle={{
                 width: "50%",
                 marginBottom: "8px",
@@ -840,6 +852,7 @@ export default function ChekPostponementRequest() {
             />
           </div>
           <div
+            className="first-field"
             style={{
               display: "flex",
               columnGap: "50px",
@@ -850,6 +863,7 @@ export default function ChekPostponementRequest() {
               <span>Loading...</span>
             ) : (
               <div
+                className="first-field"
                 style={{
                   display: "flex",
                   flexDirection: "column",
@@ -857,6 +871,7 @@ export default function ChekPostponementRequest() {
                 }}
               >
                 <TextInput
+                  containerClassName="custom-input"
                   containerStyle={{
                     width: "100%",
                     marginBottom: "8px",
@@ -882,6 +897,7 @@ export default function ChekPostponementRequest() {
                   inputRef={DateRef}
                 />
                 <TextInput
+                  containerClassName="custom-input"
                   containerStyle={{
                     width: "100%",
                     marginBottom: "8px",
@@ -908,11 +924,13 @@ export default function ChekPostponementRequest() {
               </div>
             )}
             <div
+              className="first-field reason"
               style={{
                 width: "50%",
               }}
             >
               <TextAreaInput
+                containerClassName="custom-input"
                 label={{
                   title: "Reason : ",
                   style: {
@@ -939,6 +957,7 @@ export default function ChekPostponementRequest() {
             </div>
           </div>
           <div
+            className="first-field row-gap"
             style={{
               display: "flex",
               columnGap: "50px",
@@ -949,6 +968,7 @@ export default function ChekPostponementRequest() {
               <span>Loading...</span>
             ) : (
               <TextFormatedInput
+                containerClassName="custom-input"
                 label={{
                   title: "Amount : ",
                   style: {
@@ -1036,6 +1056,7 @@ export default function ChekPostponementRequest() {
             Fees and Charges
           </span>
           <div
+            className="first-field "
             style={{
               display: "flex",
               columnGap: "50px",
@@ -1122,6 +1143,7 @@ export default function ChekPostponementRequest() {
                 inputRef={SurplusRef}
               />
               <SelectInput
+                containerClassName="custom-input"
                 label={{
                   title: "Deducted to:",
                   style: {
@@ -1181,8 +1203,12 @@ export default function ChekPostponementRequest() {
                 inputRef={TotalRef}
               />
             </div>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+            <div
+              className="container-how-to-be-paid"
+              style={{ flex: 1, display: "flex", flexDirection: "column" }}
+            >
               <SelectInput
+                containerClassName="custom-input how-to-be-paid"
                 label={{
                   title: "How to be paid :",
                   style: {
@@ -1243,6 +1269,7 @@ export default function ChekPostponementRequest() {
                 _inputRef={RemarksRef}
               />
               <div
+                className="desktop-action-buttons"
                 style={{
                   flex: 1,
                   display: "flex",
@@ -1320,6 +1347,86 @@ export default function ChekPostponementRequest() {
             </div>
           </div>
         </div>
+        <div
+          className="mobile-action-buttons"
+          style={{
+            flex: 1,
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
+            columnGap: "7px",
+          }}
+        >
+          <Button
+            disabled={mode !== ""}
+            variant="contained"
+            color="info"
+            style={{
+              height: "25px",
+              fontSize: "12px",
+            }}
+            onClick={(e) => {
+              loadARefetch();
+              setMode("add");
+            }}
+          >
+            Add
+          </Button>
+          <Button
+            disabled={mode !== ""}
+            variant="contained"
+            color="success"
+            style={{
+              height: "25px",
+              fontSize: "12px",
+              background: orange[800],
+            }}
+            onClick={(e) => {
+              setMode("edit");
+              mutateLoadRPCDNo({});
+            }}
+          >
+            edit
+          </Button>
+          <Button
+            disabled={
+              mode === "" ||
+              paid === "" ||
+              (paid === "Direct Deposit" && remarks === "")
+            }
+            variant="contained"
+            color="success"
+            style={{
+              height: "25px",
+              fontSize: "12px",
+            }}
+            onClick={handleOnSave}
+          >
+            save
+          </Button>
+          <Button
+            disabled={mode === ""}
+            variant="contained"
+            color="error"
+            style={{
+              height: "25px",
+              fontSize: "12px",
+            }}
+            onClick={(e) => {
+              setMode("");
+              resetFirstFields();
+              resetSecondFields();
+              resetThirdFields();
+              table.current.resetTable();
+            }}
+          >
+            cancel
+          </Button>
+        </div>
+        <div
+          className="add-height"
+          style={{ height: "30px", display: "none" }}
+        ></div>
       </div>
     </>
   );

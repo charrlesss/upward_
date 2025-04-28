@@ -37,6 +37,7 @@ import { useUpwardTableModalSearchSafeMode } from "../../../../../../../componen
 import { Loading } from "../../../../../../../components/Loading";
 import { wait } from "../../../../../../../lib/wait";
 import PageHelmet from "../../../../../../../components/Helmet";
+import "../../../../../../../style/monbileview/production/production.css";
 
 export default function VehiclePolicy() {
   const { user, myAxios } = useContext(AuthContext);
@@ -235,6 +236,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
       <PolicySearchUpwardTableModalSearch />
       <PolicySearchTempUpwardTableModalSearch />
       <div
+        className="header"
         style={{
           display: "flex",
           columnGap: "8px",
@@ -242,85 +244,638 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           marginBottom: "15px",
         }}
       >
-        {user?.department === "UMIS" && (
-          <SelectInput
-            ref={_policy}
+        <div
+          className="search-container-mobile"
+          style={{
+            display: "none",
+            alignItems: "center",
+            columnGap: "8px",
+          }}
+        >
+          <div className="search-container-mobile-buttons">
+            {user?.department === "UMIS" && (
+              <SelectInput
+                containerClassName="custom-input adjust-label"
+                ref={_policy}
+                label={{
+                  title: "Policy: ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "50px",
+                  },
+                }}
+                select={{
+                  style: { width: "70px", height: "20px" },
+                  value: policy,
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      e.preventDefault();
+                    }
+                  },
+                  onChange: (e) => {
+                    setPolicy(e.currentTarget.value);
+                  },
+                }}
+                datasource={[
+                  {
+                    key: "COM",
+                  },
+                  {
+                    key: "TPL",
+                  },
+                ]}
+                values={"key"}
+                display={"key"}
+              />
+            )}
+            <div
+              style={{
+                display: "flex",
+                columnGap: "5px",
+                alignItems: "center",
+                marginLeft: "10px",
+                borderLeft: "1px solid black",
+                paddingLeft: "20px",
+              }}
+            >
+              <Button
+                // disabled={policyType === "REG"}
+                sx={{
+                  height: "23px",
+                  fontSize: "11px",
+                  background: policyType === "REG" ? blue[700] : grey[700],
+                  "&:hover": {
+                    background: policyType === "REG" ? blue[800] : grey[800],
+                  },
+                }}
+                variant="contained"
+                color={policyType === "REG" ? "secondary" : "info"}
+                onClick={() => {
+                  Swal.fire({
+                    title: "Are you sure?",
+                    text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Yes, Change  to Regualr!",
+                    cancelButtonText: "No",
+                  }).then((result) => {
+                    if (result.isConfirmed) {
+                      setPolicyType("REG");
+                      window.localStorage.setItem("__policy_type__", "REG");
+                      setMode("");
+                    }
+                  });
+                }}
+              >
+                REGULAR
+              </Button>
+              <Button
+                // disabled={policyType === "TEMP"}
+                sx={{
+                  height: "23px",
+                  fontSize: "11px",
+                  marginLeft: "5px",
+                  background: policyType === "TEMP" ? blue[700] : grey[700],
+                  "&:hover": {
+                    background: policyType === "TEMP" ? blue[800] : grey[800],
+                  },
+                }}
+                onClick={() => {
+                  Swal.fire({
+                    title: "Are you sure?",
+                    text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Yes, Change  to Temporary!",
+                    cancelButtonText: "No",
+                  }).then((result) => {
+                    if (result.isConfirmed) {
+                      setPolicyType("TEMP");
+                      window.localStorage.setItem("__policy_type__", "TEMP");
+                      setMode("");
+                    }
+                  });
+                }}
+                variant="contained"
+                color={policyType === "TEMP" ? "secondary" : "info"}
+              >
+                TEMPORARY
+              </Button>
+            </div>
+          </div>
+          <TextInput
+            containerClassName="custom-input adjust-label-search"
+            containerStyle={{ width: "550px" }}
             label={{
-              title: "Policy: ",
+              title: "Search: ",
               style: {
                 fontSize: "12px",
                 fontWeight: "bold",
-                width: "50px",
+                width: "60px",
               },
             }}
-            select={{
-              style: { width: "70px", height: "20px" },
-              value: policy,
+            input={{
+              className: "search-input-up-on-key-down",
+              type: "search",
               onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                if (e.key === "Enter" || e.key === "NumpadEnter") {
                   e.preventDefault();
+                  if (policyType === "TEMP") {
+                    return policySearcTempOpenModal(e.currentTarget.value);
+                  } else {
+                    if (policyType === "REG") {
+                      return policySearchOpenModal(e.currentTarget.value);
+                    } else {
+                    }
+                  }
                 }
               },
-              onChange: (e) => {
-                setPolicy(e.currentTarget.value);
-              },
+              style: { width: "100%", height: "22px" },
             }}
-            datasource={[
-              {
-                key: "COM",
-              },
-              {
-                key: "TPL",
-              },
-            ]}
-            values={"key"}
-            display={"key"}
-          />
-        )}
-        <TextInput
-          containerStyle={{ width: "550px" }}
-          label={{
-            title: "Search: ",
-            style: {
-              fontSize: "12px",
-              fontWeight: "bold",
-              width: "60px",
-            },
-          }}
-          input={{
-            className: "search-input-up-on-key-down",
-            type: "search",
-            onKeyDown: (e) => {
-              if (e.key === "Enter" || e.key === "NumpadEnter") {
-                e.preventDefault();
+            icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+            onIconClick={(e) => {
+              e.preventDefault();
+              if (searchRef.current) {
                 if (policyType === "TEMP") {
-                  return policySearcTempOpenModal(e.currentTarget.value);
+                  return policySearcTempOpenModal(searchRef.current.value);
                 } else {
                   if (policyType === "REG") {
-                    return policySearchOpenModal(e.currentTarget.value);
+                    return policySearchOpenModal(searchRef.current.value);
                   } else {
                   }
                 }
               }
-            },
-            style: { width: "100%", height: "22px" },
+            }}
+            inputRef={searchRef}
+          />
+        </div>
+
+        <div
+          className="search-container-desktop"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            columnGap: "8px",
           }}
-          icon={<SearchIcon sx={{ fontSize: "18px" }} />}
-          onIconClick={(e) => {
-            e.preventDefault();
-            if (searchRef.current) {
-              if (policyType === "TEMP") {
-                return policySearcTempOpenModal(searchRef.current.value);
-              } else {
-                if (policyType === "REG") {
-                  return policySearchOpenModal(searchRef.current.value);
+        >
+          {user?.department === "UMIS" && (
+            <SelectInput
+              containerClassName="custom-input"
+              ref={_policy}
+              label={{
+                title: "Policy: ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "50px",
+                },
+              }}
+              select={{
+                style: { width: "70px", height: "20px" },
+                value: policy,
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    e.preventDefault();
+                  }
+                },
+                onChange: (e) => {
+                  setPolicy(e.currentTarget.value);
+                },
+              }}
+              datasource={[
+                {
+                  key: "COM",
+                },
+                {
+                  key: "TPL",
+                },
+              ]}
+              values={"key"}
+              display={"key"}
+            />
+          )}
+
+          <TextInput
+            containerClassName="custom-input"
+            containerStyle={{ width: "550px" }}
+            label={{
+              title: "Search: ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "60px",
+              },
+            }}
+            input={{
+              className: "search-input-up-on-key-down",
+              type: "search",
+              onKeyDown: (e) => {
+                if (e.key === "Enter" || e.key === "NumpadEnter") {
+                  e.preventDefault();
+                  if (policyType === "TEMP") {
+                    return policySearcTempOpenModal(e.currentTarget.value);
+                  } else {
+                    if (policyType === "REG") {
+                      return policySearchOpenModal(e.currentTarget.value);
+                    } else {
+                    }
+                  }
+                }
+              },
+              style: { width: "100%", height: "22px" },
+            }}
+            icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+            onIconClick={(e) => {
+              e.preventDefault();
+              if (searchRef.current) {
+                if (policyType === "TEMP") {
+                  return policySearcTempOpenModal(searchRef.current.value);
                 } else {
+                  if (policyType === "REG") {
+                    return policySearchOpenModal(searchRef.current.value);
+                  } else {
+                  }
                 }
               }
-            }
+            }}
+            inputRef={searchRef}
+          />
+        </div>
+        <div
+          className="button-action-desktop"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            columnGap: "8px",
           }}
-          inputRef={searchRef}
+        >
+          <Button
+            sx={{
+              height: "23px",
+              fontSize: "11px",
+            }}
+            disabled={mode === "add" || mode === "edit"}
+            size="small"
+            color="primary"
+            onClick={() => {
+              setMode("add");
+              if (policyType === "REG") {
+                wait(100).then(() => {
+                  regularPolicyRef.current.disableField(false);
+                });
+              }
+
+              if (policyType === "TEMP") {
+                wait(100).then(() => {
+                  temporaryPolicyRef.current.disableField(false);
+                  temporaryPolicyRef.current.refetchID();
+                });
+              }
+            }}
+            variant="contained"
+            startIcon={<AddBoxIcon />}
+          >
+            New
+          </Button>
+          <Button
+            variant="contained"
+            color="success"
+            startIcon={<SaveAsIcon />}
+            disabled={mode === ""}
+            size="small"
+            onClick={handleSave}
+            sx={{
+              height: "23px",
+              fontSize: "11px",
+            }}
+          >
+            Save
+          </Button>
+          <Button
+            sx={{
+              height: "23px",
+              fontSize: "11px",
+            }}
+            variant="contained"
+            color="error"
+            startIcon={<CloseIcon />}
+            disabled={mode === ""}
+            size="small"
+            onClick={() => {
+              Swal.fire({
+                title: "Are you sure?",
+                text: "You won't be able to revert this!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, cencel it!",
+                cancelButtonText: "No",
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  if (policyType === "REG") {
+                    regularPolicyRef.current.disableField(true);
+                    regularPolicyRef.current?.resetFields();
+                  }
+                  if (policyType === "TEMP") {
+                    wait(100).then(() => {
+                      temporaryPolicyRef.current.disableField(true);
+                    });
+                    temporaryPolicyRef.current.resetFields(true);
+                  }
+                  setMode("");
+                }
+              });
+            }}
+          >
+            Cancel
+          </Button>
+          <div
+            style={{
+              display: "flex",
+              columnGap: "5px",
+              alignItems: "center",
+              marginLeft: "10px",
+              borderLeft: "1px solid black",
+              paddingLeft: "20px",
+            }}
+          >
+            <Button
+              // disabled={policyType === "REG"}
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+                background: policyType === "REG" ? blue[700] : grey[700],
+                "&:hover": {
+                  background: policyType === "REG" ? blue[800] : grey[800],
+                },
+              }}
+              variant="contained"
+              color={policyType === "REG" ? "secondary" : "info"}
+              onClick={() => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, Change  to Regualr!",
+                  cancelButtonText: "No",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    setPolicyType("REG");
+                    window.localStorage.setItem("__policy_type__", "REG");
+                    setMode("");
+                  }
+                });
+              }}
+            >
+              REGULAR
+            </Button>
+            <Button
+              // disabled={policyType === "TEMP"}
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+                marginLeft: "5px",
+                background: policyType === "TEMP" ? blue[700] : grey[700],
+                "&:hover": {
+                  background: policyType === "TEMP" ? blue[800] : grey[800],
+                },
+              }}
+              onClick={() => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, Change  to Temporary!",
+                  cancelButtonText: "No",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    setPolicyType("TEMP");
+                    window.localStorage.setItem("__policy_type__", "TEMP");
+                    setMode("");
+                  }
+                });
+              }}
+              variant="contained"
+              color={policyType === "TEMP" ? "secondary" : "info"}
+            >
+              TEMPORARY
+            </Button>
+          </div>
+        </div>
+      </div>
+      <div style={{ display: "flex", columnGap: "7px", marginBottom: "6px" }}>
+        <div
+          className="desktop-choices-buttons"
+          style={{ display: "flex", columnGap: "2px" }}
+        >
+          <Button
+            // disabled={selectedPage === 0}
+            sx={{
+              height: "23px",
+              fontSize: "11px",
+              background: selectedPage === 0 ? blue[700] : grey[700],
+              "&:hover": {
+                background: selectedPage === 0 ? blue[800] : grey[800],
+              },
+            }}
+            variant="contained"
+            onClick={() => {
+              setSelectedPage(0);
+            }}
+          >
+            Policy Information
+          </Button>
+          <Button
+            // disabled={selectedPage === 1}
+            sx={{
+              height: "23px",
+              fontSize: "11px",
+              background: selectedPage === 1 ? blue[700] : grey[700],
+              "&:hover": {
+                background: selectedPage === 1 ? blue[800] : grey[800],
+              },
+            }}
+            onClick={() => {
+              setSelectedPage(1);
+            }}
+            variant="contained"
+          >
+            Policy Type Details
+          </Button>
+          <Button
+            // disabled={selectedPage === 2}
+            sx={{
+              height: "23px",
+              fontSize: "11px",
+
+              background: selectedPage === 2 ? blue[700] : grey[700],
+              "&:hover": {
+                background: selectedPage === 2 ? blue[800] : grey[800],
+              },
+            }}
+            onClick={() => {
+              setSelectedPage(2);
+            }}
+            variant="contained"
+          >
+            Policy Premium
+          </Button>
+          {isLoading ? (
+            <>Laoding...</>
+          ) : (
+            <SelectInput
+              ref={subAccountRef_}
+              label={{
+                title: "Sub Account :",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
+              }}
+              selectRef={subAccountRef}
+              select={{
+                style: { flex: 1, height: "22px" },
+                defaultValue: "HO",
+              }}
+              containerStyle={{
+                flex: 2,
+                marginLeft: "20px",
+              }}
+              datasource={[]}
+              values={"Acronym"}
+              display={"Acronym"}
+            />
+          )}
+        </div>
+        <div
+          className="mobile-choices-buttons"
+          style={{ display: "none", columnGap: "2px" }}
+        >
+          <Button
+            // disabled={selectedPage === 0}
+            sx={{
+              height: "23px",
+              fontSize: "11px",
+              background: selectedPage === 0 ? blue[700] : grey[700],
+              "&:hover": {
+                background: selectedPage === 0 ? blue[800] : grey[800],
+              },
+            }}
+            variant="contained"
+            onClick={() => {
+              setSelectedPage(0);
+            }}
+          >
+            Information
+          </Button>
+          <Button
+            // disabled={selectedPage === 1}
+            sx={{
+              height: "23px",
+              fontSize: "11px",
+              background: selectedPage === 1 ? blue[700] : grey[700],
+              "&:hover": {
+                background: selectedPage === 1 ? blue[800] : grey[800],
+              },
+            }}
+            onClick={() => {
+              setSelectedPage(1);
+            }}
+            variant="contained"
+          >
+            Details
+          </Button>
+          <Button
+            // disabled={selectedPage === 2}
+            sx={{
+              height: "23px",
+              fontSize: "11px",
+
+              background: selectedPage === 2 ? blue[700] : grey[700],
+              "&:hover": {
+                background: selectedPage === 2 ? blue[800] : grey[800],
+              },
+            }}
+            onClick={() => {
+              setSelectedPage(2);
+            }}
+            variant="contained"
+          >
+            Premium
+          </Button>
+          {isLoading ? (
+            <>Laoding...</>
+          ) : (
+            <SelectInput
+              ref={subAccountRef_}
+              label={{
+                title: "",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "50px",
+                  display: "none",
+                },
+              }}
+              selectRef={subAccountRef}
+              select={{
+                style: { flex: 1, height: "22px" },
+                defaultValue: "HO",
+              }}
+              containerStyle={{
+                flex: 2,
+                marginLeft: "10px",
+              }}
+              datasource={[]}
+              values={"Acronym"}
+              display={"Acronym"}
+            />
+          )}
+        </div>
+      </div>
+      {policyType === "REG" ? (
+        <COMRegular
+          setMode={setMode}
+          subAccountRef={subAccountRef}
+          ref={regularPolicyRef}
+          selectedPage={selectedPage}
+          policyType={policyType}
+          mode={mode}
+          policy={policy}
         />
+      ) : (
+        <COMTemporary
+          setMode={setMode}
+          subAccountRef={subAccountRef}
+          ref={temporaryPolicyRef}
+          selectedPage={selectedPage}
+          policyType={policyType}
+          mode={mode}
+          policy={policy}
+        />
+      )}
+
+      <div
+        className="button-action-mobile"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          columnGap: "8px",
+        }}
+      >
         <Button
           sx={{
             height: "23px",
@@ -402,189 +957,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
         >
           Cancel
         </Button>
-        <div
-          style={{
-            display: "flex",
-            columnGap: "5px",
-            alignItems: "center",
-            marginLeft: "10px",
-            borderLeft: "1px solid black",
-            paddingLeft: "20px",
-          }}
-        >
-          <Button
-            // disabled={policyType === "REG"}
-            sx={{
-              height: "23px",
-              fontSize: "11px",
-              background: policyType === "REG" ? blue[700] : grey[700],
-              "&:hover": {
-                background: policyType === "REG" ? blue[800] : grey[800],
-              },
-            }}
-            variant="contained"
-            color={policyType === "REG" ? "secondary" : "info"}
-            onClick={() => {
-              Swal.fire({
-                title: "Are you sure?",
-                text: "You won't be able to revert this!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, Change  to Regualr!",
-                cancelButtonText: "No",
-              }).then((result) => {
-                if (result.isConfirmed) {
-                  setPolicyType("REG");
-                  window.localStorage.setItem("__policy_type__", "REG");
-                  setMode("");
-                }
-              });
-            }}
-          >
-            REGULAR
-          </Button>
-          <Button
-            // disabled={policyType === "TEMP"}
-            sx={{
-              height: "23px",
-              fontSize: "11px",
-              marginLeft: "5px",
-              background: policyType === "TEMP" ? blue[700] : grey[700],
-              "&:hover": {
-                background: policyType === "TEMP" ? blue[800] : grey[800],
-              },
-            }}
-            onClick={() => {
-              Swal.fire({
-                title: "Are you sure?",
-                text: "You won't be able to revert this!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, Change  to Temporary!",
-                cancelButtonText: "No",
-              }).then((result) => {
-                if (result.isConfirmed) {
-                  setPolicyType("TEMP");
-                  window.localStorage.setItem("__policy_type__", "TEMP");
-                  setMode("");
-                }
-              });
-            }}
-            variant="contained"
-            color={policyType === "TEMP" ? "secondary" : "info"}
-          >
-            TEMPORARY
-          </Button>
-        </div>
       </div>
-      <div style={{ display: "flex", columnGap: "7px", marginBottom: "6px" }}>
-        <div style={{ display: "flex", columnGap: "2px" }}>
-          <Button
-            // disabled={selectedPage === 0}
-            sx={{
-              height: "23px",
-              fontSize: "11px",
-              background: selectedPage === 0 ? blue[700] : grey[700],
-              "&:hover": {
-                background: selectedPage === 0 ? blue[800] : grey[800],
-              },
-            }}
-            variant="contained"
-            onClick={() => {
-              setSelectedPage(0);
-            }}
-          >
-            Policy Information
-          </Button>
-          <Button
-            // disabled={selectedPage === 1}
-            sx={{
-              height: "23px",
-              fontSize: "11px",
-              background: selectedPage === 1 ? blue[700] : grey[700],
-              "&:hover": {
-                background: selectedPage === 1 ? blue[800] : grey[800],
-              },
-            }}
-            onClick={() => {
-              setSelectedPage(1);
-            }}
-            variant="contained"
-          >
-            Policy Type Details
-          </Button>
-          <Button
-            // disabled={selectedPage === 2}
-            sx={{
-              height: "23px",
-              fontSize: "11px",
-
-              background: selectedPage === 2 ? blue[700] : grey[700],
-              "&:hover": {
-                background: selectedPage === 2 ? blue[800] : grey[800],
-              },
-            }}
-            onClick={() => {
-              setSelectedPage(2);
-            }}
-            variant="contained"
-          >
-            Policy Premium
-          </Button>
-          {isLoading ? (
-            <>Laoding...</>
-          ) : (
-            <SelectInput
-              ref={subAccountRef_}
-              label={{
-                title: "Sub Account :",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "100px",
-                },
-              }}
-              selectRef={subAccountRef}
-              select={{
-                style: { flex: 1, height: "22px" },
-                defaultValue: "HO",
-              }}
-              containerStyle={{
-                flex: 2,
-                marginLeft: "20px",
-              }}
-              datasource={[]}
-              values={"Acronym"}
-              display={"Acronym"}
-            />
-          )}
-        </div>
-      </div>
-      {policyType === "REG" ? (
-        <COMRegular
-          setMode={setMode}
-          subAccountRef={subAccountRef}
-          ref={regularPolicyRef}
-          selectedPage={selectedPage}
-          policyType={policyType}
-          mode={mode}
-          policy={policy}
-        />
-      ) : (
-        <COMTemporary
-          setMode={setMode}
-          subAccountRef={subAccountRef}
-          ref={temporaryPolicyRef}
-          selectedPage={selectedPage}
-          policyType={policyType}
-          mode={mode}
-          policy={policy}
-        />
-      )}
     </>
   );
 }
@@ -2515,11 +2888,13 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
       }
     },
   });
+
   return (
     <>
       <PolicyNoUpwardTableModalSearch />
       <PolicySearchUpwardTableModalSearch />
       <div
+        className="header"
         style={{
           display: "flex",
           columnGap: "8px",
@@ -2527,136 +2902,316 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           marginBottom: "15px",
         }}
       >
-        {process.env.REACT_APP_DEPARTMENT === "UMIS" && (
-          <SelectInput
-            ref={_policy}
+        <div
+          className="search-container-mobile"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            columnGap: "8px",
+          }}
+        >
+          <div className="search-container-mobile-buttons">
+            {process.env.REACT_APP_DEPARTMENT === "UMIS" && (
+              <SelectInput
+                ref={_policy}
+                label={{
+                  title: "Policy: ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "50px",
+                  },
+                }}
+                select={{
+                  style: { width: "70px", height: "20px" },
+                  value: policy,
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      e.preventDefault();
+                    }
+                  },
+                  onChange: (e) => {
+                    setPolicy(e.currentTarget.value);
+                  },
+                }}
+                datasource={[
+                  {
+                    key: "COM",
+                  },
+                  {
+                    key: "TPL",
+                  },
+                ]}
+                values={"key"}
+                display={"key"}
+              />
+            )}
+            <div
+              style={{
+                display: "flex",
+                columnGap: "5px",
+                alignItems: "center",
+                marginLeft: "10px",
+                borderLeft: "1px solid black",
+                paddingLeft: "20px",
+              }}
+            >
+              <Button
+                // disabled={policyType === "REG"}
+                sx={{
+                  height: "23px",
+                  fontSize: "11px",
+                  background: policyType === "REG" ? blue[700] : grey[700],
+                  "&:hover": {
+                    background: policyType === "REG" ? blue[800] : grey[800],
+                  },
+                }}
+                variant="contained"
+                color={policyType === "REG" ? "secondary" : "info"}
+                onClick={() => {
+                  Swal.fire({
+                    title: "Are you sure?",
+                    text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Yes, Change  to Regualr!",
+                    cancelButtonText: "No",
+                  }).then((result) => {
+                    if (result.isConfirmed) {
+                      setPolicyType("REG");
+                      window.localStorage.setItem("__policy_type__", "REG");
+                      setMode("");
+                    }
+                  });
+                }}
+              >
+                REGULAR
+              </Button>
+              <Button
+                // disabled={policyType === "TEMP"}
+                sx={{
+                  height: "23px",
+                  fontSize: "11px",
+                  marginLeft: "5px",
+                  background: policyType === "TEMP" ? blue[700] : grey[700],
+                  "&:hover": {
+                    background: policyType === "TEMP" ? blue[800] : grey[800],
+                  },
+                }}
+                onClick={() => {
+                  Swal.fire({
+                    title: "Are you sure?",
+                    text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Yes, Change  to Temporary!",
+                    cancelButtonText: "No",
+                  }).then((result) => {
+                    if (result.isConfirmed) {
+                      setPolicyType("TEMP");
+                      window.localStorage.setItem("__policy_type__", "TEMP");
+                      setMode("");
+                    }
+                  });
+                }}
+                variant="contained"
+                color={policyType === "TEMP" ? "secondary" : "info"}
+              >
+                TEMPORARY
+              </Button>
+            </div>
+          </div>
+          <TextInput
+            containerClassName="custom-input"
+            containerStyle={{ width: "550px" }}
             label={{
-              title: "Policy: ",
+              title: "Search: ",
               style: {
                 fontSize: "12px",
                 fontWeight: "bold",
-                width: "50px",
+                width: "60px",
               },
             }}
-            select={{
-              style: { width: "70px", height: "20px" },
-              value: policy,
+            input={{
+              className: "search-input-up-on-key-down",
+              type: "search",
               onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                if (e.key === "Enter" || e.key === "NumpadEnter") {
                   e.preventDefault();
+                  return policySearchOpenModal(e.currentTarget.value);
                 }
               },
-              onChange: (e) => {
-                setPolicy(e.currentTarget.value);
+              style: { width: "100%", height: "22px" },
+            }}
+            icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+            onIconClick={(e) => {
+              e.preventDefault();
+              if (searchRef.current) {
+                policySearchOpenModal(searchRef.current.value);
+              }
+            }}
+            inputRef={searchRef}
+          />
+        </div>
+        <div
+          className="search-container-desktop"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            columnGap: "8px",
+          }}
+        >
+          {process.env.REACT_APP_DEPARTMENT === "UMIS" && (
+            <SelectInput
+              ref={_policy}
+              label={{
+                title: "Policy: ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "50px",
+                },
+              }}
+              select={{
+                style: { width: "70px", height: "20px" },
+                value: policy,
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    e.preventDefault();
+                  }
+                },
+                onChange: (e) => {
+                  setPolicy(e.currentTarget.value);
+                },
+              }}
+              datasource={[
+                {
+                  key: "COM",
+                },
+                {
+                  key: "TPL",
+                },
+              ]}
+              values={"key"}
+              display={"key"}
+            />
+          )}
+          <TextInput
+            containerStyle={{ width: "550px" }}
+            label={{
+              title: "Search: ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "60px",
               },
             }}
-            datasource={[]}
-            values={"key"}
-            display={"key"}
+            input={{
+              className: "search-input-up-on-key-down",
+              type: "search",
+              onKeyDown: (e) => {
+                if (e.key === "Enter" || e.key === "NumpadEnter") {
+                  e.preventDefault();
+                  return policySearchOpenModal(e.currentTarget.value);
+                }
+              },
+              style: { width: "100%", height: "22px" },
+            }}
+            icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+            onIconClick={(e) => {
+              e.preventDefault();
+              if (searchRef.current) {
+                policySearchOpenModal(searchRef.current.value);
+              }
+            }}
+            inputRef={searchRef}
           />
-        )}
-        <TextInput
-          containerStyle={{ width: "550px" }}
-          label={{
-            title: "Search: ",
-            style: {
-              fontSize: "12px",
-              fontWeight: "bold",
-              width: "60px",
-            },
+        </div>
+        <div
+          className="button-action-desktop"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            columnGap: "8px",
           }}
-          input={{
-            className: "search-input-up-on-key-down",
-            type: "search",
-            onKeyDown: (e) => {
-              if (e.key === "Enter" || e.key === "NumpadEnter") {
-                e.preventDefault();
-                return policySearchOpenModal(e.currentTarget.value);
-              }
-            },
-            style: { width: "100%", height: "22px" },
-          }}
-          icon={<SearchIcon sx={{ fontSize: "18px" }} />}
-          onIconClick={(e) => {
-            e.preventDefault();
-            if (searchRef.current) {
-              policySearchOpenModal(searchRef.current.value);
+        >
+          <Button
+            sx={{
+              height: "23px",
+              fontSize: "11px",
+            }}
+            disabled={mode === "add" || mode === "edit"}
+            size="small"
+            color="primary"
+            onClick={() => {
+              setMode("add");
+              wait(100).then(() => {
+                regularPolicyRef.current.disableField(false);
+              });
+            }}
+            variant="contained"
+            startIcon={<AddBoxIcon />}
+          >
+            New
+          </Button>
+          <Button
+            variant="contained"
+            color="success"
+            startIcon={<SaveAsIcon />}
+            disabled={mode === ""}
+            size="small"
+            onClick={handleSave}
+            sx={{
+              height: "23px",
+              fontSize: "11px",
+            }}
+          >
+            Save
+          </Button>
+          <Button
+            sx={{
+              height: "23px",
+              fontSize: "11px",
+            }}
+            variant="contained"
+            color="error"
+            startIcon={
+              <CloseIcon
+              // color="error"
+              // // sx={{
+              // //   fill: red[500],
+              // // }}
+              />
             }
-          }}
-          inputRef={searchRef}
-        />
-        <Button
-          sx={{
-            height: "23px",
-            fontSize: "11px",
-          }}
-          disabled={mode === "add" || mode === "edit"}
-          size="small"
-          color="primary"
-          onClick={() => {
-            setMode("add");
-            wait(100).then(() => {
-              regularPolicyRef.current.disableField(false);
-            });
-          }}
-          variant="contained"
-          startIcon={<AddBoxIcon />}
-        >
-          New
-        </Button>
-        <Button
-          variant="contained"
-          color="success"
-          startIcon={<SaveAsIcon />}
-          disabled={mode === ""}
-          size="small"
-          onClick={handleSave}
-          sx={{
-            height: "23px",
-            fontSize: "11px",
-          }}
-        >
-          Save
-        </Button>
-        <Button
-          sx={{
-            height: "23px",
-            fontSize: "11px",
-          }}
-          variant="contained"
-          color="error"
-          startIcon={
-            <CloseIcon
-            // color="error"
-            // // sx={{
-            // //   fill: red[500],
-            // // }}
-            />
-          }
-          disabled={mode === ""}
-          size="small"
-          onClick={() => {
-            Swal.fire({
-              title: "Are you sure?",
-              text: "You won't be able to revert this!",
-              icon: "warning",
-              showCancelButton: true,
-              confirmButtonColor: "#3085d6",
-              cancelButtonColor: "#d33",
-              confirmButtonText: "Yes, cencel it!",
-              cancelButtonText: "No",
-            }).then((result) => {
-              if (result.isConfirmed) {
-                regularPolicyRef.current.disableField(true);
-                regularPolicyRef.current?.resetFields();
+            disabled={mode === ""}
+            size="small"
+            onClick={() => {
+              Swal.fire({
+                title: "Are you sure?",
+                text: "You won't be able to revert this!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, cencel it!",
+                cancelButtonText: "No",
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  regularPolicyRef.current.disableField(true);
+                  regularPolicyRef.current?.resetFields();
 
-                setMode("");
-              }
-            });
-          }}
-        >
-          Cancel
-        </Button>
+                  setMode("");
+                }
+              });
+            }}
+          >
+            Cancel
+          </Button>
+        </div>
       </div>
       <div style={{ display: "flex", columnGap: "7px", marginBottom: "6px" }}>
         {policy === "COM" && (
@@ -2701,7 +3256,10 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
             <div>|</div>
           </>
         )}
-        <div style={{ display: "flex", columnGap: "2px" }}>
+        <div
+          className="desktop-choices-buttons"
+          style={{ display: "flex", columnGap: "2px" }}
+        >
           <Button
             sx={{
               height: "23px",
@@ -2778,6 +3336,87 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
             />
           )}
         </div>
+        <div
+          className="mobile-choices-buttons"
+          style={{ display: "flex", columnGap: "2px" }}
+        >
+          <Button
+            sx={{
+              height: "23px",
+              fontSize: "11px",
+              background: selectedPage === 0 ? blue[700] : grey[700],
+              "&:hover": {
+                background: selectedPage === 0 ? blue[800] : grey[800],
+              },
+            }}
+            variant="contained"
+            onClick={() => {
+              setSelectedPage(0);
+            }}
+          >
+            Information
+          </Button>
+          <Button
+            sx={{
+              height: "23px",
+              fontSize: "11px",
+              background: selectedPage === 1 ? blue[700] : grey[700],
+              "&:hover": {
+                background: selectedPage === 1 ? blue[800] : grey[800],
+              },
+            }}
+            onClick={() => {
+              setSelectedPage(1);
+            }}
+            variant="contained"
+          >
+            Details
+          </Button>
+          <Button
+            sx={{
+              height: "23px",
+              fontSize: "11px",
+              background: selectedPage === 2 ? blue[700] : grey[700],
+              "&:hover": {
+                background: selectedPage === 2 ? blue[800] : grey[800],
+              },
+            }}
+            onClick={() => {
+              setSelectedPage(2);
+            }}
+            variant="contained"
+          >
+            Premium
+          </Button>
+          {isLoading ? (
+            <div>Loading..</div>
+          ) : (
+            <SelectInput
+              ref={subAccountRef_}
+              label={{
+                title: "Sub Account :",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                  display: "none",
+                },
+              }}
+              selectRef={subAccountRef}
+              select={{
+                style: { flex: 1, height: "22px" },
+                defaultValue: "HO",
+              }}
+              containerStyle={{
+                flex: 2,
+                marginLeft: "20px",
+              }}
+              datasource={[]}
+              values={"Acronym"}
+              display={"Acronym"}
+            />
+          )}
+        </div>
       </div>
       <COMRegular
         setMode={setMode}
@@ -2791,6 +3430,88 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
         mode={mode}
         policy={policy}
       />
+
+      <div
+        className="button-action-mobile"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          columnGap: "8px",
+        }}
+      >
+        <Button
+          sx={{
+            height: "23px",
+            fontSize: "11px",
+          }}
+          disabled={mode === "add" || mode === "edit"}
+          size="small"
+          color="primary"
+          onClick={() => {
+            setMode("add");
+            wait(100).then(() => {
+              regularPolicyRef.current.disableField(false);
+            });
+          }}
+          variant="contained"
+          startIcon={<AddBoxIcon />}
+        >
+          New
+        </Button>
+        <Button
+          variant="contained"
+          color="success"
+          startIcon={<SaveAsIcon />}
+          disabled={mode === ""}
+          size="small"
+          onClick={handleSave}
+          sx={{
+            height: "23px",
+            fontSize: "11px",
+          }}
+        >
+          Save
+        </Button>
+        <Button
+          sx={{
+            height: "23px",
+            fontSize: "11px",
+          }}
+          variant="contained"
+          color="error"
+          startIcon={
+            <CloseIcon
+            // color="error"
+            // // sx={{
+            // //   fill: red[500],
+            // // }}
+            />
+          }
+          disabled={mode === ""}
+          size="small"
+          onClick={() => {
+            Swal.fire({
+              title: "Are you sure?",
+              text: "You won't be able to revert this!",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Yes, cencel it!",
+              cancelButtonText: "No",
+            }).then((result) => {
+              if (result.isConfirmed) {
+                regularPolicyRef.current.disableField(true);
+                regularPolicyRef.current?.resetFields();
+
+                setMode("");
+              }
+            });
+          }}
+        >
+          Cancel
+        </Button>
+      </div>
     </>
   );
 }
@@ -3073,6 +3794,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
 
   return (
     <div
+      className="main-field-container"
       style={{
         display: "flex",
         flexDirection: "column",
@@ -3083,6 +3805,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
     >
       {/* First Field*/}
       <div
+        className="container-fields"
         style={{
           display: "flex",
           columnGap: "15px",
@@ -3090,6 +3813,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       >
         {/* Insurer Information*/}
         <div
+          className="container-max-width"
           style={{
             width: "50%",
             border: "1px solid #9ca3af",
@@ -3115,6 +3839,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             Insurer Information
           </span>
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "70%",
             }}
@@ -3144,6 +3869,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={clientIDRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "90%",
             }}
@@ -3167,6 +3893,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={clientNameRef}
           />
           <TextAreaInput
+            containerClassName="custom-input"
             label={{
               title: "Address",
               style: {
@@ -3187,6 +3914,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
         </div>
         {/* Agent Information*/}
         <div
+          className="container-max-width"
           style={{
             width: "50%",
             border: "1px solid #9ca3af",
@@ -3212,6 +3940,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             Agent Information
           </span>
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "70%",
             }}
@@ -3241,6 +3970,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={agentIdRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "90%",
             }}
@@ -3264,6 +3994,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={agentNameRef}
           />
           <TextFormatedInput
+            containerClassName="custom-input"
             label={{
               title: "Commission:",
               style: {
@@ -3288,6 +4019,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={agentCommisionRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "100%",
             }}
@@ -3314,6 +4046,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       </div>
       {/* Second Field*/}
       <div
+        className="container-fields"
         style={{
           display: "flex",
           columnGap: "15px",
@@ -3321,6 +4054,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
       >
         {/* Vehicle Policy*/}
         <div
+          className="container-max-width"
           style={{
             width: "50%",
             border: "1px solid #9ca3af",
@@ -3346,6 +4080,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             Vehicle Policy
           </span>
           <SelectInput
+            containerClassName="custom-input"
             ref={_accountRef}
             label={{
               title: "Account:",
@@ -3376,6 +4111,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
           />
           {policy === "COM" ? (
             <TextInput
+              containerClassName="custom-input"
               containerStyle={{
                 width: "90%",
               }}
@@ -3401,6 +4137,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             />
           ) : (
             <TextInput
+              containerClassName="custom-input"
               containerStyle={{
                 width: "90%",
               }}
@@ -3435,6 +4172,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
           )}
 
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "90%",
             }}
@@ -3459,6 +4197,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={corNoRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "90%",
             }}
@@ -3485,6 +4224,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
         </div>
         {/* Period of Insurance*/}
         <div
+          className="container-max-width"
           style={{
             width: "50%",
             border: "1px solid #9ca3af",
@@ -3510,6 +4250,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             Period of Insurance
           </span>
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
             }}
@@ -3535,6 +4276,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={dateFromRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
             }}
@@ -3560,6 +4302,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={dateToRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "50%",
             }}
@@ -3613,8 +4356,12 @@ const PolicyInformation = forwardRef((props: any, ref) => {
         >
           Insured Unit
         </span>
-        <div style={{ display: "flex", columnGap: "100px" }}>
+        <div
+          className="container-fields"
+          style={{ display: "flex", columnGap: "100px" }}
+        >
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "83%",
             }}
@@ -3639,6 +4386,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={modelRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "90%",
             }}
@@ -3663,8 +4411,12 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={plateNoRef}
           />
         </div>
-        <div style={{ display: "flex", columnGap: "100px" }}>
+        <div
+          className="container-fields"
+          style={{ display: "flex", columnGap: "100px" }}
+        >
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "83%",
             }}
@@ -3689,6 +4441,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={makeRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "90%",
             }}
@@ -3713,8 +4466,12 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={chassisNoRef}
           />
         </div>
-        <div style={{ display: "flex", columnGap: "100px" }}>
+        <div
+          className="container-fields"
+          style={{ display: "flex", columnGap: "100px" }}
+        >
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "83%",
             }}
@@ -3739,6 +4496,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={typeOfBodyRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "90%",
             }}
@@ -3763,8 +4521,12 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={motorNoRef}
           />
         </div>
-        <div style={{ display: "flex", columnGap: "100px" }}>
+        <div
+          className="container-fields"
+          style={{ display: "flex", columnGap: "100px" }}
+        >
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "83%",
             }}
@@ -3789,6 +4551,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={colorRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "90%",
             }}
@@ -3813,8 +4576,12 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={authorizedCapacityRef}
           />
         </div>
-        <div style={{ display: "flex", columnGap: "100px" }}>
+        <div
+          className="container-fields"
+          style={{ display: "flex", columnGap: "100px" }}
+        >
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "83%",
             }}
@@ -3839,6 +4606,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
             inputRef={bltFileNoRef}
           />
           <TextInput
+            containerClassName="custom-input"
             containerStyle={{
               width: "90%",
             }}
@@ -4085,8 +4853,10 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
       }
     },
   }));
+
   return (
     <div
+      className="main-field-container"
       style={{
         display: "flex",
         flex: 1,
@@ -4096,6 +4866,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
       }}
     >
       <div
+        className="details-content-container"
         style={{
           border: "1px solid #9ca3af",
           height: "100%",
@@ -4128,6 +4899,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
         </div>
 
         <div
+          className="container-fields-tpl"
           style={{
             height: "auto",
             display: policy === "TPL" ? "flex" : "none",
@@ -4135,6 +4907,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
             padding: "10px",
             columnGap: "20px",
             position: "relative",
+            boxSizing: "border-box",
           }}
         >
           <span
@@ -4151,6 +4924,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
             Section I/II
           </span>
           <SelectInput
+            containerClassName="custom-select"
             ref={_typeRef}
             label={{
               title: "Type :",
@@ -4190,6 +4964,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
             display={"key"}
           />
           <TextFormatedInput
+            containerClassName="custom-input"
             label={{
               title: "Premium Paid:",
               style: {
@@ -4262,6 +5037,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
           </span>
 
           <div
+            className="container-max-width"
             style={{
               width: "50%",
               height: "auto",
@@ -4271,6 +5047,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
             }}
           >
             <TextFormatedInput
+              containerClassName="custom-input"
               onBlur={(e) => {
                 let insuredValue = parseFloat(
                   e.currentTarget.value.replace(/,/g, "")
@@ -4326,6 +5103,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
               inputRef={estimatedValueSchedVehicleRef}
             />
             <TextFormatedInput
+              containerClassName="custom-input"
               label={{
                 title: "Aircon:",
                 style: {
@@ -4350,6 +5128,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
               inputRef={airconRef}
             />
             <TextFormatedInput
+              containerClassName="custom-input"
               label={{
                 title: "Stereo:",
                 style: {
@@ -4374,6 +5153,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
               inputRef={stereoRef}
             />
             <TextFormatedInput
+              containerClassName="custom-input"
               label={{
                 title: "Magwheels:",
                 style: {
@@ -4399,6 +5179,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
             />
           </div>
           <div
+            className="container-max-width"
             style={{
               width: "65%",
               height: "auto",
@@ -4408,6 +5189,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
             }}
           >
             <TextInput
+              containerClassName="custom-input"
               containerStyle={{
                 width: "100%",
               }}
@@ -4454,6 +5236,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
             />
           </div>
           <div
+            className="container-max-width"
             style={{
               width: "65%",
               height: "auto",
@@ -4463,6 +5246,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
             }}
           >
             <SelectInput
+              containerClassName="custom-input"
               ref={_typeRef}
               label={{
                 title: "Type :",
@@ -4498,6 +5282,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
             />
           </div>
           <div
+            className="container-fields"
             style={{
               width: "100%",
               height: "auto",
@@ -4518,6 +5303,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
               }}
             >
               <TextFormatedInput
+                containerClassName="custom-input"
                 label={{
                   title: "Deductible:",
                   style: {
@@ -4542,6 +5328,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
                 inputRef={DeductibleRef}
               />
               <TextFormatedInput
+                containerClassName="custom-input"
                 label={{
                   title: "Towing:",
                   style: {
@@ -4585,6 +5372,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
                 inputRef={towingRef}
               />
               <TextFormatedInput
+                containerClassName="custom-input"
                 label={{
                   title: "Authorized Repair Limit:",
                   style: {
@@ -4620,6 +5408,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
               }}
             >
               <AutocompleteNumber
+                containerClassName="custom-input"
                 containerStyle={{
                   width: "100%",
                 }}
@@ -4665,6 +5454,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
                 }}
               />
               <AutocompleteNumber
+                containerClassName="custom-input"
                 containerStyle={{
                   width: "100%",
                 }}
@@ -4711,6 +5501,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
                 }}
               />
               <AutocompleteNumber
+                containerClassName="custom-input"
                 containerStyle={{
                   width: "100%",
                 }}
@@ -4761,6 +5552,7 @@ const PolicyTypeDetails = forwardRef((props: any, ref) => {
         </div>
         <div style={{ flex: 1, width: "100%" }}>
           <SelectInput
+            containerClassName="custom-input"
             ref={_dinomination}
             label={{
               title: "Denomination :",
@@ -5018,6 +5810,7 @@ const PolicyPremium = forwardRef((props: any, ref) => {
       }}
     >
       <div
+        className="premuim-content-container"
         style={{
           height: "100%",
           width: "65%",
@@ -5030,6 +5823,7 @@ const PolicyPremium = forwardRef((props: any, ref) => {
       >
         {/* first layer */}
         <div
+          className="container-max-width"
           style={{
             border: "1px solid #9ca3af",
             width: "60%",
@@ -5053,6 +5847,7 @@ const PolicyPremium = forwardRef((props: any, ref) => {
           </span>
           {/* firt layer */}
           <div
+            className="desktop-content-premium"
             style={{
               width: "140px",
               display: "flex",
@@ -5108,6 +5903,7 @@ const PolicyPremium = forwardRef((props: any, ref) => {
           </div>
           {/* second layer */}
           <div
+            className="desktop-content-premium"
             style={{
               flex: 1,
               padding: "5px",
@@ -5220,9 +6016,160 @@ const PolicyPremium = forwardRef((props: any, ref) => {
               />
             </div>
           </div>
+          <div
+            className="mobile-content-premium"
+            style={{
+              flex: 1,
+              padding: "5px",
+              display: "none",
+              flexDirection: "column",
+              rowGap: "10px",
+            }}
+          >
+            <div
+              style={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                columnGap: "10px",
+              }}
+            >
+              <input
+                disabled={props.disabled}
+                ref={mortgageecheckRef}
+                type="checkbox"
+                id="mortgagee"
+                onChange={(e) => {
+                  setFormIndorseValue(
+                    e.target.checked,
+                    formIndorsementRef,
+                    mortgageeSelect
+                  );
+                }}
+              />
+              <label
+                htmlFor="mortgagee"
+                style={{
+                  fontSize: "12px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                }}
+              >
+                Mortgagee:
+              </label>
+            </div>
+            <div>
+              <Autocomplete
+                disableInput={props.disabled}
+                ref={mortgageeSelect_}
+                containerStyle={{
+                  width: "100%",
+                }}
+                label={{
+                  title: "Bodily Injury: ",
+                  style: {
+                    display: "none",
+                  },
+                }}
+                DisplayMember={"Mortgagee"}
+                DataSource={[]}
+                inputRef={mortgageeSelect}
+                input={{
+                  style: {
+                    width: "100%",
+                    flex: 1,
+                  },
+                }}
+                onChange={(selected: any, e: any) => {
+                  if (mortgageeSelect.current) {
+                    mortgageeSelect.current.value = selected.Mortgagee;
+                  }
+                }}
+                onKeydown={(e: any) => {
+                  if (e.key === "Enter" || e.key === "NumpadEnter") {
+                    e.preventDefault();
+                    formIndorsementRef.current?.focus();
+                  }
+                }}
+              />
+            </div>
+            <div
+              style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <span style={{ fontSize: "12px", fontWeight: "bold" }}>
+                Form and Endorsement
+              </span>
+              <TextAreaInput
+                containerStyle={{
+                  flex: 1,
+                }}
+                label={{
+                  title: "Address",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "150px",
+                    display: "none",
+                  },
+                }}
+                textarea={{
+                  rows: 10,
+                  disabled: props.disabled,
+                  style: { flex: 1 },
+                  defaultValue: `SUBJECT TO THE ATTACHED STANDARD ACCESSORIES ENDORSEMENT CLAUSE; FULL PREMIUM PAYMENT IN CASE OF LOSS CLAUSE; MEMORANDUM ON DOCUMENTARY STAMPS TAX; ANTI CARNAPING PREVENTION TIPS AND AUTO PA RIDER; DRUNKEN AND DRIVER CLAUSE`,
+                  onKeyDown: (e: any) => {
+                    if (e.key === "Enter" || e.key === "NumpadEnter") {
+                      e.preventDefault();
+                      remarksRef.current?.focus();
+                    }
+                  },
+                }}
+                _inputRef={formIndorsementRef}
+              />
+            </div>
+            <div
+              style={{
+                height: "150px",
+                display: "flex",
+              }}
+            >
+              <TextAreaInput
+                containerStyle={{
+                  flex: 1,
+                }}
+                label={{
+                  title: "Remarks",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "130px",
+                    display: "none",
+                  },
+                }}
+                textarea={{
+                  disabled: props.disabled,
+                  placeholder: "Remarks",
+                  style: { flex: 1 },
+                  defaultValue: "",
+                  onKeyDown: (e: any) => {
+                    if (e.key === "Enter" || e.key === "NumpadEnter") {
+                      e.preventDefault();
+                      sectionI_IIRef.current?.focus();
+                    }
+                  },
+                }}
+                _inputRef={remarksRef}
+              />
+            </div>
+          </div>
         </div>
         {/* second layer */}
         <div
+          className="container-max-width "
           style={{
             border: "1px solid #9ca3af",
             width: "40%",
