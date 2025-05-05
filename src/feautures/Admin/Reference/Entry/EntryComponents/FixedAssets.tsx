@@ -41,20 +41,19 @@ const fixedAssetsColumn = [
     label: "Remarks",
     width: 400,
   },
- 
+
   {
     key: "createdAt",
     label: "createdAt",
     width: 200,
-    hide:true
+    hide: true,
   },
   {
     key: "sub_account",
     label: "sub_account",
     width: 200,
-    hide:true
+    hide: true,
   },
-
 ];
 export default function FixedAssets() {
   const { myAxios, user } = useContext(AuthContext);
@@ -111,23 +110,23 @@ export default function FixedAssets() {
   const { mutate: mutateDelete, isLoading: loadingDelete } = useMutation({
     mutationKey: "delete-client",
     mutationFn: async (variables: any) =>
-      await myAxios.post(`/reference/entry-delete?entry=Fixed Assets`, variables, {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      }),
+      await myAxios.post(
+        `/reference/entry-delete?entry=Fixed Assets`,
+        variables,
+        {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }
+      ),
     onSuccess,
   });
   const { isLoading: isLoadingSearch, mutate: mutateSearch } = useMutation({
     mutationKey: "search",
     mutationFn: async (variables: any) =>
-      await myAxios.post(
-        `/reference/search-entry`,
-        variables,
-        {
-          headers: { Authorization: `Bearer ${user?.accessToken}` },
-        }
-      ),
+      await myAxios.post(`/reference/search-entry`, variables, {
+        headers: { Authorization: `Bearer ${user?.accessToken}` },
+      }),
     onSuccess: (res) => {
       tableRef.current.setDataFormated((res as any)?.data.entry);
     },
@@ -200,7 +199,7 @@ export default function FixedAssets() {
         timer: 1500,
       });
     }
-    
+
     const state = {
       entry_fixed_assets_id: clientIdRef.current?.value,
       fullname: fullnameRef.current?.value.toLocaleUpperCase(),
@@ -228,17 +227,17 @@ export default function FixedAssets() {
     wait(100).then(() => {
       refetchClientId();
       refetchSubAcct();
-      if(fullnameRef.current){
-        fullnameRef.current.value = ''
+      if (fullnameRef.current) {
+        fullnameRef.current.value = "";
       }
-      if(descriptionRef.current){
-        descriptionRef.current.value = ''
+      if (descriptionRef.current) {
+        descriptionRef.current.value = "";
       }
-      if(remarksRef.current){
-        remarksRef.current.value = ''
+      if (remarksRef.current) {
+        remarksRef.current.value = "";
       }
-      if(subAccountRef.current){
-        subAccountRef.current.value = 'Head Office'
+      if (subAccountRef.current) {
+        subAccountRef.current.value = "Head Office";
       }
     });
   }
@@ -255,6 +254,7 @@ export default function FixedAssets() {
         }}
       >
         <TextInput
+          containerClassName="custom-input"
           containerStyle={{
             width: "500px",
           }}
@@ -293,6 +293,7 @@ export default function FixedAssets() {
           inputRef={searchInputRef}
         />
         <div
+          className="button-action-desktop"
           style={{
             display: "flex",
             alignItems: "center",
@@ -396,6 +397,7 @@ export default function FixedAssets() {
         </div>
       </div>
       <div
+        className="container-fields-custom-client"
         style={{
           display: "flex",
           columnGap: "20px",
@@ -413,6 +415,7 @@ export default function FixedAssets() {
             <LoadingButton loading={loadingClientId} />
           ) : (
             <TextInput
+              containerClassName="custom-input"
               label={{
                 title: "Fixed Assets ID: ",
                 style: {
@@ -437,6 +440,7 @@ export default function FixedAssets() {
             />
           )}
           <TextAreaInput
+            containerClassName="custom-input"
             label={{
               title: "Full Name : ",
               style: {
@@ -466,6 +470,7 @@ export default function FixedAssets() {
             _inputRef={fullnameRef}
           />
           <TextAreaInput
+            containerClassName="custom-input"
             label={{
               title: "Description : ",
               style: {
@@ -496,6 +501,7 @@ export default function FixedAssets() {
           />
         </div>
         <div
+          className="clear-margin custom-padding"
           style={{
             display: "flex",
             flexDirection: "column",
@@ -508,6 +514,7 @@ export default function FixedAssets() {
             <LoadingButton loading={subAccountLoading} />
           ) : (
             <Autocomplete
+              containerClassName="custom-input"
               disableInput={mode === ""}
               ref={_subAccountRef}
               containerStyle={{
@@ -546,6 +553,7 @@ export default function FixedAssets() {
           )}
 
           <TextAreaInput
+            containerClassName="custom-input"
             label={{
               title: "Remarks : ",
               style: {
@@ -574,6 +582,7 @@ export default function FixedAssets() {
         </div>
       </div>
       <div
+        className="add-padding"
         style={{
           display: "flex",
           flexDirection: "column",
@@ -632,6 +641,108 @@ export default function FixedAssets() {
             }
           }}
         />
+      </div>
+      <div
+        className="button-action-mobile"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          columnGap: "5px",
+        }}
+      >
+        {mode === "" && (
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            id="entry-header-save-button"
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+            }}
+            onClick={() => {
+              refetchClientId();
+              setMode("add");
+            }}
+          >
+            New
+          </Button>
+        )}
+        <LoadingButton
+          id="save-entry-header"
+          color="primary"
+          variant="contained"
+          type="submit"
+          sx={{
+            height: "22px",
+            fontSize: "11px",
+          }}
+          onClick={handleOnSave}
+          startIcon={<SaveIcon />}
+          disabled={mode === ""}
+          loading={loadingAdd || loadingEdit}
+        >
+          Save
+        </LoadingButton>
+
+        <LoadingButton
+          disabled={mode === ""}
+          id="save-entry-header"
+          variant="contained"
+          sx={{
+            height: "22px",
+            fontSize: "11px",
+            backgroundColor: pink[500],
+            "&:hover": {
+              backgroundColor: pink[600],
+            },
+          }}
+          loading={loadingDelete}
+          startIcon={<DeleteIcon />}
+          onClick={() => {
+            codeCondfirmationAlert({
+              isUpdate: false,
+              cb: (userCodeConfirmation) => {
+                mutateDelete({
+                  id: clientIdRef.current?.value,
+                  userCodeConfirmation,
+                });
+              },
+            });
+          }}
+        >
+          Delete
+        </LoadingButton>
+        {mode !== "" && (
+          <Button
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+            }}
+            variant="contained"
+            startIcon={<CloseIcon />}
+            color="error"
+            onClick={() => {
+              Swal.fire({
+                title: "Are you sure?",
+                text: "You won't be able to revert this!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, cancel it!",
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  resetField();
+                  setMode("");
+                  tableRef.current.setSelectedRow(null);
+                  tableRef.current.resetCheckBox();
+                }
+              });
+            }}
+          >
+            Cancel
+          </Button>
+        )}
       </div>
     </>
   );

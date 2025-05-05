@@ -14,6 +14,8 @@ import { wait } from "../../../../lib/wait";
 import { Loading } from "../../../../components/Loading";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import PageHelmet from "../../../../components/Helmet";
+import { isMobile } from "react-device-detect";
+import "../../../../style/monbileview/report/report.css";
 
 const buttons = [
   { label: "Chart of Accounts", id: 0 },
@@ -58,6 +60,7 @@ export default function AccountingReport() {
     <>
       <PageHelmet title={buttonList[buttonSelected].label} />
       <div
+        className="main"
         style={{
           display: "flex",
           alignItems: "center",
@@ -68,6 +71,7 @@ export default function AccountingReport() {
         }}
       >
         <div
+          className="report-content"
           style={{
             border: "1px solid #94a3b8",
             width: "700px",
@@ -80,6 +84,7 @@ export default function AccountingReport() {
           }}
         >
           <div
+            className="component-holder"
             style={{
               flex: 1,
               display: "flex",
@@ -87,6 +92,7 @@ export default function AccountingReport() {
             }}
           >
             <div
+              className="report-buttons-dekstop"
               style={{
                 width: "250px",
                 background: "white",
@@ -168,90 +174,97 @@ export default function AccountingReport() {
                 </div>
               </div>
             </div>
-            {buttonSelected === 1 && <FormScheduleAccount />}
-            {buttonSelected === 2 && <FormSubsidiaryLedger />}
-            {buttonSelected === 3 && (
-              <FormFSReport
-                link={
-                  "/reports/accounting/report/generate-report-trial-balance"
-                }
-                reportTitle={"Trial Balance"}
-              />
-            )}
-            {buttonSelected === 4 && (
-              <FormFSReport
-                link={
-                  "/reports/accounting/report/generate-report-income-statement"
-                }
-                reportTitle={"Income Statement - Long"}
-              />
-            )}
-            {buttonSelected === 5 && (
-              <FormFSReport
-                link={
-                  "/reports/accounting/report/generate-report-balance-sheet"
-                }
-                reportTitle={"Balance Sheet"}
-              />
-            )}
-            {buttonSelected === 6 && (
-              <FormFSReport
-                link={
-                  "/reports/accounting/report/generate-report-general-ledger"
-                }
-                reportTitle={"General Ledger"}
-              />
-            )}
-            {buttonSelected === 7 && (
-              <FormAbsDepoReturned
-                link={
-                  "/reports/accounting/report/generate-report-abstract-collection"
-                }
-                reportTitle={"Abstract of Collections"}
-              />
-            )}
-            {buttonSelected === 8 && (
-              <FormAbsDepoReturned
-                link={
-                  "/reports/accounting/report/generate-report-deposit-collection"
-                }
-                reportTitle={"Deposited of Collections"}
-              />
-            )}
-            {buttonSelected === 9 && (
-              <FormAbsDepoReturned
-                link={
-                  "/reports/accounting/report/generate-report-returned-checks"
-                }
-                reportTitle={"Returned  of Checks"}
-              />
-            )}
-            {buttonSelected === 10 && <FormPostDatedCheckRegistry />}
-            {buttonSelected === 11 && <PettyCashFundDisbursement />}
-            {buttonSelected === 12 && (
-              <FormAbsDepoReturned
-                link={
-                  "/reports/accounting/report/generate-report-cash-disbursement-book-CDB"
-                }
-                reportTitle={"Cash Disbursement Book - CDB"}
-              />
-            )}
-            {buttonSelected === 13 && (
-              <FormAbsDepoReturned
-                link={
-                  "/reports/accounting/report/generate-report-general-journal-book-GJB"
-                }
-                reportTitle={"General Journal Book - GJB"}
-              />
-            )}
-            {buttonSelected === 16 && (
-              <AgingAccounts
-                link={
-                  "/reports/accounting/report/generate-report-aging-account"
-                }
-                reportTitle={"Aging of Accounts"}
-              />
-            )}
+            <div
+              className="component"
+              style={{
+                flex: 1,
+              }}
+            >
+              {buttonSelected === 1 && <FormScheduleAccount />}
+              {buttonSelected === 2 && <FormSubsidiaryLedger />}
+              {buttonSelected === 3 && (
+                <FormFSReport
+                  link={
+                    "/reports/accounting/report/generate-report-trial-balance"
+                  }
+                  reportTitle={"Trial Balance"}
+                />
+              )}
+              {buttonSelected === 4 && (
+                <FormFSReport
+                  link={
+                    "/reports/accounting/report/generate-report-income-statement"
+                  }
+                  reportTitle={"Income Statement - Long"}
+                />
+              )}
+              {buttonSelected === 5 && (
+                <FormFSReport
+                  link={
+                    "/reports/accounting/report/generate-report-balance-sheet"
+                  }
+                  reportTitle={"Balance Sheet"}
+                />
+              )}
+              {buttonSelected === 6 && (
+                <FormFSReport
+                  link={
+                    "/reports/accounting/report/generate-report-general-ledger"
+                  }
+                  reportTitle={"General Ledger"}
+                />
+              )}
+              {buttonSelected === 7 && (
+                <FormAbsDepoReturned
+                  link={
+                    "/reports/accounting/report/generate-report-abstract-collection"
+                  }
+                  reportTitle={"Abstract of Collections"}
+                />
+              )}
+              {buttonSelected === 8 && (
+                <FormAbsDepoReturned
+                  link={
+                    "/reports/accounting/report/generate-report-deposit-collection"
+                  }
+                  reportTitle={"Deposited of Collections"}
+                />
+              )}
+              {buttonSelected === 9 && (
+                <FormAbsDepoReturned
+                  link={
+                    "/reports/accounting/report/generate-report-returned-checks"
+                  }
+                  reportTitle={"Returned  of Checks"}
+                />
+              )}
+              {buttonSelected === 10 && <FormPostDatedCheckRegistry />}
+              {buttonSelected === 11 && <PettyCashFundDisbursement />}
+              {buttonSelected === 12 && (
+                <FormAbsDepoReturned
+                  link={
+                    "/reports/accounting/report/generate-report-cash-disbursement-book-CDB"
+                  }
+                  reportTitle={"Cash Disbursement Book - CDB"}
+                />
+              )}
+              {buttonSelected === 13 && (
+                <FormAbsDepoReturned
+                  link={
+                    "/reports/accounting/report/generate-report-general-journal-book-GJB"
+                  }
+                  reportTitle={"General Journal Book - GJB"}
+                />
+              )}
+              {buttonSelected === 16 && (
+                <AgingAccounts
+                  link={
+                    "/reports/accounting/report/generate-report-aging-account"
+                  }
+                  reportTitle={"Aging of Accounts"}
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -260,6 +273,7 @@ export default function AccountingReport() {
 }
 
 function FormScheduleAccount() {
+  const chartAccountUpwardTableModalSearchRef = useRef<any>(null);
   const { user, myAxios } = useContext(AuthContext);
   const [title, setTitle] = useState(
     generateTitle({
@@ -421,12 +435,23 @@ function FormScheduleAccount() {
       onSuccess: (response) => {
         const pdfBlob = new Blob([response.data], { type: "application/pdf" });
         const pdfUrl = URL.createObjectURL(pdfBlob);
-        window.open(
-          `/${
-            process.env.REACT_APP_DEPARTMENT
-          }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
-          "_blank"
-        );
+        if (isMobile) {
+          // MOBILE: download directly
+          const link = document.createElement("a");
+          link.href = pdfUrl;
+          link.download = "report.pdf";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          return;
+        } else {
+          window.open(
+            `/${
+              process.env.REACT_APP_DEPARTMENT
+            }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+            "_blank"
+          );
+        }
       },
     });
 
@@ -519,13 +544,48 @@ function FormScheduleAccount() {
             },
           }}
           input={{
+            disabled:report === "All Accounts",
             className: "search-input-up-on-key-down",
             type: "text",
-            value: "7.10.06",
-            onKeyDown: (e) => {
+            defaultValue: "7.10.06",
+            onKeyDown: async (e) => {
               if (e.key === "Enter" || e.key === "NumpadEnter") {
                 e.preventDefault();
-                chartAccountOpenModal(e.currentTarget.value);
+
+                const value = e.currentTarget.value;
+                const response =
+                  await chartAccountUpwardTableModalSearchRef.current.mutateReturnValue(
+                    { search: value }
+                  );
+
+                if (response.data.data.length > 0) {
+                  wait(100).then(() => {
+                    if (accountRef.current) {
+                      accountRef.current.value = response.data.data[0].Code;
+                    }
+                    if (_accountRef.current) {
+                      _accountRef.current.value = response.data.data[0].Title;
+                    }
+
+                    setTitle(
+                      generateTitle({
+                        report,
+                        subsiText: subsiTextRef.current?.value || "",
+                        insuarnceIndex: _subsiRef.current?.selectedIndex,
+                        insurance: _subsiRef.current?.value,
+                        dateValue: validateDate(dateRef.current?.value as any)
+                          ? new Date(dateRef.current?.value as any)
+                          : new Date(),
+                        account: response.data.data[0].Code,
+                        accountTitle: response.data.data[0].Title,
+                      })
+                    );
+
+                    subsiRef.current?.focus();
+                  });
+                } else {
+                  chartAccountOpenModal(value);
+                }
               }
               if (e.key === "ArrowDown") {
                 e.preventDefault();
@@ -824,11 +884,14 @@ function FormScheduleAccount() {
           Generate Report
         </Button>
       </div>
-      <ChartAccountUpwardTableModalSearch />
+      <ChartAccountUpwardTableModalSearch
+        ref={chartAccountUpwardTableModalSearchRef}
+      />
     </>
   );
 }
 function FormSubsidiaryLedger() {
+  const chartAccountUpwardTableModalSearchRef = useRef<any>(null);
   const { user, myAxios } = useContext(AuthContext);
   const [title, setTitle] = useState(
     generateTitle({
@@ -1090,12 +1153,24 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
       onSuccess: (response) => {
         const pdfBlob = new Blob([response.data], { type: "application/pdf" });
         const pdfUrl = URL.createObjectURL(pdfBlob);
-        window.open(
-          `/${
-            process.env.REACT_APP_DEPARTMENT
-          }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
-          "_blank"
-        );
+
+        if (isMobile) {
+          // MOBILE: download directly
+          const link = document.createElement("a");
+          link.href = pdfUrl;
+          link.download = "report.pdf";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          return;
+        } else {
+          window.open(
+            `/${
+              process.env.REACT_APP_DEPARTMENT
+            }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+            "_blank"
+          );
+        }
       },
     });
 
@@ -1147,10 +1222,47 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
             className: "search-input-up-on-key-down",
             type: "text",
             defaultValue: "1.03.01",
-            onKeyDown: (e) => {
+            onKeyDown: async (e) => {
               if (e.key === "Enter" || e.key === "NumpadEnter") {
                 e.preventDefault();
-                chartAccountOpenModal(e.currentTarget.value);
+                const value = e.currentTarget.value;
+                const response =
+                  await chartAccountUpwardTableModalSearchRef.current.mutateReturnValue(
+                    { search: value }
+                  );
+
+                if (response.data.data.length > 0) {
+                  wait(100).then(() => {
+                    if (accountRef.current) {
+                      accountRef.current.value = response.data.data[0].Code;
+                    }
+                    if (_accountRef.current) {
+                      _accountRef.current.value = response.data.data[0].Title;
+                    }
+
+                    setTitle(
+                      generateTitle({
+                        subsi: subsiRef.current?.selectedIndex,
+                        accountName: response.data.data[0].Title,
+                        account: response.data.data[0].Code,
+                        subsiName: nameRef.current,
+                        subsiId: idNoRef.current?.value,
+                        dateFrom: validateDate(
+                          dateFromRef.current?.value as any
+                        )
+                          ? new Date(dateFromRef.current?.value as any)
+                          : new Date(),
+                        dateTo: validateDate(dateToRef.current?.value as any)
+                          ? new Date(dateToRef.current?.value as any)
+                          : new Date(),
+                      })
+                    );
+
+                    subsiRef.current?.focus();
+                  });
+                } else {
+                  chartAccountOpenModal(value);
+                }
               }
               if (e.key === "ArrowDown") {
                 e.preventDefault();
@@ -1595,7 +1707,9 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
           Generate Report
         </Button>
       </div>
-      <ChartAccountUpwardTableModalSearch />
+      <ChartAccountUpwardTableModalSearch
+        ref={chartAccountUpwardTableModalSearchRef}
+      />
       <ClientUpwardTableModalSearch />
       <SubAccountUpwardTableModalSearch />
     </>
@@ -1636,12 +1750,23 @@ function FormFSReport({ link, reportTitle }: any) {
       onSuccess: (response) => {
         const pdfBlob = new Blob([response.data], { type: "application/pdf" });
         const pdfUrl = URL.createObjectURL(pdfBlob);
-        window.open(
-          `/${
-            process.env.REACT_APP_DEPARTMENT
-          }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
-          "_blank"
-        );
+        if (isMobile) {
+          // MOBILE: download directly
+          const link = document.createElement("a");
+          link.href = pdfUrl;
+          link.download = "report.pdf";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          return;
+        } else {
+          window.open(
+            `/${
+              process.env.REACT_APP_DEPARTMENT
+            }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+            "_blank"
+          );
+        }
       },
     });
 
@@ -1961,12 +2086,23 @@ function FormAbsDepoReturned({ link, reportTitle }: any) {
       onSuccess: (response) => {
         const pdfBlob = new Blob([response.data], { type: "application/pdf" });
         const pdfUrl = URL.createObjectURL(pdfBlob);
-        window.open(
-          `/${
-            process.env.REACT_APP_DEPARTMENT
-          }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
-          "_blank"
-        );
+        if (isMobile) {
+          // MOBILE: download directly
+          const link = document.createElement("a");
+          link.href = pdfUrl;
+          link.download = "report.pdf";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          return;
+        } else {
+          window.open(
+            `/${
+              process.env.REACT_APP_DEPARTMENT
+            }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+            "_blank"
+          );
+        }
       },
     });
 
@@ -2321,12 +2457,23 @@ function FormPostDatedCheckRegistry() {
       onSuccess: (response) => {
         const pdfBlob = new Blob([response.data], { type: "application/pdf" });
         const pdfUrl = URL.createObjectURL(pdfBlob);
-        window.open(
-          `/${
-            process.env.REACT_APP_DEPARTMENT
-          }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
-          "_blank"
-        );
+        if (isMobile) {
+          // MOBILE: download directly
+          const link = document.createElement("a");
+          link.href = pdfUrl;
+          link.download = "report.pdf";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          return;
+        } else {
+          window.open(
+            `/${
+              process.env.REACT_APP_DEPARTMENT
+            }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+            "_blank"
+          );
+        }
       },
     });
   const {
@@ -2746,12 +2893,23 @@ function PettyCashFundDisbursement() {
       onSuccess: (response) => {
         const pdfBlob = new Blob([response.data], { type: "application/pdf" });
         const pdfUrl = URL.createObjectURL(pdfBlob);
-        window.open(
-          `/${
-            process.env.REACT_APP_DEPARTMENT
-          }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
-          "_blank"
-        );
+        if (isMobile) {
+          // MOBILE: download directly
+          const link = document.createElement("a");
+          link.href = pdfUrl;
+          link.download = "report.pdf";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          return;
+        } else {
+          window.open(
+            `/${
+              process.env.REACT_APP_DEPARTMENT
+            }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+            "_blank"
+          );
+        }
       },
     });
 
@@ -3034,12 +3192,23 @@ function AgingAccounts({ link, reportTitle }: any) {
       onSuccess: (response) => {
         const pdfBlob = new Blob([response.data], { type: "application/pdf" });
         const pdfUrl = URL.createObjectURL(pdfBlob);
-        window.open(
-          `/${
-            process.env.REACT_APP_DEPARTMENT
-          }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
-          "_blank"
-        );
+        if (isMobile) {
+          // MOBILE: download directly
+          const link = document.createElement("a");
+          link.href = pdfUrl;
+          link.download = "report.pdf";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          return;
+        } else {
+          window.open(
+            `/${
+              process.env.REACT_APP_DEPARTMENT
+            }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+            "_blank"
+          );
+        }
       },
     });
 

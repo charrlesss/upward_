@@ -15,7 +15,7 @@ import ReactDOMServer from "react-dom/server";
 import { AuthContext } from "./AuthContext";
 import { Loading } from "./Loading";
 import ReactDOM from "react-dom";
-import '../style/datagridview.css'
+import "../style/datagridview.css";
 
 export const DataGridViewReact = forwardRef(
   (
@@ -184,7 +184,7 @@ export const DataGridViewReact = forwardRef(
           }
         />
         <div
-        className="table-datagridview-main"
+          className="table-datagridview-main"
           ref={parentElementRef}
           style={{
             width: "100%",
@@ -1612,12 +1612,14 @@ export const useUpwardTableModalSearchSafeMode = ({
     setShow(false);
     _dataCache = [];
   }
-  const UpwardTableModalSearch = () => {
+
+  const UpwardTableModalSearch = forwardRef(({}: any, ref) => {
+    const { user, myAxios } = useContext(AuthContext);
+
     const modalRef = useRef<HTMLDivElement>(null);
     const isMoving = useRef(false);
     const offset = useRef({ x: 0, y: 0 });
 
-    const { user, myAxios } = useContext(AuthContext);
     const tableRef = useRef<any>(null);
     const [blick, setBlick] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -1643,6 +1645,20 @@ export const useUpwardTableModalSearchSafeMode = ({
         .finally(() => {
           setIsLoading(false);
         });
+    }
+
+    async function mutateReturnValue(variable: any) {
+      try {
+        setIsLoading(true);
+        return await myAxios.post(link, variable, {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        });
+      } catch (error) {
+        console.log(error);
+        setIsLoading(false);
+      }
     }
 
     useEffect(() => {
@@ -1698,6 +1714,11 @@ export const useUpwardTableModalSearchSafeMode = ({
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
+
+    useImperativeHandle(ref, () => ({
+      mutate,
+      mutateReturnValue,
+    }));
 
     return show ? (
       ReactDOM.createPortal(
@@ -1873,7 +1894,7 @@ export const useUpwardTableModalSearchSafeMode = ({
     ) : (
       <></>
     );
-  };
+  });
 
   return {
     openModal,

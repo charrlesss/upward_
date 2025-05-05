@@ -155,6 +155,13 @@ const CGLPolicy = lazy(
     )
 );
 
+const TEMPTOREG = lazy(
+  () =>
+    import(
+      "../feautures/Admin/Task/Production/Policies/PolicyComponent/Vehicle/TempToRegular"
+    )
+);
+
 export default function Routers() {
   const { user } = useContext(AuthContext);
   const department = process.env.REACT_APP_DEPARTMENT;
@@ -531,6 +538,8 @@ export default function Routers() {
           <Route path="/dashboard/help/index" element={<Index />} />
           <Route path="/dashboard/help/about" element={<About />} /> */}
         </Route>
+
+        <Route path={`/${department}/dashboard/temp-to-regular`} element={<TEMPTOREG />} />
 
         <Route
           path={`/${department}/dashboard/report`}

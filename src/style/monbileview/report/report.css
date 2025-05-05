@@ -1,0 +1,24 @@
+@media (max-width: 768px) {
+  .main {
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+  }
+  .report-content {
+    width: 100% !important;
+    height: auto !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+  .component-holder {
+    flex-direction: column-reverse !important;
+    width: 100% !important;
+    row-gap: 10px;
+  }
+  .component-holder .report-buttons-dekstop {
+        width: 100% !important;
+        height: 300px !important;
+  }
+  .component{
+    min-height: 400px !important;
+  }
+}

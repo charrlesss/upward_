@@ -581,7 +581,7 @@ export default function PAPolicy() {
       <div
         className="button-action-mobile"
         style={{
-          display: "flex",
+          display: "none",
           alignItems: "center",
           columnGap: "8px",
         }}

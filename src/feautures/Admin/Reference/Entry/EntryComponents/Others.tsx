@@ -1,4 +1,3 @@
-
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { Button } from "@mui/material";
 import { AuthContext } from "../../../../../components/AuthContext";
@@ -42,20 +41,19 @@ const othersColumn = [
     label: "Remarks",
     width: 400,
   },
- 
+
   {
     key: "createdAt",
     label: "createdAt",
     width: 200,
-    hide:true
+    hide: true,
   },
   {
     key: "sub_account",
     label: "sub_account",
     width: 200,
-    hide:true
+    hide: true,
   },
-
 ];
 export default function Others() {
   const { myAxios, user } = useContext(AuthContext);
@@ -119,13 +117,9 @@ export default function Others() {
   const { isLoading: isLoadingSearch, mutate: mutateSearch } = useMutation({
     mutationKey: "search",
     mutationFn: async (variables: any) =>
-      await myAxios.post(
-        `/reference/search-entry`,
-        variables,
-        {
-          headers: { Authorization: `Bearer ${user?.accessToken}` },
-        }
-      ),
+      await myAxios.post(`/reference/search-entry`, variables, {
+        headers: { Authorization: `Bearer ${user?.accessToken}` },
+      }),
     onSuccess: (res) => {
       tableRef.current.setDataFormated((res as any)?.data.entry);
     },
@@ -198,7 +192,7 @@ export default function Others() {
         timer: 1500,
       });
     }
-    
+
     const state = {
       entry_others_id: clientIdRef.current?.value,
       description: descriptionRef.current?.value,
@@ -226,14 +220,14 @@ export default function Others() {
       refetchClientId();
       refetchSubAcct();
 
-      if(descriptionRef.current){
-        descriptionRef.current.value = ''
+      if (descriptionRef.current) {
+        descriptionRef.current.value = "";
       }
-      if(remarksRef.current){
-        remarksRef.current.value = ''
+      if (remarksRef.current) {
+        remarksRef.current.value = "";
       }
-      if(subAccountRef.current){
-        subAccountRef.current.value = 'Head Office'
+      if (subAccountRef.current) {
+        subAccountRef.current.value = "Head Office";
       }
     });
   }
@@ -250,6 +244,7 @@ export default function Others() {
         }}
       >
         <TextInput
+          containerClassName="custom-input"
           containerStyle={{
             width: "500px",
           }}
@@ -288,6 +283,7 @@ export default function Others() {
           inputRef={searchInputRef}
         />
         <div
+          className="button-action-desktop"
           style={{
             display: "flex",
             alignItems: "center",
@@ -391,6 +387,7 @@ export default function Others() {
         </div>
       </div>
       <div
+        className="container-fields-custom-client"
         style={{
           display: "flex",
           columnGap: "20px",
@@ -408,6 +405,7 @@ export default function Others() {
             <LoadingButton loading={loadingClientId} />
           ) : (
             <TextInput
+              containerClassName="custom-input"
               label={{
                 title: "Fixed Assets ID: ",
                 style: {
@@ -432,6 +430,7 @@ export default function Others() {
             />
           )}
           <TextAreaInput
+            containerClassName="custom-input"
             label={{
               title: "Description : ",
               style: {
@@ -446,7 +445,7 @@ export default function Others() {
             }}
             textarea={{
               disabled: mode === "",
-              style: { width: "calc(100% - 130px)" ,height:"50px" },
+              style: { width: "calc(100% - 130px)", height: "50px" },
               onKeyDown: (e) => {
                 e.stopPropagation();
                 if (
@@ -461,6 +460,7 @@ export default function Others() {
           />
         </div>
         <div
+          className="clear-margin custom-padding"
           style={{
             display: "flex",
             flexDirection: "column",
@@ -473,6 +473,7 @@ export default function Others() {
             <LoadingButton loading={subAccountLoading} />
           ) : (
             <Autocomplete
+              containerClassName="custom-input"
               disableInput={mode === ""}
               ref={_subAccountRef}
               containerStyle={{
@@ -511,6 +512,7 @@ export default function Others() {
           )}
 
           <TextAreaInput
+            containerClassName="custom-input"
             label={{
               title: "Remarks : ",
               style: {
@@ -539,6 +541,7 @@ export default function Others() {
         </div>
       </div>
       <div
+        className="add-padding"
         style={{
           display: "flex",
           flexDirection: "column",
@@ -595,7 +598,108 @@ export default function Others() {
           }}
         />
       </div>
+      <div
+        className="button-action-mobile"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          columnGap: "5px",
+        }}
+      >
+        {mode === "" && (
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            id="entry-header-save-button"
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+            }}
+            onClick={() => {
+              refetchClientId();
+              setMode("add");
+            }}
+          >
+            New
+          </Button>
+        )}
+        <LoadingButton
+          id="save-entry-header"
+          color="primary"
+          variant="contained"
+          type="submit"
+          sx={{
+            height: "22px",
+            fontSize: "11px",
+          }}
+          onClick={handleOnSave}
+          startIcon={<SaveIcon />}
+          disabled={mode === ""}
+          loading={loadingAdd || loadingEdit}
+        >
+          Save
+        </LoadingButton>
+
+        <LoadingButton
+          disabled={mode === ""}
+          id="save-entry-header"
+          variant="contained"
+          sx={{
+            height: "22px",
+            fontSize: "11px",
+            backgroundColor: pink[500],
+            "&:hover": {
+              backgroundColor: pink[600],
+            },
+          }}
+          loading={loadingDelete}
+          startIcon={<DeleteIcon />}
+          onClick={() => {
+            codeCondfirmationAlert({
+              isUpdate: false,
+              cb: (userCodeConfirmation) => {
+                mutateDelete({
+                  id: clientIdRef.current?.value,
+                  userCodeConfirmation,
+                });
+              },
+            });
+          }}
+        >
+          Delete
+        </LoadingButton>
+        {mode !== "" && (
+          <Button
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+            }}
+            variant="contained"
+            startIcon={<CloseIcon />}
+            color="error"
+            onClick={() => {
+              Swal.fire({
+                title: "Are you sure?",
+                text: "You won't be able to revert this!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, cancel it!",
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  resetField();
+                  setMode("");
+                  tableRef.current.setSelectedRow(null);
+                  tableRef.current.resetCheckBox();
+                }
+              });
+            }}
+          >
+            Cancel
+          </Button>
+        )}
+      </div>
     </>
   );
 }
-

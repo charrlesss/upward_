@@ -1,7 +1,9 @@
 .mobile-choices-buttons {
   display: none !important;
 }
-
+.search-container-mobile{
+  display: none !important;
+}
 @media (max-width: 768px) {
   .button-chips-container {
     overflow-x: auto !important;
@@ -26,7 +28,7 @@
   }
 
   .search-container-mobile .search-container-mobile-buttons {
-    display: flex;
+    display: flex !important;
     align-items: center;
     width: 100%;
   }
@@ -84,6 +86,7 @@
   }
   .mobile-choices-buttons {
     display: flex !important;
+    align-items: center;
   }
   .container-fields {
     width: 100% !important;

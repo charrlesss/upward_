@@ -836,7 +836,7 @@ export default function FirePolicy() {
       <div
         className="button-action-mobile"
         style={{
-          display: "flex",
+          display: "none",
           alignItems: "center",
           columnGap: "8px",
         }}
@@ -1974,7 +1974,6 @@ const PolicyPremium = forwardRef((props: any, ref) => {
           </span>
           {/* firt layer */}
           <div
-            className="desktop-content-premium"
             style={{
               width: "140px",
               display: "flex",

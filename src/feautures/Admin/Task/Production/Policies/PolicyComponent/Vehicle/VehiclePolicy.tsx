@@ -24,7 +24,7 @@ import {
   TextInput,
 } from "../../../../../../../components/UpwardFields";
 import CalculateIcon from "@mui/icons-material/Calculate";
-
+import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import SearchIcon from "@mui/icons-material/Search";
 import SaveAsIcon from "@mui/icons-material/SaveAs";
 import AddBoxIcon from "@mui/icons-material/AddBox";
@@ -38,6 +38,7 @@ import { Loading } from "../../../../../../../components/Loading";
 import { wait } from "../../../../../../../lib/wait";
 import PageHelmet from "../../../../../../../components/Helmet";
 import "../../../../../../../style/monbileview/production/production.css";
+import RepeatIcon from "@mui/icons-material/Repeat";
 
 export default function VehiclePolicy() {
   const { user, myAxios } = useContext(AuthContext);
@@ -595,6 +596,26 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           >
             Cancel
           </Button>
+          {policyType === "TEMP" && (
+            <Button
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              color="info"
+              startIcon={<RepeatIcon />}
+              disabled={mode === "" || mode === "add"}
+              size="small"
+              onClick={() => {
+                window.location.href = `/${
+                  process.env.REACT_APP_DEPARTMENT
+                }/dashboard/temp-to-regular?policy_no=${temporaryPolicyRef.current.getPolicy()}&accessToken=${user.accessToken}`;
+              }}
+            >
+              To Regular
+            </Button>
+          )}
           <div
             style={{
               display: "flex",
@@ -871,7 +892,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
       <div
         className="button-action-mobile"
         style={{
-          display: "flex",
+          display: "none",
           alignItems: "center",
           columnGap: "8px",
         }}
@@ -1008,27 +1029,35 @@ const COMRegular = forwardRef(
       ],
       getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
         if (rowItm) {
-          if (_policyInformationRef.current.getRefs().clientIDRef.current) {
-            _policyInformationRef.current.getRefs().clientIDRef.current.value =
-              rowItm[0];
+          if (_policyInformationRef.current) {
+            if (_policyInformationRef.current.getRefs().clientIDRef.current) {
+              _policyInformationRef.current.getRefs().clientIDRef.current.value =
+                rowItm[0];
+            }
+            if (_policyInformationRef.current.getRefs().clientNameRef.current) {
+              _policyInformationRef.current.getRefs().clientNameRef.current.value =
+                rowItm[1];
+            }
+            if (
+              _policyInformationRef.current.getRefs().clientAddressRef.current
+            ) {
+              _policyInformationRef.current.getRefs().clientAddressRef.current.value =
+                rowItm[3];
+            }
+            if (
+              _policyInformationRef.current.getRefs().saleOfficerRef.current
+            ) {
+              _policyInformationRef.current.getRefs().saleOfficerRef.current.value =
+                rowItm[4];
+            }
           }
-          if (_policyInformationRef.current.getRefs().clientNameRef.current) {
-            _policyInformationRef.current.getRefs().clientNameRef.current.value =
-              rowItm[1];
-          }
-          if (
-            _policyInformationRef.current.getRefs().clientAddressRef.current
-          ) {
-            _policyInformationRef.current.getRefs().clientAddressRef.current.value =
-              rowItm[3];
-          }
-          if (_policyInformationRef.current.getRefs().saleOfficerRef.current) {
-            _policyInformationRef.current.getRefs().saleOfficerRef.current.value =
-              rowItm[4];
-          }
+
           clientCloseModal();
           wait(100).then(() => {
-            _policyInformationRef.current.getRefs().agentIdRef.current?.focus();
+            if (_policyInformationRef.current)
+              _policyInformationRef.current
+                .getRefs()
+                .agentIdRef.current?.focus();
           });
         }
       },
@@ -1051,18 +1080,23 @@ const COMRegular = forwardRef(
       ],
       getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
         if (rowItm) {
-          if (_policyInformationRef.current.getRefs().agentIdRef.current) {
-            _policyInformationRef.current.getRefs().agentIdRef.current.value =
-              rowItm[0];
-          }
-          if (_policyInformationRef.current.getRefs().agentNameRef.current) {
-            _policyInformationRef.current.getRefs().agentNameRef.current.value =
-              rowItm[1];
+          if (_policyInformationRef.current) {
+            if (_policyInformationRef.current.getRefs().agentIdRef.current) {
+              _policyInformationRef.current.getRefs().agentIdRef.current.value =
+                rowItm[0];
+            }
+            if (_policyInformationRef.current.getRefs().agentNameRef.current) {
+              _policyInformationRef.current.getRefs().agentNameRef.current.value =
+                rowItm[1];
+            }
           }
 
           agentCloseModal();
           wait(100).then(() => {
-            _policyInformationRef.current.getRefs().accountRef.current?.focus();
+            if (_policyInformationRef.current)
+              _policyInformationRef.current
+                .getRefs()
+                .accountRef.current?.focus();
           });
         }
       },
@@ -1079,15 +1113,16 @@ const COMRegular = forwardRef(
         },
         onSuccess(response) {
           wait(100).then(() => {
-            _policyInformationRef.current
-              .getRefs()
-              ._accountRef.current.setDataSource(response.data?.data);
+            if (_policyTypeDetailsRef.current)
+              _policyInformationRef.current
+                .getRefs()
+                ._accountRef.current.setDataSource(response.data?.data);
           });
         },
       });
     const { mutate: mutatateMortgagee, isLoading: isLoadingMortgagee } =
       useMutation({
-        mutationKey: "account",
+        mutationKey: "mortgagee",
         mutationFn: (variables: any) => {
           return myAxios.post("/task/production/mortgagee", variables, {
             headers: {
@@ -1097,9 +1132,15 @@ const COMRegular = forwardRef(
         },
         onSuccess(response) {
           wait(100).then(() => {
-            _policyPremiumRef.current
-              .getRefs()
-              .mortgageeSelect_.current.setDataSource(response.data?.data);
+            console.log(response.data?.data);
+            if (
+              _policyPremiumRef.current &&
+              _policyPremiumRef.current.getRefs
+            ) {
+              _policyPremiumRef.current
+                .getRefs()
+                .mortgageeSelect_.current.setDataSource(response.data?.data);
+            }
           });
         },
       });
@@ -1115,9 +1156,10 @@ const COMRegular = forwardRef(
         },
         onSuccess(response) {
           wait(100).then(() => {
-            _policyTypeDetailsRef.current
-              .getRefs()
-              ._dinomination.current.setDataSource(response.data?.data);
+            if (_policyTypeDetailsRef.current)
+              _policyTypeDetailsRef.current
+                .getRefs()
+                ._dinomination.current.setDataSource(response.data?.data);
           });
         },
       });
@@ -1942,14 +1984,18 @@ const COMTemporary = forwardRef(
       ],
       getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
         if (rowItm) {
-          console.log(rowItm);
-          if (_policyInformationRef.current.getRefs().agentIdRef.current) {
-            _policyInformationRef.current.getRefs().agentIdRef.current.value =
-              rowItm[0];
-          }
-          if (_policyInformationRef.current.getRefs().agentNameRef.current) {
-            _policyInformationRef.current.getRefs().agentNameRef.current.value =
-              rowItm[1];
+          if (
+            _policyInformationRef.current &&
+            _policyInformationRef.current.getRefs
+          ) {
+            if (_policyInformationRef.current.getRefs().agentIdRef.current) {
+              _policyInformationRef.current.getRefs().agentIdRef.current.value =
+                rowItm[0];
+            }
+            if (_policyInformationRef.current.getRefs().agentNameRef.current) {
+              _policyInformationRef.current.getRefs().agentNameRef.current.value =
+                rowItm[1];
+            }
           }
 
           agentCloseModal();
@@ -1968,14 +2014,26 @@ const COMTemporary = forwardRef(
         },
         onSuccess(response) {
           wait(100).then(() => {
-            _policyInformationRef.current
-              .getRefs()
-              ._accountRef.current.setDataSource(response.data?.data);
+            if (
+              _policyInformationRef.current &&
+              _policyInformationRef.current.getRefs
+            ) {
+              _policyInformationRef.current
+                .getRefs()
+                ._accountRef.current.setDataSource(response.data?.data);
+            }
 
             wait(100).then(() => {
-              if (_policyInformationRef.current.getRefs().accountRef.current) {
-                _policyInformationRef.current.getRefs().accountRef.current.value =
-                  "Alpha";
+              if (
+                _policyInformationRef.current &&
+                _policyInformationRef.current.getRefs
+              ) {
+                if (
+                  _policyInformationRef.current.getRefs().accountRef.current
+                ) {
+                  _policyInformationRef.current.getRefs().accountRef.current.value =
+                    "Alpha";
+                }
               }
 
               mutatateDenomination({
@@ -1988,7 +2046,7 @@ const COMTemporary = forwardRef(
       });
     const { mutate: mutatateMortgagee, isLoading: isLoadingMortgagee } =
       useMutation({
-        mutationKey: "account",
+        mutationKey: "mortgagee",
         mutationFn: (variables: any) => {
           return myAxios.post("/task/production/mortgagee", variables, {
             headers: {
@@ -2001,6 +2059,12 @@ const COMTemporary = forwardRef(
             _policyPremiumRef.current
               .getRefs()
               .mortgageeSelect_.current.setDataSource(response.data?.data);
+
+            // .mortgageeSelect_.current.setDataSource(response.data?.data);
+            // if (_policyPremiumRef.current && _policyPremiumRef.current.getRefs)
+            //   _policyPremiumRef.current
+            //     .getRefs()
+            //     .mortgageeSelect_.current.setDataSource(response.data?.data);
           });
         },
       });
@@ -2016,9 +2080,13 @@ const COMTemporary = forwardRef(
         },
         onSuccess(response) {
           wait(100).then(() => {
-            _policyTypeDetailsRef.current
-              .getRefs()
-              ._dinomination.current.setDataSource(response.data?.data);
+            if (
+              _policyTypeDetailsRef.current &&
+              _policyTypeDetailsRef.current.getRefs
+            )
+              _policyTypeDetailsRef.current
+                .getRefs()
+                ._dinomination.current.setDataSource(response.data?.data);
           });
         },
       });
@@ -2525,6 +2593,10 @@ const COMTemporary = forwardRef(
       },
       refetchID: () => {
         refetchTempID();
+      },
+      getPolicy: () => {
+        return _policyInformationRef.current.getRefs().policyNoRef.current
+          .value;
       },
     }));
     useEffect(() => {
@@ -3409,7 +3481,7 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
               }}
               containerStyle={{
                 flex: 2,
-                marginLeft: "20px",
+                marginLeft: "5px",
               }}
               datasource={[]}
               values={"Acronym"}
@@ -3434,7 +3506,7 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
       <div
         className="button-action-mobile"
         style={{
-          display: "flex",
+          display: "none",
           alignItems: "center",
           columnGap: "8px",
         }}
@@ -5847,7 +5919,7 @@ const PolicyPremium = forwardRef((props: any, ref) => {
           </span>
           {/* firt layer */}
           <div
-            className="desktop-content-premium"
+            // className="desktop-content-premium"
             style={{
               width: "140px",
               display: "flex",
@@ -5903,7 +5975,6 @@ const PolicyPremium = forwardRef((props: any, ref) => {
           </div>
           {/* second layer */}
           <div
-            className="desktop-content-premium"
             style={{
               flex: 1,
               padding: "5px",
@@ -6016,7 +6087,7 @@ const PolicyPremium = forwardRef((props: any, ref) => {
               />
             </div>
           </div>
-          <div
+          {/* <div
             className="mobile-content-premium"
             style={{
               flex: 1,
@@ -6165,7 +6236,7 @@ const PolicyPremium = forwardRef((props: any, ref) => {
                 _inputRef={remarksRef}
               />
             </div>
-          </div>
+          </div> */}
         </div>
         {/* second layer */}
         <div
@@ -6655,6 +6726,7 @@ const PolicyPremium = forwardRef((props: any, ref) => {
     </div>
   );
 });
+
 interface CustomButtonProps {
   currentStepIndex: number;
   index: number;

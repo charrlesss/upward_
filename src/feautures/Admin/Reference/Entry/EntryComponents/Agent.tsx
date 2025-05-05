@@ -309,6 +309,7 @@ export default function Agent() {
         }}
       >
         <TextInput
+          containerClassName="custom-input"
           containerStyle={{
             width: "500px",
           }}
@@ -347,6 +348,7 @@ export default function Agent() {
           inputRef={searchInputRef}
         />
         <div
+          className="button-action-desktop"
           style={{
             display: "flex",
             alignItems: "center",
@@ -450,6 +452,7 @@ export default function Agent() {
         </div>
       </div>
       <div
+        className="container-fields-custom-client"
         style={{
           display: "flex",
           columnGap: "20px",
@@ -467,6 +470,7 @@ export default function Agent() {
             <LoadingButton loading={loadingClientId} />
           ) : (
             <TextInput
+              containerClassName="custom-input"
               label={{
                 title: "Agent ID : ",
                 style: {
@@ -491,6 +495,7 @@ export default function Agent() {
           )}
 
           <TextInput
+            containerClassName="custom-input"
             label={{
               title: "First Name : ",
               style: {
@@ -516,6 +521,7 @@ export default function Agent() {
             inputRef={firstnameRef}
           />
           <TextInput
+            containerClassName="custom-input"
             label={{
               title: "Middle Name : ",
               style: {
@@ -540,7 +546,9 @@ export default function Agent() {
             }}
             inputRef={middleRef}
           />
+
           <TextInput
+            containerClassName="custom-input"
             label={{
               title: "Last Name : ",
               style: {
@@ -567,6 +575,7 @@ export default function Agent() {
           />
 
           <TextInput
+            containerClassName="custom-input"
             label={{
               title: "Suffix : ",
               style: {
@@ -589,6 +598,7 @@ export default function Agent() {
           />
         </div>
         <div
+          className="clear-margin custom-padding"
           style={{
             display: "flex",
             flexDirection: "column",
@@ -601,6 +611,7 @@ export default function Agent() {
             <LoadingButton loading={subAccountLoading} />
           ) : (
             <Autocomplete
+              containerClassName="custom-input"
               disableInput={mode === ""}
               ref={_subAccount}
               containerStyle={{
@@ -638,6 +649,7 @@ export default function Agent() {
             />
           )}
           <TextInput
+            containerClassName="custom-input"
             label={{
               title: "Mobile No. : ",
               style: {
@@ -660,6 +672,7 @@ export default function Agent() {
           />
 
           <TextInput
+            containerClassName="custom-input"
             label={{
               title: "Position : ",
               style: {
@@ -681,6 +694,7 @@ export default function Agent() {
             inputRef={positionRef}
           />
           <TextAreaInput
+            containerClassName="custom-input"
             label={{
               title: "Address : ",
               style: {
@@ -710,6 +724,7 @@ export default function Agent() {
         </div>
       </div>
       <div
+        className="add-padding"
         style={{
           display: "flex",
           flexDirection: "column",
@@ -750,7 +765,6 @@ export default function Agent() {
                 if (subAccount.current) {
                   subAccount.current.value = rowSelected[6];
                 }
-             
 
                 if (positionRef.current) {
                   positionRef.current.value = rowSelected[7];
@@ -760,7 +774,6 @@ export default function Agent() {
                 }
 
                 branchCodeRef.current = rowSelected[9];
-
               });
             } else {
               tableRef.current.setSelectedRow(null);
@@ -788,7 +801,108 @@ export default function Agent() {
           }}
         />
       </div>
+      <div
+        className="button-action-mobile"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          columnGap: "5px",
+        }}
+      >
+        {mode === "" && (
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            id="entry-header-save-button"
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+            }}
+            onClick={() => {
+              refetchClientId();
+              setMode("add");
+            }}
+          >
+            New
+          </Button>
+        )}
+        <LoadingButton
+          id="save-entry-header"
+          color="primary"
+          variant="contained"
+          type="submit"
+          sx={{
+            height: "22px",
+            fontSize: "11px",
+          }}
+          onClick={handleOnSave}
+          startIcon={<SaveIcon />}
+          disabled={mode === ""}
+          loading={loadingAdd || loadingEdit}
+        >
+          Save
+        </LoadingButton>
+
+        <LoadingButton
+          disabled={mode === ""}
+          id="save-entry-header"
+          variant="contained"
+          sx={{
+            height: "22px",
+            fontSize: "11px",
+            backgroundColor: pink[500],
+            "&:hover": {
+              backgroundColor: pink[600],
+            },
+          }}
+          loading={loadingDelete}
+          startIcon={<DeleteIcon />}
+          onClick={() => {
+            codeCondfirmationAlert({
+              isUpdate: false,
+              cb: (userCodeConfirmation) => {
+                mutateDelete({
+                  id: clientIdRef.current?.value,
+                  userCodeConfirmation,
+                });
+              },
+            });
+          }}
+        >
+          Delete
+        </LoadingButton>
+        {mode !== "" && (
+          <Button
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+            }}
+            variant="contained"
+            startIcon={<CloseIcon />}
+            color="error"
+            onClick={() => {
+              Swal.fire({
+                title: "Are you sure?",
+                text: "You won't be able to revert this!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, cancel it!",
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  resetField();
+                  setMode("");
+                  tableRef.current.setSelectedRow(null);
+                  tableRef.current.resetCheckBox();
+                }
+              });
+            }}
+          >
+            Cancel
+          </Button>
+        )}
+      </div>
     </>
   );
 }
-

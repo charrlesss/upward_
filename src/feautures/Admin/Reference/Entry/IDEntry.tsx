@@ -4,6 +4,7 @@ import useUrlParams from "../../../../hooks/useUrlParams";
 import { User } from "../../../../components/AuthContext";
 import { AxiosInstance } from "axios";
 import { Loading } from "../../../../components/Loading";
+import "../../../../style/monbileview/reference/reference.css";
 
 type classificationType =
   | "Client"
@@ -65,7 +66,7 @@ function LoadingEntry() {
         bottom: "0",
         left: "0",
         right: "0",
-        background:"#F1F1F1"
+        background: "#F1F1F1",
       }}
     >
       <div>
@@ -95,29 +96,27 @@ export default function IDEntry() {
   };
 
   return (
-    <Box
-      sx={{
+    <div
+      style={{
         width: "100%",
         height: "100%",
         flex: 1,
         display: "flex",
         flexDirection: "column",
-        padding: "5px"
+        padding: "5px",
+        position:"relative",
       }}
     >
-      <Box>
-        {/* <Typography variant="h5" sx={{ marginBottom: "10px" }}>
-          Identification Detail
-        </Typography> */}
+      <div>
         <ChipsButton
           classification={classification}
           ClassificationData={components}
           handleClick={handleClick}
           disabled={false}
         />
-      </Box>
+      </div>
       <Suspense fallback={<LoadingEntry />}>{renderComponent}</Suspense>
-    </Box>
+    </div>
   );
 }
 
@@ -143,18 +142,13 @@ function ChipsButton({
   disabled?: boolean;
 }) {
   return (
-    <Box
-      sx={(theme) => ({
+    <div
+      className="button-chips-container"
+      style={{
         display: "flex",
         columnGap: "5px",
         marginBottom: "12px",
-        [theme.breakpoints.down("md")]: {
-          flexWrap: "wrap",
-          width: "100%",
-          gap: "5px",
-          marginBottom: "10px",
-        },
-      })}
+      }}
     >
       {ClassificationData.map((item, idx) => {
         return (
@@ -170,6 +164,6 @@ function ChipsButton({
           />
         );
       })}
-    </Box>
+    </div>
   );
 }

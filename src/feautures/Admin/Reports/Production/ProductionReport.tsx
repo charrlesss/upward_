@@ -9,6 +9,7 @@ import { format, lastDayOfMonth, subYears, setDate } from "date-fns";
 import { Button } from "@mui/material";
 import { useQuery } from "react-query";
 import PageHelmet from "../../../../components/Helmet";
+import { isMobile } from "react-device-detect";
 
 export default function ProductionReport() {
   const { user, myAxios } = useContext(AuthContext);
@@ -110,74 +111,85 @@ export default function ProductionReport() {
       );
       const pdfBlob = new Blob([response.data], { type: "application/pdf" });
       const pdfUrl = URL.createObjectURL(pdfBlob);
-      // window.open(pdfUrl);
-      var newTab = window.open();
-      if (newTab) {
-        newTab.document.write("<!DOCTYPE html>");
-        newTab.document.write(
-          "<html><head><title>New Tab with iframe</title></head>"
-        );
-        newTab.document.write(
-          '<body style="width:100vw;height:100vh;padding:0;margin:0;box-sizing:border-box;">'
-        );
-        newTab.document.write(
-          `<iframe style="border:none;outline:none;padding:0;margin:0" src="${pdfUrl}" width="99%" height="99%"></iframe>`
-        );
-        newTab.document
-          .write(`<button id="excel" style="width:auto;height:auto;padding:5px;border-radius:50%;background:transparent;position:absolute;top:37px;right:19px;font-size:11px;cursor:pointer;border:none;">
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            width="20px" 
-            height="20px" 
-            viewBox="0 0 32 32">
-            <title>Download Excel</title>
-            <path d="M28.781,4.405H18.651V2.018L2,4.588V27.115l16.651,2.868V26.445H28.781A1.162,1.162,0,0,0,30,25.349V5.5A1.162,1.162,0,0,0,28.781,4.405Zm.16,21.126H18.617L18.6,23.642h2.487v-2.2H18.581l-.012-1.3h2.518v-2.2H18.55l-.012-1.3h2.549v-2.2H18.53v-1.3h2.557v-2.2H18.53v-1.3h2.557v-2.2H18.53v-2H28.941Z" style="fill:#20744a;fill-rule:evenodd"/><rect x="22.487" y="7.439" width="4.323" height="2.2" style="fill:#20744a"/><rect x="22.487" y="10.94" width="4.323" height="2.2" style="fill:#20744a"/><rect x="22.487" y="14.441" width="4.323" height="2.2" style="fill:#20744a"/><rect x="22.487" y="17.942" width="4.323" height="2.2" style="fill:#20744a"/><rect x="22.487" y="21.443" width="4.323" height="2.2" style="fill:#20744a"/><polygon points="6.347 10.673 8.493 10.55 9.842 14.259 11.436 10.397 13.582 10.274 10.976 15.54 13.582 20.819 11.313 20.666 9.781 16.642 8.248 20.513 6.163 20.329 8.585 15.666 6.347 10.673" style="fill:#ffffff;fill-rule:evenodd"/>
-            </svg>
-          </button>
-          `);
-        newTab.document.write(`
-            <script>
-              document.getElementById('excel').onclick = function() {
-               
-                fetch('${
-                  process.env.REACT_APP_API_URL
-                }/reports/reports/production-report-to-excel', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': 'Bearer ${user?.accessToken}',  
-                },
-                body:JSON.stringify(${JSON.stringify(reportDetails)})
-              })
-             .then(response => {
-                if (!response.ok) {
-                  throw new Error('Network response was not ok');
-                }
-                // Return the response as a blob (binary data for file)
-                return response.blob();
-              })
-              .then(blob => {
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = 'report.xls';  // Set the desired file name
-                link.click();  // Simulate a click to start the download
-              })
-              .catch(error => {
-                alert('Error with POST request: ' + error);
-              });
 
-              };
-            </script>
-          `);
-        newTab.document.write("</body></html>");
-        // Optional: Close the document stream after writing
-        newTab.document.close();
+      if (isMobile) {
+        // MOBILE: download directly
+        const link = document.createElement("a");
+        link.href = pdfUrl;
+        link.download = "report.pdf";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        return;
+      } else {
+        // window.open(pdfUrl);
+        var newTab = window.open();
+        if (newTab) {
+          newTab.document.write("<!DOCTYPE html>");
+          newTab.document.write(
+            "<html><head><title>New Tab with iframe</title></head>"
+          );
+          newTab.document.write(
+            '<body style="width:100vw;height:100vh;padding:0;margin:0;box-sizing:border-box;">'
+          );
+          newTab.document.write(
+            `<iframe style="border:none;outline:none;padding:0;margin:0" src="${pdfUrl}" width="99%" height="99%"></iframe>`
+          );
+          newTab.document
+            .write(`<button id="excel" style="width:auto;height:auto;padding:5px;border-radius:50%;background:transparent;position:absolute;top:37px;right:19px;font-size:11px;cursor:pointer;border:none;">
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          width="20px" 
+          height="20px" 
+          viewBox="0 0 32 32">
+          <title>Download Excel</title>
+          <path d="M28.781,4.405H18.651V2.018L2,4.588V27.115l16.651,2.868V26.445H28.781A1.162,1.162,0,0,0,30,25.349V5.5A1.162,1.162,0,0,0,28.781,4.405Zm.16,21.126H18.617L18.6,23.642h2.487v-2.2H18.581l-.012-1.3h2.518v-2.2H18.55l-.012-1.3h2.549v-2.2H18.53v-1.3h2.557v-2.2H18.53v-1.3h2.557v-2.2H18.53v-2H28.941Z" style="fill:#20744a;fill-rule:evenodd"/><rect x="22.487" y="7.439" width="4.323" height="2.2" style="fill:#20744a"/><rect x="22.487" y="10.94" width="4.323" height="2.2" style="fill:#20744a"/><rect x="22.487" y="14.441" width="4.323" height="2.2" style="fill:#20744a"/><rect x="22.487" y="17.942" width="4.323" height="2.2" style="fill:#20744a"/><rect x="22.487" y="21.443" width="4.323" height="2.2" style="fill:#20744a"/><polygon points="6.347 10.673 8.493 10.55 9.842 14.259 11.436 10.397 13.582 10.274 10.976 15.54 13.582 20.819 11.313 20.666 9.781 16.642 8.248 20.513 6.163 20.329 8.585 15.666 6.347 10.673" style="fill:#ffffff;fill-rule:evenodd"/>
+          </svg>
+        </button>
+        `);
+          newTab.document.write(`
+          <script>
+            document.getElementById('excel').onclick = function() {
+             
+              fetch('${
+                process.env.REACT_APP_API_URL
+              }/reports/reports/production-report-to-excel', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ${user?.accessToken}',  
+              },
+              body:JSON.stringify(${JSON.stringify(reportDetails)})
+            })
+           .then(response => {
+              if (!response.ok) {
+                throw new Error('Network response was not ok');
+              }
+              // Return the response as a blob (binary data for file)
+              return response.blob();
+            })
+            .then(blob => {
+              const link = document.createElement('a');
+              link.href = URL.createObjectURL(blob);
+              link.download = 'report.xls';  // Set the desired file name
+              link.click();  // Simulate a click to start the download
+            })
+            .catch(error => {
+              alert('Error with POST request: ' + error);
+            });
+
+            };
+          </script>
+        `);
+          newTab.document.write("</body></html>");
+          // Optional: Close the document stream after writing
+          newTab.document.close();
+        }
       }
     } catch (error) {
       console.error("SERVER ERROR :", error);
     }
   }
-
   return (
     <>
       <PageHelmet title={"Production Report"} />

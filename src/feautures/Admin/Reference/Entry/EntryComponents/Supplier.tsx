@@ -351,6 +351,7 @@ export default function Supplier() {
         }}
       >
         <TextInput
+          containerClassName="custom-input"
           containerStyle={{
             width: "500px",
           }}
@@ -389,6 +390,7 @@ export default function Supplier() {
           inputRef={searchInputRef}
         />
         <div
+          className="button-action-desktop"
           style={{
             display: "flex",
             alignItems: "center",
@@ -492,6 +494,7 @@ export default function Supplier() {
         </div>
       </div>
       <div
+        className="container-fields-custom-client"
         style={{
           display: "flex",
           columnGap: "20px",
@@ -509,6 +512,7 @@ export default function Supplier() {
             <LoadingButton loading={loadingClientId} />
           ) : (
             <TextInput
+              containerClassName="custom-input"
               label={{
                 title: "Client ID : ",
                 style: {
@@ -532,6 +536,7 @@ export default function Supplier() {
             />
           )}
           <SelectInput
+            containerClassName="custom-input custom-label"
             label={{
               title: "Option : ",
               style: {
@@ -569,6 +574,7 @@ export default function Supplier() {
           {option === "individual" && (
             <>
               <TextInput
+                containerClassName="custom-input"
                 label={{
                   title: "First Name : ",
                   style: {
@@ -594,6 +600,7 @@ export default function Supplier() {
                 inputRef={firstnameRef}
               />
               <TextInput
+                containerClassName="custom-input"
                 label={{
                   title: "Middle Name : ",
                   style: {
@@ -619,6 +626,7 @@ export default function Supplier() {
                 inputRef={middleRef}
               />
               <TextInput
+                containerClassName="custom-input"
                 label={{
                   title: "Last Name : ",
                   style: {
@@ -649,6 +657,7 @@ export default function Supplier() {
           {option === "company" && (
             <>
               <TextAreaInput
+                containerClassName="custom-input"
                 label={{
                   title: "Full Name : ",
                   style: {
@@ -676,6 +685,7 @@ export default function Supplier() {
           )}
         </div>
         <div
+          className="clear-margin custom-padding"
           style={{
             display: "flex",
             flexDirection: "column",
@@ -688,6 +698,7 @@ export default function Supplier() {
             <LoadingButton loading={subAccountLoading} />
           ) : (
             <Autocomplete
+              containerClassName="custom-input"
               disableInput={mode === ""}
               ref={_subAccount}
               containerStyle={{
@@ -725,6 +736,7 @@ export default function Supplier() {
             />
           )}
           <TextInput
+            containerClassName="custom-input"
             label={{
               title: "Contact No. : ",
               style: {
@@ -746,6 +758,7 @@ export default function Supplier() {
             inputRef={mobileNoRef}
           />
           <TextInput
+            containerClassName="custom-input"
             label={{
               title: "TIN : ",
               style: {
@@ -768,6 +781,7 @@ export default function Supplier() {
           />
         </div>
         <div
+          className="clear-margin "
           style={{
             display: "flex",
             flexDirection: "column",
@@ -777,6 +791,7 @@ export default function Supplier() {
           }}
         >
           <TextAreaInput
+            containerClassName="custom-input"
             containerStyle={{
               alignItems: "flex-start",
             }}
@@ -805,13 +820,14 @@ export default function Supplier() {
         </div>
       </div>
       <div
+        className="add-padding"
         style={{
           display: "flex",
           flexDirection: "column",
           width: "100%",
           height: "100%",
           flex: 1,
-          marginTop:"10px"
+          marginTop: "10px",
         }}
       >
         <DataGridViewReact
@@ -884,6 +900,108 @@ export default function Supplier() {
             }
           }}
         />
+      </div>
+      <div
+        className="button-action-mobile"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          columnGap: "5px",
+        }}
+      >
+        {mode === "" && (
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            id="entry-header-save-button"
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+            }}
+            onClick={() => {
+              refetchClientId();
+              setMode("add");
+            }}
+          >
+            New
+          </Button>
+        )}
+        <LoadingButton
+          id="save-entry-header"
+          color="primary"
+          variant="contained"
+          type="submit"
+          sx={{
+            height: "22px",
+            fontSize: "11px",
+          }}
+          onClick={handleOnSave}
+          startIcon={<SaveIcon />}
+          disabled={mode === ""}
+          loading={loadingAdd || loadingEdit}
+        >
+          Save
+        </LoadingButton>
+
+        <LoadingButton
+          disabled={mode === ""}
+          id="save-entry-header"
+          variant="contained"
+          sx={{
+            height: "22px",
+            fontSize: "11px",
+            backgroundColor: pink[500],
+            "&:hover": {
+              backgroundColor: pink[600],
+            },
+          }}
+          loading={loadingDelete}
+          startIcon={<DeleteIcon />}
+          onClick={() => {
+            codeCondfirmationAlert({
+              isUpdate: false,
+              cb: (userCodeConfirmation) => {
+                mutateDelete({
+                  id: clientIdRef.current?.value,
+                  userCodeConfirmation,
+                });
+              },
+            });
+          }}
+        >
+          Delete
+        </LoadingButton>
+        {mode !== "" && (
+          <Button
+            sx={{
+              height: "22px",
+              fontSize: "11px",
+            }}
+            variant="contained"
+            startIcon={<CloseIcon />}
+            color="error"
+            onClick={() => {
+              Swal.fire({
+                title: "Are you sure?",
+                text: "You won't be able to revert this!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, cancel it!",
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  resetField();
+                  setMode("");
+                  tableRef.current.setSelectedRow(null);
+                  tableRef.current.resetCheckBox();
+                }
+              });
+            }}
+          >
+            Cancel
+          </Button>
+        )}
       </div>
     </>
   );
