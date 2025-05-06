@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { TextInput } from "../../../../../../../components/UpwardFields";
 import { addYears, format } from "date-fns";
 import { wait } from "@testing-library/user-event/dist/utils";
@@ -6,6 +6,7 @@ import { Button } from "@mui/material";
 import { useMutation } from "react-query";
 import axios from "axios";
 import { Loading } from "../../../../../../../components/Loading";
+import { formatNumber } from "../../../../Accounting/ReturnCheck";
 
 const instance = axios.create();
 
@@ -37,20 +38,20 @@ instance.interceptors.response.use(
 );
 
 function TempToRegular() {
-  const [loading, setLoading] = useState(false);
-
   const [accessToken, setAccessToken] = useState("");
   const [oldPolicy, setOldPolicy] = useState("");
   const policyNoRef = useRef<HTMLInputElement>(null);
   const dateFromRef = useRef<HTMLInputElement>(null);
   const dateToRef = useRef<HTMLInputElement>(null);
   const dateIssuedRef = useRef<HTMLInputElement>(null);
+  const [history, setHistory] = useState<Array<any>>([]);
+  const [policyDetails, setPolicyDetails] = useState<any>({});
 
   const { mutate: mutate, isLoading: isLoading } = useMutation({
-    mutationKey: "sample",
+    mutationKey: "get-transaction-history",
     mutationFn: (variables: any) => {
       return axios.post(
-        `${process.env.REACT_APP_API_URL}/task/production/get-transaction`,
+        `${process.env.REACT_APP_API_URL}/task/production/get-transaction-history`,
         variables,
         {
           headers: {
@@ -60,7 +61,13 @@ function TempToRegular() {
         }
       );
     },
-    onSuccess(response) {},
+    onSuccess(response) {
+      if (response.data.success) {
+        const [first, ...rest] = JSON.parse(response.data.history);
+        setPolicyDetails(first[0]);
+        setHistory(rest);
+      }
+    },
   });
 
   useEffect(() => {
@@ -85,10 +92,15 @@ function TempToRegular() {
     return () => window.removeEventListener("axios-loading", handleLoading);
   }, []);
 
+  useEffect(() => {
+    if (oldPolicy && accessToken) {
+      mutate({ policyNo: oldPolicy });
+    }
+  }, [oldPolicy, accessToken]);
+
   return (
     <>
-      {loading && <div className="loading-bar">Loading...</div>}
-
+      {isLoading && <Loading />}
       <div
         style={{
           flex: 1,
@@ -102,7 +114,7 @@ function TempToRegular() {
         <div
           style={{
             height: "100%",
-            width: "50%",
+            width: "80%",
             borderLeft: "1px",
             borderRight: "1px",
             boxShadow: "0px 0px 6px -2px rgba(0,0,0,0.75)",
@@ -287,19 +299,45 @@ function TempToRegular() {
                   rowGap: "10px",
                 }}
               >
-                {[{ title: "DC", transction: [] }, 2, 3].map((itm, idx) => {
+                <div
+                  style={{
+                    background: "#EFEEEA",
+                    padding: "10px",
+                    borderRadius: "5px",
+                    boxShadow: "0px 0px 5px -2px rgba(0,0,0,0.75)",
+                    width: "calc(100% - 20px)",
+                    display: "flex",
+                    flexDirection: "column",
+                    rowGap: "10px",
+                  }}
+                >
+                  <strong>Policy Details</strong>
+                  <div>
+                   <DisplayText label={'Policy No :'} value={policyDetails.PolicyNo} />
+                  </div>
+                </div>
+                {history.map((itm, idx) => {
+                  const { title, columns, data } = cardDetails(idx, itm);
                   return (
-                    <div
-                      style={{
-                        background: "#EFEEEA",
-                        padding: "10px",
-                        borderRadius: "5px",
-                        boxShadow: "0px 0px 5px -2px rgba(0,0,0,0.75)",
-                      }}
-                      key={idx}
-                    >
-                      sdasdasd
-                    </div>
+                    <Fragment key={idx}>
+                      {itm.length > 0 ? (
+                        <div
+                          style={{
+                            background: "#EFEEEA",
+                            padding: "10px",
+                            borderRadius: "5px",
+                            boxShadow: "0px 0px 5px -2px rgba(0,0,0,0.75)",
+                            width: "calc(100% - 20px)",
+                            display: "flex",
+                            flexDirection: "column",
+                            rowGap: "10px",
+                          }}
+                        >
+                          <strong>{title}</strong>
+                          <DisplayCardHistory columns={columns} data={data} />
+                        </div>
+                      ) : null}
+                    </Fragment>
                   );
                 })}
               </div>
@@ -308,7 +346,7 @@ function TempToRegular() {
               variant="contained"
               color="success"
               onClick={() => {
-                mutate({ sample: "Qweqwe" });
+                // mutate({ policyNo: oldPolicy });
               }}
             >
               Submit
@@ -316,8 +354,315 @@ function TempToRegular() {
           </div>
         </div>
       </div>
+      <style>
+        {`
+        .table {
+          display: flex;
+          flex-direction: column;
+          width: fit-content;
+          font-family: sans-serif;
+          font-size:12px;
+          box-sizing:border-box;
+        }
+
+        .row {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+          border-bottom: 1px solid #eee;
+        }
+
+        .row.header {
+          background: #f5f5f5;
+          font-weight: bold;
+        }
+
+        .cell {
+          padding: 8px 16px;
+          border-right: 1px solid #eee;
+        }
+
+        .cell:last-child {
+          border-right: none;
+        }
+
+        .row.total {
+          background-color: #f9f9f9;
+          border-top: 2px solid #ccc;
+        }
+        
+        `}
+      </style>
     </>
   );
 }
+function DisplayText({value,label}:any){
 
+  return (
+    <div style={{ display: "flex", columnGap: "10px" ,fontSize:"12px" }}>
+    <div style={{ width: "100px" }}>{label}</div>
+    <div
+      style={{
+        minWidth: "100px",
+        maxWidth: "250px",
+        whiteSpace:"nowrap",
+        overflow: "hidden",
+        textOverflow:"ellipsis",
+        fontWeight:"bold"
+      }}
+    >
+      {value}
+    </div>
+  </div>
+  )
+}
+function DisplayCardHistory({ columns, data }: any) {
+  return (
+    <div className="table">
+      {/* Header */}
+      <div
+        className="row header"
+        style={{
+          display: "grid",
+          gridTemplateColumns: `repeat(${columns.length}, 1fr)`,
+        }}
+      >
+        {columns.map((col: any, colIdx: any) => (
+          <div className="cell" key={colIdx}>
+            {col.label}
+          </div>
+        ))}
+      </div>
+
+      {/* Data Rows */}
+      {data.map((row: any, rowIndex: number) => (
+        <div
+          className="row"
+          key={rowIndex}
+          style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${columns.length}, minmax(90px, 1fr))`,
+          }}
+        >
+          {columns.map((col: any) => (
+            <div className="cell" key={col.key}>
+              {row[col.key]}
+            </div>
+          ))}
+        </div>
+      ))}
+
+      <div
+        className="row total"
+        style={{
+          display: "grid",
+          gridTemplateColumns: `repeat(${columns.length}, 1fr)`,
+        }}
+      >
+        <div
+          className="cell"
+          style={{
+            fontWeight: "bold",
+            gridColumn: `span ${columns.length}`,
+            padding: "8px 16px",
+          }}
+        >
+          TOTAL ROWS: {data.length}
+        </div>
+      </div>
+    </div>
+  );
+}
+function cardDetails(
+  idx: number,
+  data: Array<any>
+): {
+  title: string;
+  columns: Array<{ key: string; label: string }>;
+  data: Array<any>;
+} {
+  switch (idx) {
+    case 0:
+      return {
+        title: "PDC",
+        data,
+        columns: [
+          { key: "Ref_No", label: "Reference No." },
+          { key: "Check_Date", label: "Check Date" },
+          { key: "Check_No", label: "Check No." },
+          { key: "Check_Amnt", label: "Amount" },
+          { key: "Bank", label: "Bank" },
+          { key: "Branch", label: "Branch" },
+        ],
+      };
+    case 1:
+      const newData: Array<any> = [];
+
+      for (let i = 0; i <= data.length - 1; i++) {
+        if (data[i].Payment !== null && data[i].Payment.toString() !== "") {
+          console.log(data[i]);
+
+          const isCash = data[i].Payment.toLowerCase() === "cash";
+          newData.push({
+            ORNo: data[i].ORNo,
+            Payment: data[i].Payment,
+            Amount: formatNumber(
+              parseFloat(data[i].Debit.toString().replace(/,/g, ""))
+            ),
+            Check_No: isCash ? "" : data[i].Check_No,
+            Check_Date: isCash
+              ? ""
+              : format(new Date(data[i].Check_Date), "yyyy-MM-dd"),
+            Bank_Branch: isCash ? "" : data[i].Bank,
+          });
+        }
+
+        if (data[i].Purpose !== null && data[i].Purpose.toString() !== "") {
+          newData.push({
+            ORNo: "",
+            Payment: data[i].CRTitle,
+            Amount: formatNumber(
+              parseFloat(data[i].Credit.toString().replace(/,/g, ""))
+            ),
+            Check_No: data[i].CRCode,
+            Check_Date: "",
+            Bank_Branch: data[i].CRLoanID,
+          });
+        }
+      }
+
+      return {
+        title: "Collection",
+        data: newData,
+        columns: [
+          { key: "ORNo", label: "OR No." },
+          { key: "Payment", label: "Payment" },
+          { key: "Check_Date", label: "Check Date" },
+          { key: "Check_No", label: "Check No" },
+          { key: "Amount", label: "Amount" },
+          { key: "Bank_Branch", label: "Branch" },
+        ],
+      };
+    case 2:
+      return {
+        title: "Deposit",
+        data,
+        columns: [
+          { key: "Date__Deposit", label: "Date Deposit" },
+          { key: "Slip_Code", label: "Slip Code" },
+          { key: "Account_ID", label: "Account ID" },
+          { key: "Account_Name", label: "Account Name" },
+          { key: "Debit", label: "Debit" },
+          { key: "Credit", label: "Credit" },
+          { key: "Check__Date", label: "Check Date" },
+          { key: "Check_No", label: "Check No" },
+          { key: "Bank", label: "Bank" },
+          { key: "BankAccount", label: "Bank Account" },
+        ],
+      };
+    case 3:
+      return {
+        title: "Return Checks",
+        data: formatGroupedRows(data),
+        columns: [
+          { key: "Date_Entry", label: "Date" },
+          { key: "Source_No", label: "Ref No." },
+          { key: "Explanation", label: "Explanation" },
+          { key: "Check_Date", label: "Check Date" },
+          { key: "Check_No", label: "Check No" },
+          { key: "Check_Bank", label: "Bank" },
+          { key: "Check_Return", label: "Check Return" },
+          { key: "Check_Reason", label: "Check Reason" },
+        ],
+      };
+    case 4:
+      return {
+        title: "General Journal",
+        data,
+        columns: [
+          { key: "Date_Entry", label: "Date Entry" },
+          { key: "Source_No", label: "Source No" },
+          { key: "Explanation", label: "Explanation" },
+          { key: "cGL_Acct", label: "Accoutn Title" },
+          { key: "Debit", label: "Debit" },
+          { key: "Credit", label: "Credit" },
+          { key: "Remarks", label: "Remarks" },
+        ],
+      };
+    case 5:
+      return {
+        title: "Cash Disbursement",
+        data,
+        columns: [
+          { key: "Date_Entry", label: "Date Entry" },
+          { key: "Source_No", label: "Source No" },
+          { key: "Explanation", label: "Explanation" },
+          { key: "cGL_Acct", label: "Accoutn Title" },
+          { key: "Debit", label: "Debit" },
+          { key: "Credit", label: "Credit" },
+          { key: "Remarks", label: "Remarks" },
+        ],
+      };
+    case 6:
+      return {
+        title: "Pullout",
+        data,
+        columns: [
+          { key: "RCPNo", label: "RCPNo" },
+          { key: "Requested_By", label: "Requested By" },
+          { key: "Requested_Date", label: "Requested Date" },
+          { key: "CheckNo", label: "Check No" },
+          { key: "Reason", label: "Reason" },
+          { key: "Status", label: "Status" },
+        ],
+      };
+    case 7:
+      return {
+        title: "Postponement",
+        data,
+        columns: [
+          { key: "RPCD", label: "RPCD" },
+          { key: "CheckNo", label: "Check No" },
+          { key: "OldCheckDate", label: "Old Check Date" },
+          { key: "NewCheckDate", label: "New Check Date" },
+          { key: "Reason", label: "Reason" },
+          { key: "Status", label: "Status" },
+        ],
+      };
+    default:
+      return { title: "", data: [], columns: [{ key: "", label: "" }] };
+  }
+}
+
+function formatGroupedRows(rows: any) {
+  const grouped: any = {};
+
+  // Group by Source_No (e.g. RC_No)
+  rows.forEach((row: any) => {
+    const key = row.Source_No;
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(row);
+  });
+
+  const result: any = [];
+
+  // Build formatted output
+  Object.values(grouped).forEach((group: any) => {
+    group.forEach((row: any, index: any) => {
+      if (index === 0) {
+        result.push(row);
+      } else {
+        result.push({
+          ...row,
+          Branch_Code: "",
+          Date_Entry: "",
+          Source_Type: "",
+          Source_No: "",
+          Explanation: "",
+        });
+      }
+    });
+  });
+
+  return result;
+}
 export default TempToRegular;
