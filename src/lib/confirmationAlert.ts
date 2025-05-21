@@ -8,6 +8,7 @@ export function codeCondfirmationAlert(props: {
   text?: string;
   title?: string;
   saveTitle?: string;
+  cancelTitle?: string;
 }) {
   Swal.fire({
     title: props?.title ? props?.title :`Are you sure!`,
@@ -25,6 +26,8 @@ export function codeCondfirmationAlert(props: {
     confirmButtonText: props?.saveTitle ? props?.saveTitle : "Save",
     confirmButtonColor: "green",
     showLoaderOnConfirm: true,
+    cancelButtonText: props?.cancelTitle ? props?.cancelTitle : "Cancel",
+    cancelButtonColor: "#d33",
     preConfirm: async (userCodeConfirmation) => {
       try {
         props.cb(userCodeConfirmation);

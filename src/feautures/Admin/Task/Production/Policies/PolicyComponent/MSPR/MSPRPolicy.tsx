@@ -4,6 +4,7 @@ import {
   useRef,
   forwardRef,
   useImperativeHandle,
+  useEffect,
 } from "react";
 import { Button, IconButton } from "@mui/material";
 import { blue, grey } from "@mui/material/colors";
@@ -35,6 +36,8 @@ import { Loading } from "../../../../../../../components/Loading";
 import { useUpwardTableModalSearchSafeMode } from "../../../../../../../components/DataGridViewReact";
 
 export default function MSPRPolicy() {
+  const [width, setWidth] = useState(window.innerWidth);
+
   const { myAxios, user } = useContext(AuthContext);
   const [mode, setMode] = useState("");
   const [selectedPage, setSelectedPage] = useState(0);
@@ -64,26 +67,27 @@ export default function MSPRPolicy() {
     refetchOnWindowFocus: false,
   });
 
-  const { isLoading: isLoadingSubAccount } = useQuery({
-    queryKey: "sub-account",
-    queryFn: () => {
-      return myAxios.get("/task/production/sub-account", {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      });
-    },
-    onSuccess(response) {
-      wait(100).then(() => {
-        if (subAccountRef_.current)
-          subAccountRef_.current.setDataSource(response.data?.data);
-        wait(100).then(() => {
-          if (subAccountRef.current) subAccountRef.current.value = "HO";
+  const { isLoading: isLoadingSubAccount, refetch: refetchSubAccount } =
+    useQuery({
+      queryKey: "sub-account",
+      queryFn: () => {
+        return myAxios.get("/task/production/sub-account", {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
         });
-      });
-    },
-    refetchOnWindowFocus: false,
-  });
+      },
+      onSuccess(response) {
+        wait(100).then(() => {
+          if (subAccountRef_.current)
+            subAccountRef_.current.setDataSource(response.data?.data);
+          wait(100).then(() => {
+            if (subAccountRef.current) subAccountRef.current.value = "HO";
+          });
+        });
+      },
+      refetchOnWindowFocus: false,
+    });
 
   const { mutate: mutateAddUpdate, isLoading: loadingAddUpdate } = useMutation({
     mutationKey: "add-update",
@@ -500,6 +504,25 @@ export default function MSPRPolicy() {
     }
   }
 
+  const refetchSubAccountRef = useRef(refetchSubAccount);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWidth(window.innerWidth);
+
+      setTimeout(() => {
+        refetchSubAccountRef.current();
+      }, 500);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    // Cleanup on unmount
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
     <>
       {(isLoadingAccount ||
@@ -668,29 +691,31 @@ export default function MSPRPolicy() {
             >
               Policy Premium
             </Button>
-            <SelectInput
-              ref={subAccountRef_}
-              label={{
-                title: "Sub Account :",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "100px",
-                },
-              }}
-              selectRef={subAccountRef}
-              select={{
-                style: { flex: 1, height: "22px" },
-                defaultValue: "HO",
-              }}
-              containerStyle={{
-                flex: 2,
-                marginLeft: "20px",
-              }}
-              datasource={[]}
-              values={"Acronym"}
-              display={"Acronym"}
-            />
+            {width > 768 && (
+              <SelectInput
+                ref={subAccountRef_}
+                label={{
+                  title: "Sub Account :",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "100px",
+                  },
+                }}
+                selectRef={subAccountRef}
+                select={{
+                  style: { flex: 1, height: "22px" },
+                  defaultValue: "HO",
+                }}
+                containerStyle={{
+                  flex: 2,
+                  marginLeft: "20px",
+                }}
+                datasource={[]}
+                values={"Acronym"}
+                display={"Acronym"}
+              />
+            )}
           </div>
           <div
             className="mobile-choices-buttons"
@@ -731,29 +756,31 @@ export default function MSPRPolicy() {
             >
               Premium
             </Button>
-            <SelectInput
-              ref={subAccountRef_}
-              label={{
-                title: "Sub Account :",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "100px",
-                  display: "none",
-                },
-              }}
-              selectRef={subAccountRef}
-              select={{
-                style: { flex: 1, height: "22px" },
-                defaultValue: "HO",
-              }}
-              containerStyle={{
-                flex: 2,
-              }}
-              datasource={[]}
-              values={"Acronym"}
-              display={"Acronym"}
-            />
+            {width <= 768 && (
+              <SelectInput
+                ref={subAccountRef_}
+                label={{
+                  title: "Sub Account :",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "100px",
+                    display: "none",
+                  },
+                }}
+                selectRef={subAccountRef}
+                select={{
+                  style: { flex: 1, height: "22px" },
+                  defaultValue: "HO",
+                }}
+                containerStyle={{
+                  flex: 2,
+                }}
+                datasource={[]}
+                values={"Acronym"}
+                display={"Acronym"}
+              />
+            )}
           </div>
         </div>
         <div

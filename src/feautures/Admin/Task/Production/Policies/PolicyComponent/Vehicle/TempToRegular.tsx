@@ -7,6 +7,9 @@ import { useMutation } from "react-query";
 import axios from "axios";
 import { Loading } from "../../../../../../../components/Loading";
 import { formatNumber } from "../../../../Accounting/ReturnCheck";
+import "../../../../../../../style/monbileview/production/production.css";
+import Swal from "sweetalert2";
+import { codeCondfirmationAlert } from "../../../../../../../lib/confirmationAlert";
 
 const instance = axios.create();
 
@@ -40,12 +43,51 @@ instance.interceptors.response.use(
 function TempToRegular() {
   const [accessToken, setAccessToken] = useState("");
   const [oldPolicy, setOldPolicy] = useState("");
+  const [viewing, setViewing] = useState("");
   const policyNoRef = useRef<HTMLInputElement>(null);
   const dateFromRef = useRef<HTMLInputElement>(null);
   const dateToRef = useRef<HTMLInputElement>(null);
   const dateIssuedRef = useRef<HTMLInputElement>(null);
   const [history, setHistory] = useState<Array<any>>([]);
   const [policyDetails, setPolicyDetails] = useState<any>({});
+
+  const { mutate: mutateTempToRegular, isLoading: isLoadingTempToRegular } =
+    useMutation({
+      mutationKey: "temp-to-regular",
+      mutationFn: (variables: any) => {
+        return axios.post(
+          `${process.env.REACT_APP_API_URL}/task/production/temp-to-regular`,
+          variables,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+            withCredentials: true,
+          }
+        );
+      },
+      onSuccess(response) {
+        if (response.data.success) {
+          return Swal.fire({
+            position: "center",
+            icon: "success",
+            title: response.data.message,
+            showConfirmButton: false,
+            timer: 1500,
+          }).then(() => {
+            window.location.href = `/${process.env.REACT_APP_DEPARTMENT}/dashboard/task/production/policy/`;
+          });
+        }
+
+        return Swal.fire({
+          position: "center",
+          icon: "error",
+          text: response.data.message,
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      },
+    });
 
   const { mutate: mutate, isLoading: isLoading } = useMutation({
     mutationKey: "get-transaction-history",
@@ -73,15 +115,12 @@ function TempToRegular() {
   useEffect(() => {
     wait(100).then(() => {
       const params = new URLSearchParams(window.location.search);
-      const policy_no = params.get("policy_no");
-      const accessToken = params.get("accessToken");
-
-      if (policy_no) {
-        setOldPolicy(policy_no);
-      }
-
-      if (accessToken) {
-        setAccessToken(accessToken);
+      const dataParam = params.get("Mkr44Rt2iuy13R");
+      if (dataParam) {
+        const state = JSON.parse(decodeURIComponent(dataParam));
+        setOldPolicy(JSON.parse(state.policy_no));
+        setAccessToken(JSON.parse(state.accessToken));
+        setViewing(JSON.parse(state.viewing));
       }
     });
   }, []);
@@ -100,7 +139,7 @@ function TempToRegular() {
 
   return (
     <>
-      {isLoading && <Loading />}
+      {(isLoading || isLoadingTempToRegular) && <Loading />}
       <div
         style={{
           flex: 1,
@@ -112,6 +151,7 @@ function TempToRegular() {
         }}
       >
         <div
+          className="temp-to-reg-main-content"
           style={{
             height: "100%",
             width: "80%",
@@ -152,141 +192,167 @@ function TempToRegular() {
               rowGap: "15px",
             }}
           >
+            {!viewing && (
+              <div
+                className="fields-content"
+                style={{
+                  boxShadow: "0px 0px 5px -2px rgba(0,0,0,0.75)",
+                  display: "grid",
+                  gridTemplateColumns: "repeat(2,1fr)",
+                  width: "100%",
+                  padding: "20px",
+                  boxSizing: "border-box",
+                  rowGap: "15px",
+                  columnGap: "20px",
+                  borderRadius: "5px",
+                  height: "105px",
+                }}
+              >
+                <TextInput
+                  containerClassName="custom-input"
+                  containerStyle={{
+                    width: "100%",
+                  }}
+                  label={{
+                    title: "New Policy No: ",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "100px",
+                    },
+                  }}
+                  input={{
+                    type: "text",
+                    style: { width: "calc(100% - 100px) " },
+                    onKeyDown: (e) => {
+                      if (e.code === "NumpadEnter" || e.code === "Enter") {
+                        dateFromRef.current?.focus();
+                      }
+                    },
+                  }}
+                  inputRef={policyNoRef}
+                />
+                <TextInput
+                  containerClassName="custom-input"
+                  containerStyle={{
+                    width: "100%",
+                  }}
+                  label={{
+                    title: "Date Issued:",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "100px",
+                    },
+                  }}
+                  input={{
+                    type: "date",
+                    defaultValue: format(new Date(), "yyyy-MM-dd"),
+                    style: { width: "calc(100% - 100px)" },
+                    onKeyDown: (e) => {
+                      if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      }
+                    },
+                  }}
+                  inputRef={dateIssuedRef}
+                />
+                <TextInput
+                  containerClassName="custom-input"
+                  containerStyle={{
+                    width: "100%",
+                  }}
+                  label={{
+                    title: "Date From:",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "100px",
+                    },
+                  }}
+                  input={{
+                    type: "date",
+                    defaultValue: format(new Date(), "yyyy-MM-dd"),
+                    style: { width: "calc(100% - 100px)" },
+                    onKeyDown: (e) => {
+                      if (e.code === "NumpadEnter" || e.code === "Enter") {
+                        dateToRef.current?.focus();
+                      }
+                    },
+                  }}
+                  inputRef={dateFromRef}
+                />
+                <TextInput
+                  containerClassName="custom-input"
+                  containerStyle={{
+                    width: "100%",
+                  }}
+                  label={{
+                    title: "Date To:",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "100px",
+                    },
+                  }}
+                  input={{
+                    type: "date",
+                    defaultValue: format(addYears(new Date(), 1), "yyyy-MM-dd"),
+                    style: { width: "calc(100% - 100px)" },
+                    onKeyDown: (e) => {
+                      if (e.code === "NumpadEnter" || e.code === "Enter") {
+                        dateIssuedRef.current?.focus();
+                      }
+                    },
+                  }}
+                  inputRef={dateToRef}
+                />
+              </div>
+            )}
             <div
               style={{
-                boxShadow: "0px 0px 5px -2px rgba(0,0,0,0.75)",
-                display: "grid",
-                gridTemplateColumns: "repeat(2,1fr)",
-                width: "100%",
-                padding: "20px",
-                boxSizing: "border-box",
-                rowGap: "15px",
-                columnGap: "20px",
-                borderRadius: "5px",
-                height: "105px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
               }}
             >
-              <TextInput
-                containerClassName="custom-input"
-                containerStyle={{
+              <div
+                style={{
+                  padding: 0,
+                  margin: 0,
                   width: "100%",
+                  fontSize: "13px",
+                  fontWeight: "bold",
                 }}
-                label={{
-                  title: "New Policy No: ",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "100px",
-                  },
+              >
+                TRANSACTION HISTORY
+              </div>
+              {/* <Button
+              className="export-button"
+                color="success"
+                variant="contained"
+                sx={{
+                  height: "22px",
+                  fontSize: "12px",
+                  width: "160px",
                 }}
-                input={{
-                  type: "text",
-                  style: { width: "calc(100% - 100px) " },
-                  onKeyDown: (e) => {
-                    if (e.code === "NumpadEnter" || e.code === "Enter") {
-                      dateFromRef.current?.focus();
-                    }
-                  },
-                }}
-                inputRef={policyNoRef}
-              />
-              <TextInput
-                containerClassName="custom-input"
-                containerStyle={{
-                  width: "100%",
-                }}
-                label={{
-                  title: "Date Issued:",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "100px",
-                  },
-                }}
-                input={{
-                  type: "date",
-                  defaultValue: format(new Date(), "yyyy-MM-dd"),
-                  style: { width: "calc(100% - 100px)" },
-                  onKeyDown: (e) => {
-                    if (e.code === "NumpadEnter" || e.code === "Enter") {
-                    }
-                  },
-                }}
-                inputRef={dateIssuedRef}
-              />
-              <TextInput
-                containerClassName="custom-input"
-                containerStyle={{
-                  width: "100%",
-                }}
-                label={{
-                  title: "Date From:",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "100px",
-                  },
-                }}
-                input={{
-                  type: "date",
-                  defaultValue: format(new Date(), "yyyy-MM-dd"),
-                  style: { width: "calc(100% - 100px)" },
-                  onKeyDown: (e) => {
-                    if (e.code === "NumpadEnter" || e.code === "Enter") {
-                      dateToRef.current?.focus();
-                    }
-                  },
-                }}
-                inputRef={dateFromRef}
-              />
-              <TextInput
-                containerClassName="custom-input"
-                containerStyle={{
-                  width: "100%",
-                }}
-                label={{
-                  title: "Date To:",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "100px",
-                  },
-                }}
-                input={{
-                  type: "date",
-                  defaultValue: format(addYears(new Date(), 1), "yyyy-MM-dd"),
-                  style: { width: "calc(100% - 100px)" },
-                  onKeyDown: (e) => {
-                    if (e.code === "NumpadEnter" || e.code === "Enter") {
-                      dateIssuedRef.current?.focus();
-                    }
-                  },
-                }}
-                inputRef={dateToRef}
-              />
+              >
+                Export History
+              </Button> */}
             </div>
             <div
+            className="history-content"
               style={{
-                padding: 0,
-                margin: 0,
-                width: "100%",
-                fontSize: "13px",
-                fontWeight: "bold",
-              }}
-            >
-              TRANSACTION HISTORY
-            </div>
-            <div
-              style={{
-                height: "calc(100% - 190px)",
-                border: "1px solid #D4C9BE",
+                height: viewing ? "100%" : "calc(100% - 190px)",
+                border: viewing ? "none" : "1px solid #D4C9BE",
                 boxSizing: "border-box",
                 position: "relative",
                 overflowY: "auto",
                 overflowX: "hidden",
                 padding: "15px",
-                borderRadius: "5px",
-                boxShadow: "0px 0px 5px -2px rgba(0,0,0,0.75)",
+                borderRadius: viewing ? "0px" : "5px",
+                boxShadow: viewing
+                  ? "none"
+                  : "0px 0px 5px -2px rgba(0,0,0,0.75)",
               }}
             >
               <div
@@ -312,8 +378,118 @@ function TempToRegular() {
                   }}
                 >
                   <strong>Policy Details</strong>
-                  <div>
-                   <DisplayText label={'Policy No :'} value={policyDetails.PolicyNo} />
+                  <div
+                    className="policy-details"
+                    style={{ display: "flex", columnGap: "100px" }}
+                  >
+                    <div>
+                      <DisplayText
+                        label={"Policy No :"}
+                        value={policyDetails.PolicyNo}
+                      />
+                      <DisplayText
+                        label={"Date Issued :"}
+                        value={policyDetails.DateIssued}
+                      />
+                      <DisplayText
+                        label={"Date From :"}
+                        value={policyDetails.DateFrom}
+                      />
+                      <DisplayText
+                        label={"Date To :"}
+                        value={policyDetails.DateTo}
+                      />
+                      <DisplayText
+                        label={"Account :"}
+                        value={policyDetails.Account}
+                      />
+                      <DisplayText
+                        label={"ChassisNo :"}
+                        value={policyDetails.ChassisNo}
+                      />
+                      <DisplayText
+                        label={"Make :"}
+                        value={policyDetails.Make}
+                      />
+                      <DisplayText
+                        label={"Model :"}
+                        value={policyDetails.Model}
+                      />
+                      <DisplayText
+                        label={"Body Type :"}
+                        value={policyDetails.BodyType}
+                      />
+                      <DisplayText
+                        label={"BLT File No. :"}
+                        value={policyDetails.BLTFileNo}
+                      />
+                      <DisplayText
+                        label={"Plate No. :"}
+                        value={policyDetails.PlateNo}
+                      />
+                      <DisplayText
+                        label={"Motor No. :"}
+                        value={policyDetails.MotorNo}
+                      />
+                      <DisplayText
+                        label={"Mortgagee :"}
+                        value={policyDetails.Mortgagee}
+                      />
+                      <DisplayText
+                        label={"Estimated Value :"}
+                        value={policyDetails.EstimatedValue}
+                      />
+                      <DisplayText
+                        label={"Total Due :"}
+                        value={policyDetails.TotalDue}
+                      />
+                    </div>
+                    <div>
+                      <DisplayText
+                        label={"Client ID :"}
+                        value={policyDetails.entry_client_id}
+                      />
+                      <DisplayText
+                        label={"Company :"}
+                        value={policyDetails.company}
+                      />
+                      <DisplayText
+                        label={"First Name :"}
+                        value={policyDetails.firstname}
+                      />
+                      <DisplayText
+                        label={"Last Name :"}
+                        value={policyDetails.lastname}
+                      />
+                      <DisplayText
+                        label={"Middle Name :"}
+                        value={policyDetails.middlename}
+                      />
+                      <DisplayText
+                        label={"Suffix :"}
+                        value={policyDetails.suffix}
+                      />
+                      <DisplayText
+                        label={"Address :"}
+                        value={policyDetails.address}
+                      />
+                      <DisplayText
+                        label={"Mobile No :"}
+                        value={policyDetails.mobile}
+                      />
+                      <DisplayText
+                        label={"Client Mortgagee :"}
+                        value={policyDetails.client_mortgagee}
+                      />
+                      <DisplayText
+                        label={"Client Branch :"}
+                        value={policyDetails.client_branch}
+                      />
+                      <DisplayText
+                        label={"Sale Officer :"}
+                        value={policyDetails.sale_officer}
+                      />
+                    </div>
                   </div>
                 </div>
                 {history.map((itm, idx) => {
@@ -322,6 +498,7 @@ function TempToRegular() {
                     <Fragment key={idx}>
                       {itm.length > 0 ? (
                         <div
+                        className="history-container"
                           style={{
                             background: "#EFEEEA",
                             padding: "10px",
@@ -342,82 +519,64 @@ function TempToRegular() {
                 })}
               </div>
             </div>
-            <Button
-              variant="contained"
-              color="success"
-              onClick={() => {
-                // mutate({ policyNo: oldPolicy });
-              }}
-            >
-              Submit
-            </Button>
+            {!viewing && (
+              <Button
+                variant="contained"
+                color="success"
+                onClick={() => {
+                  if (policyNoRef.current && policyNoRef.current.value === "") {
+                    return alert("New Policy No  is required field!");
+                  }
+                  codeCondfirmationAlert({
+                    title: `Are you sure you want to update it to regular policy?`,
+                    text: "You won't be able to revert this!",
+                    isUpdate: false,
+                    saveTitle: "Confirm",
+                    cancelTitle: "Decline",
+                    cb: (userCodeConfirmation) => {
+                      mutateTempToRegular({
+                        oldPolicyNo: oldPolicy,
+                        newPolicyNo: policyNoRef.current?.value,
+                        newDateFrom: dateFromRef.current?.value,
+                        newDateTo: dateToRef.current?.value,
+                        newDateIssued: dateIssuedRef.current?.value,
+                        userCodeConfirmation,
+                      });
+                    },
+                  });
+                }}
+              >
+                Submit
+              </Button>
+            )}
           </div>
         </div>
       </div>
-      <style>
-        {`
-        .table {
-          display: flex;
-          flex-direction: column;
-          width: fit-content;
-          font-family: sans-serif;
-          font-size:12px;
-          box-sizing:border-box;
-        }
-
-        .row {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-          border-bottom: 1px solid #eee;
-        }
-
-        .row.header {
-          background: #f5f5f5;
-          font-weight: bold;
-        }
-
-        .cell {
-          padding: 8px 16px;
-          border-right: 1px solid #eee;
-        }
-
-        .cell:last-child {
-          border-right: none;
-        }
-
-        .row.total {
-          background-color: #f9f9f9;
-          border-top: 2px solid #ccc;
-        }
-        
-        `}
-      </style>
     </>
   );
 }
-function DisplayText({value,label}:any){
-
+function DisplayText({ value, label }: any) {
   return (
-    <div style={{ display: "flex", columnGap: "10px" ,fontSize:"12px" }}>
-    <div style={{ width: "100px" }}>{label}</div>
-    <div
-      style={{
-        minWidth: "100px",
-        maxWidth: "250px",
-        whiteSpace:"nowrap",
-        overflow: "hidden",
-        textOverflow:"ellipsis",
-        fontWeight:"bold"
-      }}
-    >
-      {value}
+    <div style={{ display: "flex", columnGap: "10px", fontSize: "12px" }}>
+      <div style={{ width: "110px" }}>{label}</div>
+      <div
+        style={{
+          minWidth: "100px",
+          maxWidth: "250px",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          fontWeight: "bold",
+        }}
+      >
+        {value}
+      </div>
     </div>
-  </div>
-  )
+  );
 }
 function DisplayCardHistory({ columns, data }: any) {
   return (
-    <div className="table">
+    <div className="table-history">
       {/* Header */}
       <div
         className="row header"

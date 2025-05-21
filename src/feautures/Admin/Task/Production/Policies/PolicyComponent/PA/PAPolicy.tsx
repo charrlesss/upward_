@@ -468,6 +468,30 @@ export default function PAPolicy() {
             }}
             inputRef={searchRef}
           />
+          <SelectInput
+            ref={subAccountRef_}
+            label={{
+              title: "Sub Account :",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "100px",
+                display:"none"
+              },
+            }}
+            selectRef={subAccountRef}
+            select={{
+              style: { flex: 1, height: "22px" },
+              defaultValue: "HO",
+            }}
+            containerStyle={{
+              width:"50px",
+              // marginLeft: "20px",
+            }}
+            datasource={[]}
+            values={"Acronym"}
+            display={"Acronym"}
+          />
           <div
             className="button-action-desktop"
             style={{

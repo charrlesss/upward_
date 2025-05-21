@@ -41,8 +41,8 @@ export default function Header() {
 
   const { mutate: mutateLogout, isLoading: isLoadingLogout } = useMutation({
     mutationKey: "logout",
-    mutationFn: async (variables:any) => {
-      return await myAxios.post("/logout",variables, {
+    mutationFn: async (variables: any) => {
+      return await myAxios.post("/logout", variables, {
         headers: {
           Authorization: `Bearer ${user?.accessToken}`,
         },
@@ -99,7 +99,7 @@ export default function Header() {
   const handleSubLinkClick = () => {
     // Close submenu after clicking any sublink
     setOpenMenu(null);
-    setOpenMenuMobile(null)
+    setOpenMenuMobile(null);
   };
 
   const handleMobileClick = (menuItem: any, e: any) => {
@@ -183,6 +183,10 @@ export default function Header() {
           {
             name: "Policy",
             path: `/${department.current}/dashboard/task/production/policy/`,
+          },
+          {
+            name: "Renewal Notice",
+            path: `/${department.current}/dashboard/task/production/renewal-notice`,
           },
           {
             name: "Statement of Account",
@@ -327,6 +331,10 @@ export default function Header() {
               {
                 name: "Policy",
                 path: `/${department.current}/dashboard/task/production/policy/`,
+              },
+              {
+                name: "Renewal Notice",
+                path: `/${department.current}/dashboard/task/production/renewal-notice`,
               },
               {
                 name: "Statement of Account",
@@ -475,6 +483,10 @@ export default function Header() {
             {
               name: "Policy",
               path: `/${department.current}/dashboard/task/production/policy/`,
+            },
+            {
+              name: "Renewal Notice",
+              path: `/${department.current}/dashboard/task/production/renewal-notice`,
             },
             {
               name: "Statement of Account",
@@ -911,6 +923,10 @@ export default function Header() {
                 path: `/${department.current}/dashboard/task/production/policy/`,
               },
               {
+                name: "Renewal Notice",
+                path: `/${department.current}/dashboard/task/production/renewal-notice`,
+              },
+              {
                 name: "Statement of Account",
                 path: `/${department.current}/dashboard/task/production/statement-of-account`,
               },
@@ -1001,6 +1017,10 @@ export default function Header() {
               path: `/${department.current}/dashboard/task/production/policy/`,
             },
             {
+              name: "Renewal Notice",
+              path: `/${department.current}/dashboard/task/production/renewal-notice`,
+            },
+            {
               name: "Statement of Account",
               path: `/${department.current}/dashboard/task/production/statement-of-account`,
             },
@@ -1051,7 +1071,10 @@ export default function Header() {
         setOpenMenuMobile(null);
       }
 
-      if (menuUserMobileRef.current && !menuUserMobileRef.current.contains(e.target)) {
+      if (
+        menuUserMobileRef.current &&
+        !menuUserMobileRef.current.contains(e.target)
+      ) {
         setOpenUserMenuMobile(false);
       }
     };

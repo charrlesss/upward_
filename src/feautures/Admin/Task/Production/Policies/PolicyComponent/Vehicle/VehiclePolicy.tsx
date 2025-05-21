@@ -98,6 +98,8 @@ export default function VehiclePolicy() {
 }
 
 function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
+  const [width, setWidth] = useState(window.innerWidth);
+
   const [mode, setMode] = useState("");
   const [selectedPage, setSelectedPage] = useState(0);
   const [policyType, setPolicyType] = useState(
@@ -118,7 +120,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
       }
     }
   }
-  const { isLoading } = useQuery({
+  const { isLoading, refetch: refetchSubAccount } = useQuery({
     queryKey: "sub-account",
     queryFn: () => {
       return myAxios.get("/task/production/sub-account", {
@@ -232,6 +234,25 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
     }
   }, [policyType]);
 
+  const refetchSubAccountRef = useRef(refetchSubAccount);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWidth(window.innerWidth);
+
+      setTimeout(() => {
+        refetchSubAccountRef.current();
+      }, 500);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    // Cleanup on unmount
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
     <>
       <PolicySearchUpwardTableModalSearch />
@@ -320,7 +341,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
                     showCancelButton: true,
                     confirmButtonColor: "#3085d6",
                     cancelButtonColor: "#d33",
-                    confirmButtonText: "Yes, Change  to Regualr!",
+                    confirmButtonText: "Yes, Change  to Regular!",
                     cancelButtonText: "No",
                   }).then((result) => {
                     if (result.isConfirmed) {
@@ -596,26 +617,44 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           >
             Cancel
           </Button>
-          {policyType === "TEMP" && (
-            <Button
-              sx={{
-                height: "23px",
-                fontSize: "11px",
-              }}
-              variant="contained"
-              color="info"
-              startIcon={<RepeatIcon />}
-              disabled={mode === "" || mode === "add"}
-              size="small"
-              onClick={() => {
-                window.location.href = `/${
-                  process.env.REACT_APP_DEPARTMENT
-                }/dashboard/temp-to-regular?policy_no=${temporaryPolicyRef.current.getPolicy()}&accessToken=${user.accessToken}`;
-              }}
-            >
-              To Regular
-            </Button>
-          )}
+          <Button
+            sx={{
+              height: "23px",
+              fontSize: "11px",
+            }}
+            variant="contained"
+            color="info"
+            startIcon={<RepeatIcon />}
+            disabled={mode === "" || mode === "add"}
+            size="small"
+            onClick={() => {
+              if (policyType === "TEMP") {
+                const encodedData = encodeURIComponent(
+                  JSON.stringify({
+                    policy_no: JSON.stringify(
+                      temporaryPolicyRef.current.getPolicy()
+                    ),
+                    accessToken: JSON.stringify(user.accessToken),
+                    viewing: JSON.stringify(false),
+                  })
+                );
+                return (window.location.href = `/${process.env.REACT_APP_DEPARTMENT}/dashboard/temp-to-regular?Mkr44Rt2iuy13R=${encodedData}`);
+              } else {
+                const encodedData = encodeURIComponent(
+                  JSON.stringify({
+                    policy_no: JSON.stringify(
+                      regularPolicyRef.current.getPolicy()
+                    ),
+                    accessToken: JSON.stringify(user.accessToken),
+                    viewing: JSON.stringify(true),
+                  })
+                );
+                return (window.location.href = `/${process.env.REACT_APP_DEPARTMENT}/dashboard/temp-to-regular?Mkr44Rt2iuy13R=${encodedData}`);
+              }
+            }}
+          >
+            {policyType === "TEMP" ? "To Regular" : "History"}
+          </Button>
           <div
             style={{
               display: "flex",
@@ -756,29 +795,33 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           {isLoading ? (
             <>Laoding...</>
           ) : (
-            <SelectInput
-              ref={subAccountRef_}
-              label={{
-                title: "Sub Account :",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "100px",
-                },
-              }}
-              selectRef={subAccountRef}
-              select={{
-                style: { flex: 1, height: "22px" },
-                defaultValue: "HO",
-              }}
-              containerStyle={{
-                flex: 2,
-                marginLeft: "20px",
-              }}
-              datasource={[]}
-              values={"Acronym"}
-              display={"Acronym"}
-            />
+            <>
+              {width > 768 && (
+                <SelectInput
+                  ref={subAccountRef_}
+                  label={{
+                    title: "Sub Account :",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "100px",
+                    },
+                  }}
+                  selectRef={subAccountRef}
+                  select={{
+                    style: { flex: 1, height: "22px" },
+                    defaultValue: "HO",
+                  }}
+                  containerStyle={{
+                    flex: 2,
+                    marginLeft: "20px",
+                  }}
+                  datasource={[]}
+                  values={"Acronym"}
+                  display={"Acronym"}
+                />
+              )}
+            </>
           )}
         </div>
         <div
@@ -840,30 +883,34 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           {isLoading ? (
             <>Laoding...</>
           ) : (
-            <SelectInput
-              ref={subAccountRef_}
-              label={{
-                title: "",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "50px",
-                  display: "none",
-                },
-              }}
-              selectRef={subAccountRef}
-              select={{
-                style: { flex: 1, height: "22px" },
-                defaultValue: "HO",
-              }}
-              containerStyle={{
-                flex: 2,
-                marginLeft: "10px",
-              }}
-              datasource={[]}
-              values={"Acronym"}
-              display={"Acronym"}
-            />
+            <>
+              {width <= 768 && (
+                <SelectInput
+                  ref={subAccountRef_}
+                  label={{
+                    title: "",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "50px",
+                      display: "none",
+                    },
+                  }}
+                  selectRef={subAccountRef}
+                  select={{
+                    style: { flex: 1, height: "22px" },
+                    defaultValue: "HO",
+                  }}
+                  containerStyle={{
+                    flex: 2,
+                    marginLeft: "10px",
+                  }}
+                  datasource={[]}
+                  values={"Acronym"}
+                  display={"Acronym"}
+                />
+              )}
+            </>
           )}
         </div>
       </div>
@@ -977,6 +1024,44 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           }}
         >
           Cancel
+        </Button>
+        <Button
+          sx={{
+            height: "23px",
+            fontSize: "11px",
+          }}
+          variant="contained"
+          color="info"
+          startIcon={<RepeatIcon />}
+          disabled={mode === "" || mode === "add"}
+          size="small"
+          onClick={() => {
+            if (policyType === "TEMP") {
+              const encodedData = encodeURIComponent(
+                JSON.stringify({
+                  policy_no: JSON.stringify(
+                    temporaryPolicyRef.current.getPolicy()
+                  ),
+                  accessToken: JSON.stringify(user.accessToken),
+                  viewing: JSON.stringify(false),
+                })
+              );
+              return (window.location.href = `/${process.env.REACT_APP_DEPARTMENT}/dashboard/temp-to-regular?Mkr44Rt2iuy13R=${encodedData}`);
+            } else {
+              const encodedData = encodeURIComponent(
+                JSON.stringify({
+                  policy_no: JSON.stringify(
+                    regularPolicyRef.current.getPolicy()
+                  ),
+                  accessToken: JSON.stringify(user.accessToken),
+                  viewing: JSON.stringify(true),
+                })
+              );
+              return (window.location.href = `/${process.env.REACT_APP_DEPARTMENT}/dashboard/temp-to-regular?Mkr44Rt2iuy13R=${encodedData}`);
+            }
+          }}
+        >
+          {policyType === "TEMP" ? "To Reg" : "History"}
         </Button>
       </div>
     </>
@@ -1640,6 +1725,10 @@ const COMRegular = forwardRef(
         _policyInformationRef.current.refEnableDisable(disable);
         _policyTypeDetailsRef.current.refEnableDisable(disable);
         _policyPremiumRef.current.refEnableDisable(disable);
+      },
+      getPolicy: () => {
+        return _policyInformationRef.current.getRefs().policyNoRef.current
+          .value;
       },
     }));
 
@@ -2857,6 +2946,8 @@ const COMTemporary = forwardRef(
   }
 );
 function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
+  const [width, setWidth] = useState(window.innerWidth);
+
   const [mode, setMode] = useState("");
   const [selectedPage, setSelectedPage] = useState(0);
   const [policyType, setPolicyType] = useState(
@@ -2869,7 +2960,7 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
   function handleSave() {
     regularPolicyRef.current.handleOnSave(mode);
   }
-  const { isLoading } = useQuery({
+  const { isLoading, refetch: refetchSubAccount } = useQuery({
     queryKey: "sub-account",
     queryFn: () => {
       return myAxios.get("/task/production/sub-account", {
@@ -2960,6 +3051,25 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
       }
     },
   });
+
+  const refetchSubAccountRef = useRef(refetchSubAccount);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWidth(window.innerWidth);
+
+      setTimeout(() => {
+        refetchSubAccountRef.current();
+      }, 500);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    // Cleanup on unmount
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   return (
     <>
@@ -3383,29 +3493,33 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           {isLoading ? (
             <div>Loading..</div>
           ) : (
-            <SelectInput
-              ref={subAccountRef_}
-              label={{
-                title: "Sub Account :",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "100px",
-                },
-              }}
-              selectRef={subAccountRef}
-              select={{
-                style: { flex: 1, height: "22px" },
-                defaultValue: "HO",
-              }}
-              containerStyle={{
-                flex: 2,
-                marginLeft: "20px",
-              }}
-              datasource={[]}
-              values={"Acronym"}
-              display={"Acronym"}
-            />
+            <>
+              {width > 768 && (
+                <SelectInput
+                  ref={subAccountRef_}
+                  label={{
+                    title: "Sub Account :",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "100px",
+                    },
+                  }}
+                  selectRef={subAccountRef}
+                  select={{
+                    style: { flex: 1, height: "22px" },
+                    defaultValue: "HO",
+                  }}
+                  containerStyle={{
+                    flex: 2,
+                    marginLeft: "20px",
+                  }}
+                  datasource={[]}
+                  values={"Acronym"}
+                  display={"Acronym"}
+                />
+              )}
+            </>
           )}
         </div>
         <div
@@ -3463,30 +3577,34 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           {isLoading ? (
             <div>Loading..</div>
           ) : (
-            <SelectInput
-              ref={subAccountRef_}
-              label={{
-                title: "Sub Account :",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "100px",
-                  display: "none",
-                },
-              }}
-              selectRef={subAccountRef}
-              select={{
-                style: { flex: 1, height: "22px" },
-                defaultValue: "HO",
-              }}
-              containerStyle={{
-                flex: 2,
-                marginLeft: "5px",
-              }}
-              datasource={[]}
-              values={"Acronym"}
-              display={"Acronym"}
-            />
+            <>
+              {width <= 768 && (
+                <SelectInput
+                  ref={subAccountRef_}
+                  label={{
+                    title: "Sub Account :",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "100px",
+                      display: "none",
+                    },
+                  }}
+                  selectRef={subAccountRef}
+                  select={{
+                    style: { flex: 1, height: "22px" },
+                    defaultValue: "HO",
+                  }}
+                  containerStyle={{
+                    flex: 2,
+                    marginLeft: "5px",
+                  }}
+                  datasource={[]}
+                  values={"Acronym"}
+                  display={"Acronym"}
+                />
+              )}
+            </>
           )}
         </div>
       </div>

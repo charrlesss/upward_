@@ -111,6 +111,10 @@ const Policy = lazy(
 const StatementAccount = lazy(
   () => import("../feautures/Admin/Task/Production/StatementAccount")
 );
+const RenewalNotice = lazy(
+  () => import("../feautures/Admin/Task/Production/RenewalNotice")
+);
+
 
 const VehiclePolicy = lazy(
   () =>
@@ -307,6 +311,11 @@ export default function Routers() {
       key={`/${department}/dashboard/task/production/statement-of-account`}
       path={`/${department}/dashboard/task/production/statement-of-account`}
       element={<StatementAccount />}
+    />,
+    <Route
+      key={`/${department}/dashboard/task/production/renewal-notice`}
+      path={`/${department}/dashboard/task/production/renewal-notice`}
+      element={<RenewalNotice />}
     />,
   ];
   const ACCOUNTING_TASK = [
@@ -539,7 +548,10 @@ export default function Routers() {
           <Route path="/dashboard/help/about" element={<About />} /> */}
         </Route>
 
-        <Route path={`/${department}/dashboard/temp-to-regular`} element={<TEMPTOREG />} />
+        <Route
+          path={`/${department}/dashboard/temp-to-regular`}
+          element={<TEMPTOREG />}
+        />
 
         <Route
           path={`/${department}/dashboard/report`}

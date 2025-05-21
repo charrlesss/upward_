@@ -36,6 +36,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { flushSync } from "react-dom";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import "../../../../style/monbileview/accounting/pettycash.css";
+
 export const reducer = (state: any, action: any) => {
   switch (action.type) {
     case "UPDATE_FIELD":

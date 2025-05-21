@@ -212,7 +212,7 @@ export default function WarehouseChecks() {
         Check_Amnt, 
         Bank, 
         PDC_Status
-      FROM pdc as PDC 
+      FROM pdc  
       WHERE ${fldSearch} = '${valSearch}'  AND ${StrWhere} ORDER BY Check_Date`;
     const dt = await executeQueryToClient(qry);
     if (dt.data) {
@@ -312,8 +312,8 @@ export default function WarehouseChecks() {
                 for (const itm of tableDataSelected) {
                   const qry = `selecT 
                   *
-                  from pullout_request as Pullout_Request POR 
-                  left join pullOut_request_details as PullOut_Request_Details PORD on por.RCPNo = pord.RCPNo 
+                  from pullout_request as POR 
+                  left join pullout_request_details as PORD on POR.RCPNo = PORD.RCPNo 
                   where PNNo ='${itm[0]}' and  checkNo ='${itm[5]}' and status ='APPROVED'`;
                   const dt = await executeQueryToClient(qry);
                   if (dt.data?.data.length <= 0) {
@@ -833,8 +833,8 @@ export default function WarehouseChecks() {
             const { data: response } = await executeQueryToClient(`
               Select 
                 CheckNo 
-              From pullOut_request a 
-              Inner join pullOut_request_details b  on a.RCPNo = b.RCPNo 
+              From pullout_request a 
+              Inner join pullout_request_details b  on a.RCPNo = b.RCPNo 
               Where a.Status = 'APPROVED' 
               And a.RCPNo = '${rowItm[1]}'`);
 

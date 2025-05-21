@@ -1547,11 +1547,11 @@ export const useUpwardTableModalSearch = ({
           </div>
           <style>
             {`
-                                    .btn-check-exit-modal:hover{
-                                        background:red !important;
-                                        color:white !important;
-                                    }
-                                `}
+                .btn-check-exit-modal:hover{
+                    background:red !important;
+                    color:white !important;
+                }
+            `}
           </style>
         </div>
       </div>
@@ -1634,7 +1634,6 @@ export const useUpwardTableModalSearchSafeMode = ({
           },
         })
         .then((response) => {
-          console.log(response);
           setData(response.data?.data);
           setIsLoading(false);
         })
@@ -1719,6 +1718,7 @@ export const useUpwardTableModalSearchSafeMode = ({
       mutate,
       mutateReturnValue,
     }));
+
 
     return show ? (
       ReactDOM.createPortal(
