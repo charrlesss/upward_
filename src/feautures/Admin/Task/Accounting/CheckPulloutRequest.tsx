@@ -5,7 +5,10 @@ import { useMutation } from "react-query";
 import { AuthContext } from "../../../../components/AuthContext";
 import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
 import { SelectInput, TextInput } from "../../../../components/UpwardFields";
-import { DataGridViewMultiSelectionReact } from "../../../../components/DataGridViewReact";
+import {
+  DataGridViewMultiSelectionReact,
+  useUpwardTableModalSearchSafeMode,
+} from "../../../../components/DataGridViewReact";
 import { Button } from "@mui/material";
 import { orange } from "@mui/material/colors";
 import { wait } from "@testing-library/user-event/dist/utils";
@@ -13,6 +16,8 @@ import Swal from "sweetalert2";
 import { Loading } from "../../../../components/Loading";
 import PageHelmet from "../../../../components/Helmet";
 import "../../../../style/monbileview/accounting/pullout.css";
+import SearchIcon from "@mui/icons-material/Search";
+import { saveCondfirmationAlert } from "../../../../lib/confirmationAlert";
 
 const column = [
   {
@@ -35,14 +40,10 @@ export default function CheckPulloutRequest() {
   const { myAxios, user } = useContext(AuthContext);
   const { executeQueryToClient } = useExecuteQueryFromClient();
   const [flag, setFlag] = useState("");
-  const [paymentTypeLoading, setPaymentTypeLoading] = useState(false);
-  const [pdcAtributeData, setPdcAtributeData] = useState<Array<any>>([]);
 
   const executeQueryToClientRef = useRef(executeQueryToClient);
   const table = useRef<any>(null);
 
-  const _rcpnRefParent = useRef<any>(null);
-  const _rcpnRef = useRef<HTMLSelectElement>(null);
   const rcpnRef = useRef<HTMLInputElement>(null);
   const ppnoRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
@@ -71,7 +72,7 @@ export default function CheckPulloutRequest() {
     onSuccess: (data, variable) => {
       const response = data as any;
       if (response.data.success) {
-        loadChecks(variable.ppno);
+        // loadChecks(variable.ppno);
         AutoID();
         return Swal.fire({
           position: "center",
@@ -89,32 +90,81 @@ export default function CheckPulloutRequest() {
     },
   });
 
-  const LoadPNNo = useCallback(async () => {
-    setPaymentTypeLoading(true);
-    const qry = `SELECT DISTINCT PNo, Name FROM pdc WHERE PDC_Status = 'Stored' order by PNo DESC`;
-    const { data: response } = await executeQueryToClientRef.current(qry);
-    setPdcAtributeData(response.data);
-    setPaymentTypeLoading(false);
-  }, []);
+  const {
+    isLoading: isLoadingGetSelectedRcpnNoPulloutRequest,
+    mutate: mutateGetSelectedRcpnNoPulloutRequest,
+  } = useMutation({
+    mutationKey: "get-selected-rcpn-no",
+    mutationFn: async (variables: any) =>
+      await myAxios.post(
+        `/task/accounting/pullout/reqeust/get-selected-rcpn-no`,
+        variables,
+        {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }
+      ),
+    onSuccess: (response) => {
+      const rcpnDetails = response.data.data[0];
+      if (rcpnRef.current) {
+        rcpnRef.current.value = rcpnDetails.RCPNo;
+      }
+      if (ppnoRef.current) {
+        ppnoRef.current.value = rcpnDetails.PNNo;
+      }
+      if (nameRef.current) {
+        nameRef.current.value = rcpnDetails.Name;
+      }
+      if (reasonRef.current) {
+        reasonRef.current.value = rcpnDetails.Reason;
+      }
+      loadChecks(rcpnDetails.PNNo);
+    },
+  });
 
-  const Load_RCPNo = async () => {
-    const qry = `
-        select '' as RCPNo
-        union 
-        SELECT DISTINCT
-            (RCPNo)
-        FROM
-            pullout_request
-        WHERE
-            Branch = 'HO' AND Status = 'PENDING'
-        ORDER BY RCPNo
-        `;
-    const { data: response } = await executeQueryToClientRef.current(qry);
+  const {
+    UpwardTableModalSearch: PNoClientSearchUpwardTableModalSearch,
+    openModal: pNoClientSearchOpenModal,
+    closeModal: pNoClientSearchCloseModal,
+  } = useUpwardTableModalSearchSafeMode({
+    link: "/task/accounting/pullout/reqeust/get-pnno-client",
+    column: [
+      { key: "PNo", label: "PN No.", width: 150 },
+      { key: "Name", label: "Client Name", width: 270 },
+    ],
+    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
+      if (rowItm) {
+        if (ppnoRef.current) {
+          ppnoRef.current.value = rowItm[0];
+        }
+        if (nameRef.current) {
+          nameRef.current.value = rowItm[1];
+        }
 
-    wait(100).then(() => {
-      _rcpnRefParent.current.setDataSource(response.data);
-    });
-  };
+        loadChecks(rowItm[0]);
+        pNoClientSearchCloseModal();
+      }
+    },
+  });
+
+  const {
+    UpwardTableModalSearch: RcpnNoSearchUpwardTableModalSearch,
+    openModal: rcpnNoSearchOpenModal,
+    closeModal: rcpnNoSearchCloseModal,
+  } = useUpwardTableModalSearchSafeMode({
+    link: "/task/accounting/pullout/reqeust/get-rcpn-no",
+    column: [{ key: "RCPNo", label: "RCPN No.", width: 400 }],
+    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
+      if (rowItm) {
+        mutateGetSelectedRcpnNoPulloutRequest({
+          rcpno: rowItm[0],
+        });
+        rcpnNoSearchCloseModal();
+      }
+    },
+  });
+
   const AutoID = async () => {
     const qry = `
         SELECT
@@ -130,44 +180,46 @@ export default function CheckPulloutRequest() {
   };
   const loadChecks = async (pnno: string) => {
     table.current.setData([]);
-    let rcpn =
-      flag === "add" ? rcpnRef.current?.value : _rcpnRef.current?.value;
+    let rcpn = rcpnRef.current?.value;
 
     const qry = `
-          SELECT DISTINCT
-                    date_format(Check_Date,'%Y-%d-%m') as Check_Date,
-                    Bank,
-                    Check_No,
-                    Check_Amnt,
-                    ifnull(c.Status,'--') as Status,
-                    ifnull(c.RCPNo,'--') as RCPNO
-                FROM
-                    pdc a
-                    left join pullout_request_details b on a.Check_No = b.CheckNo
-					left join pullout_request c on b.RCPNo = c.RCPNo
-                WHERE
-                    PNo = '${pnno}'
-					AND PDC_Status = 'Stored'
-                ORDER BY Check_No
+    SELECT DISTINCT
+        DATE_FORMAT(Check_Date, '%Y-%d-%m') AS Check_Date,
+        Bank,
+        Check_No,
+        Check_Amnt,
+        ifnull(b.Status,'--') AS Status,
+        ifnull(b.RCPNo,'--') AS RCPNO 
+    FROM
+        pdc a
+        left join (
+        SELECT PNNo,a.RCPNo,Status,CheckNo FROM upward_insurance_umis.pullout_request  a
+        left join pullout_request_details b on a.RCPNo = b.RCPNo
+        where PNNo = '${ppnoRef.current?.value}' and Approved_By is null and Approved_Date is null
+        ) b on a.Check_No = b.CheckNo
+    WHERE
+        PNo = '${ppnoRef.current?.value}'
+      AND PDC_Status = 'Stored'
+    
+
         `;
+
     const { data: response } = await executeQueryToClientRef.current(qry);
     if (flag == "edit") {
       const qry1 = `
-            SELECT DISTINCT
-                      Check_No
+                    SELECT DISTINCT
+                      CheckNo
                   FROM
-                      pdc a
-                      left join pullout_request_details b on a.Check_No = b.CheckNo    
-                      left join pullout_request c on b.RCPNo = c.RCPNo   
+                      pullout_request a
+                          LEFT JOIN
+                      pullout_request_details b ON a.RCPNo = b.RCPNo
                   WHERE
-                      PNo = '${pnno}'
-                      AND PDC_Status = 'Stored'
-                      AND c.Status is not null
-                      AND c.RCPNo = '${rcpn}'
-                  ORDER BY Check_No
+                      a.PNNo = '${pnno}'
+                          AND Status = 'PENDING'
+                  ORDER BY CheckNo
           `;
-      const { data: response1 } = await executeQueryToClientRef.current(qry1);
-      const checkNoSelected = response1.data.map((itm: any) => itm.Check_No);
+          const { data: response1 } = await executeQueryToClientRef.current(qry1);
+      const checkNoSelected = response1.data.map((itm: any) => itm.CheckNo);
       const filteredData = response.data.map((itm: any, idx: number) => {
         if (checkNoSelected.includes(itm.Check_No)) {
           return idx;
@@ -211,115 +263,108 @@ export default function CheckPulloutRequest() {
     }, 100);
   };
 
-  useEffect(() => {
-    LoadPNNo();
-  }, [LoadPNNo]);
-
   return (
-    <div
-      className="main"
-      style={{
-        flex: "1",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "#F1F1F1",
-      }}
-    >
-      <PageHelmet title="Pullout Request" />
-      {isLoadingSavePulloutRequest && <Loading />}
+    <>
+      {(isLoadingSavePulloutRequest ||
+        isLoadingGetSelectedRcpnNoPulloutRequest) && <Loading />}
+
+      <PNoClientSearchUpwardTableModalSearch />
+      <RcpnNoSearchUpwardTableModalSearch />
       <div
-        className="content"
+        className="main"
         style={{
-          padding: "10px",
-          width: "62%",
-          border: "1px sold black",
-          height: "500px",
-          boxShadow: "1px 1px 2px 2px black",
+          flex: "1",
           display: "flex",
-          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          background: "#F1F1F1",
         }}
       >
+        <PageHelmet title="Pullout Request" />
         <div
+          className="content"
           style={{
-            height: "auto",
+            padding: "10px",
+            width: "62%",
+            border: "1px sold black",
+            height: "500px",
+            boxShadow: "1px 1px 2px 2px black",
+            display: "flex",
+            flexDirection: "column",
           }}
         >
-          {flag === "edit" &&
-            (paymentTypeLoading ? (
-              <LoadingButton loading={paymentTypeLoading} />
-            ) : (
-              <div
-                style={{
-                  width: "100%",
+          <div
+            style={{
+              height: "auto",
+            }}
+          >
+            {flag === "edit" && (
+              <TextInput
+                containerClassName="custom-input"
+                containerStyle={{
+                  width: "50%",
                   marginBottom: "8px",
                 }}
-              >
-                <SelectInput
-                  containerClassName="custom-input"
-                  ref={_rcpnRefParent}
-                  label={{
-                    title: "RCP No.  : ",
-                    style: {
-                      fontSize: "12px",
-                      fontWeight: "bold",
-                      width: "100px",
-                    },
-                  }}
-                  selectRef={_rcpnRef}
-                  select={{
-                    style: { flex: 1, height: "22px" },
-                    defaultValue: "Non-VAT",
-                    onChange: async (e) => {
-                      if (flag === "edit") {
-                        //
-                        const qry = `
-                                                Select 
-                                                        *,
-                                                        (selecT distinct(name) from pdc where PNo =a.PNNo) as 'Name'
-                                                    From pullout_request a 
-                                                    Where Branch = 'HO' and Status = 'PENDING' and rcpno = '${e.currentTarget.value}' 
-                                                    Order by RCPNo
-                                                `;
-                        const { data: response } =
-                          await executeQueryToClientRef.current(qry);
-                        if (response.data.length > 0) {
-                          wait(100).then(() => {
-                            if (ppnoRef.current)
-                              ppnoRef.current.value = response.data[0].PNNo;
-                            if (nameRef.current)
-                              nameRef.current.value = response.data[0].Name;
-                            if (reasonRef.current)
-                              reasonRef.current.value = response.data[0].Reason;
+                label={{
+                  title: "RCP No. :",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "100px",
+                  },
+                }}
+                input={{
+                  type: "text",
+                  style: { width: "calc(100% - 100px)" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      rcpnNoSearchOpenModal(e.currentTarget.value);
+                    }
+                  },
+                }}
+                icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+                onIconClick={(e) => {
+                  e.preventDefault();
+                  if (rcpnRef.current) {
+                    rcpnNoSearchOpenModal(rcpnRef.current.value);
+                  }
+                }}
+                inputRef={rcpnRef}
+              />
+            )}
+            {(flag === "" || flag === "add") && (
+              <TextInput
+                containerClassName="custom-input"
+                containerStyle={{
+                  width: "50%",
+                  marginBottom: "8px",
+                }}
+                label={{
+                  title: "RCP No. :",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "100px",
+                  },
+                }}
+                input={{
+                  disabled: true,
+                  type: "text",
+                  style: { width: "calc(100% - 100px)" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    }
+                  },
+                }}
+                inputRef={rcpnRef}
+              />
+            )}
 
-                            loadChecks(response.data[0].PNNo);
-                          });
-                        } else {
-                          table.current.setData([]);
-                          fieldsReset();
-                        }
-                      }
-                    },
-                  }}
-                  containerStyle={{
-                    width: "50%",
-                    marginBottom: "12px",
-                  }}
-                  datasource={[]}
-                  values={"RCPNo"}
-                  display={"RCPNo"}
-                />
-              </div>
-            ))}
-          {(flag === "" || flag === "add") && (
             <TextInput
-              containerClassName="custom-input"
-              containerStyle={{
-                width: "50%",
-                marginBottom: "8px",
-              }}
+              containerClassName="custom-input adjust-label-search"
+              containerStyle={{ width: "50%", marginBottom: "8px" }}
               label={{
-                title: "RCP No. :",
+                title: "PN No. : ",
                 style: {
                   fontSize: "12px",
                   fontWeight: "bold",
@@ -327,289 +372,250 @@ export default function CheckPulloutRequest() {
                 },
               }}
               input={{
-                disabled: true,
-                type: "text",
-                style: { width: "calc(100% - 100px)" },
+                disabled: flag === "" || flag === "edit",
+                type: "search",
                 onKeyDown: (e) => {
-                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  if (e.key === "Enter" || e.key === "NumpadEnter") {
+                    e.preventDefault();
+                    pNoClientSearchOpenModal(e.currentTarget.value);
                   }
                 },
+                style: {
+                  width: "calc(100% - 100px)",
+                  height: "22px",
+                },
               }}
-              inputRef={rcpnRef}
+              disableIcon={flag === "" || flag === "edit"}
+              icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+              onIconClick={(e) => {
+                e.preventDefault();
+                if (ppnoRef.current) {
+                  pNoClientSearchOpenModal(ppnoRef.current.value);
+                }
+              }}
+              inputRef={ppnoRef}
             />
-          )}
-          {paymentTypeLoading ? (
-            <LoadingButton loading={paymentTypeLoading} />
-          ) : (
-            <div
-              className="auto-complete-container"
-              style={{
-                width: "50%",
-                marginBottom: "8px",
+            <TextInput
+              containerClassName="custom-input adjust-label-search"
+              containerStyle={{ width: "50%", marginBottom: "8px" }}
+              label={{
+                title: "Client : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
               }}
-            >
-              <Autocomplete
-                disableInput={flag === "" || flag === "edit"}
-                label={{
-                  title: "PN No. :",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "100px",
-                  },
-                }}
-                input={{
-                  id: "auto-solo-collection",
-                  style: {
-                    width: "100%",
-                    flex: 1,
-                  },
-                }}
-                width={"100%"}
-                DisplayMember={"PNo"}
-                DataSource={pdcAtributeData}
-                inputRef={ppnoRef}
-                onChange={(selected: any, e: any) => {
-                  if (ppnoRef.current) ppnoRef.current.value = selected.PNo;
-                  if (nameRef.current) nameRef.current.value = selected.Name;
-
-                  if (reasonRef.current && reasonRef.current.selectedIndex > 0)
-                    loadChecks(selected.PNo);
-                }}
-                onKeydown={(e: any) => {
+              input={{
+                disabled: flag === "",
+                readOnly: true,
+                type: "text",
+                onKeyDown: (e) => {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
                   }
-                }}
-              />
-            </div>
-          )}
-          {paymentTypeLoading ? (
-            <LoadingButton loading={paymentTypeLoading} />
-          ) : (
-            <div
-              className="auto-complete-container"
-              style={{ width: "50%", marginBottom: "8px" }}
-            >
-              <Autocomplete
-                disableInput={flag === "" || flag === "edit"}
-                label={{
-                  title: "Client :",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "100px",
-                  },
-                }}
-                input={{
-                  id: "auto-solo-collection",
-                  style: {
-                    width: "100%",
-                    flex: 1,
-                  },
-                }}
-                width={"100%"}
-                DisplayMember={"Name"}
-                DataSource={pdcAtributeData}
-                inputRef={nameRef}
-                onChange={(selected: any, e: any) => {
-                  if (ppnoRef.current) ppnoRef.current.value = selected.PNo;
-                  if (nameRef.current) nameRef.current.value = selected.Name;
-
-                  if (reasonRef.current && reasonRef.current.selectedIndex > 0)
-                    loadChecks(selected.PNo);
-                }}
-                onKeydown={(e: any) => {
-                  if (e.key === "Enter" || e.key === "NumpadEnter") {
-                    e.preventDefault();
-                  }
-                }}
-              />
-            </div>
-          )}
-          <SelectInput
-            containerClassName="custom-input"
-            label={{
-              title: "Reason : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-              },
-            }}
-            selectRef={reasonRef}
-            select={{
-              disabled: flag === "",
-              style: { flex: 1, height: "22px" },
-              defaultValue: "Non-VAT",
-              onChange: (e) => {
-                if (ppnoRef.current) loadChecks(ppnoRef.current.value);
-              },
-            }}
+                },
+                style: {
+                  width: "calc(100% - 100px)",
+                  height: "22px",
+                },
+              }}
+              inputRef={nameRef}
+            />
+            <SelectInput
+              containerClassName="custom-input"
+              label={{
+                title: "Reason : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
+              }}
+              selectRef={reasonRef}
+              select={{
+                disabled: flag === "",
+                style: { flex: 1, height: "22px" },
+                defaultValue: "Non-VAT",
+                onChange: (e) => {
+                  // if (ppnoRef.current) loadChecks(ppnoRef.current.value);
+                },
+              }}
+              containerStyle={{
+                width: "50%",
+                marginBottom: "12px",
+              }}
+              datasource={[
+                { key: "", value: "" },
+                { key: "Fully Paid", value: "Fully Paid" },
+                { key: "Cash Replacement", value: "Cash Replacement" },
+                { key: "Check Replacement", value: "Check Replacement" },
+                { key: "Account Closed", value: "Account Closed" },
+                { key: "Hold", value: "Hold" },
+                {
+                  key: "Not Renewed by Camfin",
+                  value: "Not Renewed by Camfin",
+                },
+              ]}
+              values={"value"}
+              display={"key"}
+            />
+          </div>
+          <DataGridViewMultiSelectionReact
+            ref={table}
+            columns={column}
+            rows={[]}
             containerStyle={{
-              width: "50%",
-              marginBottom: "12px",
+              flex: 1,
             }}
-            datasource={[
-              { key: "", value: "" },
-              { key: "Fully Paid", value: "Fully Paid" },
-              { key: "Cash Replacement", value: "Cash Replacement" },
-              { key: "Check Replacement", value: "Check Replacement" },
-              { key: "Account Closed", value: "Account Closed" },
-              { key: "Hold", value: "Hold" },
-              { key: "Not Renewed by Camfin", value: "Not Renewed by Camfin" },
-            ]}
-            values={"value"}
-            display={"key"}
-          />
-        </div>
-        <DataGridViewMultiSelectionReact
-          ref={table}
-          columns={column}
-          rows={[]}
-          containerStyle={{
-            flex: 1,
-          }}
-          rowIsSelectable={(rowItm: any) => {
-            return ["APPROVED", "PENDING"].includes(rowItm[4]);
-          }}
-          getSelectedItem={(rowItm: any) => {
-            if (rowItm) {
-            }
-          }}
-          onKeyDown={(rowItm: any, rowIdx: any, e: any) => {}}
-          onCheckAll={() => {
-            const getData = table.current.getData();
-            const filteredData = getData.map((itm: any, idx: number) => {
-              if (
-                itm.RCPNO !== "--" &&
-                itm.RCPNO !== "" &&
-                itm.Status !== "APPROVED"
-              ) {
-                return idx;
+            rowIsSelectable={(rowItm: any) => {
+              return ["APPROVED", "PENDING"].includes(rowItm[4]);
+            }}
+            getSelectedItem={(rowItm: any) => {
+              if (rowItm) {
               }
-              return null;
-            });
-            const selectedRows = filteredData.filter(
-              (itm: any) => itm !== null
-            );
-            table.current.setSelectedRow(selectedRows);
-          }}
-          onUnCheckAll={() => {
-            table.current.setSelectedRow([]);
-          }}
-        />
-        <div
-          style={{
-            height: "35px",
-            display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "center",
-            columnGap: "5px",
-          }}
-        >
-          {flag === "" ? (
-            <>
-              <Button
-                ref={btnAddRef}
-                variant="contained"
-                color="info"
-                style={{
-                  height: "25px",
-                  fontSize: "12px",
-                }}
-                onClick={(e) => {
-                  setFlag("add");
-                  fieldsReset();
-                  if (btnSaveRef.current) btnSaveRef.current.disabled = false;
-                  setTimeout(() => {
-                    AutoID();
-                  }, 100);
-                }}
-              >
-                Add
-              </Button>
-              <Button
-                ref={btnEditRef}
-                variant="contained"
-                color="success"
-                style={{
-                  height: "25px",
-                  fontSize: "12px",
-                  background: orange[800],
-                }}
-                onClick={(e) => {
-                  setFlag("edit");
-                  Load_RCPNo();
-                }}
-              >
-                edit
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                ref={btnSaveRef}
-                variant="contained"
-                color="success"
-                style={{
-                  height: "25px",
-                  fontSize: "12px",
-                }}
-                onClick={async (e) => {
-                  const getData = table.current.getSelectedRowsData();
-                  if (getData.length <= 0) {
-                    return alert("No selected row found!");
-                  }
-                  const data = getData.map((itm: any) => {
-                    return {
-                      Check_Date: itm[0],
-                      Bank: itm[1],
-                      Check_No: itm[2],
-                      Check_Amnt: itm[3],
-                      Status: itm[4],
-                      RCPNO: itm[5],
-                    };
-                  });
-                  if (ppnoRef.current && nameRef.current && reasonRef.current) {
-                    let rcpn =
-                      flag === "add"
-                        ? rcpnRef.current?.value
-                        : _rcpnRef.current?.value;
+            }}
+            onKeyDown={(rowItm: any, rowIdx: any, e: any) => {}}
+            onCheckAll={() => {
+              const getData = table.current.getData();
+              const filteredData = getData.map((itm: any, idx: number) => {
+                if (
+                  itm.RCPNO !== "--" &&
+                  itm.RCPNO !== "" &&
+                  itm.Status !== "APPROVED"
+                ) {
+                  return idx;
+                }
+                return null;
+              });
+              const selectedRows = filteredData.filter(
+                (itm: any) => itm !== null
+              );
+              table.current.setSelectedRow(selectedRows);
+            }}
+            onUnCheckAll={() => {
+              table.current.setSelectedRow([]);
+            }}
+          />
+          <div
+            style={{
+              height: "35px",
+              display: "flex",
+              justifyContent: "flex-end",
+              alignItems: "center",
+              columnGap: "5px",
+            }}
+          >
+            {flag === "" ? (
+              <>
+                <Button
+                  ref={btnAddRef}
+                  variant="contained"
+                  color="info"
+                  style={{
+                    height: "25px",
+                    fontSize: "12px",
+                  }}
+                  onClick={(e) => {
+                    setFlag("add");
+                    fieldsReset();
+                    if (btnSaveRef.current) btnSaveRef.current.disabled = false;
+                    setTimeout(() => {
+                      AutoID();
+                    }, 100);
+                  }}
+                >
+                  Add
+                </Button>
+                <Button
+                  ref={btnEditRef}
+                  variant="contained"
+                  color="success"
+                  style={{
+                    height: "25px",
+                    fontSize: "12px",
+                    background: orange[800],
+                  }}
+                  onClick={(e) => {
+                    setFlag("edit");
+                    // Load_RCPNo();
+                  }}
+                >
+                  edit
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  ref={btnSaveRef}
+                  variant="contained"
+                  color="success"
+                  style={{
+                    height: "25px",
+                    fontSize: "12px",
+                  }}
+                  onClick={async (e) => {
+                    const getData = table.current.getSelectedRowsData();
+                    if (getData.length <= 0) {
+                      return alert("No selected row found!");
+                    }
 
-                    mutateSavePulloutRequest({
-                      flag,
-                      rcpn,
-                      ppno: ppnoRef.current.value,
-                      name: nameRef.current.value,
-                      reason: reasonRef.current.value,
-                      data: JSON.stringify(data),
+                    if (reasonRef.current?.value === "") {
+                      return alert("Reason is required!");
+                    }
+                    saveCondfirmationAlert({
+                      isConfirm: () => {
+                        const data = getData.map((itm: any) => {
+                          return {
+                            Check_Date: itm[0],
+                            Bank: itm[1],
+                            Check_No: itm[2],
+                            Check_Amnt: itm[3],
+                            Status: itm[4],
+                            RCPNO: itm[5],
+                          };
+                        });
+                        if (
+                          ppnoRef.current &&
+                          nameRef.current &&
+                          reasonRef.current
+                        ) {
+                          mutateSavePulloutRequest({
+                            flag,
+                            rcpn: rcpnRef.current?.value,
+                            ppno: ppnoRef.current.value,
+                            name: nameRef.current.value,
+                            reason: reasonRef.current.value,
+                            data: JSON.stringify(data),
+                          });
+                        }
+                      },
                     });
-                  }
-                }}
-              >
-                save
-              </Button>
-              <Button
-                ref={btnCancelRef}
-                variant="contained"
-                color="error"
-                style={{
-                  height: "25px",
-                  fontSize: "12px",
-                }}
-                onClick={(e) => {
-                  setFlag("");
-                  fieldsReset();
-                  table.current.setData([]);
-                }}
-              >
-                cancel
-              </Button>
-            </>
-          )}
+                  }}
+                >
+                  save
+                </Button>
+                <Button
+                  ref={btnCancelRef}
+                  variant="contained"
+                  color="error"
+                  style={{
+                    height: "25px",
+                    fontSize: "12px",
+                  }}
+                  onClick={(e) => {
+                    setFlag("");
+                    fieldsReset();
+                    table.current.setData([]);
+                  }}
+                >
+                  cancel
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

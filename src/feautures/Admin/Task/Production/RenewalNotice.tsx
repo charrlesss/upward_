@@ -43,6 +43,8 @@ function RenewalNotice() {
   const premiumTPPDRef = useRef<HTMLInputElement>(null);
   const premiumAPARef = useRef<HTMLInputElement>(null);
 
+  const balanceRef = useRef<HTMLInputElement>(null);
+
   const [isEditMode, setIsEditMode] = useState(false);
 
   const { mutate: mutatateRenewalNotice, isLoading: isLoadingRenewalNotice } =
@@ -82,6 +84,38 @@ function RenewalNotice() {
         }
       },
     });
+
+  const { mutate: mutatatePayment, isLoading: isLoadingPayment } = useMutation({
+    mutationKey: "payment",
+    mutationFn: (variables: any) => {
+      return myAxios.post("/task/production/get-balance", variables, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      });
+    },
+    onSuccess: (response) => {
+      const totalGross = parseFloat(
+        response.data.payment.totalGross[0].TotalDue
+      );
+      const totalPaidDeposit = parseFloat(
+        response.data.payment.totalPaidDeposit[0].totalDeposit
+      );
+      const totalPaidReturned = parseFloat(
+        response.data.payment.totalPaidReturned[0].totalReturned
+      );
+      const totalDiscount = parseFloat(
+        response.data.payment.totalDiscount[0].discount
+      );
+
+      let totalPaid = totalPaidDeposit - totalPaidReturned;
+      let totalBalance = totalGross - (totalPaid + totalDiscount);
+
+      if (balanceRef.current) {
+        balanceRef.current.value = formatNumber(totalBalance);
+      }
+    },
+  });
 
   const {
     UpwardTableModalSearch: PolicyComSearchUpwardTableModalSearch,
@@ -198,7 +232,7 @@ function RenewalNotice() {
           );
         }
         setIsEditMode(true);
-
+        mutatatePayment({ policyNo: rowItm[1] });
         policyComSearchCloseModal();
       }
     },
@@ -258,7 +292,7 @@ function RenewalNotice() {
           fireMortgageeRef.current.value = rowItm[6] || "";
         }
         setIsEditMode(true);
-
+        mutatatePayment({ policyNo: rowItm[1] });
         policyFireSearchCloseModal();
       }
     },
@@ -318,7 +352,7 @@ function RenewalNotice() {
           marAdditionalInfoRef.current.value = rowItm[6];
         }
         setIsEditMode(true);
-
+        mutatatePayment({ policyNo: rowItm[1] });
         policyMarSearchCloseModal();
       }
     },
@@ -359,7 +393,7 @@ function RenewalNotice() {
           nameRef.current.value = rowItm[3];
         }
         setIsEditMode(true);
-
+        mutatatePayment({ policyNo: rowItm[1] });
         policyPaSearchCloseModal();
       }
     },
@@ -404,7 +438,7 @@ function RenewalNotice() {
 
   return (
     <>
-      {isLoadingRenewalNotice && <Loading />}
+      {(isLoadingRenewalNotice || isLoadingPayment) && <Loading />}
       <PageHelmet title="RENEWAL NOTICE" />
       <PolicyComSearchUpwardTableModalSearch />
       <PolicyFireSearchUpwardTableModalSearch />
@@ -690,7 +724,7 @@ function RenewalNotice() {
                     display: "flex",
                     flexDirection: "column",
                     rowGap: "5px",
-                    marginTop: "5px",
+                    marginTop: "8px",
                   }}
                 >
                   <span
@@ -992,120 +1026,161 @@ function RenewalNotice() {
             />
           )}
           <div
-            style={{ display: "flex", columnGap: "10px", alignItems: "center" }}
+            style={{
+              display: "flex",
+              columnGap: "10px",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
           >
-            <SelectInput
-              selectRef={policyTypeRef}
-              containerClassName="custom-input adjust-label"
+            <div
+              style={{
+                display: "flex",
+                columnGap: "10px",
+                alignItems: "center",
+              }}
+            >
+              <SelectInput
+                selectRef={policyTypeRef}
+                containerClassName="custom-input adjust-label"
+                label={{
+                  title: "Policy Type : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: policyType === "COM" ? "100px" : "150px",
+                  },
+                }}
+                select={{
+                  disabled: isEditMode,
+                  style: {
+                    width:
+                      policyType === "COM"
+                        ? "calc(100% - 100px)"
+                        : "calc(100% - 150px)",
+                    height: "20px",
+                  },
+                  value: policyType,
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      e.preventDefault();
+                    }
+                  },
+                  onChange: (e) => {
+                    setPolicyType(e.currentTarget.value);
+                  },
+                }}
+                datasource={[
+                  {
+                    key: "COM",
+                  },
+                  {
+                    key: "FIRE",
+                  },
+                  {
+                    key: "MAR",
+                  },
+                  {
+                    key: "PA",
+                  },
+                ]}
+                values={"key"}
+                display={"key"}
+              />
+              <Button
+                onClick={() => {
+                  if (searchRef.current) {
+                    searchRef.current.value = "";
+                  }
+                  if (nameRef.current) {
+                    nameRef.current.value = "";
+                  }
+                  if (paPropertyInsuredRef.current) {
+                    paPropertyInsuredRef.current.value = "";
+                  }
+                  if (firePropertyInsuredRef.current) {
+                    firePropertyInsuredRef.current.value = "";
+                  }
+                  if (fireMortgageeRef.current) {
+                    fireMortgageeRef.current.value = "";
+                  }
+                  if (marPropertyInsuredRef.current) {
+                    marPropertyInsuredRef.current.value = "";
+                  }
+                  if (marMortgageeRef.current) {
+                    marMortgageeRef.current.value = "";
+                  }
+                  if (marAdditionalInfoRef.current) {
+                    marAdditionalInfoRef.current.value = "";
+                  }
+                  if (comPassenger1Ref.current) {
+                    comPassenger1Ref.current.value = "(50,000 per passenger)";
+                  }
+                  if (comPassenger2Ref.current) {
+                    comPassenger2Ref.current.value = "(50,000 per passenger)";
+                  }
+                  if (sumInsuredEBIRef.current) {
+                    sumInsuredEBIRef.current.value = "0.00";
+                  }
+                  if (sumInsuredTPPDRef.current) {
+                    sumInsuredTPPDRef.current.value = "0.00";
+                  }
+                  if (premiumSec3Ref.current) {
+                    premiumSec3Ref.current.value = "2.00";
+                  }
+                  if (premiumAOFRef.current) {
+                    premiumAOFRef.current.value = "0.5";
+                  }
+                  if (premiumAOGRef.current) {
+                    premiumAOGRef.current.value = "0.75";
+                  }
+                  if (premiumEBIRef.current) {
+                    premiumEBIRef.current.value = "0.00";
+                  }
+                  if (premiumTPPDRef.current) {
+                    premiumTPPDRef.current.value = "0.00";
+                  }
+                  if (premiumAPARef.current) {
+                    premiumAPARef.current.value = "0.00";
+                  }
+                  if (balanceRef.current) {
+                    balanceRef.current.value = "0.00";
+                  }
+                  setIsEditMode(false);
+                }}
+                disabled={!isEditMode}
+                color="warning"
+                variant="contained"
+                sx={{ height: "22px", fontSize: "12px", width: "50px" }}
+              >
+                Edit
+              </Button>
+            </div>
+            <TextInput
+              containerClassName="custom-input adjust-label-search"
+              containerStyle={{ width: "200px" }}
               label={{
-                title: "Policy Type : ",
+                title: "Balance : ",
                 style: {
                   fontSize: "12px",
                   fontWeight: "bold",
-                  width: policyType === "COM" ? "100px" : "150px",
+                  width: "70px",
                 },
               }}
-              select={{
-                disabled: isEditMode,
-                style: {
-                  width:
-                    policyType === "COM"
-                      ? "calc(100% - 100px)"
-                      : "calc(100% - 150px)",
-                  height: "20px",
-                },
-                value: policyType,
+              input={{
+                defaultValue: "0.00",
+                readOnly: true,
+                type: "text",
                 onKeyDown: (e) => {
-                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
+                    search(e.currentTarget.value, policyType);
                   }
                 },
-                onChange: (e) => {
-                  setPolicyType(e.currentTarget.value);
-                },
+                style: { width: "calc(100% - 70px)", height: "22px" },
               }}
-              datasource={[
-                {
-                  key: "COM",
-                },
-                {
-                  key: "FIRE",
-                },
-                {
-                  key: "MAR",
-                },
-                {
-                  key: "PA",
-                },
-              ]}
-              values={"key"}
-              display={"key"}
+              inputRef={balanceRef}
             />
-            <Button
-              onClick={() => {
-                if (searchRef.current) {
-                  searchRef.current.value = "";
-                }
-                if (nameRef.current) {
-                  nameRef.current.value = "";
-                }
-                if (paPropertyInsuredRef.current) {
-                  paPropertyInsuredRef.current.value = "";
-                }
-                if (firePropertyInsuredRef.current) {
-                  firePropertyInsuredRef.current.value = "";
-                }
-                if (fireMortgageeRef.current) {
-                  fireMortgageeRef.current.value = "";
-                }
-                if (marPropertyInsuredRef.current) {
-                  marPropertyInsuredRef.current.value = "";
-                }
-                if (marMortgageeRef.current) {
-                  marMortgageeRef.current.value = "";
-                }
-                if (marAdditionalInfoRef.current) {
-                  marAdditionalInfoRef.current.value = "";
-                }
-                if (comPassenger1Ref.current) {
-                  comPassenger1Ref.current.value = "(50,000 per passenger)";
-                }
-                if (comPassenger2Ref.current) {
-                  comPassenger2Ref.current.value = "(50,000 per passenger)";
-                }
-                if (sumInsuredEBIRef.current) {
-                  sumInsuredEBIRef.current.value = "0.00";
-                }
-                if (sumInsuredTPPDRef.current) {
-                  sumInsuredTPPDRef.current.value = "0.00";
-                }
-                if (premiumSec3Ref.current) {
-                  premiumSec3Ref.current.value = "2.00";
-                }
-                if (premiumAOFRef.current) {
-                  premiumAOFRef.current.value = "0.5";
-                }
-                if (premiumAOGRef.current) {
-                  premiumAOGRef.current.value = "0.75";
-                }
-                if (premiumEBIRef.current) {
-                  premiumEBIRef.current.value = "0.00";
-                }
-                if (premiumTPPDRef.current) {
-                  premiumTPPDRef.current.value = "0.00";
-                }
-                if (premiumAPARef.current) {
-                  premiumAPARef.current.value = "0.00";
-                }
-                setIsEditMode(false);
-              }}
-              disabled={!isEditMode}
-              color="warning"
-              variant="contained"
-              sx={{ height: "22px", fontSize: "12px", width: "50px" }}
-            >
-              Edit
-            </Button>
           </div>
           <Button
             disabled={!isEditMode}

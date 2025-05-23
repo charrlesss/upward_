@@ -3,12 +3,18 @@ import { useContext, useRef } from "react";
 import { useMutation, useQuery } from "react-query";
 import { AuthContext } from "../../../../components/AuthContext";
 import { SelectInput, TextInput } from "../../../../components/UpwardFields";
-import { DataGridViewMultiSelectionReact } from "../../../../components/DataGridViewReact";
+import {
+  DataGridViewMultiSelectionReact,
+  useUpwardTableModalSearchSafeMode,
+} from "../../../../components/DataGridViewReact";
 import { Button } from "@mui/material";
 import Swal from "sweetalert2";
 import { Loading } from "../../../../components/Loading";
 import PageHelmet from "../../../../components/Helmet";
 import "../../../../style/monbileview/accounting/pullout.css";
+import SearchIcon from "@mui/icons-material/Search";
+import { formatNumber } from "./ReturnCheck";
+import { wait } from "@testing-library/user-event/dist/utils";
 
 const column = [
   {
@@ -33,31 +39,13 @@ export default function CheckPulloutApproved() {
   const { myAxios, user } = useContext(AuthContext);
   const table = useRef<any>(null);
 
-  const rcpnRef = useRef<HTMLSelectElement>(null);
+  const rcpnRef = useRef<HTMLInputElement>(null);
   const ppnoRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
   const reasonRef = useRef<HTMLInputElement>(null);
   const codeRef = useRef<HTMLInputElement>(null);
 
   const btnAddRef = useRef<HTMLButtonElement>(null);
-
-  const {
-    isLoading: isLoadingLoadRequestNumber,
-    data: dataLoadRequestNumber,
-    refetch: refetchRequestNumber,
-  } = useQuery({
-    queryKey: "load-request-number",
-    queryFn: async () =>
-      await myAxios.get(
-        `/task/accounting/pullout/approved/load-request-number`,
-        {
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
-        }
-      ),
-    refetchOnWindowFocus: false,
-  });
 
   const { isLoading: isLoadingLoadDetails, mutate: mutateDetails } =
     useMutation({
@@ -73,13 +61,51 @@ export default function CheckPulloutApproved() {
           }
         ),
       onSuccess(res) {
-        const details = res?.data.details;
+        const details = res?.data.details.map((itm: any) => {
+          return {
+            ...itm,
+            Check_Amnt: formatNumber(
+              parseFloat(itm.Check_Amnt.toString().replace(/,/g, ""))
+            ),
+          };
+        });
+
         if (ppnoRef.current) ppnoRef.current.value = details[0].PNNo;
         if (nameRef.current) nameRef.current.value = details[0].Name;
         if (reasonRef.current) reasonRef.current.value = details[0].Reason;
         table.current.setDataFormated(details);
       },
     });
+
+  const { mutate: mutatePrint, isLoading: isLoadingPrint } = useMutation({
+    mutationKey: "print",
+    mutationFn: async (variables: any) => {
+      return await myAxios.post(
+        "/task/accounting/pullout/approved/print",
+        variables,
+        {
+          responseType: "arraybuffer",
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }
+      );
+    },
+    onSuccess: (response) => {
+      const pdfBlob = new Blob([response.data], { type: "application/pdf" });
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+
+      window.open(
+        `/${
+          process.env.REACT_APP_DEPARTMENT
+        }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+        "_blank"
+      );
+
+
+
+    },
+  });
 
   const { isLoading: isLoadingConfirmCode, mutate: mutateConfirmCode } =
     useMutation({
@@ -95,23 +121,72 @@ export default function CheckPulloutApproved() {
           }
         ),
       onSuccess(res) {
-        table.current.resetTable();
-        if (rcpnRef.current) rcpnRef.current.value = "";
-        if (ppnoRef.current) ppnoRef.current.value = "";
-        if (nameRef.current) nameRef.current.value = "";
-        if (reasonRef.current) reasonRef.current.value = "";
-        if (codeRef.current) codeRef.current.value = "";
-
-        Swal.fire({
-          position: "center",
-          icon: "warning",
-          title: res.data.message,
-          timer: 1500,
-        }).then(() => {
-          refetchRequestNumber();
-        });
+        if (res.data.success) {
+          Swal.fire({
+            text: res.data.message,
+            icon: "success",
+            timer: 1500,
+          })
+            .then(() => {
+              mutatePrint({
+                state: {
+                  PNo: ppnoRef.current?.value,
+                  Name: nameRef.current?.value,
+                  rcpnNo: rcpnRef.current?.value,
+                  reportTitle: "",
+                },
+                tableData: table.current.getData().map((itm: Array<any>) => {
+                  return {
+                    Check_No: itm[3],
+                    Check_Date: itm[1],
+                    BankName: itm[2],
+                    Check_Amnt: itm[4],
+                    seq: itm[0],
+                  };
+                }),
+              });
+            })
+            .finally(() => {
+              table.current.resetTable();
+              if (rcpnRef.current) rcpnRef.current.value = "";
+              if (ppnoRef.current) ppnoRef.current.value = "";
+              if (nameRef.current) nameRef.current.value = "";
+              if (reasonRef.current) reasonRef.current.value = "";
+              if (codeRef.current) codeRef.current.value = "";
+            });
+        } else {
+          Swal.fire({
+            text: res.data.message,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, confirm it!",
+          });
+        }
       },
     });
+
+  const {
+    UpwardTableModalSearch: RcpnNoSearchUpwardTableModalSearch,
+    openModal: rcpnNoSearchOpenModal,
+    closeModal: rcpnNoSearchCloseModal,
+  } = useUpwardTableModalSearchSafeMode({
+    link: "/task/accounting/pullout/reqeust/get-rcpn-no",
+    column: [{ key: "RCPNo", label: "RCPN No.", width: 400 }],
+    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
+      if (rowItm) {
+        mutateDetails({
+          RCPNo: rowItm[0],
+        });
+
+        if (rcpnRef.current) {
+          rcpnRef.current.value = rowItm[0];
+        }
+        rcpnNoSearchCloseModal();
+      }
+    },
+  });
 
   const { isLoading: isLoadingConfirm, mutate: mutateConfirm } = useMutation({
     mutationKey: "confirm",
@@ -173,10 +248,12 @@ export default function CheckPulloutApproved() {
         background: "#F1F1F1",
       }}
     >
+      <RcpnNoSearchUpwardTableModalSearch />
       <PageHelmet title="Pullout Approved" />
-      {(isLoadingLoadDetails || isLoadingConfirm || isLoadingConfirmCode) && (
-        <Loading />
-      )}
+      {(isLoadingLoadDetails ||
+        isLoadingConfirm ||
+        isLoadingConfirmCode ||
+        isLoadingPrint) && <Loading />}
       <div
         className="content"
         style={{
@@ -196,51 +273,38 @@ export default function CheckPulloutApproved() {
             boxSizing: "border-box",
           }}
         >
-          {isLoadingLoadRequestNumber ? (
-            <LoadingButton loading={isLoadingLoadRequestNumber} />
-          ) : (
-            <div
-              style={{
-                width: "100%",
-                marginBottom: "8px",
-              }}
-            >
-              <SelectInput
-                containerClassName="custom-input"
-                label={{
-                  title: "RCP No.  : ",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "100px",
-                  },
-                }}
-                selectRef={rcpnRef}
-                select={{
-                  style: { flex: 1, height: "22px" },
-                  defaultValue: "Non-VAT",
-                  onChange: async (e) => {
-                    if (e.currentTarget.selectedIndex === 0) {
-                      table.current.resetTable();
-                      if (rcpnRef.current) rcpnRef.current.value = "";
-                      if (ppnoRef.current) ppnoRef.current.value = "";
-                      if (nameRef.current) nameRef.current.value = "";
-                      if (reasonRef.current) reasonRef.current.value = "";
-                      if (codeRef.current) codeRef.current.value = "";
-                    }
-                    mutateDetails({ RCPNo: e.target.value });
-                  },
-                }}
-                containerStyle={{
-                  width: "300px",
-                  marginBottom: "12px",
-                }}
-                datasource={dataLoadRequestNumber?.data.rcpn}
-                values={"RCPNo"}
-                display={"RCPNo"}
-              />
-            </div>
-          )}
+          <TextInput
+            containerClassName="custom-input"
+            containerStyle={{
+              width: "50%",
+              marginBottom: "8px",
+            }}
+            label={{
+              title: "RCP No. :",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "100px",
+              },
+            }}
+            input={{
+              type: "text",
+              style: { width: "calc(100% - 100px)" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  rcpnNoSearchOpenModal(e.currentTarget.value);
+                }
+              },
+            }}
+            icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+            onIconClick={(e) => {
+              e.preventDefault();
+              if (rcpnRef.current) {
+                rcpnNoSearchOpenModal(rcpnRef.current.value);
+              }
+            }}
+            inputRef={rcpnRef}
+          />
 
           <TextInput
             containerClassName="custom-input"
