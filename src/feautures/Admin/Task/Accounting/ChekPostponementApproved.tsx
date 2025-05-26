@@ -11,18 +11,22 @@ import {
   TextFormatedInput,
   TextInput,
 } from "../../../../components/UpwardFields";
-import { DataGridViewReact } from "../../../../components/DataGridViewReact";
-import { useMutation, useQuery } from "react-query";
+import {
+  DataGridViewReact,
+  useUpwardTableModalSearchSafeMode,
+} from "../../../../components/DataGridViewReact";
+import { useMutation } from "react-query";
 import { AuthContext } from "../../../../components/AuthContext";
 import { Loading } from "../../../../components/Loading";
 import Swal from "sweetalert2";
-import { LoadingButton } from "@mui/lab";
 import { wait } from "../../../../lib/wait";
 import { Button } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { grey } from "@mui/material/colors";
 import PageHelmet from "../../../../components/Helmet";
 import "../../../../style/monbileview/accounting/checkpostponement.css";
+import AccountBoxIcon from "@mui/icons-material/AccountBox";
+import { formatNumber } from "./ReturnCheck";
 
 const columns = [
   { key: "ln", label: "#", width: 40 },
@@ -42,8 +46,10 @@ export default function ChekPostponementApproved() {
   const [disabledButtons, setDisabledButtons] = useState(true);
   const modal = useRef<any>(null);
   // first field
-  const RPCDNoRef = useRef<HTMLSelectElement>(null);
-  const _RPCDNoRef = useRef<any>(null);
+  // const RPCDNoRef = useRef<HTMLSelectElement>(null);
+  // const _RPCDNoRef = useRef<any>(null);
+
+  const RPCDNoRef = useRef<HTMLInputElement>(null);
   const BranchRef = useRef<HTMLInputElement>(null);
   const PNNoRef = useRef<HTMLInputElement>(null);
   const NameRef = useRef<HTMLInputElement>(null);
@@ -57,30 +63,35 @@ export default function ChekPostponementApproved() {
   const HowToBePaidRef = useRef<HTMLSelectElement>(null);
   const RemarksRef = useRef<HTMLTextAreaElement>(null);
 
-  // laod rpcno
-  const { isLoading: isLoadingLoadROCNo, refetch } = useQuery({
-    queryKey: "saving",
-    queryFn: async (variable: any) =>
-      await myAxios.get(
-        `/task/accounting/check-postponement/approve/load-rpcdno`,
+  const { mutate: mutatePrint, isLoading: isLoadingPrint } = useMutation({
+    mutationKey: "print-apporved",
+    mutationFn: async (variables: any) => {
+      return await myAxios.post(
+        "/task/accounting/check-postponement/approved/print",
+        variables,
         {
+          responseType: "arraybuffer",
           headers: {
             Authorization: `Bearer ${user?.accessToken}`,
           },
         }
-      ),
-    onSuccess(response) {
-      if (!response.data.success) {
-        return alert(response.data.message);
-      }
-
-      wait(100).then(() => {
-        _RPCDNoRef.current.setDataSource(response.data.data);
-      });
+      );
     },
-    refetchOnWindowFocus: false,
+    onSuccess: (response) => {
+      const pdfBlob = new Blob([response.data], { type: "application/pdf" });
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+
+      window.open(
+        `/${
+          process.env.REACT_APP_DEPARTMENT
+        }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+        "_blank"
+      );
+    },
   });
+
   // load details
+
   const { isLoading: isLoadingDetails, mutate: mutateDetails } = useMutation({
     mutationKey: "load-details",
     mutationFn: async (variable: any) =>
@@ -131,8 +142,19 @@ export default function ChekPostponementApproved() {
         if (PenaltyChargeRef.current) {
           PenaltyChargeRef.current.value = "0.00";
         }
+        if (data.length > 0) {
+          const newData = data.map((itm: any, idx: number) => {
+            return {
+              ...itm,
+              Amount: formatNumber(
+                parseFloat(itm.Amount.toString().replace(/,/g, ""))
+              ),
+              ln: idx + 1,
+            };
+          });
 
-        table.current.setDataFormated(data);
+          table.current.setDataFormated(newData);
+        }
       });
     },
   });
@@ -155,21 +177,43 @@ export default function ChekPostponementApproved() {
           return alert(response.data.message);
         }
 
-        wait(100).then(() => {
-          setDisabledButtons(true);
-          resetFirstFields();
-          resetThirdFields();
-          table.current.resetTable();
-          modal.current.closeDelay();
-          refetch();
-        });
-
-        return Swal.fire({
-          position: "center",
+        Swal.fire({
+          text: response.data.message,
           icon: "success",
-          title: response.data.message,
           timer: 1500,
-        });
+        })
+          .then(() => {
+            mutatePrint({
+              state: {
+                PNo: PNNoRef.current?.value,
+                Name: NameRef.current?.value,
+                rcpnNo: RPCDNoRef.current?.value,
+                reportTitle: "",
+              },
+              tableData: table.current.getData().map((itm: any) => {
+                return {
+                  CheckNo: itm[1] || "",
+                  OldDepositDate: itm[4] || "",
+                  NewDate: itm[5] || "",
+                  Bank: itm[2] || "",
+                  Amount: itm[3] || "0.00",
+                  Datediff: itm[7] || "0",
+                  Penalty: itm[6] || "0.00",
+                  Reason: itm[8] || "",
+                  ln: itm[0],
+                };
+              }),
+            });
+          })
+          .finally(() => {
+            wait(100).then(() => {
+              setDisabledButtons(true);
+              resetFirstFields();
+              resetThirdFields();
+              table.current.resetTable();
+              modal.current.closeDelay();
+            });
+          });
       },
     });
 
@@ -212,6 +256,26 @@ export default function ChekPostponementApproved() {
         }
       },
     });
+
+  const {
+    UpwardTableModalSearch: RCPNopwardTableModalSearch,
+    openModal: rcpnoOpenModal,
+    closeModal: rcpnoCloseModal,
+  } = useUpwardTableModalSearchSafeMode({
+    size: "medium",
+    link: "/task/accounting/check-postponement/approve/load-rpcdno",
+    column: [{ key: "RPCDNo", label: "Name", width: 300 }],
+    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
+      if (rowItm) {
+        if (RPCDNoRef.current) {
+          RPCDNoRef.current.value = rowItm[0];
+        }
+        mutateDetails({ RPCDNo: rowItm[0] });
+        setDisabledButtons(false);
+        rcpnoCloseModal();
+      }
+    },
+  });
   function resetFirstFields() {
     if (RPCDNoRef.current) {
       RPCDNoRef.current.value = "";
@@ -226,7 +290,6 @@ export default function ChekPostponementApproved() {
       BranchRef.current.value = "";
     }
   }
-
   function resetThirdFields() {
     if (HoldingFeesRef.current) {
       HoldingFeesRef.current.value = "";
@@ -259,11 +322,13 @@ export default function ChekPostponementApproved() {
         height: "100%",
       }}
     >
+      <RCPNopwardTableModalSearch />
       <PageHelmet title="Check Postponement Approved" />
 
       {(isLoadingDetails ||
         isLoadingConfirmation ||
-        isLoadingConConfirmation) && <Loading />}
+        isLoadingConConfirmation ||
+        isLoadingPrint) && <Loading />}
       <Modal
         ref={modal}
         handleOnSave={(mode: string, code: string) => {
@@ -275,6 +340,33 @@ export default function ChekPostponementApproved() {
         handleOnClose={() => {}}
       />
       {/* ===========  first field  =========== */}
+      {/* <Button
+        onClick={() => {
+          mutatePrint({
+            state: {
+              PNo: PNNoRef.current?.value,
+              Name: NameRef.current?.value,
+              rcpnNo: RPCDNoRef.current?.value,
+              reportTitle: "",
+            },
+            tableData: table.current.getData().map((itm: any) => {
+              return {
+                CheckNo: itm[1] || "",
+                OldDepositDate: itm[4] || "",
+                NewDate: itm[5] || "",
+                Bank: itm[2] || "",
+                Amount: itm[3] || "0.00",
+                Datediff: itm[7] || "0",
+                Penalty: itm[6] || "0.00",
+                Reason: itm[8] || "",
+                ln: itm[0],
+              };
+            }),
+          });
+        }}
+      >
+        print
+      </Button> */}
       <div
         className="second-field"
         style={{
@@ -303,45 +395,39 @@ export default function ChekPostponementApproved() {
             columnGap: "50px",
           }}
         >
-          {isLoadingLoadROCNo ? (
-            <LoadingButton loading={isLoadingLoadROCNo} />
-          ) : (
-            <SelectInput
-              containerClassName="custom-input"
-              ref={_RPCDNoRef}
-              label={{
-                title: "RPCD no. :",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "80px",
-                },
-              }}
-              selectRef={RPCDNoRef}
-              select={{
-                style: { flex: 1, height: "22px" },
-                defaultValue: "",
-                onChange: (e) => {
-                  if (e.target.value !== "") {
-                    mutateDetails({ RPCDNo: e.target.value });
-                    setDisabledButtons(false);
-                  } else {
-                    setDisabledButtons(true);
-                    resetFirstFields();
-                    resetThirdFields();
-                    table.current.resetTable();
-                  }
-                },
-              }}
-              containerStyle={{
-                width: "50%",
-                marginBottom: "12px",
-              }}
-              datasource={[]}
-              values={"RPCDNo"}
-              display={"RPCDNo"}
-            />
-          )}
+          <TextInput
+            containerClassName="custom-input"
+            containerStyle={{
+              width: "50%",
+              marginBottom: "8px",
+            }}
+            label={{
+              title: "RPCD no. :",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "80px",
+              },
+            }}
+            input={{
+              type: "text",
+              style: { width: "calc(100% - 80px) " },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  rcpnoOpenModal(e.currentTarget.value);
+                }
+              },
+            }}
+            icon={<AccountBoxIcon sx={{ fontSize: "18px" }} />}
+            onIconClick={(e) => {
+              e.preventDefault();
+              if (PNNoRef.current) {
+                rcpnoOpenModal(PNNoRef.current.value);
+              }
+            }}
+            inputRef={RPCDNoRef}
+          />
+
           <TextInput
             containerClassName="custom-input"
             containerStyle={{

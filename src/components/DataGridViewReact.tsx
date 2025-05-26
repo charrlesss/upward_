@@ -1299,7 +1299,7 @@ export const useUpwardTableModalSearch = ({
   const [show, setShow] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  function openModal() {
+  function openModal(search: string) {
     const body = document.body;
     const div = document.createElement("div");
     div.id = "modal-portal";
@@ -1313,19 +1313,21 @@ export const useUpwardTableModalSearch = ({
     });
 
     setShow(true);
-    setTimeout(() => {
+
+    wait(100).then(() => {
       if (searchInputRef.current) {
+        searchInputRef.current.value = search;
         const event = new KeyboardEvent("keydown", {
           code: "Enter",
           bubbles: true,
         });
         searchInputRef.current.focus(); // Ensure the element has focus
         searchInputRef.current.dispatchEvent(event); // Dispatch the native event
-        setTimeout(() => {
+        wait(100).then(() => {
           searchInputRef.current?.focus();
-        }, 100);
+        });
       }
-    }, 100);
+    });
   }
   function closeModal(muteOnClose = true) {
     if (onClose && muteOnClose) {
@@ -1334,6 +1336,7 @@ export const useUpwardTableModalSearch = ({
     setShow(false);
     dataCache = [];
   }
+
   const UpwardTableModalSearch = () => {
     const modalRef = useRef<HTMLDivElement>(null);
     const isMoving = useRef(false);
@@ -1509,6 +1512,13 @@ export const useUpwardTableModalSearch = ({
                       });
                     }
                     tableRef.current?._setSelectedRow(0);
+                  }
+                },
+                onInput: async (e) => {
+                  if (e.currentTarget.value === "") {
+                    const searchQuery = query(searchInputRef.current?.value);
+                    const dd = await executeQueryToClient(searchQuery);
+                    setData(dd.data.data);
                   }
                 },
               }}
@@ -1718,7 +1728,6 @@ export const useUpwardTableModalSearchSafeMode = ({
       mutate,
       mutateReturnValue,
     }));
-
 
     return show ? (
       ReactDOM.createPortal(

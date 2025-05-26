@@ -101,9 +101,6 @@ export default function CheckPulloutApproved() {
         }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
         "_blank"
       );
-
-
-
     },
   });
 

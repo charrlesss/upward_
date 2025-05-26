@@ -1551,7 +1551,9 @@ export default function Collection() {
               }}
               color="success"
               variant="contained"
-              onClick={openModal}
+              onClick={() => {
+                openModal("");
+              }}
             >
               Add Check from PDC Entry
             </Button>

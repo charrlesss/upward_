@@ -171,31 +171,7 @@ export default function ChekPostponementRequest() {
         }
       },
     });
-  //load check RPCDNo
-  const { isLoading: isLoadingLoadRPCDNo, mutate: mutateLoadRPCDNo } =
-    useMutation({
-      mutationKey: "load-rpcdno",
-      mutationFn: async (variable: any) =>
-        await myAxios.post(
-          `/task/accounting/check-postponement/request/load-rpcdno`,
-          variable,
-          {
-            headers: {
-              Authorization: `Bearer ${user?.accessToken}`,
-            },
-          }
-        ),
-      onSuccess(response) {
-        if (!response.data.success) {
-          return alert(response.data.message);
-        }
-        const res = response?.data.data;
 
-        wait(100).then(() => {
-          _RPCDNoSubRef.current.setDataSource(res);
-        });
-      },
-    });
   //load check RPCDNo
   const {
     isLoading: isLoadingLoadRPCDNoDetails,
@@ -440,6 +416,26 @@ export default function ChekPostponementRequest() {
     },
   });
 
+  // search RCPNo Edit
+  const {
+    UpwardTableModalSearch: EditRCPNUpwardTableModalSearch,
+    openModal: editRCPNOpenModal,
+    closeModal: editRCPNCloseModal,
+  } = useUpwardTableModalSearchSafeMode({
+    size: "medium",
+    link: "/task/accounting/check-postponement/request/load-rpcdno",
+    column: [{ key: "RPCDNo", label: "Name", width: 300 }],
+    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
+      if (rowItm) {
+        if (RPCDNoRef.current) {
+          RPCDNoRef.current.value = rowItm[0];
+        }
+        mutateLoadRPCDNoDetails({ RPCDNo: rowItm[0] });
+        editRCPNCloseModal();
+      }
+    },
+  });
+
   function handleAddCheck() {
     if (
       (BankRef.current && BankRef.current.value === "") ||
@@ -563,6 +559,7 @@ export default function ChekPostponementRequest() {
 
   return (
     <>
+      <EditRCPNUpwardTableModalSearch />
       <PNNoUpwardTableModalSearch />
       <PageHelmet title="Check Postponement Request" />
       <div
@@ -579,7 +576,7 @@ export default function ChekPostponementRequest() {
           isLoadingEdit) && <Loading />}
         {/* ===========  first field  =========== */}
         <div
-        className="second-field"
+          className="second-field"
           style={{
             position: "relative",
             padding: "12px",
@@ -608,36 +605,38 @@ export default function ChekPostponementRequest() {
             }}
           >
             {mode === "edit" ? (
-              isLoadingLoadRPCDNo ? (
-                <LoadingButton loading={isLoadingLoadRPCDNo} />
-              ) : (
-                <SelectInput
-                  ref={_RPCDNoSubRef}
-                  label={{
-                    title: "RPCD no. :",
-                    style: {
-                      fontSize: "12px",
-                      fontWeight: "bold",
-                      width: "80px",
-                    },
-                  }}
-                  selectRef={RPCDNoSubRef}
-                  select={{
-                    style: { flex: 1, height: "22px" },
-                    defaultValue: "",
-                    onChange: (e) => {
-                      mutateLoadRPCDNoDetails({ RPCDNo: e.target.value });
-                    },
-                  }}
-                  containerStyle={{
-                    width: "50%",
-                    marginBottom: "12px",
-                  }}
-                  datasource={[]}
-                  values={"RPCDNo"}
-                  display={"RPCDNo"}
-                />
-              )
+              <TextInput
+                containerClassName="custom-input"
+                containerStyle={{
+                  width: "50%",
+                  marginBottom: "8px",
+                }}
+                label={{
+                  title: "RPCD no. :",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "80px",
+                  },
+                }}
+                input={{
+                  type: "text",
+                  style: { width: "calc(100% - 80px) " },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      editRCPNOpenModal(e.currentTarget.value);
+                    }
+                  },
+                }}
+                icon={<AccountBoxIcon sx={{ fontSize: "18px" }} />}
+                onIconClick={(e) => {
+                  e.preventDefault();
+                  if (PNNoRef.current) {
+                    editRCPNOpenModal(PNNoRef.current.value);
+                  }
+                }}
+                inputRef={RPCDNoRef}
+              />
             ) : isLoadingLoadAutoIdData ? (
               <LoadingButton loading={isLoadingLoadAutoIdData} />
             ) : (
@@ -763,7 +762,7 @@ export default function ChekPostponementRequest() {
         </div>
         {/* ===========  second field  =========== */}
         <div
-        className="second-field"
+          className="second-field"
           style={{
             position: "relative",
             padding: "12px",
@@ -1304,7 +1303,9 @@ export default function ChekPostponementRequest() {
                   }}
                   onClick={(e) => {
                     setMode("edit");
-                    mutateLoadRPCDNo({});
+                    if (RPCDNoRef.current) {
+                      RPCDNoRef.current.value = "";
+                    }
                   }}
                 >
                   edit
@@ -1383,7 +1384,9 @@ export default function ChekPostponementRequest() {
             }}
             onClick={(e) => {
               setMode("edit");
-              mutateLoadRPCDNo({});
+              if (RPCDNoRef.current) {
+                RPCDNoRef.current.value = "";
+              }
             }}
           >
             edit
