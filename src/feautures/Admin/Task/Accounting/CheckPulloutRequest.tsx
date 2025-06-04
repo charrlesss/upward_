@@ -200,8 +200,7 @@ export default function CheckPulloutRequest() {
     WHERE
         PNo = '${ppnoRef.current?.value}'
       AND PDC_Status = 'Stored'
-    
-
+    order by Check_Date asc
         `;
 
     const { data: response } = await executeQueryToClientRef.current(qry);
@@ -218,7 +217,7 @@ export default function CheckPulloutRequest() {
                           AND Status = 'PENDING'
                   ORDER BY CheckNo
           `;
-          const { data: response1 } = await executeQueryToClientRef.current(qry1);
+      const { data: response1 } = await executeQueryToClientRef.current(qry1);
       const checkNoSelected = response1.data.map((itm: any) => itm.CheckNo);
       const filteredData = response.data.map((itm: any, idx: number) => {
         if (checkNoSelected.includes(itm.Check_No)) {

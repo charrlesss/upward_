@@ -1026,6 +1026,115 @@ export default function GeneralJournal() {
       maximumFractionDigits: 2,
     });
   }
+  async function DoRPTTransactionNILHNASTRA() {
+    setLoadingJob(true);
+    setOpenJobs(false);
+    setTimeout(async () => {
+      let JobDate = new Date(state.jobTransactionDate);
+      let dtFrom = format(JobDate, "yyyy-MM-01-");
+      let dtTo = format(lastDayOfMonth(JobDate), "yyyy-MM-dd");
+      let iRow = 0;
+
+      const qry = `
+    select 
+      a.PolicyNo,
+      a.IDNo,
+      (TotalDue - ifnull(b.TotalPaid,0)) as 'Amount',
+      c.Mortgagee 
+    from policy a 
+      left join (
+        select 
+          IDNo,
+          sum(Debit) as 'TotalPaid' 
+        from collection 
+        group by IDNo
+      ) b on b.IDNo = a.PolicyNo 
+      inner join vpolicy c on c.PolicyNo = a.PolicyNo 
+      where
+      (TotalDue - ifnull(b.TotalPaid,0)) <> 0 and 
+      a.PolicyType = 'TPL' and 
+      c.Mortgagee = 'N I L - ASTRA' and 
+      (
+        a.DateIssued >= '${dtFrom}' and 
+        a.DateIssued <= '${dtTo}'
+      ) 
+      order by a.DateIssued
+      `;
+      let dgvJournal: any = [];
+      const { data } = await executeQueryToClient(qry);
+      const dataArray = data.data;
+
+      if (dataArray.length > 0) {
+        let totalAmount = 0;
+        let i = 0;
+        for (const itm of dataArray) {
+          let tmpID = "";
+          if (i === 0) {
+            iRow = 0;
+          } else {
+            iRow = iRow + 1;
+          }
+
+          tmpID = itm.IDNo;
+          const { data: tmpNameRes } = await executeQueryToClient(
+            `SELECT Shortname ,Sub_ShortName, Sub_Acct FROM (${ID_Entry}) id_entry WHERE IDNo = '${tmpID}'`
+          );
+
+          dgvJournal[iRow] = [
+            "1.03.01", // 0
+            "Premium Receivables", // 1
+            tmpNameRes.data[0]?.Sub_ShortName, // 2
+            tmpNameRes.data[0]?.Shortname, // 3
+            "0.00", // 4
+            formatNumber(itm.Amount), //5
+            "RPT", // 6
+            "", // 7
+            "Non-VAT", //8
+            "",
+            itm.PolicyNo,
+            itm.PolicyNo,
+            tmpNameRes.data[0]?.Sub_Acct, // 8
+          ];
+
+          totalAmount =
+            totalAmount + parseFloat(itm.Amount.toString().replace(/,/g, ""));
+          i += 1;
+        }
+
+        const { data: tmpNameRes } = await executeQueryToClient(
+          `SELECT Shortname ,Sub_ShortName, Sub_Acct FROM (${ID_Entry}) id_entry WHERE IDNo = 'C-1024-04785'`
+        );
+
+        dgvJournal[iRow + 1] = [
+          "1.03.01",
+          "Premium Receivables",
+          tmpNameRes.data[0]?.Sub_ShortName, // 2
+          tmpNameRes.data[0]?.Shortname, // 3
+          formatNumber(totalAmount), //4
+          "0.00", // 5,
+          "RPT", // 7
+          "", // 9
+          "Non-VAT", //8
+          "",
+          "1.05.02", // 9
+          "1.05.02", // 10
+          tmpNameRes.data[0]?.Sub_Acct, // 12
+        ];
+        table.current.setData(dgvJournal);
+        setMode("update");
+        setOpenJobs(false);
+
+        setMonitoring({
+          totalRow: dgvJournal.length,
+          totalDebit: formatNumber(totalAmount),
+          totalCredit: formatNumber(totalAmount),
+          balance: "0.00",
+        });
+      }
+
+      setLoadingJob(false);
+    }, 300);
+  }
   async function DoRPTTransactionNILHN() {
     setLoadingJob(true);
     setOpenJobs(false);
@@ -1078,6 +1187,7 @@ export default function GeneralJournal() {
           const { data: tmpNameRes } = await executeQueryToClient(
             `SELECT Shortname ,Sub_ShortName, Sub_Acct FROM (${ID_Entry}) id_entry WHERE IDNo = '${tmpID}'`
           );
+
           dgvJournal[iRow] = [
             "1.03.01", // 0
             "Premium Receivables", // 1
@@ -1121,6 +1231,12 @@ export default function GeneralJournal() {
         table.current.setData(dgvJournal);
         setMode("update");
         setOpenJobs(false);
+        setMonitoring({
+          totalRow: dgvJournal.length,
+          totalDebit: formatNumber(totalAmount),
+          totalCredit: formatNumber(totalAmount),
+          balance: "0.00",
+        });
       }
       setLoadingJob(false);
     }, 300);
@@ -2084,7 +2200,6 @@ export default function GeneralJournal() {
                   <MenuItem value={""}> </MenuItem>
                   <MenuItem value={"0"}>Reversal of Accrued Interest </MenuItem>
                   <MenuItem value={"1"}>
-                    {" "}
                     Income Recognition & Accrual of Interest
                   </MenuItem>
                   <MenuItem value={"2"}>Penalty Charges</MenuItem>
@@ -2101,6 +2216,7 @@ export default function GeneralJournal() {
                     Production (Liberty Insurance Co.)
                   </MenuItem>
                   <MenuItem value={"11"}>Production (Federal Phoenix)</MenuItem>
+                  <MenuItem value={"12"}>ASTRA</MenuItem>
                 </Select>
               </FormControl>
             </div>
@@ -2119,6 +2235,9 @@ export default function GeneralJournal() {
                 onClick={() => {
                   if (state.jobType === "4") {
                     DoRPTTransactionNILHN();
+                  }
+                  if (state.jobType === "12") {
+                    DoRPTTransactionNILHNASTRA();
                   }
                 }}
               >

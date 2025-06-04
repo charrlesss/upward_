@@ -81,27 +81,27 @@ export default function WarehouseChecks() {
     ],
     query: (search: string) => {
       const StrQry = `
-      SELECT 
-          DATE_FORMAT(Policy.DateIssued, '%M. %d, %Y') AS Date,
-          Policy.PolicyNo,
-          Policy.Account,
+     SELECT 
+          DATE_FORMAT(policy.DateIssued, '%M. %d, %Y') AS Date,
+          policy.PolicyNo,
+          policy.Account,
           ID_Entry.Shortname AS Name
       FROM
-          Policy
+          policy
               LEFT JOIN
-          FPolicy ON Policy.PolicyNo = FPolicy.PolicyNo
+          fpolicy ON policy.PolicyNo = fpolicy.PolicyNo
               LEFT JOIN
-          VPolicy ON Policy.PolicyNo = VPolicy.PolicyNo
+          vpolicy ON policy.PolicyNo = vpolicy.PolicyNo
               LEFT JOIN
-          MPolicy ON Policy.PolicyNo = MPolicy.PolicyNo
+          mpolicy ON policy.PolicyNo = mpolicy.PolicyNo
               LEFT JOIN
-          BPolicy ON Policy.PolicyNo = BPolicy.PolicyNo
+          bpolicy ON policy.PolicyNo = bpolicy.PolicyNo
               LEFT JOIN
-          MSPRPolicy ON Policy.PolicyNo = MSPRPolicy.PolicyNo
+          msprpolicy ON policy.PolicyNo = msprpolicy.PolicyNo
               LEFT JOIN
-          PAPolicy ON Policy.PolicyNo = PAPolicy.PolicyNo
+          papolicy ON policy.PolicyNo = papolicy.PolicyNo
               LEFT JOIN
-          CGLPolicy ON Policy.PolicyNo = CGLPolicy.PolicyNo
+          cglpolicy ON policy.PolicyNo = cglpolicy.PolicyNo
               LEFT JOIN
           (SELECT 
               id_entry.IDNo, id_entry.ShortName AS Shortname, IDType
@@ -146,19 +146,19 @@ export default function WarehouseChecks() {
                   aa.sub_account,
                   'Supplier' AS IDType
           FROM
-              entry_supplier aa) id_entry) AS ID_Entry ON Policy.IDNo = ID_Entry.IDNo
+              entry_supplier aa) id_entry)  AS ID_Entry ON policy.IDNo = ID_Entry.IDNo
       WHERE
-          Policy.PolicyNo IN (SELECT 
+          policy.PolicyNo IN (SELECT 
                   PNo
               FROM
                   pdc)
-              AND ((VPolicy.ChassisNo LIKE '%${search}%')
-              OR (VPolicy.MotorNo LIKE '%${search}%')
-              OR (VPolicy.PlateNo LIKE '%${search}%')
+              AND ((vpolicy.ChassisNo LIKE '%${search}%')
+              OR (vpolicy.MotorNo LIKE '%${search}%')
+              OR (vpolicy.PlateNo LIKE '%${search}%')
               OR (ID_Entry.Shortname LIKE '%${search}%')
-              OR (Policy.PolicyNo LIKE '%${search}%')
-              OR (Policy.Account LIKE '%${search}%'))
-      ORDER BY Policy.DateIssued DESC
+              OR (vpolicy.PolicyNo LIKE '%${search}%')
+              OR (vpolicy.Account LIKE '%${search}%'))
+      ORDER BY policy.DateIssued DESC
       LIMIT 500
         `;
       return StrQry;
@@ -329,11 +329,11 @@ export default function WarehouseChecks() {
         PDC_Status
       FROM pdc  
       WHERE ${fldSearch} = '${valSearch}'  AND ${StrWhere} ORDER BY Check_Date`;
-    console.log(qry);
     const dt = await executeQueryToClient(qry);
+    table.current.resetTable([]);
+
     if (dt.data) {
       if (dt.data.data.length > 0) {
-        table.current.resetTable([]);
         table.current.setDataFormated(dt.data.data);
         table.current.setIsTableSelectable(true);
         setMonitoring({
@@ -356,7 +356,6 @@ export default function WarehouseChecks() {
     //   refIDS.current?.focus();
     //   return;
     // }
-
     if (refPDCStatus.current && refSearch.current) {
       let strWhere = "";
       const statusOptions = ["Received", "Stored", "Stored"];
@@ -631,6 +630,9 @@ export default function WarehouseChecks() {
                 if (refRemarks.current) {
                   refRemarks.current.disabled = e.target.selectedIndex !== 2;
                 }
+                if (refIDS.current) {
+                  tsbSearch_Click(refIDS.current.value);
+                }
               },
             }}
             datasource={[
@@ -753,6 +755,11 @@ export default function WarehouseChecks() {
                         e.preventDefault();
                       }
                     },
+                    onChange: () => {
+                      if (refIDS.current) {
+                        tsbSearch_Click(refIDS.current.value);
+                      }
+                    },
                   }}
                   datasource={[
                     { key: "", value: "" },
@@ -760,11 +767,9 @@ export default function WarehouseChecks() {
                     { key: "ID No.", value: "IDNo" },
                     { key: "Bank", value: "Bank" },
                   ]}
-                  
                   values={"value"}
                   display={"key"}
                 />
-               
               </div>
               <div style={{ display: "flex", columnGap: "10px" }}>
                 <TextInput
@@ -797,7 +802,6 @@ export default function WarehouseChecks() {
                   }}
                   inputRef={refIDS}
                 />
-            
               </div>
             </div>
             <div
@@ -1270,7 +1274,7 @@ const ModalCheck = forwardRef(
                 }}
                 inputRef={rcpnRef}
               />
-             
+
               <DataGridViewMultiSelectionReact
                 ref={table}
                 columns={[
