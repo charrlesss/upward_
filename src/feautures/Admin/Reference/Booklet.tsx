@@ -28,7 +28,7 @@ export default function Booklet() {
       if (response.data.success) {
         console.log(response.data);
         wait(100).then(() => {
-          tableRef.current.setDataFormated(
+          tableRef.current.setData(
             response.data.data.map((itm: any) => {
               itm.DateIssued = format(new Date(itm.DateIssued), "MM/dd/yyyy");
               return itm;
@@ -115,10 +115,6 @@ export default function Booklet() {
           }}
         >
           <DataGridViewReactUpgraded
-            containerStyle={{
-              flex: 1,
-              height: "auto",
-            }}
             ref={tableRef}
             columns={[
               { key: "IDNo", label: "ID No.", width: 150 },
@@ -134,10 +130,26 @@ export default function Booklet() {
               { key: "LGovTax", label: "LGovTax", width: 150 },
               { key: "Notarial", label: "Notarial", width: 150 },
             ]}
-            height="280px"
-            getSelectedItem={(rowItm: any) => {
-              if (rowItm) {
-              }
+            adjustVisibleRowCount={150}
+            RightClickComponent={({ row }: any) => {
+              return (
+                <>
+                  {row.PolicyType === "TPL" ? (
+                    <div
+                      className="modal-action"
+                      onClick={() => {
+                        console.log(row);
+                        // alert('primnting')
+                      }}
+                    >
+                      🖨️ Print Check
+                    </div>
+                  ) : null}
+                </>
+              );
+            }}
+            handleSelectionChange={(row: any) => {
+              console.log(row);
             }}
           />
         </div>
