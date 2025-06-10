@@ -10,17 +10,36 @@
   }
 }
 
+.row-data {
+  z-index: 0 !important;
+}
 .modal-action {
   cursor: pointer;
   padding: 2px 10px;
   font-size: 14px;
 }
 .modal-action:hover {
-  background-color: rgb(240, 236, 236);
+  background-color: rgb(230, 222, 222) !important;
 }
-.row-data:focus {
-  outline: 3px solid #2344eb !important;
-  z-index: 22;
+.row-data:has(input:focus) {
+  border: 2px solid blue !important;
+}
+.row-data:has(:not(input)):focus-within::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background-color: transparent;
+  z-index: 100 !important;
+  width: 100%;
+  height: 100%;
+  border: 2px solid blue !important;
+}
+
+.row:has(.row-data:focus):has(.row-data:hover) {
+  z-index: 100 !important;
 }
 .row:has(.row-data:focus) {
   background-color: #dbedff !important;
@@ -37,17 +56,47 @@
   background-color: #f5f5f5 !important;
 }
 .row.row-selected {
-  background: #1E7FE6 !important;
-    color: white !important;
-
+  background: #1e7fe6 !important;
+  color: white !important;
 }
 .row.row-selected:has(.row-data:focus) {
-  background-color: #1E7FE6 !important;
+  background-color: #1e7fe6 !important;
+  color: white !important;
+}
+
+.row:has(.row-data.freeze:focus):has(.row-data.freeze:hover) {
+  z-index: 100 !important;
+}
+.row-data.freeze {
+  z-index: 200 !important;
+}
+
+.row:has(.row-data:focus) .freeze {
+  background-color: #dbedff !important;
+}
+
+.row:has(.row-data:hover) .freeze {
+  background-color: rgb(230, 222, 222) !important;
+}
+
+.row:nth-child(odd) .freeze {
+  background-color: #ffffff !important;
+}
+.row:nth-child(even) .freeze {
+  background-color: #f5f5f5 !important;
+}
+
+.row.row-selected .freeze {
+  background: #1e7fe6 !important;
+  color: white !important;
+}
+.row.row-selected:has(.row-data:focus) .freeze {
+  background-color: #1e7fe6 !important;
   color: white !important;
 }
 
 .noselect {
   user-select: none;
   -webkit-user-select: none; /* Safari */
-  -ms-user-select: none;     /* IE 10+ */
+  -ms-user-select: none; /* IE 10+ */
 }

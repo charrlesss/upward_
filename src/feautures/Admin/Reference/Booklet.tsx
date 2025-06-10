@@ -1,4 +1,4 @@
-import React, { useContext, useRef } from "react";
+import React, { useContext, useRef, useState, useEffect } from "react";
 import PageHelmet from "../../../components/Helmet";
 import { Button } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
@@ -39,11 +39,12 @@ export default function Booklet() {
     },
   });
 
+
   return (
     <>
       {loadingSearch && <Loading />}
       <PageHelmet title="Booklet" />
-      <Button
+    <Button
         variant="contained"
         sx={{
           width: "200px",
@@ -117,18 +118,43 @@ export default function Booklet() {
           <DataGridViewReactUpgraded
             ref={tableRef}
             columns={[
-              { key: "IDNo", label: "ID No.", width: 150 },
-              { key: "Account", label: "Account", width: 150 },
-              { key: "SubAcct", label: "Sub Acct", width: 150 },
-              { key: "PolicyType", label: "Policy Type", width: 150 },
-              { key: "PolicyNo", label: "Policy No", width: 150 },
-              { key: "DateIssued", label: "Date Issued", width: 150 },
-              { key: "TotalPremium", label: "Total Premium", width: 200 },
-              { key: "Vat", label: "Vat", width: 150 },
-              { key: "DocStamp", label: "DocS tamp", width: 150 },
-              { key: "FireTax", label: "Fire Tax", width: 150 },
-              { key: "LGovTax", label: "LGovTax", width: 150 },
-              { key: "Notarial", label: "Notarial", width: 150 },
+              { key: "IDNo", label: "ID No.", width: 150, freeze: true },
+              { key: "Account", label: "Account", width: 150, freeze: false },
+              { key: "SubAcct", label: "Sub Acct", width: 150, freeze: false },
+              {
+                key: "PolicyType",
+                label: "Policy Type",
+                width: 150,
+                freeze: false,
+              },
+              {
+                key: "PolicyNo",
+                label: "Policy No",
+                width: 150,
+                freeze: false,
+              },
+              {
+                key: "DateIssued",
+                label: "Date Issued",
+                width: 150,
+                freeze: false,
+              },
+              {
+                key: "TotalPremium",
+                label: "Total Premium",
+                width: 200,
+                freeze: false,
+              },
+              { key: "Vat", label: "Vat", width: 150, freeze: false },
+              {
+                key: "DocStamp",
+                label: "DocS tamp",
+                width: 150,
+                freeze: false,
+              },
+              { key: "FireTax", label: "Fire Tax", width: 150, freeze: false },
+              { key: "LGovTax", label: "LGovTax", width: 150, freeze: false },
+              { key: "Notarial", label: "Notarial", width: 150, freeze: false },
             ]}
             adjustVisibleRowCount={150}
             RightClickComponent={({ row }: any) => {
@@ -153,7 +179,8 @@ export default function Booklet() {
             }}
           />
         </div>
-      </div>
+      </div> 
+  
     </>
   );
 }

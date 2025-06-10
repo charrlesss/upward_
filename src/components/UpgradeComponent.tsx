@@ -26,6 +26,7 @@ export const DataGridViewReactUpgraded = forwardRef(
     ref
   ) => {
     let lastColIdx: any = null;
+    const [draggedRowIndex, setDraggedRowIndex] = useState<number | null>(null);
     const [selectAll, setSelectAll] = useState(false);
     const [rightClickRowIndex, setRightClickRowIndex] = useState<any>(null);
     const [rightClickColumnIndex, setRightClickColumnIndex] =
@@ -44,6 +45,7 @@ export const DataGridViewReactUpgraded = forwardRef(
         key: "checkbox",
         label: "",
         width: 25,
+        freeze: true,
       },
       ...columns.filter((itm: any) => !itm.hide),
     ]);
@@ -138,6 +140,7 @@ export const DataGridViewReactUpgraded = forwardRef(
             key: "checkbox",
             label: "",
             width: 25,
+            freeze: true,
           },
           ...columnHeader.filter((itm: any) => !itm.hide),
         ] as any);
@@ -276,6 +279,16 @@ export const DataGridViewReactUpgraded = forwardRef(
       document.addEventListener("mouseup", onMouseUp);
     };
 
+    const getFrozenLeft = (colIdx: number) => {
+      let left = 0;
+      for (let i = 0; i < colIdx; i++) {
+        if (columnHeader[i].freeze) {
+          left += columnHeader[i].width;
+        }
+      }
+      return left;
+    };
+
     return (
       <>
         <div
@@ -300,7 +313,6 @@ export const DataGridViewReactUpgraded = forwardRef(
               height: `${rowHeight * visibleRowCount}px`,
               overflowY: "auto",
               position: "relative",
-              padding: "0px 3px",
             }}
           >
             {/* Header */}
@@ -312,41 +324,46 @@ export const DataGridViewReactUpgraded = forwardRef(
                 background: "#f5f5f5",
                 position: "sticky",
                 top: 0,
-                width: `${totalRowWidth + 25}px`,
+                width: `${totalRowWidth - 25}px`,
                 zIndex: 2,
               }}
             >
-              {columnHeader.map((col: any, colIdx: number) => (
-                <div
-                  className={`col-${colIdx}`}
-                  key={col.key}
-                  style={{
-                    width: `${col.width}px`,
-                    padding: "1px 4px",
-                    boxSizing: "border-box",
-                    borderLeft: colIdx === 0 ? "none" : "1px solid #ebe8e8",
-                    fontSize: "12px",
-                    position: "relative",
-                  }}
-                >
-                  {col.label}
+              {columnHeader.map((col: any, colIdx: number) => {
+                return (
                   <div
-                    onMouseDown={(e) => {
-                      onMouseDown(e, col, colIdx);
-                    }}
+                    key={col.key}
+                    className={`col-${colIdx}`}
                     style={{
-                      position: "absolute",
-                      top: 0,
-                      right: 0,
-                      width: "3px",
-                      height: "100%",
-                      cursor: "col-resize",
-                      zIndex: 2,
-                      background: "transparent",
+                      width: `${col.width}px`,
+                      padding: "1px 4px",
+                      boxSizing: "border-box",
+                      borderLeft: colIdx === 0 ? "none" : "1px solid #ebe8e8",
+                      fontSize: "12px",
+                      position: col.freeze ? "sticky" : "relative",
+                      left: col.freeze ? `${getFrozenLeft(colIdx)}px` : "auto",
+                      background: "#f5f5f5",
+                      zIndex: col.freeze ? 3 : 1,
                     }}
-                  />
-                </div>
-              ))}
+                  >
+                    {col.label}
+                    <div
+                      onMouseDown={(e) => {
+                        onMouseDown(e, col, colIdx);
+                      }}
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        right: 0,
+                        width: "3px",
+                        height: "100%",
+                        cursor: "col-resize",
+                        zIndex: 2,
+                        background: "transparent",
+                      }}
+                    />
+                  </div>
+                );
+              })}
             </div>
             {/* Body */}
             <div
@@ -371,6 +388,36 @@ export const DataGridViewReactUpgraded = forwardRef(
                       display: "flex",
                       height: `${rowHeight}px`,
                     }}
+                    draggable
+                    onDragStart={() => setDraggedRowIndex(actualIndex)}
+                    onDragOver={(e) => {
+                      e.preventDefault(); // Required to allow drop
+                    }}
+                    onDrop={() => {
+                      if (
+                        draggedRowIndex === null ||
+                        draggedRowIndex === actualIndex
+                      )
+                        return;
+
+                      const updatedData = [...data];
+                      const [draggedRow] = updatedData.splice(
+                        draggedRowIndex,
+                        1
+                      );
+                      updatedData.splice(actualIndex, 0, draggedRow);
+
+                      // Re-index after drop
+                      const reindexed: any = updatedData.map(
+                        (item: any, index) => ({
+                          ...item,
+                          rowIndex: index,
+                        })
+                      );
+
+                      setData(reindexed);
+                      setDraggedRowIndex(null);
+                    }}
                   >
                     {columnHeader.map((col: any, colIdx: number) => {
                       const key = `${actualIndex}-${col.key}`;
@@ -383,25 +430,31 @@ export const DataGridViewReactUpgraded = forwardRef(
                               onKeyDown={(e) =>
                                 handleCellKeyDown(e, actualIndex, col.key, row)
                               }
-                              className={` row-data row-idx-${row.rowIndex} col-${colIdx}`}
+                              className={` row-data row-idx-${
+                                row.rowIndex
+                              } col-${colIdx} ${col.freeze ? "freeze" : ""}`}
                               onContextMenu={(e) => {
                                 handleContextMenu(e, row, col);
                               }}
                               style={{
-                                width: `25px`,
+                                width: `${col.width}px`,
                                 boxSizing: "border-box",
                                 outline: "none",
-                                borderRight: "1px solid #ebe8e8",
+                                borderLeft:
+                                  colIdx === 0 ? "none" : "1px solid #ebe8e8",
                                 borderBottom: "1px solid #ebe8e8",
                                 fontSize: "12px",
-                                cursor: "pointer",
-                                whiteSpace: "nowrap", // Prevent text wrapping
-                                overflow: "hidden", // Hide overflowing text
+                                // cursor: "pointer",
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
                                 textOverflow: "ellipsis",
-                                position: "relative",
+                                position: col.freeze ? "sticky" : "relative",
+                                left: col.freeze
+                                  ? `${getFrozenLeft(colIdx)}px`
+                                  : "auto",
                                 display: "flex",
-                                alignItems: "center",
                                 justifyContent: "center",
+                                alignItems: "center",
                               }}
                             >
                               <input
@@ -418,7 +471,9 @@ export const DataGridViewReactUpgraded = forwardRef(
                             </div>
                           ) : (
                             <div
-                              className={`row-data col-${colIdx}`}
+                              className={`row-data col-${colIdx} ${
+                                col.freeze ? "freeze" : ""
+                              }`}
                               ref={(el) => (cellRefs.current[key] = el)}
                               tabIndex={0}
                               onKeyDown={(e) =>
@@ -438,10 +493,13 @@ export const DataGridViewReactUpgraded = forwardRef(
                                 borderBottom: "1px solid #ebe8e8",
                                 fontSize: "12px",
                                 cursor: "pointer",
-                                whiteSpace: "nowrap", // Prevent text wrapping
-                                overflow: "hidden", // Hide overflowing text
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
                                 textOverflow: "ellipsis",
-                                position: "relative",
+                                position: col.freeze ? "sticky" : "relative",
+                                left: col.freeze
+                                  ? `${getFrozenLeft(colIdx)}px`
+                                  : "auto",
                               }}
                               onDoubleClick={() => {
                                 selectedRowAction(row);
@@ -544,7 +602,7 @@ export const DataGridViewReactUpgraded = forwardRef(
                   setSelectAll(true);
                   setTimeout(() => {
                     const confirm = window.confirm(
-                      "Are you sure you want to delete all the rows?"
+                      "Are you sure you want to delete this rows?"
                     );
                     if (confirm) {
                       setData([]);
