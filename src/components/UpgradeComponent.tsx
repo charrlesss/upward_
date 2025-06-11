@@ -21,6 +21,9 @@ export const DataGridViewReactUpgraded = forwardRef(
       RightClickComponent = (props: any) => {
         return <></>;
       },
+      FooterComponent = (props: any) => {
+        return <></>;
+      },
       handleSelectionChange,
     }: any,
     ref
@@ -537,9 +540,13 @@ export const DataGridViewReactUpgraded = forwardRef(
               fontSize: "12px",
               fontWeight: "bold",
               padding: "2px 10px ",
+              display: "flex",
             }}
           >
-            Total Rows : {data.length.toLocaleString("en-US")}
+            <div style={{ width: "120px" }}>
+              Total Rows : {data.length.toLocaleString("en-US")}
+            </div>
+            <FooterComponent />
           </div>
           {visible && (
             <div

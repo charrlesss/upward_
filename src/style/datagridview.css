@@ -59,6 +59,10 @@
   background: #1e7fe6 !important;
   color: white !important;
 }
+.row.row-selected:hover {
+  background: #1e7fe6 !important;
+  color: white !important;
+}
 .row.row-selected:has(.row-data:focus) {
   background-color: #1e7fe6 !important;
   color: white !important;

@@ -39,12 +39,11 @@ export default function Booklet() {
     },
   });
 
-
   return (
     <>
       {loadingSearch && <Loading />}
       <PageHelmet title="Booklet" />
-    <Button
+      <Button
         variant="contained"
         sx={{
           width: "200px",
@@ -174,13 +173,24 @@ export default function Booklet() {
                 </>
               );
             }}
+            FooterComponent={() => {
+              console.log("qweqwe");
+              return (
+                <div
+                  style={{
+                    flex: 1,
+                    background: "red",
+                    height: "22px",
+                  }}
+                ></div>
+              );
+            }}
             handleSelectionChange={(row: any) => {
               console.log(row);
             }}
           />
         </div>
-      </div> 
-  
+      </div>
     </>
   );
 }
