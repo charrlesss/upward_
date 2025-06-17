@@ -19,19 +19,15 @@ import { formatNumber } from "../Accounting/ReturnCheck";
 function RenewalNotice() {
   const { myAxios, user } = useContext(AuthContext);
   const [policyType, setPolicyType] = useState("COM");
-
   const searchRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
   const policyTypeRef = useRef<HTMLSelectElement>(null);
-
   const paPropertyInsuredRef = useRef<HTMLInputElement>(null);
   const firePropertyInsuredRef = useRef<HTMLInputElement>(null);
   const fireMortgageeRef = useRef<HTMLInputElement>(null);
-
   const marPropertyInsuredRef = useRef<HTMLInputElement>(null);
   const marMortgageeRef = useRef<HTMLInputElement>(null);
   const marAdditionalInfoRef = useRef<HTMLTextAreaElement>(null);
-
   const comPassenger1Ref = useRef<HTMLInputElement>(null);
   const comPassenger2Ref = useRef<HTMLInputElement>(null);
   const sumInsuredEBIRef = useRef<HTMLInputElement>(null);
@@ -42,9 +38,7 @@ function RenewalNotice() {
   const premiumEBIRef = useRef<HTMLInputElement>(null);
   const premiumTPPDRef = useRef<HTMLInputElement>(null);
   const premiumAPARef = useRef<HTMLInputElement>(null);
-
   const balanceRef = useRef<HTMLInputElement>(null);
-
   const [isEditMode, setIsEditMode] = useState(false);
 
   const { mutate: mutatateRenewalNotice, isLoading: isLoadingRenewalNotice } =
@@ -84,7 +78,6 @@ function RenewalNotice() {
         }
       },
     });
-
   const { mutate: mutatatePayment, isLoading: isLoadingPayment } = useMutation({
     mutationKey: "payment",
     mutationFn: (variables: any) => {
@@ -116,7 +109,6 @@ function RenewalNotice() {
       }
     },
   });
-
   const {
     UpwardTableModalSearch: PolicyComSearchUpwardTableModalSearch,
     openModal: policyComSearchOpenModal,
@@ -237,7 +229,6 @@ function RenewalNotice() {
       }
     },
   });
-
   const {
     UpwardTableModalSearch: PolicyFireSearchUpwardTableModalSearch,
     openModal: policyFireSearchOpenModal,
@@ -297,7 +288,6 @@ function RenewalNotice() {
       }
     },
   });
-
   const {
     UpwardTableModalSearch: PolicyMarSearchUpwardTableModalSearch,
     openModal: policyMarSearchOpenModal,
@@ -357,11 +347,10 @@ function RenewalNotice() {
       }
     },
   });
-
   const {
     UpwardTableModalSearch: PolicyPaSearchUpwardTableModalSearch,
     openModal: policyPaSearchOpenModal,
-    closeModal: policyPaSearchCloseModal,
+    closeModal: policyPaSearchCloseModal,  
   } = useUpwardTableModalSearchSafeMode({
     size: "large",
     link: "/task/production/search-policy-renewal-notice-pa",
@@ -398,7 +387,6 @@ function RenewalNotice() {
       }
     },
   });
-
   const generateRenewalNotice = () => {
     mutatateRenewalNotice({
       PolicyNo: searchRef.current?.value,
@@ -421,7 +409,6 @@ function RenewalNotice() {
       premiumAPARef: premiumAPARef.current?.value,
     });
   };
-
   function search(search: string, policyType: string) {
     if (policyType === "COM") {
       policyComSearchOpenModal(search);

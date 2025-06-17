@@ -37,6 +37,17 @@
 .search-container-mobile {
   display: none !important;
 }
+
+@media (max-width:540px) {
+  .care-of-input{
+    width:200px !important;
+  }
+}
+@media (max-width:400px) {
+  .care-of-input{
+    width:120px !important;
+  }
+}
 @media (max-width: 768px) {
   .button-chips-container {
     overflow-x: auto !important;
@@ -46,6 +57,9 @@
   .header {
     flex-direction: column !important;
     row-gap: 10px;
+  }
+  .header.mobile{
+    margin-bottom: 5px !important;
   }
   .search-container-desktop {
     display: none !important;
@@ -215,4 +229,15 @@
   .history-container{
     overflow: auto !important;
   }
+  .pa-header {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+  .mobile-choices-buttons.tpl-com{
+    margin-top: 0px !important;
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
 }
+
+

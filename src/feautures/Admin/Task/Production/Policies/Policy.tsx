@@ -3,22 +3,70 @@ import { blue } from "@mui/material/colors";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import useUrlParams from "../../../../../hooks/useUrlParams";
 import "../../../../../style/monbileview/production/production.css";
+import { useQuery } from "react-query";
+import { createContext, useContext } from "react";
+import { AuthContext } from "../../../../../components/AuthContext";
+import { wait } from "@testing-library/user-event/dist/utils";
+import { Loading } from "../../../../../components/Loading";
+
+export const PolicyContext = createContext<{
+  careOfData: Array<any>;
+  subAccountData: Array<any>;
+}>({
+  careOfData: [],
+  subAccountData: [],
+});
 
 export default function Policy() {
+  const { myAxios, user } = useContext(AuthContext);
+
+  const { isLoading: isLoadingSubAccount, data: subAccountData } = useQuery({
+    queryKey: "sub-account",
+    queryFn: () => {
+      return myAxios.get("/task/production/sub-account", {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      });
+    },
+    refetchOnWindowFocus: false,
+  });
+  const { isLoading: isLoadingcareOf, data: careOfData } = useQuery({
+    queryKey: "care-of",
+    queryFn: () => {
+      return myAxios.get("/task/production/care-of", {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      });
+    },
+    refetchOnWindowFocus: false,
+  });
+
   return (
-    <div
-      className="main"
-      style={{
-        flex: 1,
-        padding: "5px",
-        msFlexDirection: "column",
-        background: "#F1F1F1",
-        position: "relative",
-      }}
-    >
-      <ChipsButton />
-      <Outlet />
-    </div>
+    <>
+      {(isLoadingcareOf || isLoadingSubAccount) && <Loading />}
+      <div
+        className="main"
+        style={{
+          flex: 1,
+          padding: "5px",
+          msFlexDirection: "column",
+          background: "#F1F1F1",
+          position: "relative",
+        }}
+      >
+        <ChipsButton />
+        <PolicyContext.Provider
+          value={{
+            careOfData: careOfData?.data.data,
+            subAccountData: subAccountData?.data.data,
+          }}
+        >
+          <Outlet />
+        </PolicyContext.Provider>
+      </div>
+    </>
   );
 }
 

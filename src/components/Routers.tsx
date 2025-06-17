@@ -101,6 +101,7 @@ const Booklet = lazy(() => import("../feautures/Admin/Reference/Booklet"));
 const Subline = lazy(() => import("../feautures/Admin/Reference/Subline"));
 const Rates = lazy(() => import("../feautures/Admin/Reference/Rates"));
 const CTPL = lazy(() => import("../feautures/Admin/Reference/CTPL"));
+const CareOf = lazy(() => import("../feautures/Admin/Reference/CareOf"));
 const PettyCashTransaction = lazy(
   () => import("../feautures/Admin/Reference/PettyCashTransaction")
 );
@@ -114,7 +115,6 @@ const StatementAccount = lazy(
 const RenewalNotice = lazy(
   () => import("../feautures/Admin/Task/Production/RenewalNotice")
 );
-
 
 const VehiclePolicy = lazy(
   () =>
@@ -221,6 +221,11 @@ export default function Routers() {
       path={`/${department}/dashboard/reference/petty-cash-transaction`}
       element={<PettyCashTransaction />}
     />,
+    <Route
+      key={`/${department}/dashboard/reference/care-of`}
+      path={`/${department}/dashboard/reference/care-of`}
+      element={<CareOf />}
+    />,
   ];
   const ACCOUNTING_REFERENCE = [
     <Route
@@ -288,6 +293,11 @@ export default function Routers() {
       key={`/${department}/dashboard/reference/petty-cash-transaction`}
       path={`/${department}/dashboard/reference/petty-cash-transaction`}
       element={<PettyCashTransaction />}
+    />,
+    <Route
+      key={`/${department}/dashboard/reference/care-of`}
+      path={`/${department}/dashboard/reference/care-of`}
+      element={<CareOf />}
     />,
   ];
   const PRODUCTION_TASK = [

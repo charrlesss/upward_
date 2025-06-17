@@ -24,7 +24,6 @@ import {
   TextInput,
 } from "../../../../../../../components/UpwardFields";
 import CalculateIcon from "@mui/icons-material/Calculate";
-import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import SearchIcon from "@mui/icons-material/Search";
 import SaveAsIcon from "@mui/icons-material/SaveAs";
 import AddBoxIcon from "@mui/icons-material/AddBox";
@@ -39,6 +38,7 @@ import { wait } from "../../../../../../../lib/wait";
 import PageHelmet from "../../../../../../../components/Helmet";
 import "../../../../../../../style/monbileview/production/production.css";
 import RepeatIcon from "@mui/icons-material/Repeat";
+import { PolicyContext } from "../../Policy";
 
 export default function VehiclePolicy() {
   const { user, myAxios } = useContext(AuthContext);
@@ -96,8 +96,8 @@ export default function VehiclePolicy() {
     </div>
   );
 }
-
 function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
+  const { careOfData, subAccountData } = useContext(PolicyContext);
   const [width, setWidth] = useState(window.innerWidth);
 
   const [mode, setMode] = useState("");
@@ -109,7 +109,8 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
   const regularPolicyRef = useRef<any>(null);
   const temporaryPolicyRef = useRef<any>(null);
   const subAccountRef = useRef<HTMLSelectElement>(null);
-  const subAccountRef_ = useRef<any>(null);
+  const careOfRef = useRef<HTMLSelectElement>(null);
+
   function handleSave() {
     if (policyType === "TEMP") {
       return temporaryPolicyRef.current.handleOnSave(mode);
@@ -120,26 +121,6 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
       }
     }
   }
-  const { isLoading, refetch: refetchSubAccount } = useQuery({
-    queryKey: "sub-account",
-    queryFn: () => {
-      return myAxios.get("/task/production/sub-account", {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      });
-    },
-    onSuccess(response) {
-      wait(100).then(() => {
-        if (subAccountRef_.current)
-          subAccountRef_.current.setDataSource(response.data?.data);
-        wait(100).then(() => {
-          if (subAccountRef.current) subAccountRef.current.value = "HO";
-        });
-      });
-    },
-    refetchOnWindowFocus: false,
-  });
   const {
     UpwardTableModalSearch: PolicySearchUpwardTableModalSearch,
     openModal: policySearchOpenModal,
@@ -233,20 +214,11 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
       });
     }
   }, [policyType]);
-
-  const refetchSubAccountRef = useRef(refetchSubAccount);
-
   useEffect(() => {
     const handleResize = () => {
       setWidth(window.innerWidth);
-
-      setTimeout(() => {
-        refetchSubAccountRef.current();
-      }, 500);
     };
-
     window.addEventListener("resize", handleResize);
-
     // Cleanup on unmount
     return () => {
       window.removeEventListener("resize", handleResize);
@@ -258,7 +230,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
       <PolicySearchUpwardTableModalSearch />
       <PolicySearchTempUpwardTableModalSearch />
       <div
-        className="header"
+        className="header mobile"
         style={{
           display: "flex",
           columnGap: "8px",
@@ -352,7 +324,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
                   });
                 }}
               >
-                REGULAR
+                REG
               </Button>
               <Button
                 // disabled={policyType === "TEMP"}
@@ -386,7 +358,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
                 variant="contained"
                 color={policyType === "TEMP" ? "secondary" : "info"}
               >
-                TEMPORARY
+                TEMP
               </Button>
             </div>
           </div>
@@ -436,7 +408,6 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
             inputRef={searchRef}
           />
         </div>
-
         <div
           className="search-container-desktop"
           style={{
@@ -792,13 +763,11 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           >
             Policy Premium
           </Button>
-          {isLoading ? (
-            <>Laoding...</>
-          ) : (
+          {width > 768 && (
             <>
-              {width > 768 && (
+              {subAccountData && (
                 <SelectInput
-                  ref={subAccountRef_}
+                  // ref={subAccountRef_}
                   label={{
                     title: "Sub Account :",
                     style: {
@@ -816,101 +785,157 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
                     flex: 2,
                     marginLeft: "20px",
                   }}
-                  datasource={[]}
+                  datasource={subAccountData}
                   values={"Acronym"}
                   display={"Acronym"}
+                />
+              )}
+              {careOfData && (
+                <SelectInput
+                  label={{
+                    title: "Care of :",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "70px",
+                    },
+                  }}
+                  selectRef={careOfRef}
+                  select={{
+                    style: { width: "calc(100% - 70px)", height: "22px" },
+                    defaultValue: "NONE",
+                  }}
+                  containerStyle={{
+                    width: "350px",
+                    marginLeft: "20px",
+                  }}
+                  datasource={careOfData}
+                  values={"careOf"}
+                  display={"careOf"}
                 />
               )}
             </>
           )}
         </div>
         <div
-          className="mobile-choices-buttons"
+          className="mobile-choices-buttons tpl-com"
           style={{ display: "none", columnGap: "2px" }}
         >
-          <Button
-            // disabled={selectedPage === 0}
-            sx={{
-              height: "23px",
-              fontSize: "11px",
-              background: selectedPage === 0 ? blue[700] : grey[700],
-              "&:hover": {
-                background: selectedPage === 0 ? blue[800] : grey[800],
-              },
-            }}
-            variant="contained"
-            onClick={() => {
-              setSelectedPage(0);
+          <div
+            style={{
+              display: "flex",
+              columnGap: "5px",
             }}
           >
-            Information
-          </Button>
-          <Button
-            // disabled={selectedPage === 1}
-            sx={{
-              height: "23px",
-              fontSize: "11px",
-              background: selectedPage === 1 ? blue[700] : grey[700],
-              "&:hover": {
-                background: selectedPage === 1 ? blue[800] : grey[800],
-              },
-            }}
-            onClick={() => {
-              setSelectedPage(1);
-            }}
-            variant="contained"
-          >
-            Details
-          </Button>
-          <Button
-            // disabled={selectedPage === 2}
-            sx={{
-              height: "23px",
-              fontSize: "11px",
+            <Button
+              // disabled={selectedPage === 0}
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+                background: selectedPage === 0 ? blue[700] : grey[700],
+                "&:hover": {
+                  background: selectedPage === 0 ? blue[800] : grey[800],
+                },
+              }}
+              variant="contained"
+              onClick={() => {
+                setSelectedPage(0);
+              }}
+            >
+              Information
+            </Button>
+            <Button
+              // disabled={selectedPage === 1}
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+                background: selectedPage === 1 ? blue[700] : grey[700],
+                "&:hover": {
+                  background: selectedPage === 1 ? blue[800] : grey[800],
+                },
+              }}
+              onClick={() => {
+                setSelectedPage(1);
+              }}
+              variant="contained"
+            >
+              Details
+            </Button>
+            <Button
+              // disabled={selectedPage === 2}
+              sx={{
+                height: "23px",
+                fontSize: "11px",
 
-              background: selectedPage === 2 ? blue[700] : grey[700],
-              "&:hover": {
-                background: selectedPage === 2 ? blue[800] : grey[800],
-              },
-            }}
-            onClick={() => {
-              setSelectedPage(2);
-            }}
-            variant="contained"
-          >
-            Premium
-          </Button>
-          {isLoading ? (
-            <>Laoding...</>
-          ) : (
-            <>
-              {width <= 768 && (
+                background: selectedPage === 2 ? blue[700] : grey[700],
+                "&:hover": {
+                  background: selectedPage === 2 ? blue[800] : grey[800],
+                },
+              }}
+              onClick={() => {
+                setSelectedPage(2);
+              }}
+              variant="contained"
+            >
+              Premium
+            </Button>
+          </div>
+          {width <= 768 && (
+            <div
+              style={{
+                display: "flex",
+                columnGap: "5px",
+              }}
+            >
+              {subAccountData && (
                 <SelectInput
-                  ref={subAccountRef_}
+                  // ref={subAccountRef_}
                   label={{
-                    title: "",
+                    title: "Sub Account :",
                     style: {
                       fontSize: "12px",
                       fontWeight: "bold",
-                      width: "50px",
-                      display: "none",
+                      width: "100px",
                     },
                   }}
                   selectRef={subAccountRef}
                   select={{
-                    style: { flex: 1, height: "22px" },
+                    style: { width: "calc(100% - 100px)", height: "22px" },
                     defaultValue: "HO",
                   }}
                   containerStyle={{
-                    flex: 2,
-                    marginLeft: "10px",
+                    width: "150px",
                   }}
-                  datasource={[]}
+                  datasource={subAccountData}
                   values={"Acronym"}
                   display={"Acronym"}
                 />
               )}
-            </>
+              {careOfData && (
+                <SelectInput
+                  label={{
+                    title: "Care of :",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "55px",
+                    },
+                  }}
+                  selectRef={careOfRef}
+                  select={{
+                    style: { width: "calc(100% - 55px)", height: "22px" },
+                    defaultValue: "NONE",
+                  }}
+                  containerStyle={{
+                    width: "120px",
+                    marginLeft: "20px",
+                  }}
+                  datasource={careOfData}
+                  values={"careOf"}
+                  display={"careOf"}
+                />
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -923,6 +948,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           policyType={policyType}
           mode={mode}
           policy={policy}
+          careOfRef={careOfRef}
         />
       ) : (
         <COMTemporary
@@ -933,9 +959,9 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           policyType={policyType}
           mode={mode}
           policy={policy}
+          careOfRef={careOfRef}
         />
       )}
-
       <div
         className="button-action-mobile"
         style={{
@@ -1077,6 +1103,7 @@ const COMRegular = forwardRef(
       searchPolicyNo,
       mode,
       policy,
+      careOfRef,
     }: any,
     ref
   ) => {
@@ -1217,7 +1244,6 @@ const COMRegular = forwardRef(
         },
         onSuccess(response) {
           wait(100).then(() => {
-            console.log(response.data?.data);
             if (
               _policyPremiumRef.current &&
               _policyPremiumRef.current.getRefs
@@ -1273,6 +1299,7 @@ const COMRegular = forwardRef(
           const dt = response.data.data1;
           const dtVP = response.data.data2;
           const dtVP1 = response.data.data3;
+
           if (dt.length <= 0) {
             return alert("Unable to load data!");
           }
@@ -1350,6 +1377,9 @@ const COMRegular = forwardRef(
           }
 
           if (dtVP.length > 0) {
+            if (careOfRef.current) {
+              careOfRef.current.value = dtVP[0].careOf;
+            }
             if (_policyPremiumRef.current.getRefs().aogRef.current) {
               _policyPremiumRef.current.getRefs().aogRef.current.value =
                 formatNumber(parseFloat(dtVP[0].AOGPercent.replace(/,/g, "")));
@@ -1590,6 +1620,9 @@ const COMRegular = forwardRef(
           if (subAccountRef.current) {
             subAccountRef.current.value = "HO";
           }
+          if (careOfRef.current) {
+            careOfRef.current.value = "NONE";
+          }
           setMode("");
           return Swal.fire({
             position: "center",
@@ -1623,7 +1656,6 @@ const COMRegular = forwardRef(
         });
       },
       onSuccess(response) {
-        console.log(response);
         if (response.data.success) {
           _policyInformationRef.current.resetRefs();
           _policyTypeDetailsRef.current.resetRefs();
@@ -1635,6 +1667,9 @@ const COMRegular = forwardRef(
 
           if (subAccountRef.current) {
             subAccountRef.current.value = "HO";
+          }
+          if (careOfRef.current) {
+            careOfRef.current.value = "NONE";
           }
           setMode("");
 
@@ -1677,6 +1712,7 @@ const COMRegular = forwardRef(
                 policy: window.localStorage.getItem("__policy__"),
                 form_action: policyType,
                 subAccountRef: subAccountRef.current?.value,
+                careOfRef: careOfRef.current?.value,
                 userCodeConfirmation,
               };
               mutatateUpdate(data);
@@ -1692,6 +1728,7 @@ const COMRegular = forwardRef(
                 policy: window.localStorage.getItem("__policy__"),
                 form_action: policyType,
                 subAccountRef: subAccountRef.current?.value,
+                careOfRef: careOfRef.current?.value,
               };
               mutatateSave(data);
             },
@@ -1711,6 +1748,9 @@ const COMRegular = forwardRef(
         _policyPremiumRef.current.resetRefs();
         if (subAccountRef.current) {
           subAccountRef.current.value = "HO";
+        }
+        if (careOfRef.current) {
+          careOfRef.current.value = "NONE";
         }
         setMode("");
       },
@@ -2000,7 +2040,17 @@ const COMRegular = forwardRef(
   }
 );
 const COMTemporary = forwardRef(
-  ({ selectedPage, policyType, subAccountRef, setMode, policy }: any, ref) => {
+  (
+    {
+      selectedPage,
+      policyType,
+      subAccountRef,
+      setMode,
+      policy,
+      careOfRef,
+    }: any,
+    ref
+  ) => {
     const { user, myAxios } = useContext(AuthContext);
     const _policyInformationRef = useRef<any>(null);
     const _policyTypeDetailsRef = useRef<any>(null);
@@ -2261,6 +2311,9 @@ const COMTemporary = forwardRef(
           if (subAccountRef.current) {
             subAccountRef.current.value = "HO";
           }
+          if (careOfRef.current) {
+            careOfRef.current.value = "NONE";
+          }
           setMode("");
           refetchTempID();
 
@@ -2306,8 +2359,9 @@ const COMTemporary = forwardRef(
             return alert("Unable to load data!");
           }
           if (dt.length > 0) {
-            console.log(dt);
-
+            if (careOfRef.current) {
+              careOfRef.current.value = dtVP[0].careOf;
+            }
             if (subAccountRef.current) {
               subAccountRef.current.value = dt[0].SubAcct;
             }
@@ -2609,6 +2663,7 @@ const COMTemporary = forwardRef(
       },
       refetchOnWindowFocus: false,
     });
+
     useImperativeHandle(ref, () => ({
       handleOnSave: (mode: string) => {
         if (
@@ -2620,7 +2675,6 @@ const COMTemporary = forwardRef(
         }
 
         if (mode === "edit") {
-          console.log(_policyInformationRef.current.getRefsValue());
           codeCondfirmationAlert({
             isUpdate: true,
             cb: (userCodeConfirmation) => {
@@ -2631,6 +2685,7 @@ const COMTemporary = forwardRef(
                 policy: window.localStorage.getItem("__policy__"),
                 form_action: policyType,
                 subAccountRef: subAccountRef.current?.value,
+                careOfRef: careOfRef.current?.value,
                 userCodeConfirmation,
               };
               mutatateUpdate(data);
@@ -2646,6 +2701,7 @@ const COMTemporary = forwardRef(
                 policy: window.localStorage.getItem("__policy__"),
                 form_action: policyType,
                 subAccountRef: subAccountRef.current?.value,
+                careOfRef: careOfRef.current?.value,
               };
               mutatateSave(data);
             },
@@ -2666,6 +2722,9 @@ const COMTemporary = forwardRef(
         _policyPremiumRef.current.resetRefs();
         if (subAccountRef.current) {
           subAccountRef.current.value = "HO";
+        }
+        if (careOfRef.current) {
+          careOfRef.current.value = "NONE";
         }
         setMode("");
       },
@@ -2946,6 +3005,7 @@ const COMTemporary = forwardRef(
   }
 );
 function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
+  const { careOfData, subAccountData } = useContext(PolicyContext);
   const [width, setWidth] = useState(window.innerWidth);
 
   const [mode, setMode] = useState("");
@@ -2955,29 +3015,13 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
   );
   const searchRef = useRef<HTMLInputElement>(null);
   const regularPolicyRef = useRef<any>(null);
+  const careOfRef = useRef<HTMLSelectElement>(null);
   const subAccountRef = useRef<HTMLSelectElement>(null);
   const subAccountRef_ = useRef<any>(null);
   function handleSave() {
     regularPolicyRef.current.handleOnSave(mode);
   }
-  const { isLoading, refetch: refetchSubAccount } = useQuery({
-    queryKey: "sub-account",
-    queryFn: () => {
-      return myAxios.get("/task/production/sub-account", {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      });
-    },
-    onSuccess(response) {
-      wait(100).then(() => {
-        subAccountRef_.current.setDataSource(response.data?.data);
-        wait(100).then(() => {
-          if (subAccountRef.current) subAccountRef.current.value = "HO";
-        });
-      });
-    },
-  });
+
   const {
     UpwardTableModalSearch: PolicySearchUpwardTableModalSearch,
     openModal: policySearchOpenModal,
@@ -3052,15 +3096,9 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
     },
   });
 
-  const refetchSubAccountRef = useRef(refetchSubAccount);
-
   useEffect(() => {
     const handleResize = () => {
       setWidth(window.innerWidth);
-
-      setTimeout(() => {
-        refetchSubAccountRef.current();
-      }, 500);
     };
 
     window.addEventListener("resize", handleResize);
@@ -3076,7 +3114,7 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
       <PolicyNoUpwardTableModalSearch />
       <PolicySearchUpwardTableModalSearch />
       <div
-        className="header"
+        className="header mobile"
         style={{
           display: "flex",
           columnGap: "8px",
@@ -3169,7 +3207,7 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
                   });
                 }}
               >
-                REGULAR
+                REG
               </Button>
               <Button
                 // disabled={policyType === "TEMP"}
@@ -3203,7 +3241,7 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
                 variant="contained"
                 color={policyType === "TEMP" ? "secondary" : "info"}
               >
-                TEMPORARY
+                TEMP
               </Button>
             </div>
           </div>
@@ -3490,13 +3528,10 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
           >
             Policy Premium
           </Button>
-          {isLoading ? (
-            <div>Loading..</div>
-          ) : (
+          {width > 768 && (
             <>
-              {width > 768 && (
+              {subAccountData && (
                 <SelectInput
-                  ref={subAccountRef_}
                   label={{
                     title: "Sub Account :",
                     style: {
@@ -3514,97 +3549,152 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
                     flex: 2,
                     marginLeft: "20px",
                   }}
-                  datasource={[]}
+                  datasource={subAccountData}
                   values={"Acronym"}
                   display={"Acronym"}
+                />
+              )}
+              {careOfData && (
+                <SelectInput
+                  label={{
+                    title: "Care of :",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "70px",
+                    },
+                  }}
+                  selectRef={careOfRef}
+                  select={{
+                    style: { width: "calc(100% - 70px)", height: "22px" },
+                    defaultValue: "NONE",
+                  }}
+                  containerStyle={{
+                    width: "350px",
+                    marginLeft: "20px",
+                  }}
+                  datasource={careOfData}
+                  values={"careOf"}
+                  display={"careOf"}
                 />
               )}
             </>
           )}
         </div>
         <div
-          className="mobile-choices-buttons"
+          className="mobile-choices-buttons tpl-com"
           style={{ display: "flex", columnGap: "2px" }}
         >
-          <Button
-            sx={{
-              height: "23px",
-              fontSize: "11px",
-              background: selectedPage === 0 ? blue[700] : grey[700],
-              "&:hover": {
-                background: selectedPage === 0 ? blue[800] : grey[800],
-              },
-            }}
-            variant="contained"
-            onClick={() => {
-              setSelectedPage(0);
+          <div
+            style={{
+              display: "flex",
+              columnGap: "5px",
             }}
           >
-            Information
-          </Button>
-          <Button
-            sx={{
-              height: "23px",
-              fontSize: "11px",
-              background: selectedPage === 1 ? blue[700] : grey[700],
-              "&:hover": {
-                background: selectedPage === 1 ? blue[800] : grey[800],
-              },
-            }}
-            onClick={() => {
-              setSelectedPage(1);
-            }}
-            variant="contained"
-          >
-            Details
-          </Button>
-          <Button
-            sx={{
-              height: "23px",
-              fontSize: "11px",
-              background: selectedPage === 2 ? blue[700] : grey[700],
-              "&:hover": {
-                background: selectedPage === 2 ? blue[800] : grey[800],
-              },
-            }}
-            onClick={() => {
-              setSelectedPage(2);
-            }}
-            variant="contained"
-          >
-            Premium
-          </Button>
-          {isLoading ? (
-            <div>Loading..</div>
-          ) : (
-            <>
-              {width <= 768 && (
+            <Button
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+                background: selectedPage === 0 ? blue[700] : grey[700],
+                "&:hover": {
+                  background: selectedPage === 0 ? blue[800] : grey[800],
+                },
+              }}
+              variant="contained"
+              onClick={() => {
+                setSelectedPage(0);
+              }}
+            >
+              Information
+            </Button>
+            <Button
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+                background: selectedPage === 1 ? blue[700] : grey[700],
+                "&:hover": {
+                  background: selectedPage === 1 ? blue[800] : grey[800],
+                },
+              }}
+              onClick={() => {
+                setSelectedPage(1);
+              }}
+              variant="contained"
+            >
+              Details
+            </Button>
+            <Button
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+                background: selectedPage === 2 ? blue[700] : grey[700],
+                "&:hover": {
+                  background: selectedPage === 2 ? blue[800] : grey[800],
+                },
+              }}
+              onClick={() => {
+                setSelectedPage(2);
+              }}
+              variant="contained"
+            >
+              Premium
+            </Button>
+          </div>
+          {width <= 768 && (
+            <div
+              style={{
+                display: "flex",
+                columnGap: "5px",
+              }}
+            >
+              {subAccountData && (
                 <SelectInput
-                  ref={subAccountRef_}
                   label={{
-                    title: "Sub Account :",
+                    title: "Sub :",
                     style: {
                       fontSize: "12px",
                       fontWeight: "bold",
-                      width: "100px",
-                      display: "none",
+                      width: "40px",
                     },
                   }}
                   selectRef={subAccountRef}
                   select={{
-                    style: { flex: 1, height: "22px" },
+                    style: { width: "calc(100% - 40px)", height: "22px" },
                     defaultValue: "HO",
                   }}
                   containerStyle={{
-                    flex: 2,
-                    marginLeft: "5px",
+                    width: "100px",
                   }}
-                  datasource={[]}
+                  datasource={subAccountData}
                   values={"Acronym"}
                   display={"Acronym"}
                 />
               )}
-            </>
+              {careOfData && (
+                <SelectInput
+                  label={{
+                    title: "Care of :",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "70px",
+                    },
+                  }}
+                  selectRef={careOfRef}
+                  select={{
+                    style: { width: "calc(100% - 70px)", height: "22px" },
+                    defaultValue: "NONE",
+                  }}
+                  containerStyle={{
+                    width: "150px",
+                    marginLeft: "20px",
+                  }}
+                  datasource={careOfData}
+                  values={"careOf"}
+                  display={"careOf"}
+                />
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -3619,6 +3709,7 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
         }}
         mode={mode}
         policy={policy}
+        careOfRef={careOfRef}
       />
 
       <div
@@ -6844,7 +6935,6 @@ const PolicyPremium = forwardRef((props: any, ref) => {
     </div>
   );
 });
-
 interface CustomButtonProps {
   currentStepIndex: number;
   index: number;
@@ -6864,7 +6954,6 @@ export const CustomButton = styled.button`
     background:white;
   },
 `;
-
 function formatNumber(Amount: number) {
   return Amount.toLocaleString("en-US", {
     minimumFractionDigits: 2,

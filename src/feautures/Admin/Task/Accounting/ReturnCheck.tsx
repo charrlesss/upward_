@@ -28,6 +28,7 @@ import {
   saveCondfirmationAlert,
 } from "../../../../lib/confirmationAlert";
 import "../../../../style/monbileview/accounting/returnchecks.css";
+import PageHelmet from "../../../../components/Helmet";
 
 export default function ReturnCheck() {
   const { user, myAxios } = useContext(AuthContext);
@@ -359,6 +360,7 @@ export default function ReturnCheck() {
         isLoadingReturnChecksID ||
         isLoadingReturnChecksSearchSelectedSave ||
         isLoadingReturnChecksUpdate) && <Loading />}
+      <PageHelmet title="Return Checks" />
       <div
         className="main"
         style={{

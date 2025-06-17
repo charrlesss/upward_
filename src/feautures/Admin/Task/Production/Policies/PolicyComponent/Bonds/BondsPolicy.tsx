@@ -34,10 +34,11 @@ import SaveAsIcon from "@mui/icons-material/SaveAs";
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import { Loading } from "../../../../../../../components/Loading";
 import { useUpwardTableModalSearchSafeMode } from "../../../../../../../components/DataGridViewReact";
+import { PolicyContext } from "../../Policy";
 
 export default function BondsPolicy() {
+  const { careOfData, subAccountData } = useContext(PolicyContext);
   const [width, setWidth] = useState(window.innerWidth);
-
   const { myAxios, user } = useContext(AuthContext);
   const [mode, setMode] = useState("");
   const [selectedPage, setSelectedPage] = useState(0);
@@ -47,6 +48,7 @@ export default function BondsPolicy() {
   const _policyPremiumRef = useRef<any>(null);
   const subAccountRef = useRef<HTMLSelectElement>(null);
   const subAccountRef_ = useRef<any>(null);
+  const careOfRef = useRef<HTMLSelectElement>(null);
 
   const { isLoading: isLoadingBondSubline } = useQuery({
     queryKey: "bond-subline",
@@ -88,27 +90,7 @@ export default function BondsPolicy() {
     },
   });
   const mutateAccountRef = useRef<any>(mutateAccount);
-  const { isLoading: isLoadingSubAccount, refetch: refetchSubAccount } =
-    useQuery({
-      queryKey: "sub-account",
-      queryFn: () => {
-        return myAxios.get("/task/production/sub-account", {
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
-        });
-      },
-      onSuccess(response) {
-        wait(100).then(() => {
-          if (subAccountRef_.current)
-            subAccountRef_.current.setDataSource(response.data?.data);
-          wait(100).then(() => {
-            if (subAccountRef.current) subAccountRef.current.value = "HO";
-          });
-        });
-      },
-      refetchOnWindowFocus: false,
-    });
+
   const { mutate: mutateAddUpdate, isLoading: loadingAddUpdate } = useMutation({
     mutationKey: "add-update",
     mutationFn: async (variables: any) => {
@@ -136,6 +118,12 @@ export default function BondsPolicy() {
     onSuccess: async (res) => {
       if (res.data.success) {
         setMode("");
+        if (subAccountRef.current) {
+          subAccountRef.current.value = "HO";
+        }
+        if (careOfRef.current) {
+          careOfRef.current.value = "NONE";
+        }
         _policyInformationRef.current.resetRefs();
         _policyPremiumRef.current.resetRefs();
 
@@ -174,7 +162,12 @@ export default function BondsPolicy() {
       onSuccess: async (res) => {
         if (res.data.success) {
           const selected = res.data.data[0];
-          console.log(selected);
+          if (subAccountRef.current) {
+            subAccountRef.current.value = selected.SubAcct;
+          }
+          if (careOfRef.current) {
+            careOfRef.current.value = selected.careOf;
+          }
           // client
           if (_policyInformationRef.current.getRefs().clientIDRef.current) {
             _policyInformationRef.current.getRefs().clientIDRef.current.value =
@@ -511,6 +504,7 @@ export default function BondsPolicy() {
             ..._policyInformationRef.current.getRefsValue(),
             ..._policyPremiumRef.current.getRefsValue(),
             subAccountRef: subAccountRef.current?.value,
+            careOfRef: careOfRef.current?.value,
             userCodeConfirmation,
           };
           mutateAddUpdate(data);
@@ -523,6 +517,7 @@ export default function BondsPolicy() {
             ..._policyInformationRef.current.getRefsValue(),
             ..._policyPremiumRef.current.getRefsValue(),
             subAccountRef: subAccountRef.current?.value,
+            careOfRef: careOfRef.current?.value,
           };
           mutateAddUpdate(data);
         },
@@ -533,19 +528,11 @@ export default function BondsPolicy() {
     mutateAccountRef.current({ policyType: "" });
   }, []);
 
-  const refetchSubAccountRef = useRef(refetchSubAccount);
-
   useEffect(() => {
     const handleResize = () => {
       setWidth(window.innerWidth);
-
-      setTimeout(() => {
-        refetchSubAccountRef.current();
-      }, 500);
     };
-
     window.addEventListener("resize", handleResize);
-
     // Cleanup on unmount
     return () => {
       window.removeEventListener("resize", handleResize);
@@ -556,7 +543,6 @@ export default function BondsPolicy() {
     <>
       {(isLoadingBondSubline ||
         isLoadingAccount ||
-        isLoadingSubAccount ||
         laodingSelectedSearch ||
         loadingAddUpdate) && <Loading />}
       <AgentUpwardTableModalSearch />
@@ -671,6 +657,12 @@ export default function BondsPolicy() {
                 }).then((result) => {
                   if (result.isConfirmed) {
                     setMode("");
+                    if (subAccountRef.current) {
+                      subAccountRef.current.value = "HO";
+                    }
+                    if (careOfRef.current) {
+                      careOfRef.current.value = "NONE";
+                    }
                     _policyInformationRef.current.resetRefs();
                     _policyPremiumRef.current.resetRefs();
                   }
@@ -722,29 +714,56 @@ export default function BondsPolicy() {
               Policy Premium
             </Button>
             {width > 768 && (
-              <SelectInput
-                ref={subAccountRef_}
-                label={{
-                  title: "Sub Account :",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "100px",
-                  },
-                }}
-                selectRef={subAccountRef}
-                select={{
-                  style: { flex: 1, height: "22px" },
-                  defaultValue: "HO",
-                }}
-                containerStyle={{
-                  flex: 2,
-                  marginLeft: "20px",
-                }}
-                datasource={[]}
-                values={"Acronym"}
-                display={"Acronym"}
-              />
+              <>
+                {subAccountData && (
+                  <SelectInput
+                    label={{
+                      title: "Sub Account :",
+                      style: {
+                        fontSize: "12px",
+                        fontWeight: "bold",
+                        width: "100px",
+                      },
+                    }}
+                    selectRef={subAccountRef}
+                    select={{
+                      style: { flex: 1, height: "22px" },
+                      defaultValue: "HO",
+                    }}
+                    containerStyle={{
+                      flex: 2,
+                      marginLeft: "20px",
+                    }}
+                    datasource={subAccountData}
+                    values={"Acronym"}
+                    display={"Acronym"}
+                  />
+                )}
+                {careOfData && (
+                  <SelectInput
+                    label={{
+                      title: "Care of :",
+                      style: {
+                        fontSize: "12px",
+                        fontWeight: "bold",
+                        width: "70px",
+                      },
+                    }}
+                    selectRef={careOfRef}
+                    select={{
+                      style: { width: "calc(100% - 70px)", height: "22px" },
+                      defaultValue: "NONE",
+                    }}
+                    containerStyle={{
+                      width: "350px",
+                      marginLeft: "20px",
+                    }}
+                    datasource={careOfData}
+                    values={"careOf"}
+                    display={"careOf"}
+                  />
+                )}
+              </>
             )}
           </div>
           <div
@@ -766,7 +785,7 @@ export default function BondsPolicy() {
                 setSelectedPage(0);
               }}
             >
-              Policy Information
+              Info
             </Button>
             <Button
               // disabled={selectedPage === 2}
@@ -784,31 +803,58 @@ export default function BondsPolicy() {
               }}
               variant="contained"
             >
-              Policy Premium
+              Premium
             </Button>
-           {width <= 768 &&  <SelectInput
-              ref={subAccountRef_}
-              label={{
-                title: "Sub Account :",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "100px",
-                  display: "none",
-                },
-              }}
-              selectRef={subAccountRef}
-              select={{
-                style: { flex: 1, height: "22px" },
-                defaultValue: "HO",
-              }}
-              containerStyle={{
-                flex: 2,
-              }}
-              datasource={[]}
-              values={"Acronym"}
-              display={"Acronym"}
-            />}
+            {width <= 768 && (
+              <>
+                {subAccountData && (
+                  <SelectInput
+                    label={{
+                      title: "Sub Account :",
+                      style: {
+                        fontSize: "12px",
+                        fontWeight: "bold",
+                        width: "100px",
+                        display: "none",
+                      },
+                    }}
+                    selectRef={subAccountRef}
+                    select={{
+                      style: { flex: 1, height: "22px" },
+                      defaultValue: "HO",
+                    }}
+                    containerStyle={{
+                      flex: 2,
+                    }}
+                    datasource={subAccountData}
+                    values={"Acronym"}
+                    display={"Acronym"}
+                  />
+                )}
+                {careOfData && (
+                  <SelectInput
+                    label={{
+                      title: "",
+                      style: {
+                        fontSize: "12px",
+                        fontWeight: "bold",
+                      },
+                    }}
+                    selectRef={careOfRef}
+                    select={{
+                      style: { width: "100%", height: "22px" },
+                      defaultValue: "NONE",
+                    }}
+                    containerStyle={{
+                      width: "60px",
+                    }}
+                    datasource={careOfData}
+                    values={"careOf"}
+                    display={"careOf"}
+                  />
+                )}
+              </>
+            )}
           </div>
         </div>
         <div

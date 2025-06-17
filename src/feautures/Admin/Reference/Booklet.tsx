@@ -63,7 +63,7 @@ export default function Booklet() {
         }}
       >
         <TextInput
-          containerClassName="custom-input"
+          containerClassName="custom-input "
           containerStyle={{
             width: "550px",
           }}
@@ -116,10 +116,11 @@ export default function Booklet() {
         >
           <DataGridViewReactUpgraded
             ref={tableRef}
+            adjustVisibleRowCount={150}
             columns={[
               { key: "IDNo", label: "ID No.", width: 150, freeze: true },
               { key: "Account", label: "Account", width: 150, freeze: false },
-              { key: "SubAcct", label: "Sub Acct", width: 150, freeze: false },
+              { key: "SubAcct", label: "Sub Acct", width: 150, freeze: true },
               {
                 key: "PolicyType",
                 label: "Policy Type",
@@ -155,7 +156,6 @@ export default function Booklet() {
               { key: "LGovTax", label: "LGovTax", width: 150, freeze: false },
               { key: "Notarial", label: "Notarial", width: 150, freeze: false },
             ]}
-            adjustVisibleRowCount={150}
             RightClickComponent={({ row }: any) => {
               return (
                 <>

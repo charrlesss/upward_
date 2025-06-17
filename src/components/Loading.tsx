@@ -11,13 +11,13 @@ export const Loading = () => {
                 left: 0,
                 right: 0,
                 background: "red",
-                zIndex: "9999",
+                zIndex: "99",
                 backgroundColor: 'rgba(0, 0, 0, 0.4)'
             }}
             ></div>
             <div style={{
                 position: "absolute",
-                zIndex: "9999",
+                zIndex: "99",
                 background: "white",
                 width: "auto",
                 height: "auto",

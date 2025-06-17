@@ -28,6 +28,7 @@ export const DataGridViewReactUpgraded = forwardRef(
     }: any,
     ref
   ) => {
+
     let lastColIdx: any = null;
     const [draggedRowIndex, setDraggedRowIndex] = useState<number | null>(null);
     const [selectAll, setSelectAll] = useState(false);
@@ -37,7 +38,6 @@ export const DataGridViewReactUpgraded = forwardRef(
     const [visible, setVisible] = useState(false);
     const [pos, setPos] = useState({ x: 0, y: 0 });
     const menuRef = useRef<HTMLDivElement | null>(null);
-
     const [selectedRow, setSelectedRow] = useState<any>(null);
     const [visibleRowCount, setVisibleRowCount] = useState(25);
     const [data, setData] = useState([]);
@@ -62,7 +62,7 @@ export const DataGridViewReactUpgraded = forwardRef(
       data.length,
       startIndex + visibleRowCount + buffer
     );
-
+    
     const handleContextMenu = (e: React.MouseEvent, row: any, col: any) => {
       e.preventDefault();
       setRightClickRowIndex(row);
@@ -73,11 +73,9 @@ export const DataGridViewReactUpgraded = forwardRef(
       setVisible(true);
       setPos({ x: clickX, y: clickY });
     };
-
     const handleClickCloseRightClickModal = () => {
       setVisible(false);
     };
-
     const handleCellKeyDown = (
       e: React.KeyboardEvent<HTMLDivElement>,
       rowIndex: number,
@@ -128,7 +126,6 @@ export const DataGridViewReactUpgraded = forwardRef(
         containerRef.current?.scrollTo({ top: rowBottom - containerHeight });
       }
     };
-
     const handleScroll = useCallback(() => {
       setVisible(false);
       const scrollTop = containerRef.current?.scrollTop || 0;
@@ -149,7 +146,6 @@ export const DataGridViewReactUpgraded = forwardRef(
         ] as any);
       }
     }, [columnHeader]);
-
     useEffect(() => {
       const wH = window.innerHeight - adjustVisibleRowCount;
       const rowCount = Math.round(wH) / rowHeight;
@@ -165,7 +161,6 @@ export const DataGridViewReactUpgraded = forwardRef(
         window.removeEventListener("resize", resize);
       };
     }, []);
-
     useEffect(() => {
       if (visible && menuRef.current) {
         const menu = menuRef.current;
@@ -188,7 +183,6 @@ export const DataGridViewReactUpgraded = forwardRef(
         }
       }
     }, [visible, pos]);
-
     useEffect(() => {
       window.addEventListener("click", handleClickCloseRightClickModal);
       return () => {
@@ -281,7 +275,6 @@ export const DataGridViewReactUpgraded = forwardRef(
       document.addEventListener("mousemove", onMouseMove);
       document.addEventListener("mouseup", onMouseUp);
     };
-
     const getFrozenLeft = (colIdx: number) => {
       let left = 0;
       for (let i = 0; i < colIdx; i++) {

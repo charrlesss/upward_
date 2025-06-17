@@ -175,6 +175,10 @@ export default function Header() {
             name: "Mortgagee",
             path: `/${department.current}/dashboard/reference/mortgagee`,
           },
+          {
+            name: "Care of",
+            path: `/${department.current}/dashboard/reference/care-of`,
+          },
         ],
       },
       {
@@ -322,6 +326,10 @@ export default function Header() {
               {
                 name: "Mortgagee",
                 path: `/${department.current}/dashboard/reference/mortgagee`,
+              },
+              {
+                name: "Care of",
+                path: `/${department.current}/dashboard/reference/care-of`,
               },
             ],
           },
@@ -475,6 +483,10 @@ export default function Header() {
               name: "Mortgagee",
               path: `/${department.current}/dashboard/reference/mortgagee`,
             },
+            {
+              name: "Care of",
+              path: `/${department.current}/dashboard/reference/care-of`,
+            },
           ],
         },
         {
@@ -623,6 +635,10 @@ export default function Header() {
                 name: "Mortgagee",
                 path: `/${department.current}/dashboard/reference/mortgagee`,
               },
+              {
+                name: "Care of",
+                path: `/${department.current}/dashboard/reference/care-of`,
+              },
             ],
           },
           {
@@ -748,6 +764,10 @@ export default function Header() {
             {
               name: "Mortgagee",
               path: `/${department.current}/dashboard/reference/mortgagee`,
+            },
+            {
+              name: "Care of",
+              path: `/${department.current}/dashboard/reference/care-of`,
             },
           ],
         },
@@ -913,6 +933,10 @@ export default function Header() {
                 name: "Mortgagee",
                 path: `/${department.current}/dashboard/reference/mortgagee`,
               },
+              {
+                name: "Care of",
+                path: `/${department.current}/dashboard/reference/care-of`,
+              },
             ],
           },
           {
@@ -1006,6 +1030,10 @@ export default function Header() {
             {
               name: "Mortgagee",
               path: `/${department.current}/dashboard/reference/mortgagee`,
+            },
+            {
+              name: "Care of",
+              path: `/${department.current}/dashboard/reference/care-of`,
             },
           ],
         },

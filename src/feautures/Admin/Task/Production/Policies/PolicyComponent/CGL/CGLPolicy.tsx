@@ -32,14 +32,17 @@ import SaveAsIcon from "@mui/icons-material/SaveAs";
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import { Loading } from "../../../../../../../components/Loading";
 import { useUpwardTableModalSearchSafeMode } from "../../../../../../../components/DataGridViewReact";
+import { PolicyContext } from "../../Policy";
 
 export default function PAPolicy() {
+  const { careOfData, subAccountData } = useContext(PolicyContext);
+
   const { myAxios, user } = useContext(AuthContext);
   const [mode, setMode] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
   const _policyInformationRef = useRef<any>(null);
   const subAccountRef = useRef<HTMLSelectElement>(null);
-  const subAccountRef_ = useRef<any>(null);
+  const careOfRef = useRef<any>(HTMLSelectElement);
 
   const { isLoading: isLoadingAccount } = useQuery({
     queryKey: "account",
@@ -59,26 +62,7 @@ export default function PAPolicy() {
     },
     refetchOnWindowFocus: false,
   });
-  const { isLoading: isLoadingSubAccount } = useQuery({
-    queryKey: "sub-account",
-    queryFn: () => {
-      return myAxios.get("/task/production/sub-account", {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      });
-    },
-    onSuccess(response) {
-      wait(100).then(() => {
-        if (subAccountRef_.current)
-          subAccountRef_.current.setDataSource(response.data?.data);
-        wait(100).then(() => {
-          if (subAccountRef.current) subAccountRef.current.value = "HO";
-        });
-      });
-    },
-    refetchOnWindowFocus: false,
-  });
+
   const { mutate: mutateAddUpdate, isLoading: loadingAddUpdate } = useMutation({
     mutationKey: "add-update",
     mutationFn: async (variables: any) => {
@@ -102,6 +86,12 @@ export default function PAPolicy() {
     onSuccess: async (res) => {
       if (res.data.success) {
         setMode("");
+        if (subAccountRef.current) {
+          subAccountRef.current.value = "HO";
+        }
+        if (careOfRef.current) {
+          careOfRef.current.value = "NONE";
+        }
         _policyInformationRef.current.resetRefs();
 
         return Swal.fire({
@@ -139,7 +129,14 @@ export default function PAPolicy() {
       onSuccess: async (res) => {
         if (res.data.success) {
           const selected = res.data.data[0];
-          console.log(selected);
+
+          if (subAccountRef.current) {
+            subAccountRef.current.value = selected.SubAcct;
+          }
+          if (careOfRef.current) {
+            careOfRef.current.value = selected.careOf;
+          }
+
           // client
           if (_policyInformationRef.current.getRefs().clientIDRef.current) {
             _policyInformationRef.current.getRefs().clientIDRef.current.value =
@@ -402,6 +399,7 @@ export default function PAPolicy() {
           const data = {
             ..._policyInformationRef.current.getRefsValue(),
             subAccountRef: subAccountRef.current?.value,
+            careOfRef: careOfRef.current?.value,
             userCodeConfirmation,
           };
           mutateAddUpdate(data);
@@ -413,6 +411,7 @@ export default function PAPolicy() {
           const data = {
             ..._policyInformationRef.current.getRefsValue(),
             subAccountRef: subAccountRef.current?.value,
+            careOfRef: careOfRef.current?.value,
           };
           mutateAddUpdate(data);
         },
@@ -422,10 +421,9 @@ export default function PAPolicy() {
 
   return (
     <>
-      {(isLoadingAccount ||
-        isLoadingSubAccount ||
-        laodingSelectedSearch ||
-        loadingAddUpdate) && <Loading />}
+      {(isLoadingAccount || laodingSelectedSearch || loadingAddUpdate) && (
+        <Loading />
+      )}
       <AgentUpwardTableModalSearch />
       <ClientUpwardTableModalSearch />
       <SearchFireUpwardTableModalSearch />
@@ -440,6 +438,7 @@ export default function PAPolicy() {
       >
         <PageHelmet title="CGL Policy" />
         <div
+          className="pa-header"
           style={{
             display: "flex",
             columnGap: "8px",
@@ -477,30 +476,54 @@ export default function PAPolicy() {
             }}
             inputRef={searchRef}
           />
-          <SelectInput
-            ref={subAccountRef_}
-            label={{
-              title: "Sub Account :",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-                display: "none",
-              },
-            }}
-            selectRef={subAccountRef}
-            select={{
-              style: { flex: 1, height: "22px" },
-              defaultValue: "HO",
-            }}
-            containerStyle={{
-              width: "50px",
-              // marginLeft: "20px",
-            }}
-            datasource={[]}
-            values={"Acronym"}
-            display={"Acronym"}
-          />
+          {subAccountData && (
+            <SelectInput
+              label={{
+                title: "Sub Account :",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
+              }}
+              selectRef={subAccountRef}
+              select={{
+                style: { flex: 1, height: "22px" },
+                defaultValue: "HO",
+              }}
+              containerStyle={{
+                width: "150px",
+                // marginLeft: "20px",
+              }}
+              datasource={subAccountData}
+              values={"Acronym"}
+              display={"Acronym"}
+            />
+          )}
+          {careOfData && (
+            <SelectInput
+              label={{
+                title: "Care of:",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "50px",
+                },
+              }}
+              selectRef={careOfRef}
+              select={{
+                style: { width: "calc(100% - 50px)", height: "22px" },
+                defaultValue: "NONE",
+              }}
+              containerClassName="care-of-input"
+              containerStyle={{
+                width: "350px",
+              }}
+              datasource={careOfData}
+              values={"careOf"}
+              display={"careOf"}
+            />
+          )}
           <div
             className="button-action-desktop"
             style={{
@@ -562,6 +585,12 @@ export default function PAPolicy() {
                 }).then((result) => {
                   if (result.isConfirmed) {
                     setMode("");
+                    if (subAccountRef.current) {
+                      subAccountRef.current.value = "HO";
+                    }
+                    if (careOfRef.current) {
+                      careOfRef.current.value = "NONE";
+                    }
                     _policyInformationRef.current.resetRefs();
                   }
                 });
