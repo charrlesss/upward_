@@ -350,7 +350,7 @@ function RenewalNotice() {
   const {
     UpwardTableModalSearch: PolicyPaSearchUpwardTableModalSearch,
     openModal: policyPaSearchOpenModal,
-    closeModal: policyPaSearchCloseModal,  
+    closeModal: policyPaSearchCloseModal,
   } = useUpwardTableModalSearchSafeMode({
     size: "large",
     link: "/task/production/search-policy-renewal-notice-pa",
@@ -446,13 +446,137 @@ function RenewalNotice() {
             flexDirection: "column",
             rowGap: "10px",
             position: "absolute",
-            top: "45%",
+            top: "50%",
             left: "50%",
             transform: "translate(-50%,-50%)",
             border: "1px solid #94a3b8",
             boxShadow: "0px 0px 5px -1px rgba(0,0,0,0.75)",
           }}
         >
+          <div
+            style={{
+              display: "flex",
+              columnGap: "10px",
+              alignItems: "center",
+              justifyContent:"space-between"
+            }}
+          >
+            <SelectInput
+              selectRef={policyTypeRef}
+              containerClassName="custom-input adjust-label"
+              label={{
+                title: "Policy Type : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: policyType === "COM" ? "100px" : "150px",
+                },
+              }}
+              select={{
+                disabled: isEditMode,
+                style: {
+                  width:
+                    policyType === "COM"
+                      ? "calc(100% - 100px)"
+                      : "calc(100% - 150px)",
+                  height: "20px",
+                },
+                value: policyType,
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    e.preventDefault();
+                  }
+                },
+                onChange: (e) => {
+                  setPolicyType(e.currentTarget.value);
+                },
+              }}
+              datasource={[
+                {
+                  key: "COM",
+                },
+                {
+                  key: "FIRE",
+                },
+                {
+                  key: "MAR",
+                },
+                {
+                  key: "PA",
+                },
+              ]}
+              values={"key"}
+              display={"key"}
+            />
+            <Button
+              onClick={() => {
+                if (searchRef.current) {
+                  searchRef.current.value = "";
+                }
+                if (nameRef.current) {
+                  nameRef.current.value = "";
+                }
+                if (paPropertyInsuredRef.current) {
+                  paPropertyInsuredRef.current.value = "";
+                }
+                if (firePropertyInsuredRef.current) {
+                  firePropertyInsuredRef.current.value = "";
+                }
+                if (fireMortgageeRef.current) {
+                  fireMortgageeRef.current.value = "";
+                }
+                if (marPropertyInsuredRef.current) {
+                  marPropertyInsuredRef.current.value = "";
+                }
+                if (marMortgageeRef.current) {
+                  marMortgageeRef.current.value = "";
+                }
+                if (marAdditionalInfoRef.current) {
+                  marAdditionalInfoRef.current.value = "";
+                }
+                if (comPassenger1Ref.current) {
+                  comPassenger1Ref.current.value = "(50,000 per passenger)";
+                }
+                if (comPassenger2Ref.current) {
+                  comPassenger2Ref.current.value = "(50,000 per passenger)";
+                }
+                if (sumInsuredEBIRef.current) {
+                  sumInsuredEBIRef.current.value = "0.00";
+                }
+                if (sumInsuredTPPDRef.current) {
+                  sumInsuredTPPDRef.current.value = "0.00";
+                }
+                if (premiumSec3Ref.current) {
+                  premiumSec3Ref.current.value = "2.00";
+                }
+                if (premiumAOFRef.current) {
+                  premiumAOFRef.current.value = "0.5";
+                }
+                if (premiumAOGRef.current) {
+                  premiumAOGRef.current.value = "0.75";
+                }
+                if (premiumEBIRef.current) {
+                  premiumEBIRef.current.value = "0.00";
+                }
+                if (premiumTPPDRef.current) {
+                  premiumTPPDRef.current.value = "0.00";
+                }
+                if (premiumAPARef.current) {
+                  premiumAPARef.current.value = "0.00";
+                }
+                if (balanceRef.current) {
+                  balanceRef.current.value = "0.00";
+                }
+                setIsEditMode(false);
+              }}
+              disabled={!isEditMode}
+              color="warning"
+              variant="contained"
+              sx={{ height: "22px", fontSize: "12px", width: "50px" }}
+            >
+              Edit
+            </Button>
+          </div>
           <TextInput
             containerClassName="custom-input adjust-label-search"
             containerStyle={{ width: "100%" }}
@@ -1017,132 +1141,9 @@ function RenewalNotice() {
               display: "flex",
               columnGap: "10px",
               alignItems: "center",
-              justifyContent: "space-between",
+              justifyContent: "flex-end",
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                columnGap: "10px",
-                alignItems: "center",
-              }}
-            >
-              <SelectInput
-                selectRef={policyTypeRef}
-                containerClassName="custom-input adjust-label"
-                label={{
-                  title: "Policy Type : ",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: policyType === "COM" ? "100px" : "150px",
-                  },
-                }}
-                select={{
-                  disabled: isEditMode,
-                  style: {
-                    width:
-                      policyType === "COM"
-                        ? "calc(100% - 100px)"
-                        : "calc(100% - 150px)",
-                    height: "20px",
-                  },
-                  value: policyType,
-                  onKeyDown: (e) => {
-                    if (e.code === "NumpadEnter" || e.code === "Enter") {
-                      e.preventDefault();
-                    }
-                  },
-                  onChange: (e) => {
-                    setPolicyType(e.currentTarget.value);
-                  },
-                }}
-                datasource={[
-                  {
-                    key: "COM",
-                  },
-                  {
-                    key: "FIRE",
-                  },
-                  {
-                    key: "MAR",
-                  },
-                  {
-                    key: "PA",
-                  },
-                ]}
-                values={"key"}
-                display={"key"}
-              />
-              <Button
-                onClick={() => {
-                  if (searchRef.current) {
-                    searchRef.current.value = "";
-                  }
-                  if (nameRef.current) {
-                    nameRef.current.value = "";
-                  }
-                  if (paPropertyInsuredRef.current) {
-                    paPropertyInsuredRef.current.value = "";
-                  }
-                  if (firePropertyInsuredRef.current) {
-                    firePropertyInsuredRef.current.value = "";
-                  }
-                  if (fireMortgageeRef.current) {
-                    fireMortgageeRef.current.value = "";
-                  }
-                  if (marPropertyInsuredRef.current) {
-                    marPropertyInsuredRef.current.value = "";
-                  }
-                  if (marMortgageeRef.current) {
-                    marMortgageeRef.current.value = "";
-                  }
-                  if (marAdditionalInfoRef.current) {
-                    marAdditionalInfoRef.current.value = "";
-                  }
-                  if (comPassenger1Ref.current) {
-                    comPassenger1Ref.current.value = "(50,000 per passenger)";
-                  }
-                  if (comPassenger2Ref.current) {
-                    comPassenger2Ref.current.value = "(50,000 per passenger)";
-                  }
-                  if (sumInsuredEBIRef.current) {
-                    sumInsuredEBIRef.current.value = "0.00";
-                  }
-                  if (sumInsuredTPPDRef.current) {
-                    sumInsuredTPPDRef.current.value = "0.00";
-                  }
-                  if (premiumSec3Ref.current) {
-                    premiumSec3Ref.current.value = "2.00";
-                  }
-                  if (premiumAOFRef.current) {
-                    premiumAOFRef.current.value = "0.5";
-                  }
-                  if (premiumAOGRef.current) {
-                    premiumAOGRef.current.value = "0.75";
-                  }
-                  if (premiumEBIRef.current) {
-                    premiumEBIRef.current.value = "0.00";
-                  }
-                  if (premiumTPPDRef.current) {
-                    premiumTPPDRef.current.value = "0.00";
-                  }
-                  if (premiumAPARef.current) {
-                    premiumAPARef.current.value = "0.00";
-                  }
-                  if (balanceRef.current) {
-                    balanceRef.current.value = "0.00";
-                  }
-                  setIsEditMode(false);
-                }}
-                disabled={!isEditMode}
-                color="warning"
-                variant="contained"
-                sx={{ height: "22px", fontSize: "12px", width: "50px" }}
-              >
-                Edit
-              </Button>
-            </div>
             <TextInput
               containerClassName="custom-input adjust-label-search"
               containerStyle={{ width: "200px" }}

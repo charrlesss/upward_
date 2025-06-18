@@ -1,13 +1,20 @@
 import { Button } from "@mui/material";
-import React, { useRef, useState } from "react";
+import React, { useContext, useRef, useState } from "react";
 import { SelectInput, TextInput } from "../../../../components/UpwardFields";
 import SearchIcon from "@mui/icons-material/Search";
 import { useUpwardTableModalSearchSafeMode } from "../../../../components/DataGridViewReact";
+import { useMutation } from "react-query";
+import { AuthContext } from "../../../../components/AuthContext";
+import { Loading } from "../../../../components/Loading";
+import { format } from "date-fns";
+import { isMobile } from "react-device-detect";
 
 export default function StatementAccount() {
+  const { myAxios, user } = useContext(AuthContext);
   const [active, setActive] = useState("CareOf");
   const careOfRef = useRef<HTMLSelectElement>(null);
   const policyNoRef = useRef<HTMLInputElement>(null);
+  const refNoRef = useRef<HTMLInputElement>(null);
 
   const {
     UpwardTableModalSearch: PolicyUpwardTableModalSearch,
@@ -40,92 +47,96 @@ export default function StatementAccount() {
     },
   });
 
+  const { mutate: mutatateReport, isLoading: isLoadingReport } = useMutation({
+    mutationKey: "report",
+    mutationFn: (variables: any) => {
+      return myAxios.post("/task/production/soa/generate-soa", variables, {
+        responseType: "arraybuffer",
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      });
+    },
+    onSuccess: (response) => {
+      const pdfBlob = new Blob([response.data], { type: "application/pdf" });
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      if (isMobile) {
+        // MOBILE: download directly
+        const link = document.createElement("a");
+        link.href = pdfUrl;
+        link.download = "report.pdf";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        return;
+      } else {
+        window.open(
+          `/${
+            process.env.REACT_APP_DEPARTMENT
+          }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+          "_blank"
+        );
+      }
+    },
+  });
+
   return (
-    <div
-      style={{
-        flex: 1,
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
+    <>
+      {isLoadingReport && <Loading />}
       <div
         style={{
-          width: "350px",
-          height: "auto",
-          border: "1px solid rgba(126, 123, 123, 0.75)",
+          flex: 1,
           display: "flex",
-          flexDirection: "column",
-          boxShadow: "0px 0px 7px -1px rgba(0,0,0,0.75)",
+          justifyContent: "center",
+          alignItems: "center",
         }}
       >
-        <div style={{ display: "flex", height: "40px" }}>
-          <Button
-            sx={{ flex: 1, borderRadius: "0px" }}
-            variant="contained"
-            color={active === "Policy" ? "secondary" : "info"}
-            onClick={() => {
-              setActive("Policy");
-            }}
-          >
-            Policy
-          </Button>
-          <Button
-            sx={{ flex: 1, borderRadius: "0px" }}
-            variant="contained"
-            color={active !== "Policy" ? "secondary" : "info"}
-            onClick={() => {
-              setActive("CareOf");
-            }}
-          >
-            Care of
-          </Button>
-        </div>
         <div
           style={{
-            height: "50px",
+            width: "350px",
+            height: "auto",
+            border: "1px solid rgba(126, 123, 123, 0.75)",
             display: "flex",
-            alignItems: "center",
-            padding: "0px 10px",
+            flexDirection: "column",
+            boxShadow: "0px 0px 7px -1px rgba(0,0,0,0.75)",
           }}
         >
-          {active === "CareOf" && (
-            <SelectInput
-              label={{
-                title: "Care Of :",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "70px",
-                },
+          <div style={{ display: "flex", height: "40px" }}>
+            <Button
+              sx={{ flex: 1, borderRadius: "0px" }}
+              variant="contained"
+              color={active === "Policy" ? "secondary" : "info"}
+              onClick={() => {
+                setActive("Policy");
               }}
-              selectRef={careOfRef}
-              select={{
-                style: { width: "calc(100% - 70px)", height: "22px" },
-                defaultValue: "HO",
+            >
+              Policy
+            </Button>
+            <Button
+              sx={{ flex: 1, borderRadius: "0px" }}
+              variant="contained"
+              color={active !== "Policy" ? "secondary" : "info"}
+              onClick={() => {
+                setActive("CareOf");
               }}
-              containerStyle={{
-                width: "100%",
-              }}
-              datasource={[
-                { key: "ANCAR MOTORS INC." },
-                { key: "ASTRA MULTIMARKET CORPORATION" },
-                { key: "COMPLETE ALLIANCE, INC" },
-                { key: "CAMFIN LENDING, INC." },
-                { key: "CASH MANAGEMENT FINANCE INC." },
-                { key: "CREDIT MASTERS & LENDING INVESTORS CORP." },
-                { key: "PRIME AMA LENDING CORP." },
-                { key: "NONE" },
-              ]}
-              values={"key"}
-              display={"key"}
-            />
-          )}
-          {active === "Policy" && (
+            >
+              Care of
+            </Button>
+          </div>
+          <div
+            style={{
+              height: "80px",
+              display: "flex",
+              alignItems: "center",
+              padding: "10px",
+              flexDirection: "column",
+              rowGap: "10px",
+            }}
+          >
             <TextInput
               containerStyle={{ width: "100%" }}
               label={{
-                title: "Policy: ",
+                title: "Ref No. : ",
                 style: {
                   fontSize: "12px",
                   fontWeight: "bold",
@@ -134,36 +145,101 @@ export default function StatementAccount() {
               }}
               input={{
                 className: "search-input-up-on-key-down",
-                type: "search",
+                type: "text",
                 onKeyDown: (e) => {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
                     policyOpenModal(e.currentTarget.value);
                   }
                 },
+                defaultValue: `${format(new Date(), "yyyy")}-000001`,
                 style: { width: "calc(100% - 70px)", height: "22px" },
               }}
-              icon={<SearchIcon sx={{ fontSize: "18px" }} />}
-              onIconClick={(e) => {
-                e.preventDefault();
-                if (policyNoRef.current) {
-                  policyOpenModal(policyNoRef.current.value);
-                }
-              }}
-              inputRef={policyNoRef}
+              inputRef={refNoRef}
             />
-          )}
+            {active === "CareOf" && (
+              <SelectInput
+                label={{
+                  title: "Care Of :",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "70px",
+                  },
+                }}
+                selectRef={careOfRef}
+                select={{
+                  style: { width: "calc(100% - 70px)", height: "22px" },
+                  defaultValue: "HO",
+                }}
+                containerStyle={{
+                  width: "100%",
+                }}
+                datasource={[
+                  { key: "ANCAR MOTORS INC." },
+                  { key: "ASTRA MULTIMARKET CORPORATION" },
+                  { key: "COMPLETE ALLIANCE, INC" },
+                  { key: "CAMFIN LENDING, INC." },
+                  { key: "CASH MANAGEMENT FINANCE INC." },
+                  { key: "CREDIT MASTERS & LENDING INVESTORS CORP." },
+                  { key: "PRIME AMA LENDING CORP." },
+                  { key: "NONE" },
+                ]}
+                values={"key"}
+                display={"key"}
+              />
+            )}
+            {active === "Policy" && (
+              <TextInput
+                containerStyle={{ width: "100%" }}
+                label={{
+                  title: "Policy: ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "70px",
+                  },
+                }}
+                input={{
+                  className: "search-input-up-on-key-down",
+                  type: "search",
+                  onKeyDown: (e) => {
+                    if (e.key === "Enter" || e.key === "NumpadEnter") {
+                      e.preventDefault();
+                      policyOpenModal(e.currentTarget.value);
+                    }
+                  },
+                  style: { width: "calc(100% - 70px)", height: "22px" },
+                }}
+                icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+                onIconClick={(e) => {
+                  e.preventDefault();
+                  if (policyNoRef.current) {
+                    policyOpenModal(policyNoRef.current.value);
+                  }
+                }}
+                inputRef={policyNoRef}
+              />
+            )}
+          </div>
+          <Button
+            sx={{ flex: 1, borderRadius: "0px" }}
+            variant="contained"
+            color="success"
+            onClick={() => {
+              mutatateReport({
+                type: active,
+                careOf: careOfRef.current?.value,
+                policy: policyNoRef.current?.value,
+                refNo: refNoRef.current?.value,
+              });
+            }}
+          >
+            SUBMIT
+          </Button>
         </div>
-        <Button
-          sx={{ flex: 1, borderRadius: "0px" }}
-          variant="contained"
-          color="success"
-          onClick={() => {}}
-        >
-          SUBMIT
-        </Button>
+        <PolicyUpwardTableModalSearch />
       </div>
-      <PolicyUpwardTableModalSearch />
-    </div>
+    </>
   );
 }

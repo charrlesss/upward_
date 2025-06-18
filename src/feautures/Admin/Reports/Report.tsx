@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { wait } from "../../../lib/wait";
 
 export default function DisplayReport() {
@@ -14,6 +14,8 @@ export default function DisplayReport() {
       }
     });
   }, []);
+
+  
 
   return (
     <div
