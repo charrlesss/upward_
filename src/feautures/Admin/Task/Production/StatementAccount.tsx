@@ -1,6 +1,10 @@
 import { Button } from "@mui/material";
 import React, { useContext, useRef, useState } from "react";
-import { SelectInput, TextInput } from "../../../../components/UpwardFields";
+import {
+  SelectInput,
+  TextAreaInput,
+  TextInput,
+} from "../../../../components/UpwardFields";
 import SearchIcon from "@mui/icons-material/Search";
 import { useUpwardTableModalSearchSafeMode } from "../../../../components/DataGridViewReact";
 import { useMutation } from "react-query";
@@ -14,7 +18,9 @@ export default function StatementAccount() {
   const [active, setActive] = useState("CareOf");
   const careOfRef = useRef<HTMLSelectElement>(null);
   const policyNoRef = useRef<HTMLInputElement>(null);
+  const policyTypeRef = useRef("");
   const refNoRef = useRef<HTMLInputElement>(null);
+  const attachmentRef = useRef<HTMLTextAreaElement>(null);
 
   const {
     UpwardTableModalSearch: PolicyUpwardTableModalSearch,
@@ -36,12 +42,18 @@ export default function StatementAccount() {
         label: "Policy Type",
         width: 90,
       },
+      {
+        key: "PolicyType",
+        label: "Policy Type",
+        width: 90,
+      },
     ],
     getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
       if (rowItm) {
         if (policyNoRef.current) {
           policyNoRef.current.value = rowItm[0];
         }
+        policyTypeRef.current = rowItm[5];
         policyCloseModal();
       }
     },
@@ -50,12 +62,18 @@ export default function StatementAccount() {
   const { mutate: mutatateReport, isLoading: isLoadingReport } = useMutation({
     mutationKey: "report",
     mutationFn: (variables: any) => {
-      return myAxios.post("/task/production/soa/generate-soa", variables, {
-        responseType: "arraybuffer",
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      });
+      return myAxios.post(
+        active === "Policy"
+          ? "/task/production/soa/generate-soa-policy"
+          : "/task/production/soa/generate-soa-careof",
+        variables,
+        {
+          responseType: "arraybuffer",
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }
+      );
     },
     onSuccess: (response) => {
       const pdfBlob = new Blob([response.data], { type: "application/pdf" });
@@ -125,7 +143,7 @@ export default function StatementAccount() {
           </div>
           <div
             style={{
-              height: "80px",
+              height: "auto",
               display: "flex",
               alignItems: "center",
               padding: "10px",
@@ -157,38 +175,6 @@ export default function StatementAccount() {
               }}
               inputRef={refNoRef}
             />
-            {active === "CareOf" && (
-              <SelectInput
-                label={{
-                  title: "Care Of :",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "70px",
-                  },
-                }}
-                selectRef={careOfRef}
-                select={{
-                  style: { width: "calc(100% - 70px)", height: "22px" },
-                  defaultValue: "HO",
-                }}
-                containerStyle={{
-                  width: "100%",
-                }}
-                datasource={[
-                  { key: "ANCAR MOTORS INC." },
-                  { key: "ASTRA MULTIMARKET CORPORATION" },
-                  { key: "COMPLETE ALLIANCE, INC" },
-                  { key: "CAMFIN LENDING, INC." },
-                  { key: "CASH MANAGEMENT FINANCE INC." },
-                  { key: "CREDIT MASTERS & LENDING INVESTORS CORP." },
-                  { key: "PRIME AMA LENDING CORP." },
-                  { key: "NONE" },
-                ]}
-                values={"key"}
-                display={"key"}
-              />
-            )}
             {active === "Policy" && (
               <TextInput
                 containerStyle={{ width: "100%" }}
@@ -221,6 +207,64 @@ export default function StatementAccount() {
                 inputRef={policyNoRef}
               />
             )}
+            <SelectInput
+              label={{
+                title: "Care Of :",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "70px",
+                },
+              }}
+              selectRef={careOfRef}
+              select={{
+                style: { width: "calc(100% - 70px)", height: "22px" },
+                defaultValue: "HO",
+              }}
+              containerStyle={{
+                width: "100%",
+              }}
+              datasource={[
+                { key: "ANCAR MOTORS INC." },
+                { key: "ASTRA MULTIMARKET CORPORATION" },
+                { key: "COMPLETE ALLIANCE, INC" },
+                { key: "CAMFIN LENDING, INC." },
+                { key: "CASH MANAGEMENT FINANCE INC." },
+                { key: "CREDIT MASTERS & LENDING INVESTORS CORP." },
+                { key: "PRIME AMA LENDING CORP." },
+                { key: "NONE" },
+              ]}
+              values={"key"}
+              display={"key"}
+            />
+            <TextAreaInput
+              containerClassName="custom-input"
+              label={{
+                title: "Attachment : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
+              }}
+              textarea={{
+                rows: 4,
+                defaultValue: "**ATTACHED COPY OF COMPREHENSIVE BONDS 7 GPA**",
+                style: { width: "100%" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    //  refDate.current?.focus()
+                  }
+                },
+              }}
+              containerStyle={{
+                width: "100%",
+                flexDirection: "column",
+                justifyContent: "flex-start",
+                alignItems: "flex-start",
+              }}
+              _inputRef={attachmentRef}
+            />
           </div>
           <Button
             sx={{ flex: 1, borderRadius: "0px" }}
@@ -232,6 +276,8 @@ export default function StatementAccount() {
                 careOf: careOfRef.current?.value,
                 policy: policyNoRef.current?.value,
                 refNo: refNoRef.current?.value,
+                attachment: attachmentRef.current?.value,
+                policyType: policyTypeRef.current,
               });
             }}
           >

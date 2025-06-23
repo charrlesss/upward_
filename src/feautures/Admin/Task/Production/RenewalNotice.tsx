@@ -88,24 +88,8 @@ function RenewalNotice() {
       });
     },
     onSuccess: (response) => {
-      const totalGross = parseFloat(
-        response.data.payment.totalGross[0].TotalDue
-      );
-      const totalPaidDeposit = parseFloat(
-        response.data.payment.totalPaidDeposit[0].totalDeposit
-      );
-      const totalPaidReturned = parseFloat(
-        response.data.payment.totalPaidReturned[0].totalReturned
-      );
-      const totalDiscount = parseFloat(
-        response.data.payment.totalDiscount[0].discount
-      );
-
-      let totalPaid = totalPaidDeposit - totalPaidReturned;
-      let totalBalance = totalGross - (totalPaid + totalDiscount);
-
       if (balanceRef.current) {
-        balanceRef.current.value = formatNumber(totalBalance);
+        balanceRef.current.value = formatNumber(response.data.Balance);
       }
     },
   });
@@ -193,34 +177,34 @@ function RenewalNotice() {
         }
         if (premiumSec3Ref.current) {
           premiumSec3Ref.current.value = formatNumber(
-            parseFloat(rowItm[6].toString().replace(/,/g, ""))
+            parseFloat((rowItm[6] || 0)?.toString().replace(/,/g, ""))
           );
         }
 
         if (sumInsuredEBIRef.current) {
           sumInsuredEBIRef.current.value = formatNumber(
-            parseFloat(rowItm[7].toString().replace(/,/g, ""))
+            parseFloat((rowItm[7] || 0)?.toString().replace(/,/g, ""))
           );
         }
         if (sumInsuredTPPDRef.current) {
           sumInsuredTPPDRef.current.value = formatNumber(
-            parseFloat(rowItm[8].toString().replace(/,/g, ""))
+            parseFloat((rowItm[8] || 0)?.toString().replace(/,/g, ""))
           );
         }
 
         if (premiumEBIRef.current) {
           premiumEBIRef.current.value = formatNumber(
-            parseFloat(rowItm[10].toString().replace(/,/g, ""))
+            parseFloat((rowItm[10] || 0)?.toString().replace(/,/g, ""))
           );
         }
         if (premiumTPPDRef.current) {
           premiumTPPDRef.current.value = formatNumber(
-            parseFloat(rowItm[11].toString().replace(/,/g, ""))
+            parseFloat((rowItm[11] || 0)?.toString().replace(/,/g, ""))
           );
         }
         if (premiumAPARef.current) {
           premiumAPARef.current.value = formatNumber(
-            parseFloat(rowItm[12].toString().replace(/,/g, ""))
+            parseFloat((rowItm[12] || 0).toString().replace(/,/g, ""))
           );
         }
         setIsEditMode(true);
@@ -458,7 +442,7 @@ function RenewalNotice() {
               display: "flex",
               columnGap: "10px",
               alignItems: "center",
-              justifyContent:"space-between"
+              justifyContent: "space-between",
             }}
           >
             <SelectInput
@@ -897,7 +881,7 @@ function RenewalNotice() {
                   />
                   <TextFormatedInput
                     label={{
-                      title: "AOG % : ",
+                      title: "LGT % : ",
                       style: {
                         fontSize: "12px",
                         fontWeight: "bold",
