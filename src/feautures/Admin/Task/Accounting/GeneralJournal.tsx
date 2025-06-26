@@ -48,8 +48,8 @@ import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import { format, lastDayOfMonth } from "date-fns";
 import PageHelmet from "../../../../components/Helmet";
 import {
-  DataGridViewReact,
-  useUpwardTableModalSearchSafeMode,
+  DataGridViewReactUpgraded,
+  UpwardTableModalSearch,
 } from "../../../../components/DataGridViewReact";
 import { Loading } from "../../../../components/Loading";
 import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
@@ -79,18 +79,19 @@ export const reducer = (state: any, action: any) => {
 };
 
 const selectedCollectionColumns = [
-  { key: "code", label: "Code", width: 150 },
-  { key: "acctName", label: "Account Name", width: 300 },
+  { key: "code", label: "Code", width: 100, freeze: true },
+  { key: "acctName", label: "Account Name", width: 200, freeze: true },
   {
     key: "subAcctName",
     label: "Sub Account",
-    width: 170,
+    width: 120,
   },
-  { key: "ClientName", label: "Name", width: 300 },
+  { key: "IDNo", label: "I.D.", width: 200 },
+  { key: "ClientName", label: "Name", width: 300, freeze: true },
   { key: "debit", label: "Debit", width: 120, type: "number" },
   { key: "credit", label: "Credit", width: 120, type: "number" },
   // hide
-  { key: "TC_Code", label: "TC", width: 120 },
+  { key: "TC_Code", label: "TC", width: 100 },
   {
     key: "remarks",
     label: "Remarks",
@@ -100,7 +101,6 @@ const selectedCollectionColumns = [
   { key: "vatType", label: "Vat Type", width: 120 },
   { key: "invoice", label: "Invoice", width: 200 },
   { key: "TempID", label: "TempId", hide: true },
-  { key: "IDNo", label: "I.D.", width: 300, hide: true },
   {
     key: "BranchCode",
     label: "BranchCode",
@@ -152,6 +152,11 @@ export default function GeneralJournal() {
   const [openJobs, setOpenJobs] = useState(false);
 
   const table = useRef<any>(null);
+
+  const clientModalRef = useRef<any>(null);
+  const chartOfAccountModalRef = useRef<any>(null);
+  const transactionOfAccountModalRef = useRef<any>(null);
+  const searchGeneralJournalModalRef = useRef<any>(null);
 
   const modeAdd = mode === "add";
   const modeUpdate = mode === "update";
@@ -230,24 +235,7 @@ export default function GeneralJournal() {
             confirmButtonText: "Yes, print it!",
           }).then((result) => {
             if (result.isConfirmed) {
-              const data = table.current.getData();
-              const generalJournal: any = data.map((itm: any) => {
-                return {
-                  code: itm[0],
-                  acctName: itm[1],
-                  subAcctName: itm[2],
-                  ClientName: itm[3],
-                  debit: itm[4],
-                  credit: itm[5],
-                  TC_Code: itm[6],
-                  remarks: itm[7],
-                  vatType: itm[8],
-                  invoice: itm[9],
-                  TempID: itm[10],
-                  IDNo: itm[11],
-                  BranchCode: itm[12],
-                };
-              });
+              const generalJournal = table.current.getData();
 
               mutatePrint({
                 JVNo: refRefNo.current?.value,
@@ -278,7 +266,6 @@ export default function GeneralJournal() {
       });
     },
   });
-
   const {
     mutate: mutateVoidGeneralJournal,
     isLoading: loadingVoidGeneralJournalMutate,
@@ -318,6 +305,7 @@ export default function GeneralJournal() {
       });
     },
   });
+  
   const {
     mutate: getSearchSelectedGeneralJournal,
     isLoading: loadingGetSearchSelectedGeneralJournal,
@@ -347,160 +335,10 @@ export default function GeneralJournal() {
       if (refExplanation.current) {
         refExplanation.current.value = explanation;
       }
-      console.log(selected);
-      table.current.setDataFormated(selected);
+      table.current.setData(selected);
       monitor();
     },
   });
-  //Collection Search
-  const {
-    UpwardTableModalSearch: SearchCollectionUpwardTableModalSearch,
-    openModal: searchCollectionCreditOpenModal,
-    closeModal: searchCollectionCreditCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    size: "medium",
-    link: "/task/accounting/general-journal/search-general-journal",
-    column: [
-      { key: "Date_Entry", headerName: "Date", width: 130 },
-      { key: "Source_No", headerName: "Ref No.", width: 150 },
-      {
-        key: "Explanation",
-        headerName: "Explanation",
-        width: 300,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        wait(100).then(() => {
-          getSearchSelectedGeneralJournal({
-            Source_No: rowItm[1],
-          });
-          setMode("update");
-          table.current.resetTable();
-          resetRow();
-        });
-        searchCollectionCreditCloseModal();
-      }
-    },
-  });
-  // chart of account Search
-  const {
-    UpwardTableModalSearch: ChartAccountUpwardTableModalSearch,
-    openModal: chartAccountOpenModal,
-    closeModal: chartAccountCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    size: "medium",
-    link: "/task/accounting/general-journal/get-chart-account",
-    column: [
-      { key: "Acct_Code", label: "Account Code", width: 130 },
-      { key: "Acct_Title", label: "Account Title.", width: 250 },
-      {
-        key: "Short",
-        label: "Short",
-        width: 300,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        wait(100).then(() => {
-          if (refCode.current) {
-            refCode.current.value = rowItm[0];
-          }
-          if (refAccountName.current) {
-            refAccountName.current.value = rowItm[1];
-          }
-
-          refName.current?.focus();
-        });
-        chartAccountCloseModal();
-      }
-    },
-  });
-  // Client Search
-  const {
-    UpwardTableModalSearch: ClientUpwardTableModalSearch,
-    openModal: clientOpenModal,
-    closeModal: clientCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    size: "medium",
-    link: "/task/accounting/search-pdc-policy-id",
-    column: [
-      { key: "Type", label: "Type", width: 130 },
-      { key: "IDNo", label: "ID No.", width: 150 },
-      {
-        key: "Name",
-        label: "Name",
-        width: 300,
-      },
-      {
-        key: "ID",
-        label: "ID",
-        hide: true,
-      },
-      {
-        key: "client_id",
-        label: "client_id",
-        hide: true,
-      },
-      {
-        key: "sub_account",
-        label: "sub_account",
-        hide: true,
-      },
-      {
-        key: "ShortName",
-        label: "ShortName",
-        hide: true,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        wait(100).then(() => {
-          if (refName.current) {
-            refName.current.value = rowItm[2] ?? "";
-          }
-          if (refSubAccount.current) {
-            refSubAccount.current.value = rowItm[6] ?? "";
-          }
-          refIDNo.current = rowItm[1];
-          refSubAcct.current = rowItm[5];
-
-          refDebit.current?.focus();
-        });
-        clientCloseModal();
-      }
-    },
-  });
-  //  Transaction Accoun Search
-  const {
-    UpwardTableModalSearch: TransactionAccountUpwardTableModalSearch,
-    openModal: TransactionAccountOpenModal,
-    closeModal: TransactionAccountCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    link: "/task/accounting/general-journal/get-transaction-account",
-    column: [
-      { key: "Code", label: "Code", width: 130 },
-      {
-        key: "Description",
-        label: "Description",
-        width: 300,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        wait(100).then(() => {
-          if (refTC.current) {
-            refTC.current.value = rowItm[0];
-          }
-          refTCDesc.current = rowItm[1];
-          refRemarks.current?.focus();
-        });
-        TransactionAccountCloseModal();
-      }
-    },
-  });
-
-  // print
   const { mutate: mutatePrint, isLoading: isLoadingPrint } = useMutation({
     mutationKey: "print",
     mutationFn: async (variables: any) => {
@@ -532,99 +370,6 @@ export default function GeneralJournal() {
     const { name, value } = e.target;
     dispatch({ type: "UPDATE_FIELD", field: name, value });
   };
-  const handleOnSave = useCallback(() => {
-    if (refRefNo.current?.value === "") {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Please provide reference number!",
-        timer: 1500,
-      });
-    }
-    if (refExplanation.current?.value === "") {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title: "Please provide explanation!",
-        timer: 1500,
-      }).then(() => {
-        wait(300).then(() => {
-          refExplanation.current?.focus();
-        });
-      });
-    }
-    if (
-      parseFloat(monitoring.totalDebit.replace(/,/g, "")) <= 0 ||
-      parseFloat(monitoring.totalCredit.replace(/,/g, "")) <= 0
-    ) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title:
-          "Total Debit and Credit amount must not be zero(0), please double check the entries",
-        timer: 1500,
-      }).then(() => {
-        wait(300).then(() => {});
-      });
-    }
-    if (monitoring.totalDebit !== monitoring.totalCredit) {
-      return Swal.fire({
-        position: "center",
-        icon: "warning",
-        title:
-          "Total Debit and Credit amount must be balance, please double check the entries",
-        timer: 1500,
-      }).then(() => {
-        wait(300).then(() => {});
-      });
-    }
-
-    const generalJournalData: any = table.current.getData();
-    const generalJournalDataFormatted = generalJournalData.map((itm: any) => {
-      return {
-        code: itm[0],
-        acctName: itm[1],
-        subAcctName: itm[2],
-        ClientName: itm[3],
-        debit: itm[4],
-        credit: itm[5],
-        TC_Code: itm[6],
-        remarks: itm[7],
-        vatType: itm[8],
-        invoice: itm[9],
-        TempID: itm[10],
-        IDNo: itm[11],
-        BranchCode: itm[12],
-      };
-    });
-    if (modeUpdate) {
-      codeCondfirmationAlert({
-        isUpdate: true,
-        cb: (userCodeConfirmation) => {
-          addGeneralJournalMutate({
-            hasSelected: true,
-            refNo: refRefNo.current?.value,
-            dateEntry: refDate.current?.value,
-            explanation: refExplanation.current?.value,
-            generalJournal: generalJournalDataFormatted,
-            userCodeConfirmation,
-          });
-        },
-      });
-    } else {
-      saveCondfirmationAlert({
-        isConfirm: () => {
-          addGeneralJournalMutate({
-            hasSelected: false,
-            refNo: refRefNo.current?.value,
-            dateEntry: refDate.current?.value,
-            explanation: refExplanation.current?.value,
-            generalJournal: generalJournalDataFormatted,
-          });
-        },
-      });
-    }
-  }, [monitoring, addGeneralJournalMutate, modeUpdate]);
   function handleVoid() {
     codeCondfirmationAlert({
       isUpdate: false,
@@ -683,7 +428,7 @@ export default function GeneralJournal() {
         timer: 1500,
       }).then(() => {
         wait(300).then(() => {
-          return chartAccountOpenModal(state.code);
+          chartOfAccountModalRef.current.openModal(state.code);
         });
       });
     }
@@ -696,7 +441,7 @@ export default function GeneralJournal() {
         timer: 1500,
       }).then(() => {
         wait(300).then(() => {
-          return clientOpenModal(refName.current?.value);
+          return clientModalRef.current.openModal(refName.current?.value);
         });
       });
     }
@@ -756,7 +501,7 @@ export default function GeneralJournal() {
         timer: 1500,
       }).then(() => {
         wait(300).then(() => {
-          TransactionAccountOpenModal(state.TC_Code);
+          transactionOfAccountModalRef.current.openModal(refTC.current?.value);
         });
       });
     }
@@ -836,34 +581,34 @@ export default function GeneralJournal() {
           refInvoice.current
         ) {
           const newData: any = table.current.getData();
-          const newInput = [
-            refCode.current.value,
-            refAccountName.current.value,
-            refSubAccount.current.value,
-            refName.current.value,
-            refDebit.current.value,
-            refCredit.current.value,
-            refTC.current.value,
-            refRemarks.current.value,
-            refVat.current.value,
-            refInvoice.current.value,
-            refIDNo.current,
-            refIDNo.current,
-            refSubAcct.current,
-          ];
+          const newInput = {
+            code: refCode.current.value,
+            acctName: refAccountName.current.value,
+            subAcctName: refSubAccount.current.value,
+            IDNo: refIDNo.current,
+            ClientName: refName.current.value,
+            debit: refDebit.current.value,
+            credit: refCredit.current.value,
+            TC_Code: refTC.current.value,
+            remarks: refRemarks.current.value,
+            vatType: refVat.current.value,
+            invoice: refInvoice.current.value,
+            TempID: "",
+            BranchCode: refSubAcct.current,
+          };
 
           let taxtInput: any = [];
           let taxableamt = 0;
 
-          if (newInput[8] === "VAT" && newInput[0] !== "1.06.02") {
-            const debit = parseFloat(newInput[4].replace(/,/g, ""));
-            const credit = parseFloat(newInput[5].replace(/,/g, ""));
+          if (newInput.vatType === "VAT" && newInput.code !== "1.06.02") {
+            const debit = parseFloat(newInput.debit.replace(/,/g, ""));
+            const credit = parseFloat(newInput.credit.replace(/,/g, ""));
             if (debit > 0) {
               taxableamt = debit / 1.12;
-              newInput[4] = formatNumber(taxableamt);
+              newInput.debit = formatNumber(taxableamt);
             } else {
               taxableamt = credit / 1.12;
-              newInput[5] = formatNumber(taxableamt);
+              newInput.credit = formatNumber(taxableamt);
             }
 
             let inputtax = taxableamt * 0.12;
@@ -871,38 +616,37 @@ export default function GeneralJournal() {
             let taxtCredit = "";
             if (debit > 0) {
               taxtDebit = formatNumber(inputtax);
-              taxtCredit = newInput[5];
+              taxtCredit = newInput.credit;
             } else {
               taxtCredit = formatNumber(inputtax);
-              taxtDebit = newInput[4];
+              taxtDebit = newInput.debit;
             }
 
-            taxtInput = [
-              "1.06.02",
-              "Input Tax",
-              refSubAccount.current.value,
-              refName.current.value,
-              taxtDebit,
-              taxtCredit,
-              refTC.current.value,
-              refRemarks.current.value,
-              refVat.current.value,
-              refInvoice.current.value,
-              refIDNo.current,
-              refIDNo.current,
-              refSubAcct.current,
-            ];
+            taxtInput = {
+              code: "1.06.02",
+              acctName: "Input Tax",
+              subAcctName: refSubAccount.current.value,
+              IDNo: refIDNo.current,
+              ClientName: refName.current.value,
+              debit: taxtDebit,
+              credit: taxtCredit,
+              TC_Code: refTC.current.value,
+              remarks: refRemarks.current.value,
+              vatType: refVat.current.value,
+              invoice: refInvoice.current.value,
+              TempID: "",
+              BranchCode: refSubAcct.current,
+            };
           }
           if (isUpdate) {
             newData[getSelectedRow] = newInput;
-            table.current.setSelectedRow(null);
-            table.current.resetCheckBox(null);
+            table.current.resetTable();
           } else {
             newData[newData.length] = newInput;
           }
           table.current.setData(newData);
           setTimeout(() => {
-            if (newInput[8] === "VAT" && newInput[0] !== "1.06.02") {
+            if (newInput.vatType === "VAT" && newInput.code !== "1.06.02") {
               const getNewData = table.current.getData();
               if (isUpdate) {
                 getNewData.splice(getSelectedRow + 1, 0, taxtInput);
@@ -927,7 +671,6 @@ export default function GeneralJournal() {
   function handleJobs() {
     setOpenJobs((d) => !d);
   }
-
   function onCancel() {
     resetFieldRef();
     resetRowFieldRef();
@@ -939,11 +682,11 @@ export default function GeneralJournal() {
     setTimeout(() => {
       const getData = table.current.getData();
       const totalCredit = getData.reduce(
-        (a: any, b: any) => a + parseFloat(b[5].replace(/,/g, "")),
+        (a: any, b: any) => a + parseFloat(b.credit.replace(/,/g, "")),
         0
       );
       const totalDebit = getData.reduce(
-        (a: any, b: any) => a + parseFloat(b[4].replace(/,/g, "")),
+        (a: any, b: any) => a + parseFloat(b.debit.replace(/,/g, "")),
         0
       );
       setMonitoring({
@@ -1007,19 +750,6 @@ export default function GeneralJournal() {
       balance: "0.00",
     });
   }
-  useEffect(() => {
-    const handleKeyDown = (event: any) => {
-      if ((event.ctrlKey || event.metaKey) && event.key === "s") {
-        event.preventDefault();
-        handleOnSave();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [handleOnSave]);
   function formatNumber(Amount: number) {
     return Amount.toLocaleString("en-US", {
       minimumFractionDigits: 2,
@@ -1036,29 +766,29 @@ export default function GeneralJournal() {
       let iRow = 0;
 
       const qry = `
-    select 
-      a.PolicyNo,
-      a.IDNo,
-      (TotalDue - ifnull(b.TotalPaid,0)) as 'Amount',
-      c.Mortgagee 
-    from policy a 
-      left join (
-        select 
-          IDNo,
-          sum(Debit) as 'TotalPaid' 
-        from collection 
-        group by IDNo
-      ) b on b.IDNo = a.PolicyNo 
-      inner join vpolicy c on c.PolicyNo = a.PolicyNo 
-      where
-      (TotalDue - ifnull(b.TotalPaid,0)) <> 0 and 
-      a.PolicyType = 'TPL' and 
-      c.Mortgagee = 'N I L - ASTRA' and 
-      (
-        a.DateIssued >= '${dtFrom}' and 
-        a.DateIssued <= '${dtTo}'
-      ) 
-      order by a.DateIssued
+      select 
+        a.PolicyNo,
+        a.IDNo,
+        (TotalDue - ifnull(b.TotalPaid,0)) as 'Amount',
+        c.Mortgagee 
+      from policy a 
+        left join (
+          select 
+            IDNo,
+            sum(Debit) as 'TotalPaid' 
+          from collection 
+          group by IDNo
+        ) b on b.IDNo = a.PolicyNo 
+        inner join vpolicy c on c.PolicyNo = a.PolicyNo 
+        where
+        (TotalDue - ifnull(b.TotalPaid,0)) <> 0 and 
+        a.PolicyType = 'TPL' and 
+        c.Mortgagee = 'N I L - ASTRA' and 
+        (
+          a.DateIssued >= '${dtFrom}' and 
+          a.DateIssued <= '${dtTo}'
+        ) 
+        order by a.DateIssued
       `;
       let dgvJournal: any = [];
       const { data } = await executeQueryToClient(qry);
@@ -1080,21 +810,21 @@ export default function GeneralJournal() {
             `SELECT Shortname ,Sub_ShortName, Sub_Acct FROM (${ID_Entry}) id_entry WHERE IDNo = '${tmpID}'`
           );
 
-          dgvJournal[iRow] = [
-            "1.03.01", // 0
-            "Premium Receivables", // 1
-            tmpNameRes.data[0]?.Sub_ShortName, // 2
-            tmpNameRes.data[0]?.Shortname, // 3
-            "0.00", // 4
-            formatNumber(itm.Amount), //5
-            "RPT", // 6
-            "", // 7
-            "Non-VAT", //8
-            "",
-            itm.PolicyNo,
-            itm.PolicyNo,
-            tmpNameRes.data[0]?.Sub_Acct, // 8
-          ];
+          dgvJournal[iRow] = {
+            code: "1.03.01",
+            acctName: "Premium Receivables",
+            subAcctName: tmpNameRes.data[0]?.Sub_ShortName,
+            IDNo: itm.PolicyNo,
+            ClientName: tmpNameRes.data[0]?.Shortname,
+            debit: "0.00",
+            credit: formatNumber(itm.Amount),
+            TC_Code: "RPT",
+            remarks: "",
+            vatType: "Non-VAT",
+            invoice: "",
+            TempID: "",
+            BranchCode: tmpNameRes.data[0]?.Sub_Acct,
+          };
 
           totalAmount =
             totalAmount + parseFloat(itm.Amount.toString().replace(/,/g, ""));
@@ -1105,21 +835,22 @@ export default function GeneralJournal() {
           `SELECT Shortname ,Sub_ShortName, Sub_Acct FROM (${ID_Entry}) id_entry WHERE IDNo = 'C-1024-04785'`
         );
 
-        dgvJournal[iRow + 1] = [
-          "1.03.01",
-          "Premium Receivables",
-          tmpNameRes.data[0]?.Sub_ShortName, // 2
-          tmpNameRes.data[0]?.Shortname, // 3
-          formatNumber(totalAmount), //4
-          "0.00", // 5,
-          "RPT", // 7
-          "", // 9
-          "Non-VAT", //8
-          "",
-          "1.05.02", // 9
-          "1.05.02", // 10
-          tmpNameRes.data[0]?.Sub_Acct, // 12
-        ];
+        dgvJournal[iRow + 1] = {
+          code: "1.03.01",
+          acctName: "Premium Receivables",
+          subAcctName: tmpNameRes.data[0]?.Sub_ShortName,
+          IDNo: "C-1024-04785",
+          ClientName: tmpNameRes.data[0]?.Shortname,
+          debit: formatNumber(totalAmount),
+          credit: "0.00",
+          TC_Code: "RPT",
+          remarks: "",
+          vatType: "Non-VAT",
+          invoice: "",
+          TempID: "",
+          BranchCode: tmpNameRes.data[0]?.Sub_Acct,
+        };
+
         table.current.setData(dgvJournal);
         setMode("update");
         setOpenJobs(false);
@@ -1188,21 +919,21 @@ export default function GeneralJournal() {
             `SELECT Shortname ,Sub_ShortName, Sub_Acct FROM (${ID_Entry}) id_entry WHERE IDNo = '${tmpID}'`
           );
 
-          dgvJournal[iRow] = [
-            "1.03.01", // 0
-            "Premium Receivables", // 1
-            tmpNameRes.data[0]?.Sub_ShortName, // 2
-            tmpNameRes.data[0]?.Shortname, // 3
-            "0.00", // 4
-            formatNumber(itm.Amount), //5
-            "RPT", // 6
-            "", // 7
-            "Non-VAT", //8
-            "",
-            itm.PolicyNo,
-            itm.PolicyNo,
-            tmpNameRes.data[0]?.Sub_Acct, // 8
-          ];
+          dgvJournal[iRow] = {
+            code: "1.03.01",
+            acctName: "Premium Receivables",
+            subAcctName: tmpNameRes.data[0]?.Sub_ShortName,
+            IDNo: itm.PolicyNo,
+            ClientName: tmpNameRes.data[0]?.Shortname,
+            debit: "0.00",
+            credit: formatNumber(itm.Amount),
+            TC_Code: "RPT",
+            remarks: "",
+            vatType: "Non-VAT",
+            invoice: "",
+            TempID: "",
+            BranchCode: tmpNameRes.data[0]?.Sub_Acct,
+          };
 
           totalAmount =
             totalAmount + parseFloat(itm.Amount.toString().replace(/,/g, ""));
@@ -1210,24 +941,25 @@ export default function GeneralJournal() {
         }
 
         const { data: tmpNameRes } = await executeQueryToClient(
-          `SELECT Shortname ,Sub_ShortName, Sub_Acct FROM (${ID_Entry}) id_entry WHERE IDNo = 'O-1024-00011'`
+          `SELECT Shortname ,Sub_ShortName, Sub_Acct FROM (${ID_Entry}) id_entry WHERE IDNo = 'C-1024-01370'`
         );
 
-        dgvJournal[iRow + 1] = [
-          "1.03.01",
-          "Premium Receivables",
-          tmpNameRes.data[0]?.Sub_ShortName, // 2
-          tmpNameRes.data[0]?.Shortname, // 3
-          formatNumber(totalAmount), //4
-          "0.00", // 5,
-          "RPT", // 7
-          "", // 9
-          "Non-VAT", //8
-          "",
-          "1.05.02", // 9
-          "1.05.02", // 10
-          tmpNameRes.data[0]?.Sub_Acct, // 12
-        ];
+        dgvJournal[iRow + 1] = {
+          code: "1.03.01",
+          acctName: "Premium Receivables",
+          subAcctName: tmpNameRes.data[0]?.Sub_ShortName,
+          IDNo: "C-1024-01370",
+          ClientName: tmpNameRes.data[0]?.Shortname,
+          debit: formatNumber(totalAmount),
+          credit: "0.00",
+          TC_Code: "RPT",
+          remarks: "",
+          vatType: "Non-VAT",
+          invoice: "",
+          TempID: "",
+          BranchCode: tmpNameRes.data[0]?.Sub_Acct,
+        };
+
         table.current.setData(dgvJournal);
         setMode("update");
         setOpenJobs(false);
@@ -1241,14 +973,100 @@ export default function GeneralJournal() {
       setLoadingJob(false);
     }, 300);
   }
+  const handleOnSave = useCallback(() => {
+    if (refRefNo.current?.value === "") {
+      return Swal.fire({
+        position: "center",
+        icon: "warning",
+        title: "Please provide reference number!",
+        timer: 1500,
+      });
+    }
+    if (refExplanation.current?.value === "") {
+      return Swal.fire({
+        position: "center",
+        icon: "warning",
+        title: "Please provide explanation!",
+        timer: 1500,
+      }).then(() => {
+        wait(300).then(() => {
+          refExplanation.current?.focus();
+        });
+      });
+    }
+    if (
+      parseFloat(monitoring.totalDebit.replace(/,/g, "")) <= 0 ||
+      parseFloat(monitoring.totalCredit.replace(/,/g, "")) <= 0
+    ) {
+      return Swal.fire({
+        position: "center",
+        icon: "warning",
+        title:
+          "Total Debit and Credit amount must not be zero(0), please double check the entries",
+        timer: 1500,
+      }).then(() => {
+        wait(300).then(() => {});
+      });
+    }
+    if (monitoring.totalDebit !== monitoring.totalCredit) {
+      return Swal.fire({
+        position: "center",
+        icon: "warning",
+        title:
+          "Total Debit and Credit amount must be balance, please double check the entries",
+        timer: 1500,
+      }).then(() => {
+        wait(300).then(() => {});
+      });
+    }
+
+    const generalJournalData: any = table.current.getData();
+    if (modeUpdate) {
+      codeCondfirmationAlert({
+        isUpdate: true,
+        cb: (userCodeConfirmation) => {
+          addGeneralJournalMutate({
+            hasSelected: true,
+            refNo: refRefNo.current?.value,
+            dateEntry: refDate.current?.value,
+            explanation: refExplanation.current?.value,
+            generalJournal: generalJournalData,
+            userCodeConfirmation,
+          });
+        },
+      });
+    } else {
+      saveCondfirmationAlert({
+        isConfirm: () => {
+          addGeneralJournalMutate({
+            hasSelected: false,
+            refNo: refRefNo.current?.value,
+            dateEntry: refDate.current?.value,
+            explanation: refExplanation.current?.value,
+            generalJournal: generalJournalData,
+          });
+        },
+      });
+    }
+  }, [monitoring, addGeneralJournalMutate, modeUpdate]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: any) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === "s") {
+        event.preventDefault();
+        handleOnSave();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [handleOnSave]);
 
   return (
     <>
       <PageHelmet title="General Journal" />
-      <TransactionAccountUpwardTableModalSearch />
-      <ClientUpwardTableModalSearch />
-      <ChartAccountUpwardTableModalSearch />
-      <SearchCollectionUpwardTableModalSearch />
       {(loadingGetSearchSelectedGeneralJournal ||
         loadingJob ||
         loadingGeneralJournalMutate ||
@@ -1299,7 +1117,9 @@ export default function GeneralJournal() {
                 onKeyDown: (e) => {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
-                    searchCollectionCreditOpenModal(e.currentTarget.value);
+                    searchGeneralJournalModalRef.current.openModal(
+                      e.currentTarget.value
+                    );
                   }
                   if (e.key === "ArrowDown") {
                     e.preventDefault();
@@ -1315,7 +1135,9 @@ export default function GeneralJournal() {
               onIconClick={(e) => {
                 e.preventDefault();
                 if (inputSearchRef.current)
-                  searchCollectionCreditOpenModal(inputSearchRef.current.value);
+                  searchGeneralJournalModalRef.current.openModal(
+                    inputSearchRef.current.value
+                  );
               }}
               inputRef={inputSearchRef}
             />
@@ -1424,24 +1246,7 @@ export default function GeneralJournal() {
                 id="basic-button"
                 aria-haspopup="true"
                 onClick={() => {
-                  const data = table.current.getData();
-                  const generalJournal: any = data.map((itm: any) => {
-                    return {
-                      code: itm[0],
-                      acctName: itm[1],
-                      subAcctName: itm[2],
-                      ClientName: itm[3],
-                      debit: itm[4],
-                      credit: itm[5],
-                      TC_Code: itm[6],
-                      remarks: itm[7],
-                      vatType: itm[8],
-                      invoice: itm[9],
-                      TempID: itm[10],
-                      IDNo: itm[11],
-                      BranchCode: itm[12],
-                    };
-                  });
+                  const generalJournal = table.current.getData();
 
                   mutatePrint({
                     JVNo: refRefNo.current?.value,
@@ -1591,7 +1396,9 @@ export default function GeneralJournal() {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
                     if (refCode.current) {
-                      chartAccountOpenModal(refCode.current.value);
+                      chartOfAccountModalRef.current.openModal(
+                        refCode.current.value
+                      );
                     }
                   }
                 },
@@ -1608,7 +1415,9 @@ export default function GeneralJournal() {
               onIconClick={(e) => {
                 e.preventDefault();
                 if (refCode.current) {
-                  chartAccountOpenModal(refCode.current.value);
+                  chartOfAccountModalRef.current.openModal(
+                    refCode.current.value
+                  );
                 }
               }}
               disableIcon={modeDefault}
@@ -1677,7 +1486,7 @@ export default function GeneralJournal() {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
                     if (refName.current) {
-                      clientOpenModal(e.currentTarget.value);
+                      clientModalRef.current.openModal(e.currentTarget.value);
                     }
                   }
                 },
@@ -1694,7 +1503,7 @@ export default function GeneralJournal() {
               onIconClick={(e) => {
                 e.preventDefault();
                 if (refName.current) {
-                  clientOpenModal(refName.current.value);
+                  clientModalRef.current.openModal(refName.current.value);
                 }
               }}
               disableIcon={modeDefault}
@@ -1770,7 +1579,9 @@ export default function GeneralJournal() {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
                     if (refTC.current) {
-                      TransactionAccountOpenModal(e.currentTarget.value);
+                      transactionOfAccountModalRef.current.openModal(
+                        e.currentTarget.value
+                      );
                     }
                   }
                 },
@@ -1787,7 +1598,9 @@ export default function GeneralJournal() {
               onIconClick={(e) => {
                 e.preventDefault();
                 if (refTC.current) {
-                  TransactionAccountOpenModal(refTC.current.value);
+                  transactionOfAccountModalRef.current.openModal(
+                    refTC.current.value
+                  );
                 }
               }}
               disableIcon={modeDefault}
@@ -1890,184 +1703,151 @@ export default function GeneralJournal() {
             </Button>
           </div>
         </fieldset>
-
-        <DataGridViewReact
-          containerStyle={{
-            flex: 1,
-            height: "auto",
-            minHeight: "200px",
-          }}
-          ref={table}
-          columns={selectedCollectionColumns}
-          height="380px"
-          getSelectedItem={(rowItm: any) => {
-            if (rowItm) {
-              refIDNo.current = rowItm[11];
-              refSubAcct.current = rowItm[12];
-
-              if (refCode.current) {
-                refCode.current.value = rowItm[0];
-              }
-              if (refAccountName.current) {
-                refAccountName.current.value = rowItm[1];
-              }
-              if (refSubAccount.current) {
-                refSubAccount.current.value = rowItm[2];
-              }
-              if (refName.current) {
-                refName.current.value = rowItm[3];
-              }
-              if (refDebit.current) {
-                refDebit.current.value = rowItm[4];
-              }
-              if (refCredit.current) {
-                refCredit.current.value = rowItm[5];
-              }
-              if (refTC.current) {
-                refTC.current.value = rowItm[6];
-              }
-              if (refRemarks.current) {
-                refRemarks.current.value = rowItm[7];
-              }
-              if (refVat.current) {
-                refVat.current.value = rowItm[8];
-              }
-              if (refInvoice.current) {
-                refInvoice.current.value = rowItm[9];
-              }
-            } else {
-              resetRow();
-            }
-          }}
-          onKeyDown={(rowItm: any, rowIdx: any, e: any) => {
-            if (e.code === "Delete" || e.code === "Backspace") {
-              const isConfim = window.confirm(
-                `Are you sure you want to delete?`
-              );
-              if (isConfim) {
-                const debitTableData = table.current.getData();
-                debitTableData.splice(rowIdx, 1);
-                table.current.setData(debitTableData);
-
-                setTimeout(() => {
-                  monitor();
-                }, 200);
-
-                return;
-              }
-            }
-          }}
-        />
         <div
-          className="footer-table"
           style={{
-            fontSize: "13px",
-            border: "1px solid #d4d4d8",
+            marginTop: "10px",
             width: "100%",
+            position: "relative",
+            flex: 1,
             display: "flex",
-            columnGap: "50px",
-            height: "30px",
-            alignItems: "center",
-            justifyContent: "flex-end",
-            padding: "0px 10px",
           }}
         >
-          <div
-            style={{
-              margin: 0,
-              padding: 0,
-              color: "black",
-              display: "flex",
-              columnGap: "10px",
-              alignItems: "flex-end",
+          <DataGridViewReactUpgraded
+            ref={table}
+            adjustVisibleRowCount={310}
+            columns={selectedCollectionColumns}
+            handleSelectionChange={(rowItm: any) => {
+              if (rowItm) {
+                refIDNo.current = rowItm.IDNo;
+                refSubAcct.current = rowItm.BranchCode;
+
+                if (refCode.current) {
+                  refCode.current.value = rowItm.code;
+                }
+                if (refAccountName.current) {
+                  refAccountName.current.value = rowItm.acctName;
+                }
+                if (refSubAccount.current) {
+                  refSubAccount.current.value = rowItm.subAcctName;
+                }
+                if (refName.current) {
+                  refName.current.value = rowItm.ClientName;
+                }
+                if (refDebit.current) {
+                  refDebit.current.value = rowItm.debit;
+                }
+                if (refCredit.current) {
+                  refCredit.current.value = rowItm.credit;
+                }
+                if (refTC.current) {
+                  refTC.current.value = rowItm.TC_Code;
+                }
+                if (refRemarks.current) {
+                  refRemarks.current.value = rowItm.remarks;
+                }
+                if (refVat.current) {
+                  refVat.current.value = rowItm.vatType;
+                }
+                if (refInvoice.current) {
+                  refInvoice.current.value = rowItm.invoice;
+                }
+              } else {
+                resetRow();
+              }
             }}
-          >
-            <div style={{ fontSize: "12px" }}>Total Rows:</div>
-            <div
-              style={{
-                background: "white",
-                padding: "0px 10px",
-                textAlign: "right",
-                width: "100px",
-                fontWeight: "bold",
-              }}
-            >
-              {monitoring.totalRow}
-            </div>
-          </div>
-          <div
-            style={{
-              margin: 0,
-              padding: 0,
-              color: "black",
-              display: "flex",
-              columnGap: "10px",
-              alignItems: "flex-end",
+            FooterComponent={() => {
+              return (
+                <div
+                  className="footer-table"
+                  style={{
+                    fontSize: "13px",
+                    width: "100%",
+                    display: "flex",
+                    columnGap: "50px",
+                    height: "auto",
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    padding: "0px 10px",
+                    boxSizing: "border-box",
+                  }}
+                >
+                  <div
+                    style={{
+                      margin: 0,
+                      padding: 0,
+                      color: "black",
+                      display: "flex",
+                      columnGap: "10px",
+                      alignItems: "flex-end",
+                    }}
+                  >
+                    <div style={{ fontSize: "12px" }}>Total Debit:</div>
+                    <div
+                      style={{
+                        background: "white",
+                        padding: "0px 10px",
+                        textAlign: "right",
+                        width: "100px",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {monitoring.totalDebit}
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      margin: 0,
+                      padding: 0,
+                      color: "black",
+                      display: "flex",
+                      columnGap: "10px",
+                      alignItems: "flex-end",
+                    }}
+                  >
+                    <div style={{ fontSize: "12px" }}>Total Credit:</div>
+                    <div
+                      style={{
+                        background: "white",
+                        padding: "0px 10px",
+                        textAlign: "right",
+                        width: "100px",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {monitoring.totalCredit}
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      margin: 0,
+                      padding: 0,
+                      color: "black",
+                      display: "flex",
+                      columnGap: "10px",
+                      alignItems: "flex-end",
+                    }}
+                  >
+                    <div style={{ fontSize: "12px" }}>Balance:</div>{" "}
+                    <div
+                      style={{
+                        color:
+                          parseInt(monitoring.balance.replace(/,/g, "")) !== 0
+                            ? "red"
+                            : "black",
+                        background: "white",
+                        padding: "0px 10px",
+                        textAlign: "right",
+                        width: "100px",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {monitoring.balance}
+                    </div>
+                  </div>
+                </div>
+              );
             }}
-          >
-            <div style={{ fontSize: "12px" }}>Total Debit:</div>
-            <div
-              style={{
-                background: "white",
-                padding: "0px 10px",
-                textAlign: "right",
-                width: "100px",
-                fontWeight: "bold",
-              }}
-            >
-              {monitoring.totalDebit}
-            </div>
-          </div>
-          <div
-            style={{
-              margin: 0,
-              padding: 0,
-              color: "black",
-              display: "flex",
-              columnGap: "10px",
-              alignItems: "flex-end",
-            }}
-          >
-            <div style={{ fontSize: "12px" }}>Total Credit:</div>
-            <div
-              style={{
-                background: "white",
-                padding: "0px 10px",
-                textAlign: "right",
-                width: "100px",
-                fontWeight: "bold",
-              }}
-            >
-              {monitoring.totalCredit}
-            </div>
-          </div>
-          <div
-            style={{
-              margin: 0,
-              padding: 0,
-              color: "black",
-              display: "flex",
-              columnGap: "10px",
-              alignItems: "flex-end",
-            }}
-          >
-            <div style={{ fontSize: "12px" }}>Balance:</div>{" "}
-            <div
-              style={{
-                color:
-                  parseInt(monitoring.balance.replace(/,/g, "")) !== 0
-                    ? "red"
-                    : "black",
-                background: "white",
-                padding: "0px 10px",
-                textAlign: "right",
-                width: "100px",
-                fontWeight: "bold",
-              }}
-            >
-              {monitoring.balance}
-            </div>
-          </div>
+          />
         </div>
         <Modal open={openJobs} onClose={() => setOpenJobs(false)}>
           <Box
@@ -2204,7 +1984,7 @@ export default function GeneralJournal() {
                   </MenuItem>
                   <MenuItem value={"2"}>Penalty Charges</MenuItem>
                   <MenuItem value={"3"}>Penalty Income</MenuItem>
-                  <MenuItem value={"4"}>RPT Transaction (NIL-HN)</MenuItem>
+                  <MenuItem value={"4"}>PR Transaction (ANCAR)</MenuItem>
                   <MenuItem value={"5"}>RPT Transaction (AMIFIN)</MenuItem>
                   <MenuItem value={"6"}>RPT Income</MenuItem>
                   <MenuItem value={"7"}>Monthly Accrual Expenses</MenuItem>
@@ -2254,7 +2034,6 @@ export default function GeneralJournal() {
             </div>
           </Box>
         </Modal>
-
         <div
           className="general-journal-mobile-buttons"
           style={{
@@ -2403,6 +2182,137 @@ export default function GeneralJournal() {
           </Button>
         </div>
       </div>
+      {/* client modal */}
+      <UpwardTableModalSearch
+        ref={clientModalRef}
+        link={"/task/accounting/search-pdc-policy-ids"}
+        column={[
+          { key: "Type", label: "Type", width: 100 },
+          { key: "IDNo", label: "ID No.", width: 150 },
+          {
+            key: "Name",
+            label: "Name",
+            width: 300,
+          },
+          {
+            key: "ID",
+            label: "ID",
+            hide: true,
+          },
+          {
+            key: "client_id",
+            label: "client_id",
+            hide: true,
+          },
+          {
+            key: "sub_account",
+            label: "sub_account",
+            hide: true,
+          },
+          {
+            key: "ShortName",
+            label: "ShortName",
+            hide: true,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              if (refName.current) {
+                refName.current.value = rowItm.Name ?? "";
+              }
+              if (refSubAccount.current) {
+                refSubAccount.current.value = rowItm.ShortName ?? "";
+              }
+              refIDNo.current = rowItm.IDNo;
+              refSubAcct.current = rowItm.sub_account;
+
+              refDebit.current?.focus();
+            });
+            clientModalRef.current.closeModal();
+          }
+        }}
+      />
+      {/* chart of account modal */}
+      <UpwardTableModalSearch
+        ref={chartOfAccountModalRef}
+        link={"/task/accounting/general-journal/get-chart-account"}
+        column={[
+          { key: "Acct_Code", label: "Account Code", width: 130 },
+          { key: "Acct_Title", label: "Account Title.", width: 250 },
+          {
+            key: "Short",
+            label: "Short",
+            width: 300,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              if (refCode.current) {
+                refCode.current.value = rowItm.Acct_Code;
+              }
+              if (refAccountName.current) {
+                refAccountName.current.value = rowItm.Acct_Title;
+              }
+              refName.current?.focus();
+            });
+            chartOfAccountModalRef.current.closeModal();
+          }
+        }}
+      />
+      {/* transaction of account modal */}
+      <UpwardTableModalSearch
+        ref={transactionOfAccountModalRef}
+        link={"/task/accounting/general-journal/get-transaction-account"}
+        column={[
+          { key: "Code", label: "Code", width: 130 },
+          {
+            key: "Description",
+            label: "Description",
+            width: 300,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              if (refTC.current) {
+                refTC.current.value = rowItm.Code;
+              }
+              refTCDesc.current = rowItm.Description;
+              refRemarks.current?.focus();
+            });
+            transactionOfAccountModalRef.current.closeModal();
+          }
+        }}
+      />
+      {/* General Journal Search */}
+      <UpwardTableModalSearch
+        ref={searchGeneralJournalModalRef}
+        link={"/task/accounting/general-journal/search-general-journal"}
+        column={[
+          { key: "Date_Entry", headerName: "Date", width: 130 },
+          { key: "Source_No", headerName: "Ref No.", width: 150 },
+          {
+            key: "Explanation",
+            headerName: "Explanation",
+            width: 300,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              getSearchSelectedGeneralJournal({
+                Source_No: rowItm.Source_No,
+              });
+              setMode("update");
+              table.current.resetTable();
+              resetRow();
+            });
+            searchGeneralJournalModalRef.current.closeModal();
+          }
+        }}
+      />
     </>
   );
 }

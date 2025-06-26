@@ -66,9 +66,17 @@
 .row:has(.row-data.freeze:focus):has(.row-data.freeze:hover) {
   z-index: 100 !important;
 }
+
 .row-data.freeze {
   z-index: 2 !important;
+} 
+.header:has(.header-col.freeze){
+  z-index: 4 !important;
 }
+
+
+
+
 .row:has(.row-data:focus) .freeze {
   background-color: #dbedff !important;
 }

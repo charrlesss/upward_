@@ -28,7 +28,6 @@ export const DataGridViewReactUpgraded = forwardRef(
     }: any,
     ref
   ) => {
-
     let lastColIdx: any = null;
     const [draggedRowIndex, setDraggedRowIndex] = useState<number | null>(null);
     const [selectAll, setSelectAll] = useState(false);
@@ -58,11 +57,11 @@ export const DataGridViewReactUpgraded = forwardRef(
     const [startIndex, setStartIndex] = useState(0);
     const containerRef = useRef<HTMLDivElement>(null);
     const cellRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
-    const endIndex = Math.min(
+    const endIndex = Math.min( 
       data.length,
       startIndex + visibleRowCount + buffer
     );
-    
+
     const handleContextMenu = (e: React.MouseEvent, row: any, col: any) => {
       e.preventDefault();
       setRightClickRowIndex(row);
@@ -190,29 +189,6 @@ export const DataGridViewReactUpgraded = forwardRef(
       };
     }, []);
 
-    useImperativeHandle(ref, () => ({
-      getData: () => {
-        const newData = [...data];
-        return newData;
-      },
-      setData: (newData: any) => {
-        setData(
-          newData.map((itm: any, idx: number) => {
-            return { ...itm, rowIndex: idx };
-          })
-        );
-      },
-      getColumns: () => {
-        return columns;
-      },
-      focusFirstRowColumn: () => {
-        const firstCell = cellRefs.current[`${startIndex}-${columns[0].key}`];
-        if (firstCell) {
-          firstCell.focus();
-        }
-      },
-    }));
-
     const selectedRowAction = (row: any) => {
       if (selectedRow !== null) {
         if (selectedRow !== row.rowIndex) {
@@ -285,6 +261,63 @@ export const DataGridViewReactUpgraded = forwardRef(
       return left;
     };
 
+    useImperativeHandle(ref, () => ({
+      getData: () => {
+        const newData = [...data];
+        return newData;
+      },
+      setData: (newData: any) => {
+        setData(
+          newData.map((itm: any, idx: number) => {
+            return { ...itm, rowIndex: idx };
+          })
+        );
+      },
+      getColumns: () => {
+        return columns;
+      },
+      focusOnFirstRowColumn: () => {
+        const firstCell = cellRefs.current[`${startIndex}-${columns[0].key}`];
+        if (firstCell) {
+          firstCell.focus();
+        }
+      },
+      focusOnLastRowColumn: () => {
+        const lastRowIndex = data.length - 1;
+        const d = Math.round(lastRowIndex - visibleRowCount);
+        console.log(d);
+        setStartIndex(d);
+        setSelectedRow(lastRowIndex);
+
+        setTimeout(() => {
+          const key = `${lastRowIndex}-${columns[0]?.key}`;
+          const el = cellRefs.current[key];
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            el.focus();
+          }
+        }, 10);
+      },
+      getSelectedRow: () => {
+        return selectedRow;
+      },
+      setSelectedRow: (_selectedRow: number) => {
+        setStartIndex(
+          Math.max(0, _selectedRow - Math.floor(visibleRowCount / 2))
+        );
+        setSelectedRow(_selectedRow);
+
+        setTimeout(() => {
+          const key = `${_selectedRow}-${columns[0]?.key}`;
+          const el = cellRefs.current[key];
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            el.focus();
+          }
+        }, 10);
+      },
+    }));
+
     return (
       <>
         <div
@@ -313,6 +346,7 @@ export const DataGridViewReactUpgraded = forwardRef(
           >
             {/* Header */}
             <div
+              className="header"
               style={{
                 display: "flex",
                 fontWeight: "bold",
@@ -328,7 +362,7 @@ export const DataGridViewReactUpgraded = forwardRef(
                 return (
                   <div
                     key={col.key}
-                    className={`col-${colIdx}`}
+                    className={`col-${colIdx} header-col ${col.freeze ? "freeze" : ""}`}
                     style={{
                       width: `${col.width}px`,
                       padding: "1px 4px",
@@ -338,7 +372,7 @@ export const DataGridViewReactUpgraded = forwardRef(
                       position: col.freeze ? "sticky" : "relative",
                       left: col.freeze ? `${getFrozenLeft(colIdx)}px` : "auto",
                       background: "#f5f5f5",
-                      zIndex: col.freeze ? 3 : 1,
+                      zIndex: col.freeze ? 2 : 1,
                     }}
                   >
                     {col.label}

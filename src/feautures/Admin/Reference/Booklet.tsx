@@ -1,4 +1,11 @@
-import React, { useContext, useRef, useState, useEffect } from "react";
+import React, {
+  useContext,
+  useRef,
+  useState,
+  useEffect,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import PageHelmet from "../../../components/Helmet";
 import { Button } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
@@ -9,11 +16,13 @@ import { AuthContext } from "../../../components/AuthContext";
 import { wait } from "@testing-library/user-event/dist/utils";
 import { Loading } from "../../../components/Loading";
 import { format } from "date-fns";
+import CloseIcon from "@mui/icons-material/Close";
 
 export default function Booklet() {
   const { myAxios, user } = useContext(AuthContext);
   const inputSearchRef = useRef<HTMLInputElement>(null);
   const tableRef = useRef<any>(null);
+  const modalRef = useRef<any>(null);
 
   const { mutate: mutateSearch, isLoading: loadingSearch } = useMutation({
     mutationKey: "practice-journal",
@@ -174,23 +183,191 @@ export default function Booklet() {
               );
             }}
             FooterComponent={() => {
-              console.log("qweqwe");
+        
               return (
                 <div
                   style={{
                     flex: 1,
-                    background: "red",
+                    // background: "red",
                     height: "22px",
                   }}
                 ></div>
               );
             }}
             handleSelectionChange={(row: any) => {
-              console.log(row);
+              if (row) {
+              } else {
+              }
             }}
           />
         </div>
       </div>
+      <ModalCheck ref={modalRef} handleOnClose={() => {}} />
     </>
   );
 }
+
+const ModalCheck = forwardRef(
+  ({ handleOnSave, handleOnClose, hasSelectedRow }: any, ref) => {
+    const modalRef = useRef<HTMLDivElement>(null);
+    const isMoving = useRef(false);
+    const offset = useRef({ x: 0, y: 0 });
+
+    const [showModal, setShowModal] = useState(false);
+    const [handleDelayClose, setHandleDelayClose] = useState(false);
+    const [blick, setBlick] = useState(false);
+
+    const closeDelay = () => {
+      setHandleDelayClose(true);
+      setTimeout(() => {
+        setShowModal(false);
+        setHandleDelayClose(false);
+        handleOnClose();
+      }, 100);
+    };
+    const closeDelayRef = useRef<any>(closeDelay);
+
+    useImperativeHandle(ref, () => ({
+      showModal: () => {
+        setShowModal(true);
+      },
+      clsoeModal: () => {
+        setShowModal(false);
+      },
+      getRefs: () => {
+        return {};
+      },
+      closeDelay,
+    }));
+
+    useEffect(() => {
+      window.addEventListener("keydown", (e: any) => {
+        if (e.key === "Escape") {
+          closeDelayRef.current();
+        }
+      });
+    }, []);
+
+    const handleMouseDown = (e: any) => {
+      if (!modalRef.current) return;
+
+      isMoving.current = true;
+      offset.current = {
+        x: e.clientX - modalRef.current.offsetLeft,
+        y: e.clientY - modalRef.current.offsetTop,
+      };
+
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    };
+
+    // Move modal with mouse
+    const handleMouseMove = (e: any) => {
+      if (!isMoving.current || !modalRef.current) return;
+
+      modalRef.current.style.left = `${e.clientX - offset.current.x}px`;
+      modalRef.current.style.top = `${e.clientY - offset.current.y}px`;
+    };
+
+    // Stop moving when releasing mouse
+    const handleMouseUp = () => {
+      isMoving.current = false;
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    return showModal ? (
+      <>
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            background: "transparent",
+            zIndex: "88",
+          }}
+          onClick={() => {
+            setBlick(true);
+            setTimeout(() => {
+              setBlick(false);
+            }, 250);
+          }}
+        ></div>
+        <div
+          className="modal-add-check"
+          ref={modalRef}
+          style={{
+            height: blick ? "202px" : "200px",
+            width: blick ? "60.3%" : "60%",
+            border: "1px solid #64748b",
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%, -75%)",
+            display: "flex",
+            flexDirection: "column",
+            zIndex: handleDelayClose ? -100 : 100,
+            opacity: handleDelayClose ? 0 : 1,
+            transition: "all 150ms",
+            boxShadow: "3px 6px 32px -7px rgba(0,0,0,0.75)",
+          }}
+        >
+          <div
+            style={{
+              height: "22px",
+              background: "white",
+              display: "flex",
+              justifyContent: "space-between",
+              padding: "5px",
+              position: "relative",
+              alignItems: "center",
+              cursor: "grab",
+            }}
+            onMouseDown={handleMouseDown}
+          >
+            <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+              Check Details
+            </span>
+            <button
+              className="btn-check-exit-modal"
+              style={{
+                padding: "0 5px",
+                borderRadius: "0px",
+                background: "white",
+                color: "black",
+                height: "22px",
+                position: "absolute",
+                top: 0,
+                right: 0,
+              }}
+              onClick={() => {
+                closeDelay();
+              }}
+            >
+              <CloseIcon sx={{ fontSize: "22px" }} />
+            </button>
+          </div>
+          <div
+            className="main-content"
+            style={{
+              flex: 1,
+              background: "#F1F1F1",
+              padding: "5px",
+              display: "flex",
+            }}
+          ></div>
+          <style>
+            {`
+              .btn-check-exit-modal:hover{
+                background:red !important;
+                color:white !important;
+              }
+            `}
+          </style>
+        </div>
+      </>
+    ) : null;
+  }
+);
