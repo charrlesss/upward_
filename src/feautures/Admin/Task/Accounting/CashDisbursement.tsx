@@ -1,5 +1,4 @@
 import {
-  useReducer,
   useContext,
   useState,
   useRef,
@@ -13,7 +12,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import Swal from "sweetalert2";
 import { AuthContext } from "../../../../components/AuthContext";
 import { useMutation, useQuery } from "react-query";
-import useQueryModalTable from "../../../../hooks/useQueryModalTable";
 import { wait } from "../../../../lib/wait";
 import NotInterestedIcon from "@mui/icons-material/NotInterested";
 import { deepOrange, grey } from "@mui/material/colors";
@@ -24,16 +22,14 @@ import {
   TextInput,
 } from "../../../../components/UpwardFields";
 import { format } from "date-fns";
-import { setNewStateValue } from "./PostDateChecks";
 import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../../lib/confirmationAlert";
-import { flushSync } from "react-dom";
 import PageHelmet from "../../../../components/Helmet";
 import {
-  DataGridViewReact,
-  useUpwardTableModalSearchSafeMode,
+  DataGridViewReactUpgraded,
+  UpwardTableModalSearch,
 } from "../../../../components/DataGridViewReact";
 import SaveIcon from "@mui/icons-material/Save";
 import SupervisorAccountIcon from "@mui/icons-material/SupervisorAccount";
@@ -43,126 +39,80 @@ import { Loading } from "../../../../components/Loading";
 import SearchIcon from "@mui/icons-material/Search";
 import "../../../../style/monbileview/accounting/cashdisbursement.css";
 
-const initialState = {
-  sub_refNo: "",
-  refNo: "",
-  dateEntry: format(new Date(), "yyyy-MM-dd"),
-  explanation: "",
-  particulars: "",
-
-  totalDebit: "",
-  totalCredit: "",
-  totalBalance: "",
-
-  jobAutoExp: false,
-  jobTransactionDate: new Date(),
-  jobType: "",
-  search: "",
-  cashMode: "",
-  position: "",
-  suffix: "",
-};
-export const reducer = (state: any, action: any) => {
-  switch (action.type) {
-    case "UPDATE_FIELD":
-      return {
-        ...state,
-        [action.field]: action.value,
-      };
-    default:
-      return state;
-  }
-};
 const columns = [
   {
     key: "code",
     label: "Code",
-    width: 150,
+    width: 100,
     type: "text",
   },
   {
     key: "acctName",
     label: "Account Name",
-    width: 400,
+    width: 200,
     type: "text",
     readonly: () => true,
   },
   {
     key: "subAcctName",
     label: "Sub Account",
-    width: 170,
+    width: 120,
     type: "text",
     readonly: () => true,
   },
   {
     key: "ClientName",
     label: "Name",
-    width: 400,
+    width: 300,
     type: "text",
   },
   {
     key: "debit",
     label: "Debit",
-    width: 120,
+    width: 100,
     type: "number",
   },
   {
     key: "credit",
     label: "Credit",
-    width: 120,
+    width: 100,
     type: "number",
   },
   {
     key: "checkNo",
     label: "Check No",
-    width: 120,
+    width: 200,
     type: "text",
-    readonly: (rowItm: any, colItm: any, rowIdx: any, colIdx: any) => {
-      return rowItm[0] !== "1.01.10";
-    },
   },
   {
     key: "checkDate",
     label: "Check Date",
-    width: 120,
+    width: 100,
     type: "date",
-    readonly: (rowItm: any, colItm: any, rowIdx: any, colIdx: any) => {
-      return rowItm[0] !== "1.01.10";
-    },
-    typeLogic: (rowItm: any) => {
-      return rowItm[0] !== "1.01.10" ? "text" : "date";
-    },
   },
   {
     key: "TC_Code",
     label: "TC",
-    width: 120,
+    width: 90,
     type: "text",
   },
   {
     key: "remarks",
     label: "Remarks",
-    width: 400,
+    width: 300,
     type: "text",
   },
   {
     key: "Payto",
     label: "Payto",
-    width: 400,
+    width: 300,
     type: "text",
-    readonly: (rowItm: any, colItm: any, rowIdx: any, colIdx: any) => {
-      return rowItm[0] !== "1.01.10";
-    },
   },
   {
     key: "vatType",
     label: "Vat Type",
     width: 100,
     type: "select",
-    options: [{ key: "NON-VAT" }, { key: "VAT" }],
-    setDefaultValue: () => {
-      return "NON-VAT";
-    },
   },
   {
     key: "invoice",
@@ -196,17 +146,15 @@ const columns = [
 export default function CashDisbursement() {
   const tableRef = useRef<any>(null);
   const { myAxios, user } = useContext(AuthContext);
-  const [state, dispatch] = useReducer(reducer, initialState);
   const inputSearchRef = useRef<HTMLInputElement>(null);
   const refNoRef = useRef<HTMLInputElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
   const expRef = useRef<HTMLInputElement>(null);
   const particularRef = useRef<HTMLTextAreaElement>(null);
-  const chartAccountSearchInput = useRef<HTMLInputElement>(null);
+
   const [cashDMode, setCashDMode] = useState("");
   const [getTotalDebit, setGetTotalDebit] = useState(0);
   const [getTotalCredit, setGetTotalCredit] = useState(0);
-  const [totalRow, setTotalRow] = useState(0);
   const isDisableField = cashDMode === "";
 
   const refCode = useRef<HTMLInputElement>(null);
@@ -230,6 +178,12 @@ export default function CashDisbursement() {
   const refVat = useRef<HTMLSelectElement>(null);
   const refInvoice = useRef<HTMLInputElement>(null);
 
+  const chartAccountModalRef = useRef<any>(null);
+  const clientModalRef = useRef<any>(null);
+  const tcModalRef = useRef<any>(null);
+  const paytoRef = useRef<any>(null);
+  const searchCashDisbursementRef = useRef<any>(null);
+
   const {
     isLoading: loadingGeneralJournalGenerator,
     refetch: refetchGeneralJournalGenerator,
@@ -242,18 +196,10 @@ export default function CashDisbursement() {
         },
       }),
     refetchOnWindowFocus: false,
-    onSuccess: (data) => {
-      const response = data as any;
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "refNo",
-        value: response.data.generatedId[0].id,
-      });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "sub_refNo",
-        value: response.data.generatedId[0].id,
-      });
+    onSuccess: (response) => {
+      if (refNoRef.current) {
+        refNoRef.current.value = response.data.generatedId[0].id;
+      }
     },
   });
 
@@ -276,31 +222,20 @@ export default function CashDisbursement() {
       const response = res as any;
       const selected = response.data.selectedCashDisbursement;
       const { explanation, dateEntry, refNo, particulars } = selected[0];
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "sub_refNo",
-        value: refNo,
-      });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "refNo",
-        value: refNo,
-      });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "dateEntry",
-        value: dateEntry,
-      });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "explanation",
-        value: explanation,
-      });
-      dispatch({
-        type: "UPDATE_FIELD",
-        field: "particulars",
-        value: particulars,
-      });
+
+      if (refNoRef.current) {
+        refNoRef.current.value = refNo;
+      }
+      if (dateRef.current) {
+        dateRef.current.value = dateEntry;
+      }
+      if (expRef.current) {
+        expRef.current.value = explanation;
+      }
+      if (particularRef.current) {
+        particularRef.current.value = particulars;
+      }
+
       const SearchData = selected.map((itm: any, idx: number) => {
         itm.credit = parseFloat(itm.credit.replace(/,/g, "")).toLocaleString(
           "en-US",
@@ -323,26 +258,7 @@ export default function CashDisbursement() {
           itm.checkDate = "";
         }
 
-        return [
-          itm.code,
-          itm.acctName,
-          itm.subAcctName,
-          itm.ClientName,
-          itm.debit,
-          itm.credit,
-          itm.checkNo,
-          itm.checkDate,
-          itm.TC_Code,
-          itm.remarks,
-          itm.Payto,
-          itm.vatType,
-          itm.invoice,
-          itm.IDNo,
-          itm.Branch_Code,
-          itm.refNo,
-          itm.address,
-          itm.subAcct,
-        ];
+        return itm;
       });
 
       wait(250).then(() => {
@@ -389,7 +305,7 @@ export default function CashDisbursement() {
             if (result.isConfirmed) {
               mutatePrint({
                 check: false,
-                Source_No: state.refNo,
+                Source_No: refNoRef.current?.value,
                 reportTitle:
                   process.env.REACT_APP_DEPARTMENT === "UMIS"
                     ? "UPWARD MANAGEMENT INSURANCE SERVICES"
@@ -473,11 +389,11 @@ export default function CashDisbursement() {
   function handleVoid() {
     codeCondfirmationAlert({
       isUpdate: false,
-      text: `Are you sure you want to void ${state.refNo}`,
+      text: `Are you sure you want to void ${refNoRef.current?.value}`,
       cb: (userCodeConfirmation) => {
         mutateVoidCashDisbursement({
-          refNo: state.refNo,
-          dateEntry: state.dateEntry,
+          refNo: refNoRef.current?.value,
+          dateEntry: dateRef.current?.value,
           userCodeConfirmation,
         });
       },
@@ -486,7 +402,7 @@ export default function CashDisbursement() {
   function handleClickPrint() {
     mutatePrint({
       check: false,
-      Source_No: state.refNo,
+      Source_No: refNoRef.current?.value,
       checkDate: "",
       Payto: "",
       credit: "",
@@ -500,8 +416,8 @@ export default function CashDisbursement() {
     const credit =
       tableData?.reduce((a: number, item: any) => {
         let deb = 0;
-        if (!isNaN(parseFloat(item[5].replace(/,/g, "")))) {
-          deb = parseFloat(item[5].replace(/,/g, ""));
+        if (!isNaN(parseFloat(item.credit.replace(/,/g, "")))) {
+          deb = parseFloat(item.credit.replace(/,/g, ""));
         }
         return a + deb;
       }, 0) || 0;
@@ -509,60 +425,27 @@ export default function CashDisbursement() {
     const debit =
       tableData?.reduce((a: number, item: any) => {
         let deb = 0;
-        if (!isNaN(parseFloat(item[4].replace(/,/g, "")))) {
-          deb = parseFloat(item[4].replace(/,/g, ""));
+        if (!isNaN(parseFloat(item.debit.replace(/,/g, "")))) {
+          deb = parseFloat(item.debit.replace(/,/g, ""));
         }
         return a + deb;
       }, 0) || 0;
 
-    setTotalRow(tableData.length);
     setGetTotalDebit(debit);
     setGetTotalCredit(credit);
   }
   function resetAll() {
     setCashDMode("");
-    setNewStateValue(dispatch, initialState);
     refetchGeneralJournalGenerator();
     setGetTotalDebit(0);
     setGetTotalCredit(0);
-    setTotalRow(0);
     wait(100).then(() => {
       resetRowField();
       tableRef.current?.resetTable();
     });
   }
-  function deleteRow(rowIdx: any) {
-    const isConfim = window.confirm(`Are you sure you want to delete?`);
-    if (isConfim) {
-      const data = tableRef.current.getData();
-      data.splice(rowIdx, 1);
-      const SearchData = data.map((itm: any, idx: number) => {
-        itm.credit = parseFloat(itm[5].replace(/,/g, "")).toLocaleString(
-          "en-US",
-          {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          }
-        );
-        itm.debit = parseFloat(itm[4].replace(/,/g, "")).toLocaleString(
-          "en-US",
-          {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          }
-        );
-
-        return itm;
-      });
-      tableRef.current.setData(data);
-      setTotals(SearchData);
-      tableRef.current.setSelectedRow(null);
-      tableRef.current.resetCheckBox();
-      return;
-    }
-  }
   const handleOnSave = useCallback(() => {
-    if (state.refNo === "") {
+    if (refNoRef.current?.value === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -570,7 +453,7 @@ export default function CashDisbursement() {
         timer: 1500,
       });
     }
-    if (state.explanation === "") {
+    if (expRef.current?.value === "") {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -602,42 +485,18 @@ export default function CashDisbursement() {
       });
     }
     const tableData = tableRef.current.getData();
-    console.log(tableData);
-    const cashDisbursement = tableData
-      .filter((itm: any) => itm[0] !== "")
-      .map((itm: any, idx: any) => {
-        return {
-          code: itm[0],
-          acctName: itm[1],
-          subAcctName: itm[2],
-          ClientName: itm[3],
-          debit: itm[4],
-          credit: itm[5],
-          checkNo: itm[6],
-          checkDate: itm[7],
-          TC_Code: itm[8],
-          remarks: itm[9],
-          Payto: itm[10],
-          vatType: itm[11],
-          invoice: itm[12],
-          TempID: idx,
-          IDNo: itm[13],
-          BranchCode: itm[14],
-          addres: itm[15],
-          subAcct: itm[16],
-          TC_Desc: itm[17],
-        };
-      });
+    const cashDisbursement = tableData.filter((itm: any) => itm.code !== "");
+
     if (cashDMode === "update") {
       codeCondfirmationAlert({
         isUpdate: true,
         cb: (userCodeConfirmation) => {
           addCashDisbursementMutate({
             hasSelected: cashDMode === "update",
-            refNo: state.refNo,
-            dateEntry: state.dateEntry,
-            explanation: state.explanation,
-            particulars: state.particulars,
+            refNo: refNoRef.current?.value,
+            dateEntry: dateRef.current?.value,
+            explanation: expRef.current?.value,
+            particulars: particularRef.current?.value,
             cashDisbursement,
             userCodeConfirmation,
           });
@@ -648,22 +507,16 @@ export default function CashDisbursement() {
         isConfirm: () => {
           addCashDisbursementMutate({
             hasSelected: cashDMode === "update",
-            refNo: state.refNo,
-            dateEntry: state.dateEntry,
-            explanation: state.explanation,
-            particulars: state.particulars,
+            refNo: refNoRef.current?.value,
+            dateEntry: dateRef.current?.value,
+            explanation: expRef.current?.value,
+            particulars: particularRef.current?.value,
             cashDisbursement,
           });
         },
       });
     }
-  }, [
-    state,
-    addCashDisbursementMutate,
-    cashDMode,
-    getTotalCredit,
-    getTotalDebit,
-  ]);
+  }, [addCashDisbursementMutate, cashDMode, getTotalCredit, getTotalDebit]);
   function resetRowField() {
     if (refCode.current) {
       refCode.current.value = "";
@@ -714,7 +567,7 @@ export default function CashDisbursement() {
     if (refCheckDate.current) refCheckDate.current.disabled = true;
     if (refPayTo.current) refPayTo.current.disabled = true;
     tableRef.current.setSelectedRow(null);
-    tableRef.current.resetCheckBox();
+    // tableRef.current.resetTable();
   }
   function SumbitRow() {
     if (!refCode.current) {
@@ -779,26 +632,26 @@ export default function CashDisbursement() {
         return alert("Account Code is required");
       }
 
-      const newData = [
-        refCode.current?.value, // code:
-        refAccountName.current?.value, // acctName:"",
-        refSubAccount.current?.value, // subAcctName:"",
-        refName.current?.value, // ClientName:"",
-        refDebit.current?.value, // debit:"",
-        refCredit.current?.value, // credit:"",
-        refCheckNo.current?.value, // checkNo:"",
-        refCheckDate.current?.value, // checkDate:"",
-        refTC.current?.value, // TC_Code:"",
-        refRemarks.current?.value, // remarks:"",
-        refPayTo.current?.value, // Payto:"",
-        refVat.current?.value, // vatType:"",
-        refInvoice.current?.value, // invoice:"",
-        _refName.current, // IDNo:"",
-        "HO", // BranchCode:"",
-        _refPayTo.current, // addres:"",
-        _refSubAccount.current, // subAcct:"",
-        _refTC.current, // TC_Desc:"",
-      ];
+      const newData = {
+        code: refCode.current?.value, // code:
+        acctName: refAccountName.current?.value, // acctName:"",
+        subAcctName: refSubAccount.current?.value, // subAcctName:"",
+        ClientName: refName.current?.value, // ClientName:"",
+        debit: refDebit.current?.value, // debit:"",
+        credit: refCredit.current?.value, // credit:"",
+        checkNo: refCheckNo.current?.value, // checkNo:"",
+        checkDate: refCheckDate.current?.value, // checkDate:"",
+        TC_Code: refTC.current?.value, // TC_Code:"",
+        remarks: refRemarks.current?.value, // remarks:"",
+        Payto: refPayTo.current?.value, // Payto:"",
+        vatType: refVat.current?.value, // vatType:"",
+        invoice: refInvoice.current?.value, // invoice:"",
+        IDNo: _refName.current, // IDNo:"",
+        BranchCode: "HO", // BranchCode:"",
+        addres: _refPayTo.current, // addres:"",
+        subAcct: _refSubAccount.current, // subAcct:"",
+        TC_Desc: _refTC.current, // TC_Desc:"",
+      };
 
       if (
         refVat.current &&
@@ -815,64 +668,64 @@ export default function CashDisbursement() {
 
         if (debit !== 0) {
           taxableamt = debit / 1.12;
-          newData[4] = taxableamt.toLocaleString("en-US", {
+          newData.debit = taxableamt.toLocaleString("en-US", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           });
         } else {
           taxableamt = credit / 1.12;
-          newData[5] = taxableamt.toLocaleString("en-US", {
+          newData.credit = taxableamt.toLocaleString("en-US", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           });
         }
 
         let inputtax = taxableamt * 0.12;
-        const _newData = [
-          "1.06.02",
-          "Input Tax",
-          refSubAccount.current?.value,
-          refName.current?.value,
-          "",
-          "",
-          refCheckNo.current?.value,
-          refCheckDate.current?.value,
-          refTC.current?.value,
-          refRemarks.current?.value,
-          refPayTo.current?.value,
-          refVat.current?.value,
-          refInvoice.current?.value,
-          _refName.current,
-          "HO",
-          _refPayTo.current,
-          _refSubAccount.current,
-          _refTC.current,
-        ];
+        const _newData: any = {
+          code: "1.06.02",
+          acctName: "Input Tax",
+          subAcctName: refSubAccount.current?.value,
+          ClientName: refName.current?.value,
+          debit: "",
+          credit: "",
+          checkNo: refCheckNo.current?.value,
+          checkDate: refCheckDate.current?.value,
+          TC_Code: refTC.current?.value,
+          remarks: refRemarks.current?.value,
+          Payto: refPayTo.current?.value,
+          vatType: refVat.current?.value,
+          invoice: refInvoice.current?.value,
+          IDNo: _refName.current,
+          BranchCode: "HO",
+          addres: _refPayTo.current,
+          subAcct: _refSubAccount.current,
+          TC_Desc: _refTC.current,
+        };
 
         if (parseFloat(refDebit.current.value.replace(/,/g, "")) !== 0) {
-          _newData[4] = inputtax.toLocaleString("en-US", {
+          _newData.debit = inputtax.toLocaleString("en-US", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           });
-          _newData[5] = newData[5];
+          _newData.credit = newData.credit;
         } else {
-          _newData[5] = inputtax.toLocaleString("en-US", {
+          _newData.credit = inputtax.toLocaleString("en-US", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           });
-          _newData[4] = newData[4];
+          _newData.debit = newData.debit;
         }
         const totalData = [...tableRef.current.getData(), newData, _newData];
         tableRef.current.setData(totalData);
         const SearchData = totalData.map((itm: any) => {
-          itm[4] = parseFloat(itm[4].replace(/,/g, "")).toLocaleString(
+          itm.debit = parseFloat(itm.debit.replace(/,/g, "")).toLocaleString(
             "en-US",
             {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             }
           );
-          itm[5] = parseFloat(itm[5].replace(/,/g, "")).toLocaleString(
+          itm.credit = parseFloat(itm.credit.replace(/,/g, "")).toLocaleString(
             "en-US",
             {
               minimumFractionDigits: 2,
@@ -886,20 +739,24 @@ export default function CashDisbursement() {
         resetRowField();
         wait(100).then(() => {
           refCode.current?.focus();
+        });
+
+        wait(50).then(() => {
+          tableRef.current.scrollToBottom();
         });
         return;
       } else {
         const totalData = [...tableRef.current.getData(), newData];
         tableRef.current.setData(totalData);
         const SearchData = totalData.map((itm: any) => {
-          itm[4] = parseFloat(itm[4].replace(/,/g, "")).toLocaleString(
+          itm.debit = parseFloat(itm.debit.replace(/,/g, "")).toLocaleString(
             "en-US",
             {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             }
           );
-          itm[5] = parseFloat(itm[5].replace(/,/g, "")).toLocaleString(
+          itm.credit = parseFloat(itm.credit.replace(/,/g, "")).toLocaleString(
             "en-US",
             {
               minimumFractionDigits: 2,
@@ -913,228 +770,13 @@ export default function CashDisbursement() {
         wait(100).then(() => {
           refCode.current?.focus();
         });
+        wait(50).then(() => {
+          tableRef.current.scrollToBottom();
+        });
         return;
       }
     });
   }
-  // Search Cash Disbursement
-  const {
-    UpwardTableModalSearch: SearchCashDisbursementUpwardTableModalSearch,
-    openModal: searchCashDisbursementOpenModal,
-    closeModal: searchCashDisbursementCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    size: "medium",
-    link: "/task/accounting/cash-disbursement/search-cash-disbursement",
-    column: [
-      { key: "Date_Entry", label: "Date", width: 100 },
-      { key: "Source_No", label: "Ref No.", width: 130 },
-      {
-        key: "Explanation",
-        label: "Explanation",
-        width: 350,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        wait(100).then(() => {
-          getSearchSelectedCashDisbursement({
-            Source_No: rowItm[1],
-          });
-          setCashDMode("update");
-        });
-        searchCashDisbursementCloseModal();
-      }
-    },
-  });
-  // chart of account Search
-  const {
-    UpwardTableModalSearch: ChartAccountUpwardTableModalSearch,
-    openModal: chartAccountOpenModal,
-    closeModal: chartAccountCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    size: "medium",
-    link: "/task/accounting/general-journal/get-chart-account",
-    column: [
-      { key: "Acct_Code", label: "Account Code", width: 130 },
-      { key: "Acct_Title", label: "Account Title.", width: 250 },
-      {
-        key: "Short",
-        label: "Short",
-        width: 300,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        wait(100).then(() => {
-          if (refCode.current) {
-            refCode.current.value = rowItm[0];
-          }
-          if (refAccountName.current) {
-            refAccountName.current.value = rowItm[1];
-          }
-
-          if (refCode.current && refCode.current.value === "1.01.10") {
-            if (refCheckNo.current) refCheckNo.current.disabled = false;
-            if (refCheckDate.current) refCheckDate.current.disabled = false;
-            if (refPayTo.current) refPayTo.current.disabled = false;
-          } else {
-            if (refCheckNo.current) refCheckNo.current.disabled = true;
-            if (refCheckDate.current) refCheckDate.current.disabled = true;
-            if (refPayTo.current) refPayTo.current.disabled = true;
-          }
-
-          refName.current?.focus();
-        });
-        chartAccountCloseModal();
-      }
-    },
-  });
-  // Client Search
-  const {
-    UpwardTableModalSearch: ClientUpwardTableModalSearch,
-    openModal: clientOpenModal,
-    closeModal: clientCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    size: "medium",
-    link: "/task/accounting/search-pdc-policy-id",
-    column: [
-      { key: "Type", label: "Type", width: 130 },
-      { key: "IDNo", label: "ID No.", width: 150 },
-      {
-        key: "Name",
-        label: "Name",
-        width: 300,
-      },
-      {
-        key: "ID",
-        label: "ID",
-        hide: true,
-      },
-      {
-        key: "client_id",
-        label: "client_id",
-        hide: true,
-      },
-      {
-        key: "sub_account",
-        label: "sub_account",
-        hide: true,
-      },
-      {
-        key: "Acronym",
-        label: "Acronym",
-        hide: true,
-      },
-      {
-        key: "ShortName",
-        label: "ShortName",
-        hide: true,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        wait(100).then(() => {
-          if (refSubAccount.current) {
-            refSubAccount.current.value = rowItm[7];
-          }
-          if (refName.current) {
-            refName.current.value = rowItm[2];
-          }
-
-          _refSubAccount.current = rowItm[6];
-          _refName.current = rowItm[1];
-
-          refDebit.current?.focus();
-        });
-        clientCloseModal();
-      }
-    },
-  });
-  //  Transaction Accoun Search
-  const {
-    UpwardTableModalSearch: TransactionAccountUpwardTableModalSearch,
-    openModal: TransactionAccountOpenModal,
-    closeModal: TransactionAccountCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    link: "/task/accounting/general-journal/get-transaction-account",
-    column: [
-      { key: "Code", label: "Code", width: 130 },
-      {
-        key: "Description",
-        label: "Description",
-        width: 300,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        wait(100).then(() => {
-          if (refTC.current) {
-            refTC.current.value = rowItm[0];
-          }
-          _refTC.current = rowItm[1];
-          refRemarks.current?.focus();
-        });
-        TransactionAccountCloseModal();
-      }
-    },
-  });
-  // pay to Search
-  const {
-    UpwardTableModalSearch: PayToUpwardTableModalSearch,
-    openModal: payToOpenModal,
-    closeModal: payToCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    size: "medium",
-    link: "/task/accounting/search-pay-to",
-    column: [
-      { key: "Type", label: "Type", width: 130 },
-      { key: "IDNo", label: "ID No.", width: 150 },
-      {
-        key: "Name",
-        label: "Name",
-        width: 300,
-      },
-      {
-        key: "ID",
-        label: "ID",
-        hide: true,
-      },
-      {
-        key: "client_id",
-        label: "client_id",
-        hide: true,
-      },
-      {
-        key: "sub_account",
-        label: "sub_account",
-        hide: true,
-      },
-      {
-        key: "ShortName",
-        label: "ShortName",
-        hide: true,
-      },
-      {
-        key: "address",
-        label: "address",
-        hide: true,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        wait(100).then(() => {
-          if (refPayTo.current) {
-            refPayTo.current.value = rowItm[2];
-          }
-          _refPayTo.current = rowItm[7];
-
-          refVat.current?.focus();
-        });
-        payToCloseModal();
-      }
-    },
-  });
-
   useEffect(() => {
     const handleKeyDown = (event: any) => {
       if ((event.ctrlKey || event.metaKey) && event.key === "s") {
@@ -1152,9 +794,10 @@ export default function CashDisbursement() {
   return (
     <>
       {(loadingGetSearchSelectedCashDisbursement ||
-        loadingGeneralJournalGenerator) && <Loading />}
+        loadingGeneralJournalGenerator ||
+        isLoadingPrint ||
+        loadingVoidCashDisbursement) && <Loading />}
       <PageHelmet title="Cash Disbursement" />
-
       <div
         className="main"
         style={{
@@ -1184,9 +827,6 @@ export default function CashDisbursement() {
               width: "100%",
             }}
           >
-            {/* {isLoadingSearchCashDisbursement ? (
-              <LoadingButton loading={isLoadingSearchCashDisbursement} />
-            ) : ( */}
             <TextInput
               containerClassName="search-input"
               label={{
@@ -1203,7 +843,9 @@ export default function CashDisbursement() {
                 onKeyDown: (e) => {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
-                    searchCashDisbursementOpenModal(e.currentTarget.value);
+                    searchCashDisbursementRef.current.openModal(
+                      e.currentTarget.value
+                    );
                   }
                   if (e.key === "ArrowDown") {
                     e.preventDefault();
@@ -1225,13 +867,13 @@ export default function CashDisbursement() {
               onIconClick={(e) => {
                 e.preventDefault();
                 if (inputSearchRef.current) {
-                  searchCashDisbursementOpenModal(inputSearchRef.current.value);
+                  searchCashDisbursementRef.current.openModal(
+                    inputSearchRef.current.value
+                  );
                 }
               }}
               inputRef={inputSearchRef}
             />
-            {/* )} */}
-
             <div
               className="cash-disbursement-desktop-buttons"
               style={{
@@ -1337,7 +979,7 @@ export default function CashDisbursement() {
             </div>
           </div>
         </div>
-        <div style={{ display: "flex", marginBottom: "10px" }}>
+        <div style={{ display: "flex" }}>
           <fieldset
             className="layer-one"
             style={{
@@ -1347,9 +989,9 @@ export default function CashDisbursement() {
               flex: 1,
               height: "auto",
               display: "flex",
-              marginTop: "10px",
+              marginTop: "5px",
               gap: "10px",
-              padding: "15px",
+              padding: "7px",
               flexDirection: "row",
             }}
           >
@@ -1361,41 +1003,29 @@ export default function CashDisbursement() {
                 flexDirection: "column",
               }}
             >
-              {loadingGeneralJournalGenerator ? (
-                <LoadingButton loading={loadingGeneralJournalGenerator} />
-              ) : (
-                <TextInput
-                  containerClassName="custom-input"
-                  label={{
-                    title: "Reference:   CV- ",
-                    style: {
-                      fontSize: "12px",
-                      fontWeight: "bold",
-                      width: "100px",
-                    },
-                  }}
-                  input={{
-                    disabled: isDisableField,
-                    type: "text",
-                    style: { width: "190px" },
-                    value: state.refNo,
-                    onChange: (e) => {
-                      dispatch({
-                        type: "UPDATE_FIELD",
-                        field: "refNo",
-                        value: e.target.value,
-                      });
-                    },
-                    name: "refNo",
-                    onKeyDown: (e) => {
-                      if (e.code === "NumpadEnter" || e.code === "Enter") {
-                        dateRef.current?.focus();
-                      }
-                    },
-                  }}
-                  inputRef={refNoRef}
-                />
-              )}
+              <TextInput
+                containerClassName="custom-input"
+                label={{
+                  title: "Reference:   CV- ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "100px",
+                  },
+                }}
+                input={{
+                  disabled: isDisableField,
+                  type: "text",
+                  style: { width: "190px" },
+                  name: "refNo",
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      dateRef.current?.focus();
+                    }
+                  },
+                }}
+                inputRef={refNoRef}
+              />
               <TextInput
                 containerClassName="custom-input"
                 label={{
@@ -1410,19 +1040,12 @@ export default function CashDisbursement() {
                   disabled: isDisableField,
                   type: "date",
                   name: "dateEntry",
-                  value: state.dateEntry,
+                  defaultValue: format(new Date(), "yyyy-MM-dd"),
                   style: { width: "190px" },
                   onKeyDown: (e) => {
                     if (e.code === "NumpadEnter" || e.code === "Enter") {
                       expRef.current?.focus();
                     }
-                  },
-                  onChange: (e) => {
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "dateEntry",
-                      value: e.target.value,
-                    });
                   },
                 }}
                 inputRef={dateRef}
@@ -1451,14 +1074,6 @@ export default function CashDisbursement() {
                   type: "text",
                   style: { flex: 1 },
                   name: "explanation",
-                  value: state.explanation,
-                  onChange: (e) => {
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "explanation",
-                      value: e.target.value,
-                    });
-                  },
                   onKeyDown: (e) => {
                     if (e.code === "NumpadEnter" || e.code === "Enter") {
                       particularRef.current?.focus();
@@ -1482,149 +1097,14 @@ export default function CashDisbursement() {
                   disabled: isDisableField,
                   style: { flex: 1 },
                   name: "particulars",
-                  value: state.particulars,
                   onKeyDown: (e) => {
                     if (e.code === "NumpadEnter" || e.code === "Enter") {
                       //  refDate.current?.focus()
                     }
                   },
-                  onChange: (e) => {
-                    dispatch({
-                      type: "UPDATE_FIELD",
-                      field: "particulars",
-                      value: e.target.value,
-                    });
-                  },
                 }}
                 _inputRef={particularRef}
               />
-            </div>
-          </fieldset>
-          <fieldset
-            className="desktop-monitoring"
-            style={{
-              border: "1px solid #cbd5e1",
-              borderRadius: "5px",
-              position: "relative",
-              width: "400px",
-              height: "auto",
-              display: "flex",
-              marginTop: "10px",
-              gap: "10px",
-              padding: "15px",
-            }}
-          >
-            <div
-              style={{
-                alignItems: "center",
-                display: "flex",
-                textAlign: "center",
-                width: "100px",
-              }}
-            >
-              <p
-                style={{
-                  margin: 0,
-                  padding: 0,
-                  color: "black",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
-                <span style={{ fontSize: "12px" }}>Total Rows:</span>{" "}
-                <strong>{totalRow}</strong>
-              </p>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-around",
-                flexDirection: "column",
-                flex: 1,
-              }}
-            >
-              <div
-                style={{
-                  margin: 0,
-                  padding: 0,
-                  color: "black",
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <p
-                  style={{
-                    fontSize: "12px",
-                    width: "80px",
-                    padding: 0,
-                    margin: 0,
-                  }}
-                >
-                  Total Debit:
-                </p>
-                <strong>
-                  {getTotalDebit.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </strong>
-              </div>
-              <div
-                style={{
-                  margin: 0,
-                  padding: 0,
-                  color: "black",
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <p
-                  style={{
-                    fontSize: "12px",
-                    width: "80px",
-                    padding: 0,
-                    margin: 0,
-                  }}
-                >
-                  Total Credit:
-                </p>
-                <strong>
-                  {getTotalCredit.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </strong>
-              </div>
-              <div
-                style={{
-                  margin: 0,
-                  padding: 0,
-                  color: "black",
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <p
-                  style={{
-                    fontSize: "12px",
-                    width: "80px",
-                    padding: 0,
-                    margin: 0,
-                  }}
-                >
-                  Balance:
-                </p>
-                <strong
-                  style={{
-                    color: getTotalDebit - getTotalCredit > 0 ? "red" : "black",
-                  }}
-                >
-                  {(getTotalDebit - getTotalCredit).toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </strong>
-              </div>
             </div>
           </fieldset>
         </div>
@@ -1636,8 +1116,8 @@ export default function CashDisbursement() {
             position: "relative",
             width: "100%",
             height: "auto",
-            margin: "10px 0px",
-            padding: "15px",
+            margin: "5px 0px",
+            padding: "7px",
           }}
         >
           <div
@@ -1665,7 +1145,9 @@ export default function CashDisbursement() {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
                     if (refCode.current) {
-                      chartAccountOpenModal(refCode.current.value);
+                      chartAccountModalRef.current.openModal(
+                        refCode.current.value
+                      );
                     }
                   }
                 },
@@ -1682,7 +1164,7 @@ export default function CashDisbursement() {
               onIconClick={(e) => {
                 e.preventDefault();
                 if (refCode.current) {
-                  chartAccountOpenModal(refCode.current.value);
+                  chartAccountModalRef.current.openModal(refCode.current.value);
                 }
               }}
               disableIcon={isDisableField}
@@ -1751,7 +1233,7 @@ export default function CashDisbursement() {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
                     if (refName.current) {
-                      clientOpenModal(e.currentTarget.value);
+                      clientModalRef.current.openModal(e.currentTarget.value);
                     }
                   }
                 },
@@ -1768,7 +1250,7 @@ export default function CashDisbursement() {
               onIconClick={(e) => {
                 e.preventDefault();
                 if (refName.current) {
-                  clientOpenModal(refName.current.value);
+                  clientModalRef.current.openModal(refName.current.value);
                 }
               }}
               disableIcon={isDisableField}
@@ -1906,7 +1388,7 @@ export default function CashDisbursement() {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
                     if (refTC.current) {
-                      TransactionAccountOpenModal(e.currentTarget.value);
+                      tcModalRef.current.openModal(e.currentTarget.value);
                     }
                   }
                 },
@@ -1923,7 +1405,7 @@ export default function CashDisbursement() {
               onIconClick={(e) => {
                 e.preventDefault();
                 if (refTC.current) {
-                  TransactionAccountOpenModal(refTC.current.value);
+                  tcModalRef.current.openModal(refTC.current.value);
                 }
               }}
               disableIcon={isDisableField}
@@ -1974,7 +1456,7 @@ export default function CashDisbursement() {
                 onKeyDown: (e) => {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
-                    payToOpenModal(e.currentTarget.value);
+                    paytoRef.current.openModal(e.currentTarget.value);
                   }
                 },
               }}
@@ -1990,7 +1472,7 @@ export default function CashDisbursement() {
               onIconClick={(e) => {
                 e.preventDefault();
                 if (refPayTo.current) {
-                  payToOpenModal(refPayTo.current.value);
+                  paytoRef.current.openModal(refPayTo.current.value);
                 }
               }}
               disableIcon={isDisableField}
@@ -2073,302 +1555,217 @@ export default function CashDisbursement() {
             </Button>
           </div>
         </fieldset>
-        <DataGridViewReact
-          containerStyle={{
-            flex: 1,
-            height: "auto",
-            minHeight: "200px",
-          }}
-          ref={tableRef}
-          columns={columns}
-          height="280px"
-          getSelectedItem={(rowItm: any) => {
-            if (rowItm) {
-              if (rowItm[0] === "1.01.10") {
-                if (refCheckNo.current) {
-                  refCheckNo.current.value = rowItm[6];
-                }
-                if (refCheckDate.current) {
-                  refCheckDate.current.value = format(
-                    new Date(rowItm[7]),
-                    "yyyy-MM-dd"
-                  );
-                }
-                if (refPayTo.current) {
-                  refPayTo.current.value = rowItm[10];
-                }
-
-                if (refCheckNo.current) refCheckNo.current.disabled = false;
-                if (refCheckDate.current) refCheckDate.current.disabled = false;
-                if (refPayTo.current) refPayTo.current.disabled = false;
-              }
-
-              if (refCode.current) {
-                refCode.current.value = rowItm[0];
-              }
-              if (refAccountName.current) {
-                refAccountName.current.value = rowItm[1];
-              }
-              if (refSubAccount.current) {
-                refSubAccount.current.value = rowItm[2];
-              }
-              if (refName.current) {
-                refName.current.value = rowItm[3];
-              }
-              if (refDebit.current) {
-                refDebit.current.value = rowItm[4];
-              }
-              if (refCredit.current) {
-                refCredit.current.value = rowItm[5];
-              }
-              if (refTC.current) {
-                refTC.current.value = rowItm[8];
-              }
-              if (refRemarks.current) {
-                refRemarks.current.value = rowItm[9];
-              }
-
-              if (refVat.current) {
-                refVat.current.value = rowItm[11];
-              }
-              if (refInvoice.current) {
-                refInvoice.current.value = rowItm[12];
-              }
-
-              _refSubAccount.current = rowItm[16];
-              _refName.current = rowItm[13];
-              _refTC.current = rowItm[17] ?? "";
-              _refPayTo.current = rowItm[15];
-            } else {
-              resetRowField();
-            }
-          }}
-          onKeyDown={(rowItm: any, rowIdx: any, e: any) => {
-            if (e.code === "Delete" || e.code === "Backspace") {
-              const isConfim = window.confirm(
-                `Are you sure you want to delete?`
-              );
-              if (isConfim) {
-                const debitTableData = tableRef.current.getData();
-                debitTableData.splice(rowIdx, 1);
-                const SearchData = debitTableData.map(
-                  (itm: any, idx: number) => {
-                    itm.credit = parseFloat(
-                      itm[5].replace(/,/g, "")
-                    ).toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    });
-                    itm.debit = parseFloat(
-                      itm[4].replace(/,/g, "")
-                    ).toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    });
-
-                    return itm;
-                  }
-                );
-                tableRef.current.setData(debitTableData);
-                setTotals(SearchData);
-                return;
-              }
-            }
-          }}
-          ActionComponent={({ selectedRowIndex, closeModal, rowItm }: any) => {
-            if (rowItm) {
-              return (
-                <div
-                  style={{
-                    flex: 1,
-                    background: "#F1F1F1",
-                    padding: "10px",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Button
-                    autoFocus={rowItm[0] === "1.01.10"}
-                    disabled={rowItm[0] !== "1.01.10"}
-                    variant="contained"
-                    color="success"
-                    sx={{
-                      height: "20px",
-                      width: "120px",
-                      marginBottom: "5px",
-                      fontSize: "10px",
-                    }}
-                    onClick={() => {
-                      // printRow(rowItm);
-                      closeModal();
-
-                      mutatePrint({
-                        check: true,
-                        Source_No: state.refNo,
-                        checkDate: rowItm[7],
-                        Payto: rowItm[10],
-                        credit: rowItm[5],
-                        reportTitle:
-                          process.env.REACT_APP_DEPARTMENT === "UMIS"
-                            ? "UPWARD MANAGEMENT INSURANCE SERVICES"
-                            : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
-                      });
-                    }}
-                  >
-                    Print
-                  </Button>
-                  <Button
-                    autoFocus={rowItm[0] !== "1.01.10"}
-                    variant="contained"
-                    color="error"
-                    sx={{
-                      height: "20px",
-                      width: "120px",
-                      marginBottom: "5px",
-                      fontSize: "10px",
-                    }}
-                    onClick={() => {
-                      deleteRow(selectedRowIndex);
-                      closeModal();
-                    }}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              );
-            }
-            return null;
-          }}
-        />
-        <fieldset
-          className="mobile-monitoring"
+        <div
           style={{
-            border: "1px solid #cbd5e1",
-            borderRadius: "5px",
-            position: "relative",
-            width: "400px",
-            height: "auto",
-            display: "flex",
             marginTop: "10px",
-            gap: "10px",
-            padding: "15px",
+            width: "100%",
+            position: "relative",
+            flex: 1,
+            display: "flex",
           }}
         >
-          <div
-            style={{
-              alignItems: "center",
-              display: "flex",
-              textAlign: "center",
-              width: "100px",
+          <DataGridViewReactUpgraded
+            ref={tableRef}
+            adjustVisibleRowCount={365}
+            columns={columns}
+            handleSelectionChange={(rowItm: any) => {
+              if (rowItm) {
+                if (rowItm.code === "1.01.10") {
+                  if (refCheckNo.current) {
+                    refCheckNo.current.value = rowItm.checkNo;
+                  }
+                  if (refCheckDate.current) {
+                    refCheckDate.current.value = format(
+                      new Date(rowItm.checkDate),
+                      "yyyy-MM-dd"
+                    );
+                  }
+                  if (refPayTo.current) {
+                    refPayTo.current.value = rowItm.Payto;
+                  }
+
+                  if (refCheckNo.current) refCheckNo.current.disabled = false;
+                  if (refCheckDate.current)
+                    refCheckDate.current.disabled = false;
+                  if (refPayTo.current) refPayTo.current.disabled = false;
+                }
+
+                if (refCode.current) {
+                  refCode.current.value = rowItm.code;
+                }
+                if (refAccountName.current) {
+                  refAccountName.current.value = rowItm.acctName;
+                }
+                if (refSubAccount.current) {
+                  refSubAccount.current.value = rowItm.subAcctName;
+                }
+                if (refName.current) {
+                  refName.current.value = rowItm.ClientName;
+                }
+                if (refDebit.current) {
+                  refDebit.current.value = rowItm.debit;
+                }
+                if (refCredit.current) {
+                  refCredit.current.value = rowItm.credit;
+                }
+                if (refTC.current) {
+                  refTC.current.value = rowItm.TC_Code;
+                }
+                if (refRemarks.current) {
+                  refRemarks.current.value = rowItm.remarks;
+                }
+
+                if (refVat.current) {
+                  refVat.current.value = rowItm.vatType;
+                }
+                if (refInvoice.current) {
+                  refInvoice.current.value = rowItm.invoice;
+                }
+
+                _refSubAccount.current = rowItm.subAcct;
+                _refName.current = rowItm.IDNo;
+                _refTC.current = rowItm.TC_Desc ?? "";
+                _refPayTo.current = rowItm.addres;
+              } else {
+                resetRowField();
+              }
             }}
-          >
-            <p
-              style={{
-                margin: 0,
-                padding: 0,
-                color: "black",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              <span style={{ fontSize: "12px" }}>Total Rows:</span>{" "}
-              <strong>{totalRow}</strong>
-            </p>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-around",
-              flexDirection: "column",
-              flex: 1,
+            FooterComponent={() => {
+              return (
+                <div
+                  className="footer-table"
+                  style={{
+                    fontSize: "13px",
+                    width: "100%",
+                    display: "flex",
+                    columnGap: "50px",
+                    height: "auto",
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    padding: "0px 10px",
+                    boxSizing: "border-box",
+                  }}
+                >
+                  <div
+                    style={{
+                      margin: 0,
+                      padding: 0,
+                      color: "black",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <p
+                      style={{
+                        fontSize: "12px",
+                        width: "80px",
+                        padding: 0,
+                        margin: 0,
+                      }}
+                    >
+                      Total Debit:
+                    </p>
+                    <strong>
+                      {getTotalDebit.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </strong>
+                  </div>
+                  <div
+                    style={{
+                      margin: 0,
+                      padding: 0,
+                      color: "black",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <p
+                      style={{
+                        fontSize: "12px",
+                        width: "80px",
+                        padding: 0,
+                        margin: 0,
+                      }}
+                    >
+                      Total Credit:
+                    </p>
+                    <strong>
+                      {getTotalCredit.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </strong>
+                  </div>
+                  <div
+                    style={{
+                      margin: 0,
+                      padding: 0,
+                      color: "black",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <p
+                      style={{
+                        fontSize: "12px",
+                        width: "80px",
+                        padding: 0,
+                        margin: 0,
+                      }}
+                    >
+                      Balance:
+                    </p>
+                    <strong
+                      style={{
+                        color:
+                          getTotalDebit - getTotalCredit > 0 ? "red" : "black",
+                      }}
+                    >
+                      {(getTotalDebit - getTotalCredit).toLocaleString(
+                        "en-US",
+                        {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }
+                      )}
+                    </strong>
+                  </div>
+                </div>
+              );
             }}
-          >
-            <div
-              style={{
-                margin: 0,
-                padding: 0,
-                color: "black",
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              <p
-                style={{
-                  fontSize: "12px",
-                  width: "80px",
-                  padding: 0,
-                  margin: 0,
-                }}
-              >
-                Total Debit:
-              </p>
-              <strong>
-                {getTotalDebit.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </strong>
-            </div>
-            <div
-              style={{
-                margin: 0,
-                padding: 0,
-                color: "black",
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              <p
-                style={{
-                  fontSize: "12px",
-                  width: "80px",
-                  padding: 0,
-                  margin: 0,
-                }}
-              >
-                Total Credit:
-              </p>
-              <strong>
-                {getTotalCredit.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </strong>
-            </div>
-            <div
-              style={{
-                margin: 0,
-                padding: 0,
-                color: "black",
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              <p
-                style={{
-                  fontSize: "12px",
-                  width: "80px",
-                  padding: 0,
-                  margin: 0,
-                }}
-              >
-                Balance:
-              </p>
-              <strong
-                style={{
-                  color: getTotalDebit - getTotalCredit > 0 ? "red" : "black",
-                }}
-              >
-                {(getTotalDebit - getTotalCredit).toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </strong>
-            </div>
-          </div>
-        </fieldset>
+            RightClickComponent={({ row }: any) => {
+              return (
+                <>
+                  {row?.code === "1.01.10" ? (
+                    <div
+                      className="modal-action"
+                      onClick={() => {
+                        mutatePrint({
+                          check: true,
+                          Source_No: refNoRef.current?.value,
+                          checkDate: row.checkDate,
+                          Payto: row.Payto,
+                          credit: row.credit,
+                          reportTitle:
+                            process.env.REACT_APP_DEPARTMENT === "UMIS"
+                              ? "UPWARD MANAGEMENT INSURANCE SERVICES"
+                              : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.",
+                        });
+                      }}
+                    >
+                      🖨️ Print Check
+                    </div>
+                  ) : null}
+                </>
+              );
+            }}
+            onDelete={(data: any) => {
+              setTotals(data);
+            }}
+          />
+        </div>
         <div
           className="cash-disbursement-mobile-buttons"
           style={{
@@ -2473,11 +1870,204 @@ export default function CashDisbursement() {
           </LoadingButton>
         </div>
       </div>
-      <ChartAccountUpwardTableModalSearch />
-      <PayToUpwardTableModalSearch />
-      <ClientUpwardTableModalSearch />
-      <TransactionAccountUpwardTableModalSearch />
-      <SearchCashDisbursementUpwardTableModalSearch />
+      {/* chart of account Search*/}
+      <UpwardTableModalSearch
+        ref={chartAccountModalRef}
+        link={"/task/accounting/general-journal/get-chart-account"}
+        column={[
+          { key: "Acct_Code", label: "Account Code", width: 130 },
+          { key: "Acct_Title", label: "Account Title.", width: 250 },
+          {
+            key: "Short",
+            label: "Short",
+            width: 300,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              if (refCode.current) {
+                refCode.current.value = rowItm.Acct_Code;
+              }
+              if (refAccountName.current) {
+                refAccountName.current.value = rowItm.Acct_Title;
+              }
+
+              if (refCode.current && refCode.current.value === "1.01.10") {
+                if (refCheckNo.current) refCheckNo.current.disabled = false;
+                if (refCheckDate.current) refCheckDate.current.disabled = false;
+                if (refPayTo.current) refPayTo.current.disabled = false;
+              } else {
+                if (refCheckNo.current) refCheckNo.current.disabled = true;
+                if (refCheckDate.current) refCheckDate.current.disabled = true;
+                if (refPayTo.current) refPayTo.current.disabled = true;
+              }
+
+              refName.current?.focus();
+            });
+            chartAccountModalRef.current.closeModal();
+          }
+        }}
+      />
+      {/* client search*/}
+      <UpwardTableModalSearch
+        ref={clientModalRef}
+        link={"/task/accounting/search-pdc-policy-id"}
+        column={[
+          { key: "Type", label: "Type", width: 130 },
+          { key: "IDNo", label: "ID No.", width: 150 },
+          {
+            key: "Name",
+            label: "Name",
+            width: 300,
+          },
+          {
+            key: "ID",
+            label: "ID",
+            hide: true,
+          },
+          {
+            key: "client_id",
+            label: "client_id",
+            hide: true,
+          },
+          {
+            key: "sub_account",
+            label: "sub_account",
+            hide: true,
+          },
+          {
+            key: "Acronym",
+            label: "Acronym",
+            hide: true,
+          },
+          {
+            key: "ShortName",
+            label: "ShortName",
+            hide: true,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              if (refSubAccount.current) {
+                refSubAccount.current.value = rowItm.ShortName;
+              }
+              if (refName.current) {
+                refName.current.value = rowItm.Name;
+              }
+
+              _refSubAccount.current = rowItm.Acronym;
+              _refName.current = rowItm.IDNo;
+
+              refDebit.current?.focus();
+            });
+            clientModalRef.current.closeModal();
+          }
+        }}
+      />
+      {/* tc search*/}
+      <UpwardTableModalSearch
+        ref={tcModalRef}
+        link={"/task/accounting/general-journal/get-transaction-account"}
+        column={[
+          { key: "Code", label: "Code", width: 130 },
+          {
+            key: "Description",
+            label: "Description",
+            width: 300,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              if (refTC.current) {
+                refTC.current.value = rowItm.Code;
+              }
+              _refTC.current = rowItm.Description;
+              refRemarks.current?.focus();
+            });
+            tcModalRef.current.closeModal();
+          }
+        }}
+      />
+      {/* pay to search*/}
+      <UpwardTableModalSearch
+        ref={paytoRef}
+        link={"/task/accounting/search-pay-to"}
+        column={[
+          { key: "Type", label: "Type", width: 130 },
+          { key: "IDNo", label: "ID No.", width: 150 },
+          {
+            key: "Name",
+            label: "Name",
+            width: 300,
+          },
+          {
+            key: "ID",
+            label: "ID",
+            hide: true,
+          },
+          {
+            key: "client_id",
+            label: "client_id",
+            hide: true,
+          },
+          {
+            key: "sub_account",
+            label: "sub_account",
+            hide: true,
+          },
+          {
+            key: "ShortName",
+            label: "ShortName",
+            hide: true,
+          },
+          {
+            key: "address",
+            label: "address",
+            hide: true,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              if (refPayTo.current) {
+                refPayTo.current.value = rowItm.Name;
+              }
+              _refPayTo.current = rowItm.ShortName;
+
+              refVat.current?.focus();
+            });
+            paytoRef.current.closeModal();
+          }
+        }}
+      />
+      {/* Search Cash Disbursement*/}
+      <UpwardTableModalSearch
+        ref={searchCashDisbursementRef}
+        link={"/task/accounting/cash-disbursement/search-cash-disbursement"}
+        column={[
+          { key: "Date_Entry", label: "Date", width: 100 },
+          { key: "Source_No", label: "Ref No.", width: 130 },
+          {
+            key: "Explanation",
+            label: "Explanation",
+            width: 350,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              getSearchSelectedCashDisbursement({
+                Source_No: rowItm.Source_No,
+              });
+              setCashDMode("update");
+            });
+            searchCashDisbursementRef.current.closeModal();
+          }
+        }}
+      />
     </>
   );
 }

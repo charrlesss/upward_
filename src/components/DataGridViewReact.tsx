@@ -21,6 +21,7 @@ import ReactDOM from "react-dom";
 import "../style/datagridview.css";
 import { useMutation } from "react-query";
 import { set } from "lodash";
+import { format } from "date-fns";
 
 export const DataGridViewReact = forwardRef(
   (
@@ -1946,6 +1947,8 @@ export const DataGridViewReactUpgraded = forwardRef(
       handleSelectionChange,
       onMaxScrollUp,
       adjustRightClickClientXAndY = { x: 0, y: 0 },
+      adjustOnRezise = true,
+      onDelete = (data: any) => {},
     }: any,
     ref
   ) => {
@@ -1993,6 +1996,7 @@ export const DataGridViewReactUpgraded = forwardRef(
       setVisible(true);
       setPos({ x: clickX, y: clickY });
     };
+
     const handleClickCloseRightClickModal = () => {
       setVisible(false);
     };
@@ -2014,9 +2018,11 @@ export const DataGridViewReactUpgraded = forwardRef(
           "Are you sure you want to delete all the rows?"
         );
         if (confirm) {
-          setData((data) => {
-            return data.filter((itm: any) => itm.rowIndex !== row.rowIndex);
-          });
+          const newData = data.filter(
+            (itm: any) => itm.rowIndex !== row.rowIndex
+          );
+          setData(newData);
+          onDelete(newData);
         }
       }
 
@@ -2089,15 +2095,17 @@ export const DataGridViewReactUpgraded = forwardRef(
       setVisibleRowCount(rowCount);
 
       const resize = () => {
-        const wH = window.innerHeight - adjustVisibleRowCount;
-        const rowCount = Math.round(wH) / rowHeight;
-        setVisibleRowCount(rowCount);
+        if (adjustOnRezise) {
+          const wH = window.innerHeight - adjustVisibleRowCount;
+          const rowCount = Math.round(wH) / rowHeight;
+          setVisibleRowCount(rowCount);
+        }
       };
       window.addEventListener("resize", resize);
       return () => {
         window.removeEventListener("resize", resize);
       };
-    }, []);
+    }, [adjustOnRezise]);
     useEffect(() => {
       if (visible && menuRef.current) {
         const menu = menuRef.current;
@@ -2236,9 +2244,8 @@ export const DataGridViewReactUpgraded = forwardRef(
       focusOnLastRowColumn: () => {
         const lastRowIndex = data.length - 1;
         const d = Math.round(lastRowIndex - visibleRowCount);
-        console.log(d);
         setStartIndex(d);
-        setSelectedRow(lastRowIndex);
+        // setSelectedRow(lastRowIndex);
 
         setTimeout(() => {
           const key = `${lastRowIndex}-${columns[0]?.key}`;
@@ -2248,6 +2255,11 @@ export const DataGridViewReactUpgraded = forwardRef(
             el.focus();
           }
         }, 10);
+      },
+      scrollToBottom: () => {
+        if (containerRef.current) {
+          containerRef.current.scrollTop = containerRef.current.scrollHeight;
+        }
       },
       getSelectedRow: () => {
         return selectedRow;
@@ -2268,7 +2280,6 @@ export const DataGridViewReactUpgraded = forwardRef(
         }, 10);
       },
     }));
-
     return (
       <>
         <div
@@ -2324,7 +2335,6 @@ export const DataGridViewReactUpgraded = forwardRef(
                       fontSize: "12px",
                       position: col.freeze ? "sticky" : "relative",
                       left: col.freeze ? `${getFrozenLeft(colIdx)}px` : "auto",
-                      background: "#f5f5f5",
                       zIndex: col.freeze ? 2 : 1,
                     }}
                   >
@@ -2424,8 +2434,9 @@ export const DataGridViewReactUpgraded = forwardRef(
                                 boxSizing: "border-box",
                                 outline: "none",
                                 borderLeft:
-                                  colIdx === 0 ? "none" : "1px solid #ebe8e8",
-                                borderBottom: "1px solid #ebe8e8",
+                                  colIdx === 0
+                                    ? "none"
+                                    : "1px solid rgb(245, 240, 240)",
                                 fontSize: "12px",
                                 // cursor: "pointer",
                                 whiteSpace: "nowrap",
@@ -2472,8 +2483,10 @@ export const DataGridViewReactUpgraded = forwardRef(
                                 boxSizing: "border-box",
                                 outline: "none",
                                 borderLeft:
-                                  colIdx === 0 ? "none" : "1px solid #ebe8e8",
-                                borderBottom: "1px solid #ebe8e8",
+                                  colIdx === 0
+                                    ? "none"
+                                    : "1px solid rgb(245, 240, 240)",
+                                // borderBottom: "1px solid #ebe8e8",
                                 fontSize: "12px",
                                 cursor: "pointer",
                                 whiteSpace: "nowrap",
@@ -2483,12 +2496,16 @@ export const DataGridViewReactUpgraded = forwardRef(
                                 left: col.freeze
                                   ? `${getFrozenLeft(colIdx)}px`
                                   : "auto",
+                                textAlign:
+                                  col.type === "number" ? "right" : "left",
                               }}
                               onDoubleClick={() => {
                                 selectedRowAction(row);
                               }}
                             >
-                              {row[col.key]}
+                              {(col.type === "date" && row[col.key] && row[col.key] !== '')
+                                ? format(new Date(row[col.key]), "MM/dd/yyyy")
+                                : row[col.key]}
                               <div
                                 onMouseDown={(e) => {
                                   onMouseDown(e, col, colIdx);
@@ -2543,7 +2560,13 @@ export const DataGridViewReactUpgraded = forwardRef(
                 minWidth: "150px",
               }}
             >
-              <RightClickComponent row={data[rightClickRowIndex.rowIndex]} />
+              <RightClickComponent
+                row={
+                  data.filter(
+                    (itm: any) => itm.rowIndex === rightClickRowIndex.rowIndex
+                  )[0]
+                }
+              />
               <div
                 className="modal-action"
                 onClick={() => {
@@ -2582,12 +2605,11 @@ export const DataGridViewReactUpgraded = forwardRef(
                     "Are you sure you want to delete all the rows?"
                   );
                   if (confirm) {
-                    setData((data) => {
-                      return data.filter(
-                        (itm: any) =>
-                          itm.rowIndex !== rightClickRowIndex.rowIndex
-                      );
-                    });
+                    const newData = data.filter(
+                      (itm: any) => itm.rowIndex !== rightClickRowIndex.rowIndex
+                    );
+                    setData(newData);
+                    onDelete(newData);
                   }
                 }}
               >
@@ -2603,6 +2625,7 @@ export const DataGridViewReactUpgraded = forwardRef(
                     );
                     if (confirm) {
                       setData([]);
+                      onDelete([]);
                     }
                     setSelectAll(false);
                   }, 100);
@@ -2873,6 +2896,7 @@ export const UpwardTableModalSearch = forwardRef(
                   adjustRightClickClientXAndY={adjustRightClickClientXAndY(
                     size
                   )}
+                  adjustOnRezise={false}
                 />
               </div>
               <style>

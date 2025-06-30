@@ -55,28 +55,6 @@ import { Loading } from "../../../../components/Loading";
 import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
 import SearchIcon from "@mui/icons-material/Search";
 import "../../../../style/monbileview/accounting/generaljournal.css";
-const initialState = {
-  totalDebit: "",
-  totalCredit: "",
-  totalBalance: "",
-
-  jobAutoExp: false,
-  jobTransactionDate: new Date(),
-  jobType: "",
-  search: "",
-};
-
-export const reducer = (state: any, action: any) => {
-  switch (action.type) {
-    case "UPDATE_FIELD":
-      return {
-        ...state,
-        [action.field]: action.value,
-      };
-    default:
-      return state;
-  }
-};
 
 const selectedCollectionColumns = [
   { key: "code", label: "Code", width: 100, freeze: true },
@@ -118,6 +96,9 @@ export default function GeneralJournal() {
     totalCredit: "0.00",
     balance: "0.00",
   });
+  const [jobTransactionDate, setJobTransactionDate] = useState<any>(new Date());
+  const [jobType, setJobType] = useState<any>("4");
+  const [jobAutoExp, setJobAutoExp] = useState<any>(false);
 
   const [loadingJob, setLoadingJob] = useState(false);
   const inputSearchRef = useRef<HTMLInputElement>(null);
@@ -148,7 +129,6 @@ export default function GeneralJournal() {
   const refTCDesc = useRef<string>("");
 
   const { myAxios, user } = useContext(AuthContext);
-  const [state, dispatch] = useReducer(reducer, initialState);
   const [openJobs, setOpenJobs] = useState(false);
 
   const table = useRef<any>(null);
@@ -179,14 +159,6 @@ export default function GeneralJournal() {
     refetchOnWindowFocus: false,
     onSuccess: (data) => {
       const response = data as any;
-      if (modeUpdate) {
-        dispatch({
-          type: "UPDATE_FIELD",
-          field: "refNo",
-          value: state.sub_refNo ?? "",
-        });
-        return;
-      }
       wait(100).then(() => {
         if (refRefNo.current) {
           refRefNo.current.value =
@@ -305,7 +277,7 @@ export default function GeneralJournal() {
       });
     },
   });
-  
+
   const {
     mutate: getSearchSelectedGeneralJournal,
     isLoading: loadingGetSearchSelectedGeneralJournal,
@@ -366,14 +338,10 @@ export default function GeneralJournal() {
     },
   });
 
-  const handleInputChange = (e: any) => {
-    const { name, value } = e.target;
-    dispatch({ type: "UPDATE_FIELD", field: name, value });
-  };
   function handleVoid() {
     codeCondfirmationAlert({
       isUpdate: false,
-      text: `Are you sure you want to void ${state.refNo}`,
+      text: `Are you sure you want to void ${refRefNo.current?.value}`,
       cb: (userCodeConfirmation) => {
         mutateVoidGeneralJournal({
           refNo: refRefNo.current?.value,
@@ -428,7 +396,7 @@ export default function GeneralJournal() {
         timer: 1500,
       }).then(() => {
         wait(300).then(() => {
-          chartOfAccountModalRef.current.openModal(state.code);
+          chartOfAccountModalRef.current.openModal(refCode.current?.value);
         });
       });
     }
@@ -665,6 +633,10 @@ export default function GeneralJournal() {
           }, 350);
           monitor();
         }
+
+        wait(50).then(() => {
+          table.current.scrollToBottom();
+        });
       }
     });
   }
@@ -760,7 +732,7 @@ export default function GeneralJournal() {
     setLoadingJob(true);
     setOpenJobs(false);
     setTimeout(async () => {
-      let JobDate = new Date(state.jobTransactionDate);
+      let JobDate = new Date(jobTransactionDate);
       let dtFrom = format(JobDate, "yyyy-MM-01-");
       let dtTo = format(lastDayOfMonth(JobDate), "yyyy-MM-dd");
       let iRow = 0;
@@ -870,7 +842,7 @@ export default function GeneralJournal() {
     setLoadingJob(true);
     setOpenJobs(false);
     setTimeout(async () => {
-      let JobDate = new Date(state.jobTransactionDate);
+      let JobDate = new Date(jobTransactionDate);
       let dtFrom = format(JobDate, "yyyy-MM-01-");
       let dtTo = format(lastDayOfMonth(JobDate), "yyyy-MM-dd");
       let iRow = 0;
@@ -1120,13 +1092,6 @@ export default function GeneralJournal() {
                     searchGeneralJournalModalRef.current.openModal(
                       e.currentTarget.value
                     );
-                  }
-                  if (e.key === "ArrowDown") {
-                    e.preventDefault();
-                    const datagridview = document.querySelector(
-                      ".grid-container"
-                    ) as HTMLDivElement;
-                    datagridview.focus();
                   }
                 },
                 style: { width: "500px" },
@@ -1847,6 +1812,22 @@ export default function GeneralJournal() {
                 </div>
               );
             }}
+            onDelete={(data: any) => {
+              const totalCredit = data.reduce(
+                (a: any, b: any) => a + parseFloat(b.credit.replace(/,/g, "")),
+                0
+              );
+              const totalDebit = data.reduce(
+                (a: any, b: any) => a + parseFloat(b.debit.replace(/,/g, "")),
+                0
+              );
+              setMonitoring({
+                totalRow: `${data.length}`,
+                totalCredit: formatNumber(totalCredit),
+                totalDebit: formatNumber(totalDebit),
+                balance: formatNumber(totalCredit - totalDebit),
+              });
+            }}
           />
         </div>
         <Modal open={openJobs} onClose={() => setOpenJobs(false)}>
@@ -1916,13 +1897,9 @@ export default function GeneralJournal() {
                     }}
                     label={"Transaction Date: "}
                     views={["month", "year"]}
-                    value={state.jobTransactionDate}
+                    value={jobTransactionDate}
                     onChange={(value) => {
-                      dispatch({
-                        type: "UPDATE_FIELD",
-                        field: "jobTransactionDate",
-                        value: value,
-                      });
+                      setJobTransactionDate(value);
                     }}
                   />
                 </LocalizationProvider>
@@ -1936,13 +1913,9 @@ export default function GeneralJournal() {
                   control={
                     <Checkbox
                       size="small"
-                      checked={state.jobAutoExp}
+                      checked={jobAutoExp}
                       onChange={(e) => {
-                        dispatch({
-                          type: "UPDATE_FIELD",
-                          field: "jobAutoExp",
-                          value: !state.jobAutoExp,
-                        });
+                        setJobAutoExp(!jobAutoExp);
                       }}
                     />
                   }
@@ -1968,9 +1941,11 @@ export default function GeneralJournal() {
                 </InputLabel>
                 <Select
                   labelId="label-selection-job-type"
-                  value={state.jobType}
+                  value={jobType}
                   name="jobType"
-                  onChange={handleInputChange}
+                  onChange={(e) => {
+                    setJobType(e.target.value);
+                  }}
                   autoWidth
                   sx={{
                     height: "27px",
@@ -2013,10 +1988,10 @@ export default function GeneralJournal() {
                 color="success"
                 variant="contained"
                 onClick={() => {
-                  if (state.jobType === "4") {
+                  if (jobType === "4") {
                     DoRPTTransactionNILHN();
                   }
-                  if (state.jobType === "12") {
+                  if (jobType === "12") {
                     DoRPTTransactionNILHNASTRA();
                   }
                 }}
@@ -2291,11 +2266,11 @@ export default function GeneralJournal() {
         ref={searchGeneralJournalModalRef}
         link={"/task/accounting/general-journal/search-general-journal"}
         column={[
-          { key: "Date_Entry", headerName: "Date", width: 130 },
-          { key: "Source_No", headerName: "Ref No.", width: 150 },
+          { key: "Date_Entry", label: "Date", width: 100, type: "text" },
+          { key: "Source_No", label: "Ref No.", width: 100, type: "text" },
           {
             key: "Explanation",
-            headerName: "Explanation",
+            label: "Explanation",
             width: 300,
           },
         ]}

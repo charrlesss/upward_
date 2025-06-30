@@ -28,6 +28,8 @@ import { format } from "date-fns";
 import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
 import {
   DataGridViewReact,
+  DataGridViewReactUpgraded,
+  UpwardTableModalSearch,
   useUpwardTableModalSearchSafeMode,
 } from "../../../../components/DataGridViewReact";
 import SearchIcon from "@mui/icons-material/Search";
@@ -37,17 +39,6 @@ import { flushSync } from "react-dom";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import "../../../../style/monbileview/accounting/pettycash.css";
 
-export const reducer = (state: any, action: any) => {
-  switch (action.type) {
-    case "UPDATE_FIELD":
-      return {
-        ...state,
-        [action.field]: action.value,
-      };
-    default:
-      return state;
-  }
-};
 const columns = [
   { key: "purpose", label: "Purpose", width: 400 },
   { key: "amount", label: "Amount", width: 140 },
@@ -97,7 +88,8 @@ export default function PettyCash() {
   const vatRef = useRef<HTMLSelectElement>(null);
   const invoiceRef = useRef<HTMLInputElement>(null);
 
-  const pdcSearchInput = useRef<HTMLInputElement>(null);
+  const pettyCashSearchRef = useRef<any>(null);
+  const clientModalRef = useRef<any>(null);
 
   const transactionCodeRef = useRef("");
   const transactionShortRef = useRef("");
@@ -193,7 +185,7 @@ export default function PettyCash() {
         explanationRef.current.value = loadPettyCash[0].Explanation;
       }
 
-      tableRef.current.setDataFormated(loadPettyCash);
+      tableRef.current.setData(loadPettyCash);
     },
   });
   const { isLoading: laodPettyCashTransaction } = useQuery({
@@ -241,24 +233,9 @@ export default function PettyCash() {
     }
 
     const newData = tableRef.current.getData();
-    const newDataFormatted = newData.map((itm: any) => {
-      let newItm = {
-        purpose: itm[0],
-        amount: itm[1],
-        usage: itm[2],
-        accountID: itm[3],
-        sub_account: itm[4],
-        clientID: itm[5],
-        clientName: itm[6],
-        accountCode: itm[7],
-        accountShort: itm[8],
-        vatType: itm[9],
-        invoice: itm[10],
-      };
-      return newItm;
-    });
 
-    if (newDataFormatted.length <= 0) {
+
+    if (newData.length <= 0) {
       return Swal.fire({
         position: "center",
         icon: "warning",
@@ -277,7 +254,7 @@ export default function PettyCash() {
             payee: payeeRef.current?.value,
             explanation: explanationRef.current?.value,
             hasSelected: pettyCashMode === "edit",
-            pettyCash: newDataFormatted,
+            pettyCash: newData,
             userCodeConfirmation,
           });
         },
@@ -291,7 +268,7 @@ export default function PettyCash() {
             payee: payeeRef.current?.value,
             explanation: explanationRef.current?.value,
             hasSelected: pettyCashMode === "edit",
-            pettyCash: newDataFormatted,
+            pettyCash: newData,
           });
         },
       });
@@ -343,7 +320,7 @@ export default function PettyCash() {
       }).then(() => {
         wait(300).then(() => {
           if (usageRef.current) {
-            clientOpenModal(usageRef.current.value);
+            clientModalRef.current.openModal(usageRef.current.value);
           }
         });
       });
@@ -387,29 +364,27 @@ export default function PettyCash() {
 
     wait(100).then(() => {
       const currentData = tableRef.current.getData();
-      const newData = [
-        accountRef.current?.value,
-        amountRef.current?.value,
-        `${usageRef.current?.value} > ${clientIdRef.current} > ${subAcctRef.current}`,
-        `${TransDetail.data.data[0].Short} > ${TransDetail.data.data[0].Acct_Code}`,
-        subAcctRef.current,
-        clientIdRef.current,
-        usageRef.current?.value,
-        TransDetail.data.data[0].Acct_Code,
-        TransDetail.data.data[0].Short,
-        vatRef.current?.value,
-        invoiceRef.current?.value,
-      ];
+      const newData = {
+        purpose: accountRef.current?.value,
+        amount: amountRef.current?.value,
+        usage: `${usageRef.current?.value} > ${clientIdRef.current} > ${subAcctRef.current}`,
+        accountID: `${TransDetail.data.data[0].Short} > ${TransDetail.data.data[0].Acct_Code}`,
+        sub_account: subAcctRef.current,
+        clientID: clientIdRef.current,
+        clientName: usageRef.current?.value,
+        accountCode: TransDetail.data.data[0].Acct_Code,
+        accountShort: TransDetail.data.data[0].Short,
+        vatType: vatRef.current?.value,
+        invoice: invoiceRef.current?.value,
+      };
 
       if (getSelectedItem !== null) {
         currentData.splice(getSelectedItem, 0, newData);
         tableRef.current.setData(currentData);
         tableRef.current.setSelectedRow(null);
-        tableRef.current.resetCheckBox();
       } else {
         tableRef.current.setData([...currentData, newData]);
         tableRef.current.setSelectedRow(null);
-        tableRef.current.resetCheckBox();
       }
 
       resetRefs();
@@ -461,7 +436,7 @@ export default function PettyCash() {
     refetchettyCashIdGenerator();
     resetRefsEntry();
     resetRefs();
-    tableRef.current.setData([]);
+    tableRef.current.resetTable();
   }
   function valueIsNaN(input: any) {
     if (input !== "" && input !== null) {
@@ -470,100 +445,6 @@ export default function PettyCash() {
     }
     return "0.00";
   }
-  const {
-    UpwardTableModalSearch: PettyCashUpwardTableModalSearch,
-    openModal: pettyCashOpenModal,
-    closeModal: pettyCashCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    link: "/task/accounting/search-petty-cash",
-    column: [
-      { key: "PC_Date", label: "Type", width: 130 },
-      { key: "PC_No", label: "ID No.", width: 200 },
-      {
-        key: "Payee",
-        label: "Name",
-        flex: 1,
-      },
-      {
-        key: "Explanation",
-        label: "ID",
-        flex: 1,
-      },
-      {
-        key: "Explanation",
-        label: "ID",
-        flex: 1,
-        hide: true,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        wait(100).then(() => {
-          mutateLoadSelectedPettyCash({ PC_No: rowItm[1] });
-        });
-        setPettyCashMode("edit");
-        pettyCashCloseModal();
-      }
-    },
-  });
-  const {
-    UpwardTableModalSearch: ClientUpwardTableModalSearch,
-    openModal: clientOpenModal,
-    closeModal: clientCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    size: "large",
-    link: "/task/accounting/search-pdc-policy-id",
-    column: [
-      { key: "Type", label: "Type", width: 100 },
-      { key: "IDNo", label: "ID No.", width: 120 },
-      {
-        key: "Name",
-        label: "Name",
-        width: 350,
-      },
-      { key: "chassis", label: "Chassis No.", width: 200 },
-      {
-        key: "remarks",
-        label: "remarks",
-        width: 0,
-        hide: true,
-      },
-      {
-        key: "client_id",
-        label: "client_id",
-        width: 0,
-        hide: true,
-      },
-      {
-        key: "Acronym",
-        label: "Acronym",
-        width: 0,
-        hide: true,
-      },
-      {
-        key: "sub_account",
-        label: "sub_account",
-        width: 0,
-        hide: true,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        wait(100).then(() => {
-          clientIdRef.current = rowItm[1];
-          subAcctRef.current = rowItm[6];
-          if (usageRef.current) usageRef.current.value = rowItm[2];
-        });
-        wait(200).then(() => {
-          if (amountRef.current) {
-            amountRef.current?.focus();
-            amountRef.current.value = "";
-          }
-        });
-        clientCloseModal();
-      }
-    },
-  });
 
   return (
     <>
@@ -571,8 +452,6 @@ export default function PettyCash() {
         <Loading />
       )}
       <PageHelmet title="Petty Cash" />
-      <PettyCashUpwardTableModalSearch />
-      <ClientUpwardTableModalSearch />
       <div
         className="main"
         style={{
@@ -610,7 +489,7 @@ export default function PettyCash() {
               onKeyDown: (e) => {
                 if (e.key === "Enter" || e.key === "NumpadEnter") {
                   e.preventDefault();
-                  pettyCashOpenModal(e.currentTarget.value);
+                  pettyCashSearchRef.current.openModal(e.currentTarget.value);
                 }
                 if (e.key === "ArrowDown") {
                   e.preventDefault();
@@ -626,7 +505,9 @@ export default function PettyCash() {
             onIconClick={(e) => {
               e.preventDefault();
               if (inputSearchRef.current)
-                pettyCashOpenModal(inputSearchRef.current.value);
+                pettyCashSearchRef.current.openModal(
+                  inputSearchRef.current.value
+                );
             }}
             inputRef={inputSearchRef}
           />
@@ -755,7 +636,7 @@ export default function PettyCash() {
             <TextInput
               containerClassName="custom-input"
               label={{
-                title: "Deposit Date: ",
+                title: "Date: ",
                 style: {
                   fontSize: "12px",
                   fontWeight: "bold",
@@ -888,41 +769,6 @@ export default function PettyCash() {
                   width: "450px",
                 }}
               />
-              // <Autocomplete
-              //   containerStyle={{
-              //     width: "100%",
-              //   }}
-              //   label={{
-              //     title: "Transaction : ",
-              //     style: {
-              //       fontSize: "12px",
-              //       fontWeight: "bold",
-              //       width: "80px",
-              //     },
-              //   }}
-              //   DisplayMember={"Purpose"}
-              //   DataSource={dataCashTransaction?.data.laodTranscation}
-              //   disableInput={isDisableField}
-              //   inputRef={accountRef}
-              //   input={{
-              //     style: {
-              //       width: "100%",
-              //       flex: 1,
-              //     },
-              //   }}
-              //   onChange={(selected: any, e: any) => {
-              //     if (accountRef.current)
-              //       accountRef.current.value = selected.Purpose;
-              //     transactionCodeRef.current = selected.Acct_Code;
-              //     transactionShortRef.current = selected.Short;
-              //   }}
-              //   onKeydown={(e: any) => {
-              //     if (e.key === "Enter" || e.key === "NumpadEnter") {
-              //       e.preventDefault();
-              //       usageRef.current?.focus();
-              //     }
-              //   }}
-              // />
             )}
             <div
               className="layer-two-main-div-container"
@@ -947,7 +793,7 @@ export default function PettyCash() {
                   style: { width: "450px" },
                   onKeyDown: (e) => {
                     if (e.code === "NumpadEnter" || e.code === "Enter") {
-                      clientOpenModal(e.currentTarget.value);
+                      clientModalRef.current.openModal(e.currentTarget.value);
                     }
                   },
                 }}
@@ -962,7 +808,7 @@ export default function PettyCash() {
                 onIconClick={(e) => {
                   e.preventDefault();
                   if (usageRef.current) {
-                    clientOpenModal(usageRef.current.value);
+                    clientModalRef.current.openModal(usageRef.current.value);
                   }
                 }}
                 inputRef={usageRef}
@@ -1093,70 +939,48 @@ export default function PettyCash() {
             </div>
           </div>
         </div>
-        <div style={{ height: "5px" }}></div>
-        <DataGridViewReact
-          containerStyle={{
+
+        <div
+          style={{
+            marginTop: "10px",
+            width: "100%",
+            position: "relative",
             flex: 1,
-            height: "auto",
+            display: "flex",
           }}
-          ref={tableRef}
-          width="100%"
-          height="350px"
-          columns={columns}
-          getSelectedItem={(
-            rowItm: any,
-            colItm: any,
-            rowIdx: any,
-            colIdx: any
-          ) => {
-            if (rowItm) {
-              if (accountRef.current) {
-                accountRef.current.value = rowItm[0];
-              }
-              if (amountRef.current) {
-                amountRef.current.value = rowItm[1];
-              }
-              if (usageRef.current) {
-                usageRef.current.value = rowItm[6];
-              }
-              if (vatRef.current) {
-                vatRef.current.value = rowItm[9];
-              }
-              if (invoiceRef.current) {
-                invoiceRef.current.value = rowItm[10];
-              }
-              subAcctRef.current = rowItm[4];
-              clientIdRef.current = rowItm[5];
-              transactionCodeRef.current = rowItm[7];
-              transactionShortRef.current = rowItm[8];
-            } else {
-              resetRefs();
-            }
-          }}
-          onKeyDown={(rowSelected: any, RowIndex: any, e: any) => {
-            if (e.code === "Delete" || e.code === "Backspace") {
-              Swal.fire({
-                title: "Are you sure?",
-                text: `You won't to delete this Check No. ${rowSelected[0]}`,
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, delete it!",
-              }).then((result) => {
-                if (result.isConfirmed) {
-                  setTimeout(() => {
-                    const newData = tableRef.current.getData();
-                    newData.splice(RowIndex, 1);
-                    tableRef.current.setData(newData);
-                    tableRef.current.setSelectedRow(null);
-                    tableRef.current.resetCheckBox();
-                  }, 100);
+        >
+          <DataGridViewReactUpgraded
+            ref={tableRef}
+            adjustVisibleRowCount={290}
+            columns={columns}
+            handleSelectionChange={(rowItm: any) => {
+              if (rowItm) {
+                if (accountRef.current) {
+                  accountRef.current.value = rowItm.purpose;
                 }
-              });
-            }
-          }}
-        />
+                if (amountRef.current) {
+                  amountRef.current.value = rowItm.amount;
+                }
+                if (usageRef.current) {
+                  usageRef.current.value = rowItm.clientName;
+                }
+                if (vatRef.current) {
+                  vatRef.current.value = rowItm.vatType;
+                }
+                if (invoiceRef.current) {
+                  invoiceRef.current.value = rowItm.invoice;
+                }
+                subAcctRef.current = rowItm.sub_account;
+                clientIdRef.current = rowItm.clientID;
+                transactionCodeRef.current = rowItm.accountCode;
+                transactionShortRef.current = rowItm.accountShort;
+              } else {
+                resetRefs();
+              }
+            }}
+          />
+        </div>
+
         <div
           className="petty-cash-mobile-buttons"
           style={{
@@ -1227,6 +1051,88 @@ export default function PettyCash() {
           )}
         </div>
       </div>
+      {/* client modal */}
+      <UpwardTableModalSearch
+        ref={clientModalRef}
+        link={"/task/accounting/search-pdc-policy-id"}
+        column={[
+          { key: "Type", label: "Type", width: 100 },
+          { key: "IDNo", label: "ID No.", width: 150 },
+          {
+            key: "Name",
+            label: "Name",
+            width: 300,
+          },
+          {
+            key: "ID",
+            label: "ID",
+            hide: true,
+          },
+          {
+            key: "client_id",
+            label: "client_id",
+            hide: true,
+          },
+          {
+            key: "sub_account",
+            label: "sub_account",
+            hide: true,
+          },
+          {
+            key: "ShortName",
+            label: "ShortName",
+            hide: true,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              wait(100).then(() => {
+                clientIdRef.current = rowItm.IDNo;
+                subAcctRef.current = rowItm.Acronym;
+                if (usageRef.current) usageRef.current.value = rowItm.Name;
+              });
+              wait(200).then(() => {
+                if (amountRef.current) {
+                  amountRef.current?.focus();
+                  amountRef.current.value = "";
+                }
+              });
+            });
+            clientModalRef.current.closeModal();
+          }
+        }}
+      />
+      {/* search petty cash modal */}
+      <UpwardTableModalSearch
+        ref={pettyCashSearchRef}
+        link={"/task/accounting/search-petty-cash"}
+        column={[
+          { key: "PC_Date", label: "Type", width: 90 },
+          { key: "PC_No", label: "ID No.", width: 100 },
+          {
+            key: "Payee",
+            label: "Name",
+            width: 200,
+          },
+          {
+            key: "Explanation",
+            label: "Explanation",
+            width: 200,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              wait(100).then(() => {
+                mutateLoadSelectedPettyCash({ PC_No: rowItm.PC_No });
+              });
+              setPettyCashMode("edit");
+            });
+            pettyCashSearchRef.current.closeModal();
+          }
+        }}
+      />
     </>
   );
 }
