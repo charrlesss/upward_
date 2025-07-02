@@ -36,6 +36,8 @@ import { wait } from "@testing-library/user-event/dist/utils";
 import SearchIcon from "@mui/icons-material/Search";
 import {
   DataGridViewReact,
+  DataGridViewReactUpgraded,
+  UpwardTableModalSearch,
   useUpwardTableModalSearchSafeMode,
 } from "../../../../components/DataGridViewReact";
 import { Loading } from "../../../../components/Loading";
@@ -121,6 +123,9 @@ export default function PostDateChecks() {
   const pnRef = useRef<HTMLInputElement>(null);
   const branchRef = useRef<HTMLInputElement>(null);
   const clientnameRef = useRef<HTMLTextAreaElement>(null);
+
+  const clientModalRef = useRef<any>(null);
+  const searchPdcModalRef = useRef<any>(null);
 
   const { isLoading: newRefNumberLoading, refetch: refetchNewRefNumber } =
     useQuery({
@@ -248,7 +253,7 @@ export default function PostDateChecks() {
           );
           return itm;
         });
-        tableRef.current.setDataFormated(data);
+        tableRef.current.setData(data);
 
         if (refNoRef.current) {
           refNoRef.current.value = response.data.getSearchPDCCheck[0].Ref_No;
@@ -273,103 +278,9 @@ export default function PostDateChecks() {
       },
     });
 
-  // policy ids search table modal
-  const {
-    UpwardTableModalSearch: ClientUpwardTableModalSearch,
-    openModal: clientOpenModal,
-    closeModal: clientCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    size: "large",
-    link: "/task/accounting/search-pdc-policy-id",
-    column: [
-      { key: "Type", label: "Type", width: 100 },
-      { key: "IDNo", label: "ID No.", width: 120 },
-      {
-        key: "Name",
-        label: "Name",
-        width: 350,
-      },
-      { key: "chassis", label: "Chassis No.", width: 200 },
-      {
-        key: "remarks",
-        label: "remarks",
-        width: 0,
-        hide: true,
-      },
-      {
-        key: "client_id",
-        label: "client_id",
-        width: 0,
-        hide: true,
-      },
-      {
-        key: "Acronym",
-        label: "Acronym",
-        width: 0,
-        hide: true,
-      },
-      {
-        key: "sub_account",
-        label: "sub_account",
-        width: 0,
-        hide: true,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        wait(100).then(() => {
-          PNoRef.current = rowItm[5];
-          subAccountRef.current = rowItm[7];
-          if (pnRef.current) {
-            pnRef.current.value = rowItm[1];
-          }
-          if (clientnameRef.current) {
-            clientnameRef.current.value = rowItm[2];
-          }
-          if (branchRef.current) {
-            branchRef.current.value = rowItm[6];
-          }
-          if (rowItm[4] && rowItm[4] !== "") {
-            if (remakrsRef.current) {
-              remakrsRef.current.value = rowItm[4];
-            }
-          }
-        });
-        clientCloseModal();
-      }
-    },
-  });
-
-  // pdc search table modal
-  const {
-    UpwardTableModalSearch: PDCUpwardTableModalSearch,
-    openModal: pdcOpenModal,
-    closeModal: pdcCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    link: "/task/accounting/search-pdc",
-    column: [
-      { key: "Date", label: "Date Received", width: 90 },
-      { key: "Ref_No", label: "Ref No.", width: 70 },
-      {
-        key: "Name",
-        label: "Name",
-        width: 320,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        wait(100).then(() => {
-          console.log(rowItm[2]);
-          mutateSelectedSearch({ ref_no: rowItm[1] });
-          setPdcMode("update");
-        });
-        pdcCloseModal();
-      }
-    },
-  });
   const handleOnSave = useCallback(
     async (e: any) => {
-      const pdcTableData = tableRef.current.getDataFormatted();
+      const pdcTableData = tableRef.current.getData();
 
       if (pnRef.current && pnRef.current.value === "") {
         return Swal.fire({
@@ -492,7 +403,7 @@ export default function PostDateChecks() {
     },
   });
   const clickPDCReceipt = () => {
-    const pdcTableData = tableRef.current.getDataFormatted();
+    const pdcTableData = tableRef.current.getData();
     const state = {
       Ref_No: refNoRef.current?.value,
       PNo: pnRef.current?.value,
@@ -531,9 +442,7 @@ export default function PostDateChecks() {
   };
   function resetPDC() {
     setPdcMode("");
-    tableRef.current.setSelectedRow(null);
-    tableRef.current.resetCheckBox();
-    tableRef.current.setData([]);
+    tableRef.current.resetTable();
     refetchNewRefNumber();
 
     if (dateRef.current) {
@@ -567,7 +476,7 @@ export default function PostDateChecks() {
       modalCheckRef.current.getRefs().checkdateRef.current &&
       modalCheckRef.current.getRefs().amountRef.current
     ) {
-      const tableRows = tableRef.current.getDataFormatted();
+      const tableRows = tableRef.current.getData();
       const selectedIndex = tableRef.current.getSelectedRow();
 
       const filteredChecks = tableRows.filter((itm: any) => {
@@ -630,19 +539,19 @@ export default function PostDateChecks() {
           const selectedRow = tableRef.current.getData();
 
           let isCheckFind = selectedRow
-            .map((itm: any) => itm[0])
+            .map((itm: any) => itm.Check_No)
             .includes(modalCheckRef.current.getRefs().checknoRef.current.value);
           console.log(isCheckFind);
           if (isCheckFind) {
-            selectedRow[selectedIndex][0] =
+            selectedRow[selectedIndex].Check_No =
               modalCheckRef.current.getRefs().checknoRef.current.value;
-            selectedRow[selectedIndex][1] = format(
+            selectedRow[selectedIndex].Check_Date = format(
               new Date(
                 modalCheckRef.current.getRefs().checkdateRef.current.value
               ),
               "MM/dd/yyyy"
             );
-            selectedRow[selectedIndex][2] = formatNumber(
+            selectedRow[selectedIndex].Check_Amnt = formatNumber(
               parseNumber(
                 modalCheckRef.current
                   .getRefs()
@@ -651,24 +560,23 @@ export default function PostDateChecks() {
               )
             );
 
-            selectedRow[selectedIndex][3] =
+            selectedRow[selectedIndex].BankName =
               modalCheckRef.current.getRefs().bankRef.current.value;
-            selectedRow[selectedIndex][4] =
+            selectedRow[selectedIndex].Branch =
               modalCheckRef.current.getRefs().branchRef.current.value;
-            selectedRow[selectedIndex][5] =
+            selectedRow[selectedIndex].Check_Remarks =
               modalCheckRef.current.getRefs().remarksRef.current.value;
-            selectedRow[selectedIndex][6] =
+            selectedRow[selectedIndex].Deposit_Slip =
               modalCheckRef.current.getRefs()._slipCodeRef.current;
-            selectedRow[selectedIndex][7] =
+            selectedRow[selectedIndex].DateDeposit =
               modalCheckRef.current.getRefs()._slipDateRef.current;
-            selectedRow[selectedIndex][8] =
+            selectedRow[selectedIndex].OR_No =
               modalCheckRef.current.getRefs()._checkOR.current;
-            selectedRow[selectedIndex][9] =
+            selectedRow[selectedIndex].BankCode =
               modalCheckRef.current.getRefs().bankCode.current;
 
             tableRef.current.setData(selectedRow);
             tableRef.current.setSelectedRow(null);
-            tableRef.current.resetCheckBox();
             setHasSelectedRow(null);
             modalCheckRef.current.clsoeModal();
 
@@ -685,16 +593,16 @@ export default function PostDateChecks() {
                 );
           const newData: any = [];
           for (let i = 0; i < checkCount; i++) {
-            newData.push([
-              incrementStringNumbers(
+            newData.push({
+              Check_No: incrementStringNumbers(
                 modalCheckRef.current.getRefs().checknoRef.current.value,
                 i
               ),
-              incrementDate(
+              Check_Date: incrementDate(
                 modalCheckRef.current.getRefs().checkdateRef.current.value,
                 i
               ),
-              formatNumber(
+              Check_Amnt: formatNumber(
                 parseNumber(
                   modalCheckRef.current
                     .getRefs()
@@ -702,18 +610,21 @@ export default function PostDateChecks() {
                     .replace(/,/g, "")
                 )
               ),
-              modalCheckRef.current.getRefs().bankRef.current.value,
-              modalCheckRef.current.getRefs().branchRef.current.value,
-              modalCheckRef.current.getRefs().remarksRef.current.value,
-              modalCheckRef.current.getRefs()._slipCodeRef.current,
-              modalCheckRef.current.getRefs()._slipDateRef.current,
-              modalCheckRef.current.getRefs()._checkOR.current,
-              modalCheckRef.current.getRefs().bankCode.current,
-            ]);
+              BankName: modalCheckRef.current.getRefs().bankRef.current.value,
+              Branch: modalCheckRef.current.getRefs().branchRef.current.value,
+              Check_Remarks:
+                modalCheckRef.current.getRefs().remarksRef.current.value,
+              Deposit_Slip:
+                modalCheckRef.current.getRefs()._slipCodeRef.current,
+              DateDeposit: modalCheckRef.current.getRefs()._slipDateRef.current,
+              OR_No: modalCheckRef.current.getRefs()._checkOR.current,
+              BankCode: modalCheckRef.current.getRefs().bankCode.current,
+            });
           }
 
           tableRef.current.setData([...tableRef.current.getData(), ...newData]);
           modalCheckRef.current.clsoeModal();
+          tableRef.current.setSelectedRow(null);
 
           return;
         } else {
@@ -727,16 +638,16 @@ export default function PostDateChecks() {
                 );
           const newData: any = [];
           for (let i = 0; i < checkCount; i++) {
-            newData.push([
-              incrementStringNumbers(
+            newData.push({
+              Check_No: incrementStringNumbers(
                 modalCheckRef.current.getRefs().checknoRef.current.value,
                 i
               ),
-              incrementDate(
+              Check_Date: incrementDate(
                 modalCheckRef.current.getRefs().checkdateRef.current.value,
                 i
               ),
-              formatNumber(
+              Check_Amnt: formatNumber(
                 parseNumber(
                   modalCheckRef.current
                     .getRefs()
@@ -744,18 +655,21 @@ export default function PostDateChecks() {
                     .replace(/,/g, "")
                 )
               ),
-              modalCheckRef.current.getRefs().bankRef.current.value,
-              modalCheckRef.current.getRefs().branchRef.current.value,
-              modalCheckRef.current.getRefs().remarksRef.current.value,
-              modalCheckRef.current.getRefs()._slipCodeRef.current,
-              modalCheckRef.current.getRefs()._slipDateRef.current,
-              modalCheckRef.current.getRefs()._checkOR.current,
-              modalCheckRef.current.getRefs().bankCode.current,
-            ]);
+              BankName: modalCheckRef.current.getRefs().bankRef.current.value,
+              Branch: modalCheckRef.current.getRefs().branchRef.current.value,
+              Check_Remarks:
+                modalCheckRef.current.getRefs().remarksRef.current.value,
+              Deposit_Slip:
+                modalCheckRef.current.getRefs()._slipCodeRef.current,
+              DateDeposit: modalCheckRef.current.getRefs()._slipDateRef.current,
+              OR_No: modalCheckRef.current.getRefs()._checkOR.current,
+              BankCode: modalCheckRef.current.getRefs().bankCode.current,
+            });
           }
 
           tableRef.current.setData([...tableRef.current.getData(), ...newData]);
           modalCheckRef.current.clsoeModal();
+          tableRef.current.setSelectedRow(null);
         }
       }
     }
@@ -786,18 +700,17 @@ export default function PostDateChecks() {
         }}
         handleOnClose={() => {
           tableRef.current.setSelectedRow(null);
-          tableRef.current.resetCheckBox();
 
           // buttonCheckSave.current?.focus();
         }}
         hasSelectedRow={hasSelectedRow}
       />
-      <ClientUpwardTableModalSearch />
-      <PDCUpwardTableModalSearch />
+
       <PageHelmet title="PDC" />
-      {(loadingAddNew || isLoadingSelectedSearch || isLoadingPrint) && (
-        <Loading />
-      )}
+      {(loadingAddNew ||
+        isLoadingSelectedSearch ||
+        isLoadingPrint ||
+        newRefNumberLoading) && <Loading />}
       <div
         className="pdc-main"
         style={{
@@ -846,7 +759,7 @@ export default function PostDateChecks() {
                 onKeyDown: (e) => {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
-                    pdcOpenModal(e.currentTarget.value);
+                    searchPdcModalRef.current.openModal(e.currentTarget.value);
                   }
                 },
                 style: { width: "500px" },
@@ -855,7 +768,9 @@ export default function PostDateChecks() {
               onIconClick={(e) => {
                 e.preventDefault();
                 if (searchInputRef.current)
-                  pdcOpenModal(searchInputRef.current.value);
+                  searchPdcModalRef.current.openModal(
+                    searchInputRef.current.value
+                  );
               }}
               inputRef={searchInputRef}
             />
@@ -939,7 +854,7 @@ export default function PostDateChecks() {
                 startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
                 onClick={() => {
                   wait(100).then(() => {
-                    const tableRows = tableRef.current.getDataFormatted();
+                    const tableRows = tableRef.current.getData();
                     const getLastCheck_No: any =
                       tableRows[tableRows.length - 1];
                     if (modalCheckRef.current.getRefs().checknoRef.current) {
@@ -947,8 +862,6 @@ export default function PostDateChecks() {
                         incrementCheckNo(getLastCheck_No?.Check_No);
                     }
                     tableRef.current.setSelectedRow(null);
-                    tableRef.current.resetCheckBox();
-
                     setHasSelectedRow(null);
                     modalCheckRef.current.getRefs().checknoRef.current?.focus();
                   });
@@ -1041,48 +954,43 @@ export default function PostDateChecks() {
                     gap: "15px",
                   }}
                 >
-                  {newRefNumberLoading ? (
-                    <LoadingButton loading={newRefNumberLoading} />
-                  ) : (
-                    <TextInput
-                      containerClassName="pdc-reference-no-input"
-                      label={{
-                        title: "Ref No.",
-                        style: {
-                          fontSize: "12px",
-                          fontWeight: "bold",
-                          width: "85px",
-                        },
-                      }}
-                      input={{
-                        readOnly: true,
-                        disabled: isDisableField,
-                        type: "text",
-                        style: { width: "300px" },
-                        onKeyDown: (e) => {
-                          if (e.key === "Enter" || e.key === "NumpadEnter") {
-                            e.preventDefault();
-                            dateRef.current?.focus();
-                          }
-                        },
-                      }}
-                      inputRef={refNoRef}
-                      icon={
-                        <RestartAltIcon
-                          sx={{
-                            fontSize: "18px",
-                            color: isDisableField ? "gray" : "black",
-                          }}
-                        />
-                      }
-                      disableIcon={pdcMode !== "add"}
-                      onIconClick={(e) => {
-                        e.preventDefault();
-                        refetchNewRefNumber();
-                      }}
-                    />
-                  )}
-
+                  <TextInput
+                    containerClassName="pdc-reference-no-input"
+                    label={{
+                      title: "Ref No.",
+                      style: {
+                        fontSize: "12px",
+                        fontWeight: "bold",
+                        width: "85px",
+                      },
+                    }}
+                    input={{
+                      readOnly: true,
+                      disabled: isDisableField,
+                      type: "text",
+                      style: { width: "300px" },
+                      onKeyDown: (e) => {
+                        if (e.key === "Enter" || e.key === "NumpadEnter") {
+                          e.preventDefault();
+                          dateRef.current?.focus();
+                        }
+                      },
+                    }}
+                    inputRef={refNoRef}
+                    icon={
+                      <RestartAltIcon
+                        sx={{
+                          fontSize: "18px",
+                          color: isDisableField ? "gray" : "black",
+                        }}
+                      />
+                    }
+                    disableIcon={pdcMode !== "add"}
+                    onIconClick={(e) => {
+                      e.preventDefault();
+                      refetchNewRefNumber();
+                    }}
+                  />
                   <TextInput
                     containerClassName="pdc-date-input"
                     label={{
@@ -1107,7 +1015,6 @@ export default function PostDateChecks() {
                     inputRef={dateRef}
                   />
                 </div>
-
                 <TextAreaInput
                   label={{
                     title: "Remarks : ",
@@ -1176,7 +1083,9 @@ export default function PostDateChecks() {
                         if (e.key === "Enter" || e.key === "NumpadEnter") {
                           e.preventDefault();
                           if (pnRef.current) {
-                            clientOpenModal(pnRef.current.value);
+                            clientModalRef.current.openModal(
+                              e.currentTarget.value
+                            );
                           }
                         }
                       },
@@ -1193,7 +1102,7 @@ export default function PostDateChecks() {
                     onIconClick={(e) => {
                       e.preventDefault();
                       if (pnRef.current) {
-                        clientOpenModal(pnRef.current.value);
+                        clientModalRef.current.openModal(pnRef.current.value);
                       }
                     }}
                     disableIcon={isDisableField}
@@ -1270,118 +1179,97 @@ export default function PostDateChecks() {
             </div>
           </div>
         </form>
-        <DataGridViewReact
-          containerStyle={{
+        <div
+          style={{
+            width: "100%",
+            position: "relative",
             flex: 1,
-            height: "auto",
+            display: "flex",
           }}
-          disbaleTable={isDisableField}
-          ref={tableRef}
-          rows={[]}
-          columns={pdcColumn}
-          showSequence={true}
-          getSelectedItem={(rowSelected: any, _: any, RowIndex: any) => {
-            if (rowSelected) {
-              if (
-                (rowSelected[6] && rowSelected[6] !== "") ||
-                (rowSelected[7] && rowSelected[7] !== "") ||
-                (rowSelected[8] && rowSelected[8] !== "")
-              ) {
-                setHasSelectedRow(null);
-                tableRef.current.setSelectedRow(null);
-                tableRef.current.resetCheckBox();
-
-                return Swal.fire({
-                  position: "center",
-                  icon: "warning",
-                  title: `Unable to delete. Check No ${rowSelected[0]} is already ${rowSelected[8]} issued of OR!`,
-                  showConfirmButton: false,
-                  timer: 1500,
-                });
-              }
-              setHasSelectedRow(RowIndex);
-              modalCheckRef.current?.showModal();
-              wait(100).then(() => {
+        >
+          <DataGridViewReactUpgraded
+            ref={tableRef}
+            adjustVisibleRowCount={250}
+            columns={pdcColumn}
+            handleSelectionChange={(rowItm: any) => {
+              if (rowItm) {
+                const RowIndex = tableRef.current.getSelectedRow();
                 if (
-                  modalCheckRef.current.getRefs().checknoRef.current &&
-                  modalCheckRef.current.getRefs().bankRef.current &&
-                  modalCheckRef.current.getRefs().branchRef.current &&
-                  modalCheckRef.current.getRefs().remarksRef.current &&
-                  modalCheckRef.current.getRefs().checkdateRef.current &&
-                  modalCheckRef.current.getRefs().amountRef.current
+                  (rowItm.Deposit_Slip && rowItm.Deposit_Slip !== "") ||
+                  (rowItm.DateDeposit && rowItm.DateDeposit !== "") ||
+                  (rowItm.OR_No && rowItm.OR_No !== "")
                 ) {
-                  modalCheckRef.current.getRefs().checknoRef.current.value =
-                    rowSelected[0];
-                  modalCheckRef.current.getRefs().checkdateRef.current.value =
-                    format(new Date(rowSelected[1]), "yyyy-MM-dd");
-                  modalCheckRef.current.getRefs().amountRef.current.value =
-                    formatNumber(parseFloat(rowSelected[2].replace(/,/g, "")));
-                  modalCheckRef.current.getRefs().bankRef.current.value =
-                    rowSelected[3];
-                  modalCheckRef.current.getRefs().branchRef.current.value =
-                    rowSelected[4];
-                  modalCheckRef.current.getRefs().remarksRef.current.value =
-                    rowSelected[5];
-                  modalCheckRef.current.getRefs()._slipCodeRef.current =
-                    rowSelected[6] || "";
-                  modalCheckRef.current.getRefs()._slipDateRef.current =
-                    rowSelected[7] || "";
-                  modalCheckRef.current.getRefs()._checkOR.current =
-                    rowSelected[8] || "";
-                  modalCheckRef.current.getRefs().bankCode.current =
-                    rowSelected[9];
-
-                  modalCheckRef.current.getRefs().bankRef.current.focus();
+                  setHasSelectedRow(null);
+                  return Swal.fire({
+                    position: "center",
+                    icon: "warning",
+                    title: `Unable to delete. Check No ${rowItm.Check_No} is already ${rowItm.OR_No} issued of OR!`,
+                    showConfirmButton: false,
+                    timer: 1500,
+                  });
                 }
-              });
-            } else {
-              setHasSelectedRow(null);
-            }
-          }}
-          onKeyDown={(rowSelected: any, RowIndex: any, e: any) => {
-            if (e.code === "Delete" || e.code === "Backspace") {
+                setHasSelectedRow(RowIndex);
+                modalCheckRef.current?.showModal();
+                wait(100).then(() => {
+                  if (
+                    modalCheckRef.current.getRefs().checknoRef.current &&
+                    modalCheckRef.current.getRefs().bankRef.current &&
+                    modalCheckRef.current.getRefs().branchRef.current &&
+                    modalCheckRef.current.getRefs().remarksRef.current &&
+                    modalCheckRef.current.getRefs().checkdateRef.current &&
+                    modalCheckRef.current.getRefs().amountRef.current
+                  ) {
+                    modalCheckRef.current.getRefs().checknoRef.current.value =
+                      rowItm.Check_No;
+                    modalCheckRef.current.getRefs().checkdateRef.current.value =
+                      format(new Date(rowItm.Check_Date), "yyyy-MM-dd");
+                    modalCheckRef.current.getRefs().amountRef.current.value =
+                      formatNumber(
+                        parseFloat(rowItm.Check_Amnt.replace(/,/g, ""))
+                      );
+                    modalCheckRef.current.getRefs().bankRef.current.value =
+                      rowItm.BankName;
+                    modalCheckRef.current.getRefs().branchRef.current.value =
+                      rowItm.Branch;
+                    modalCheckRef.current.getRefs().remarksRef.current.value =
+                      rowItm.Check_Remarks;
+                    modalCheckRef.current.getRefs()._slipCodeRef.current =
+                      rowItm.Deposit_Slip || "";
+                    modalCheckRef.current.getRefs()._slipDateRef.current =
+                      rowItm.DateDeposit || "";
+                    modalCheckRef.current.getRefs()._checkOR.current =
+                      rowItm.OR_No || "";
+                    modalCheckRef.current.getRefs().bankCode.current =
+                      rowItm.BankCode;
+
+                    modalCheckRef.current.getRefs().bankRef.current.focus();
+                  }
+                });
+              } else {
+                setHasSelectedRow(null);
+              }
+            }}
+            beforeDelete={(rowItm: any) => {
               if (
-                (rowSelected[6] && rowSelected[6] !== "") ||
-                (rowSelected[7] && rowSelected[7] !== "") ||
-                (rowSelected[8] && rowSelected[8] !== "")
+                (rowItm.Deposit_Slip && rowItm.Deposit_Slip !== "") ||
+                (rowItm.DateDeposit && rowItm.DateDeposit !== "") ||
+                (rowItm.OR_No && rowItm.OR_No !== "")
               ) {
                 setHasSelectedRow(null);
                 tableRef.current.setSelectedRow(null);
-                tableRef.current.resetCheckBox();
 
                 return Swal.fire({
                   position: "center",
                   icon: "warning",
-                  title: `Unable to delete. Check No ${rowSelected[0]} is already ${rowSelected[8]} issued of OR!`,
+                  title: `Unable to delete. Check No ${rowItm.Check_No} is already ${rowItm.OR_No} issued of OR!`,
                   showConfirmButton: false,
                   timer: 1500,
                 });
               }
+            }}
+          />
+        </div>
 
-              Swal.fire({
-                title: "Are you sure?",
-                text: `You won't to delete this Check No. ${rowSelected[0]}`,
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, delete it!",
-              }).then((result) => {
-                if (result.isConfirmed) {
-                  setTimeout(() => {
-                    const newData = tableRef.current.getData();
-                    newData.splice(RowIndex, 1);
-                    tableRef.current.setData(newData);
-
-                    setHasSelectedRow(null);
-                    tableRef.current.setSelectedRow(null);
-                    tableRef.current.resetCheckBox();
-                  }, 100);
-                }
-              });
-            }
-          }}
-        />
         <div
           style={{
             display: showModal ? "flex" : "none",
@@ -1610,14 +1498,13 @@ export default function PostDateChecks() {
             startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
             onClick={() => {
               wait(100).then(() => {
-                const tableRows = tableRef.current.getDataFormatted();
+                const tableRows = tableRef.current.getData();
                 const getLastCheck_No: any = tableRows[tableRows.length - 1];
                 if (modalCheckRef.current.getRefs().checknoRef.current) {
                   modalCheckRef.current.getRefs().checknoRef.current.value =
                     incrementCheckNo(getLastCheck_No?.Check_No);
                 }
                 tableRef.current.setSelectedRow(null);
-                tableRef.current.resetCheckBox();
 
                 setHasSelectedRow(null);
                 modalCheckRef.current.getRefs().checknoRef.current?.focus();
@@ -1663,6 +1550,86 @@ export default function PostDateChecks() {
           </div>
         </div>
       </div>
+      {/* client modal */}
+      <UpwardTableModalSearch
+        ref={clientModalRef}
+        link={"/task/accounting/search-pdc-policy-id"}
+        column={[
+          { key: "Type", label: "Type", width: 100 },
+          { key: "IDNo", label: "ID No.", width: 150 },
+          {
+            key: "Name",
+            label: "Name",
+            width: 300,
+          },
+          {
+            key: "ID",
+            label: "ID",
+            hide: true,
+          },
+          {
+            key: "client_id",
+            label: "client_id",
+            hide: true,
+          },
+          {
+            key: "sub_account",
+            label: "sub_account",
+            hide: true,
+          },
+          {
+            key: "ShortName",
+            label: "ShortName",
+            hide: true,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              PNoRef.current = rowItm.client_id;
+              subAccountRef.current = rowItm.sub_account;
+              if (pnRef.current) {
+                pnRef.current.value = rowItm.IDNo;
+              }
+              if (clientnameRef.current) {
+                clientnameRef.current.value = rowItm.Name;
+              }
+              if (branchRef.current) {
+                branchRef.current.value = rowItm.Acronym;
+              }
+              if (rowItm.remarks && rowItm.remarks !== "") {
+                if (remakrsRef.current) {
+                  remakrsRef.current.value = rowItm.remarks;
+                }
+              }
+            });
+            clientModalRef.current.closeModal();
+          }
+        }}
+      />
+      {/* pdc search modal */}
+      <UpwardTableModalSearch
+        ref={searchPdcModalRef}
+        link={"/task/accounting/search-pdc"}
+        column={[
+          { key: "Date", label: "Date Received", width: 100 },
+          { key: "Ref_No", label: "Ref No.", width: 70 },
+          {
+            key: "Name",
+            label: "Name",
+            width: 320,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              mutateSelectedSearch({ ref_no: rowItm.Ref_No });
+              setPdcMode("update");
+            });
+            searchPdcModalRef.current.closeModal();
+          }
+        }}
+      />
     </>
   );
 }
@@ -2067,7 +2034,7 @@ const ModalCheck = forwardRef(
                 inputRef={_checkcountRef}
               />
               <div
-              className="modal-add-check-buttons"
+                className="modal-add-check-buttons"
                 style={{
                   display: "flex",
                   columnGap: "10px",

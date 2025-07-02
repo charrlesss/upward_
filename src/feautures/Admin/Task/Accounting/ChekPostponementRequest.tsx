@@ -8,8 +8,8 @@ import {
 
 import { Button } from "@mui/material";
 import {
-  DataGridViewReact,
-  useUpwardTableModalSearchSafeMode,
+  DataGridViewReactUpgraded,
+  UpwardTableModalSearch,
 } from "../../../../components/DataGridViewReact";
 import { orange } from "@mui/material/colors";
 import { useMutation, useQuery } from "react-query";
@@ -27,11 +27,16 @@ const columns = [
   { key: "ln", label: "#", width: 40 },
   { key: "CheckNo", label: "Check No", width: 120 },
   { key: "Bank", label: "Bank", width: 200 },
-  { key: "Amount", label: "Amount", width: 120 },
-  { key: "OldDepositDate", label: "Old Deposit Date", width: 200 },
-  { key: "NewDate", label: "New Deposit Date", width: 200 },
+  { key: "Amount", label: "Amount", width: 120, type: "number" },
+  {
+    key: "OldDepositDate",
+    label: "Old Deposit Date",
+    width: 200,
+    type: "date",
+  },
+  { key: "NewDate", label: "New Deposit Date", width: 200, type: "date" },
   { key: "Penalty", label: "Penalty", width: 120 },
-  { key: "Datediff", label: "Number of Days", width: 120 },
+  { key: "Datediff", label: "Number of Days", width: 120, type: "number" },
   { key: "Reason", label: "Reason", width: 200 },
 ];
 
@@ -50,10 +55,6 @@ export default function ChekPostponementRequest() {
   const PNNoRef = useRef<HTMLInputElement>(null);
   const NameRef = useRef<HTMLInputElement>(null);
 
-  //edit sub refs
-  const RPCDNoSubRef = useRef<HTMLSelectElement>(null);
-  const _RPCDNoSubRef = useRef<any>(null);
-
   // second field
   const _CheckNoRef = useRef<any>(null);
   const CheckNoRef = useRef<HTMLSelectElement>(null);
@@ -71,6 +72,9 @@ export default function ChekPostponementRequest() {
   const TotalRef = useRef<HTMLInputElement>(null);
   const HowToBePaidRef = useRef<HTMLSelectElement>(null);
   const RemarksRef = useRef<HTMLTextAreaElement>(null);
+
+  const pnnoModalRef = useRef<any>(null);
+  const rcpnModalRef = useRef<any>(null);
 
   // load auto id
   const { isLoading: isLoadingLoadAutoIdData, refetch: loadARefetch } =
@@ -99,6 +103,7 @@ export default function ChekPostponementRequest() {
           });
         }
       },
+      refetchOnWindowFocus: false,
     });
   //load-check
   const { isLoading: isLoadingChecks, mutate: mutateChecks } = useMutation({
@@ -117,6 +122,7 @@ export default function ChekPostponementRequest() {
       if (!response.data.success) {
         return alert(response.data.message);
       }
+      console.log(response);
       _CheckNoRef.current.setDataSource(response?.data.data);
     },
   });
@@ -238,10 +244,11 @@ export default function ChekPostponementRequest() {
           };
         });
 
-        table.current.setDataFormated(data);
+        table.current.setData(data);
       });
     },
   });
+
   // check add row
   const { isLoading: isLoadingCheckIsPending, mutate: mutateCheckIsPending } =
     useMutation({
@@ -278,21 +285,8 @@ export default function ChekPostponementRequest() {
         if (Datediff <= 0) {
           return alert("Invalid date for deposit");
         }
-        const formatedTableData = tableData.map((itm: any) => {
-          return {
-            ln: itm[0],
-            CheckNo: itm[1],
-            Bank: itm[2],
-            Amount: itm[3],
-            OldDepositDate: itm[4],
-            NewDate: itm[5],
-            Penalty: itm[6],
-            Datediff: itm[7],
-            Reason: itm[8],
-          };
-        });
         const newData = [
-          ...formatedTableData,
+          ...tableData,
           {
             ln: tableData.length + 1,
             CheckNo: CheckNoRef.current?.value,
@@ -305,7 +299,7 @@ export default function ChekPostponementRequest() {
             Reason: ReasonRef.current?.value,
           },
         ];
-        table.current.setDataFormated(newData);
+        table.current.setData(newData);
         resetSecondFields();
       },
     });
@@ -375,64 +369,6 @@ export default function ChekPostponementRequest() {
         title: response.data.message,
         timer: 1500,
       });
-    },
-  });
-
-  // search PNNo Details
-  const {
-    UpwardTableModalSearch: PNNoUpwardTableModalSearch,
-    openModal: PNNoOpenModal,
-    closeModal: PNNoCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    size: "medium",
-    link: "/task/accounting/check-postponement/request/load-pnno",
-    column: [
-      { key: "PNo", label: "PNo", width: 150 },
-      { key: "Name", label: "Name", width: 300 },
-      {
-        key: "BName",
-        label: "Branch",
-        width: 100,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        wait(100).then(() => {
-          mutateChecks({
-            PNNo: rowItm[0],
-          });
-          if (BranchRef.current) {
-            BranchRef.current.value = rowItm[2];
-          }
-          if (PNNoRef.current) {
-            PNNoRef.current.value = rowItm[0];
-          }
-          if (NameRef.current) {
-            NameRef.current.value = rowItm[1];
-          }
-        });
-        PNNoCloseModal();
-      }
-    },
-  });
-
-  // search RCPNo Edit
-  const {
-    UpwardTableModalSearch: EditRCPNUpwardTableModalSearch,
-    openModal: editRCPNOpenModal,
-    closeModal: editRCPNCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    size: "medium",
-    link: "/task/accounting/check-postponement/request/load-rpcdno",
-    column: [{ key: "RPCDNo", label: "Name", width: 300 }],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        if (RPCDNoRef.current) {
-          RPCDNoRef.current.value = rowItm[0];
-        }
-        mutateLoadRPCDNoDetails({ RPCDNo: rowItm[0] });
-        editRCPNCloseModal();
-      }
     },
   });
 
@@ -541,7 +477,7 @@ export default function ChekPostponementRequest() {
       });
     } else if (mode === "edit") {
       mutateEdit({
-        RPCDNoRef: RPCDNoSubRef.current?.value,
+        RPCDNoRef: RPCDNoRef.current?.value,
         NameRef: NameRef.current?.value,
         PNNoRef: PNNoRef.current?.value,
         HoldingFeesRef: HoldingFeesRef.current?.value,
@@ -559,8 +495,6 @@ export default function ChekPostponementRequest() {
 
   return (
     <>
-      <EditRCPNUpwardTableModalSearch />
-      <PNNoUpwardTableModalSearch />
       <PageHelmet title="Check Postponement Request" />
       <div
         className="main"
@@ -624,7 +558,7 @@ export default function ChekPostponementRequest() {
                   style: { width: "calc(100% - 80px) " },
                   onKeyDown: (e) => {
                     if (e.code === "NumpadEnter" || e.code === "Enter") {
-                      editRCPNOpenModal(e.currentTarget.value);
+                      rcpnModalRef.current.openModal(e.currentTarget.value);
                     }
                   },
                 }}
@@ -632,7 +566,7 @@ export default function ChekPostponementRequest() {
                 onIconClick={(e) => {
                   e.preventDefault();
                   if (PNNoRef.current) {
-                    editRCPNOpenModal(PNNoRef.current.value);
+                    rcpnModalRef.current.openModal(PNNoRef.current.value);
                   }
                 }}
                 inputRef={RPCDNoRef}
@@ -719,7 +653,7 @@ export default function ChekPostponementRequest() {
                 style: { width: "calc(100% - 80px)" },
                 onKeyDown: (e) => {
                   if (e.code === "NumpadEnter" || e.code === "Enter") {
-                    PNNoOpenModal(e.currentTarget.value);
+                    pnnoModalRef.current.openModal(e.currentTarget.value);
                   }
                 },
               }}
@@ -728,7 +662,7 @@ export default function ChekPostponementRequest() {
               onIconClick={(e) => {
                 e.preventDefault();
                 if (PNNoRef.current) {
-                  PNNoOpenModal(PNNoRef.current.value);
+                  pnnoModalRef.current.openModal(PNNoRef.current.value);
                 }
               }}
               inputRef={PNNoRef}
@@ -1006,34 +940,37 @@ export default function ChekPostponementRequest() {
           </div>
         </div>
         {/* ========== Table ======= */}
-        <DataGridViewReact
-          ref={table}
-          columns={columns}
-          rows={[]}
-          containerStyle={{
-            height: "180px",
+        <div
+          style={{
+            width: "100%",
+            position: "relative",
+            flex: 1,
+            display: "flex",
           }}
-          getSelectedItem={(rowItm: any, _: any, rowIdx: any) => {
-            if (rowItm) {
-              const isConfim = window.confirm(
-                `Are you sure you want to delete?`
-              );
-              if (isConfim) {
-                const tableData = table.current.getData();
-                tableData.splice(rowIdx, 1);
-                table.current.setDataFormated(tableData);
-              }
+        >
+          <DataGridViewReactUpgraded
+            ref={table}
+            fixedRowCount={7}
+            columns={columns}
+            handleSelectionChange={async (rowItm: any) => {
+              if (rowItm) {
+                const rowIdx = table.current.getSelectedRow();
+                const isConfim = window.confirm(
+                  `Are you sure you want to delete?`
+                );
+                if (isConfim) {
+                  const tableData = table.current.getData();
+                  tableData.splice(rowIdx, 1);
+                  table.current.setData(tableData);
+                }
 
-              table.current.setSelectedRow(null);
-              table.current.resetCheckBox();
-            }
-          }}
-          onKeyDown={(rowItm: any, rowIdx: any, e: any) => {
-            if (e.code === "Delete" || e.code === "Backspace") {
-            }
-          }}
-        />
-        {/* ===========  third field  =========== */}
+                table.current.setSelectedRow(null);
+              } else {
+              }
+            }}
+          />
+        </div>
+
         <div
           style={{
             position: "relative",
@@ -1431,6 +1368,56 @@ export default function ChekPostponementRequest() {
           style={{ height: "30px", display: "none" }}
         ></div>
       </div>
+      {/* search PNNo Details */}
+      <UpwardTableModalSearch
+        ref={pnnoModalRef}
+        size="medium"
+        link={"/task/accounting/check-postponement/request/load-pnno"}
+        column={[
+          { key: "PNo", label: "PNo", width: 150 },
+          { key: "Name", label: "Name", width: 300 },
+          {
+            key: "BName",
+            label: "Branch",
+            width: 100,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              mutateChecks({
+                PNNo: rowItm.PNo,
+              });
+              if (BranchRef.current) {
+                BranchRef.current.value = rowItm.BName;
+              }
+              if (PNNoRef.current) {
+                PNNoRef.current.value = rowItm.PNo;
+              }
+              if (NameRef.current) {
+                NameRef.current.value = rowItm.Name;
+              }
+            });
+            pnnoModalRef.current.closeModal();
+          }
+        }}
+      />
+      {/* search RCPNo Edit */}
+      <UpwardTableModalSearch
+        ref={rcpnModalRef}
+        size="medium"
+        link={"/task/accounting/check-postponement/request/load-rpcdno"}
+        column={[{ key: "RPCDNo", label: "Name", width: 300 }]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            if (RPCDNoRef.current) {
+              RPCDNoRef.current.value = rowItm.RPCDNo;
+            }
+            mutateLoadRPCDNoDetails({ RPCDNo: rowItm.RPCDNo });
+            rcpnModalRef.current.closeModal();
+          }
+        }}
+      />
     </>
   );
 }

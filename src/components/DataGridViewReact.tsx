@@ -1949,6 +1949,8 @@ export const DataGridViewReactUpgraded = forwardRef(
       adjustRightClickClientXAndY = { x: 0, y: 0 },
       adjustOnRezise = true,
       onDelete = (data: any) => {},
+      beforeDelete = (data: any) => false,
+      fixedRowCount = 0,
     }: any,
     ref
   ) => {
@@ -2018,6 +2020,9 @@ export const DataGridViewReactUpgraded = forwardRef(
           "Are you sure you want to delete all the rows?"
         );
         if (confirm) {
+          if (beforeDelete()) {
+            return;
+          }
           const newData = data.filter(
             (itm: any) => itm.rowIndex !== row.rowIndex
           );
@@ -2090,6 +2095,10 @@ export const DataGridViewReactUpgraded = forwardRef(
       }
     }, [columnHeader]);
     useEffect(() => {
+      if (fixedRowCount > 0) {
+        return setVisibleRowCount(fixedRowCount);
+      }
+
       const wH = window.innerHeight - adjustVisibleRowCount;
       const rowCount = Math.round(wH) / rowHeight;
       setVisibleRowCount(rowCount);
@@ -2105,7 +2114,7 @@ export const DataGridViewReactUpgraded = forwardRef(
       return () => {
         window.removeEventListener("resize", resize);
       };
-    }, [adjustOnRezise]);
+    }, [adjustOnRezise, fixedRowCount]);
     useEffect(() => {
       if (visible && menuRef.current) {
         const menu = menuRef.current;
@@ -2280,6 +2289,7 @@ export const DataGridViewReactUpgraded = forwardRef(
         }, 10);
       },
     }));
+
     return (
       <>
         <div
@@ -2503,7 +2513,9 @@ export const DataGridViewReactUpgraded = forwardRef(
                                 selectedRowAction(row);
                               }}
                             >
-                              {(col.type === "date" && row[col.key] && row[col.key] !== '')
+                              {col.type === "date" &&
+                              row[col.key] &&
+                              row[col.key] !== ""
                                 ? format(new Date(row[col.key]), "MM/dd/yyyy")
                                 : row[col.key]}
                               <div
@@ -2605,6 +2617,9 @@ export const DataGridViewReactUpgraded = forwardRef(
                     "Are you sure you want to delete all the rows?"
                   );
                   if (confirm) {
+                    if (beforeDelete()) {
+                      return;
+                    }
                     const newData = data.filter(
                       (itm: any) => itm.rowIndex !== rightClickRowIndex.rowIndex
                     );
@@ -2648,11 +2663,13 @@ export const UpwardTableModalSearch = forwardRef(
       size = "small",
       column,
       handleSelectionChange,
+      otherFormData = () => ({}),
     }: {
       link: string;
       size?: "small" | "large" | "medium";
       column: Array<any>;
       handleSelectionChange: (row: any) => void;
+      otherFormData?: any;
     },
     ref
   ) => {
@@ -2669,11 +2686,15 @@ export const UpwardTableModalSearch = forwardRef(
     const { mutate, isLoading } = useMutation({
       mutationKey: link,
       mutationFn: async (variable: any) =>
-        await myAxios.post(link, variable, {
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
-        }),
+        await myAxios.post(
+          link,
+          { ...variable, ...otherFormData },
+          {
+            headers: {
+              Authorization: `Bearer ${user?.accessToken}`,
+            },
+          }
+        ),
       onSuccess: (response, variables) => {
         const data = response.data?.data;
         if (!show && data.length === 1) {
@@ -2745,7 +2766,7 @@ export const UpwardTableModalSearch = forwardRef(
     }
 
     function openModal(search: string = "") {
-      mutate({ search });
+      mutate({ search, ...otherFormData() });
       // setShow(true);
     }
 
@@ -2855,7 +2876,10 @@ export const UpwardTableModalSearch = forwardRef(
                     style: { width: "100%" },
                     onKeyDown: async (e) => {
                       if (e.code === "NumpadEnter" || e.code === "Enter") {
-                        mutate({ search: e.currentTarget.value });
+                        mutate({
+                          search: e.currentTarget.value,
+                          ...otherFormData(),
+                        });
                       }
 
                       if (e.code === "ArrowDown") {
@@ -2864,7 +2888,7 @@ export const UpwardTableModalSearch = forwardRef(
                     },
                     onInput: (e) => {
                       if (e.currentTarget.value === "") {
-                        mutate({ search: "" });
+                        mutate({ search: "", ...otherFormData() });
                       }
                     },
                   }}
@@ -2873,7 +2897,10 @@ export const UpwardTableModalSearch = forwardRef(
                   onIconClick={async (e) => {
                     e.preventDefault();
                     if (searchInputRef.current)
-                      mutate({ search: searchInputRef.current?.value });
+                      mutate({
+                        search: searchInputRef.current?.value,
+                        ...otherFormData(),
+                      });
                   }}
                 />
               </div>

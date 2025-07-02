@@ -1,5 +1,4 @@
 import {
-  useReducer,
   useContext,
   useState,
   useRef,
@@ -31,7 +30,7 @@ import NotInterestedIcon from "@mui/icons-material/NotInterested";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DatePicker } from "@mui/x-date-pickers";
-import { blue, brown, deepOrange, grey } from "@mui/material/colors";
+import {  brown, deepOrange, grey } from "@mui/material/colors";
 import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
@@ -1043,7 +1042,8 @@ export default function GeneralJournal() {
         loadingJob ||
         loadingGeneralJournalMutate ||
         loadingVoidGeneralJournalMutate ||
-        isLoadingPrint) && <Loading />}
+        isLoadingPrint ||
+        loadingGeneralJournalGenerator) && <Loading />}
       <div
         className="main"
         style={{
@@ -1251,32 +1251,28 @@ export default function GeneralJournal() {
             padding: "5px",
           }}
         >
-          {loadingGeneralJournalGenerator ? (
-            <LoadingButton loading={loadingGeneralJournalGenerator} />
-          ) : (
-            <TextInput
-              containerClassName="custom-input"
-              label={{
-                title: "Ref. No. : ",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "70px",
-                },
-              }}
-              input={{
-                disabled: modeDefault || modeUpdate,
-                type: "text",
-                style: { width: "190px" },
-                onKeyDown: (e) => {
-                  if (e.code === "NumpadEnter" || e.code === "Enter") {
-                    refDate.current?.focus();
-                  }
-                },
-              }}
-              inputRef={refRefNo}
-            />
-          )}
+          <TextInput
+            containerClassName="custom-input"
+            label={{
+              title: "Ref. No. : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "70px",
+              },
+            }}
+            input={{
+              disabled: modeDefault || modeUpdate,
+              type: "text",
+              style: { width: "190px" },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  refDate.current?.focus();
+                }
+              },
+            }}
+            inputRef={refRefNo}
+          />
           <TextInput
             containerClassName="custom-input"
             label={{
