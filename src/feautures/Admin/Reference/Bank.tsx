@@ -6,21 +6,17 @@ import React, {
   useId,
   useEffect,
 } from "react";
-import { Box, TextField, Button } from "@mui/material";
+import { Button } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { GridRowSelectionModel } from "@mui/x-data-grid";
 import { pink } from "@mui/material/colors";
 import { AuthContext } from "../../../components/AuthContext";
-import { useMutation, useQuery, useQueryClient } from "react-query";
+import { useMutation,  } from "react-query";
 import Swal from "sweetalert2";
 import { wait } from "../../../lib/wait";
 import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
-import Checkbox from "@mui/material/Checkbox";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import { LoadingButton } from "@mui/lab";
-import Table from "../../../components/Table";
 import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
@@ -28,7 +24,7 @@ import {
 import PageHelmet from "../../../components/Helmet";
 import { TextInput } from "../../../components/UpwardFields";
 import SearchIcon from "@mui/icons-material/Search";
-import { DataGridViewReact } from "../../../components/DataGridViewReact";
+import {DataGridViewReactUpgraded } from "../../../components/DataGridViewReact";
 import { Loading } from "../../../components/Loading";
 import "../../../style/monbileview/reference/reference.css";
 
@@ -59,7 +55,7 @@ export default function Bank() {
     onSuccess: (response) => {
       if (response.data.success) {
         wait(100).then(() => {
-          tableRef.current.setDataFormated(response.data.data);
+          tableRef.current.setData(response.data.data);
         });
       }
     },
@@ -99,7 +95,6 @@ export default function Bank() {
     },
     onSuccess,
   });
-
   function handleOnSave(e: any) {
     e.preventDefault();
     if (bankCodeRef.current?.value === "") {
@@ -151,12 +146,10 @@ export default function Bank() {
       inactiveRef.current.checked = false;
     }
   }
-
   function onSuccess(res: any) {
     if (res.data.success) {
-      tableRef.current.setSelectedRow(null);
-      tableRef.current.resetCheckBox();
-      mutateSearchRef.current({ search: "" });
+      tableRef.current.resetTable();
+      mutateSearch({search:""})
       resetModule();
       setMode("");
       return Swal.fire({
@@ -317,8 +310,7 @@ export default function Bank() {
                     if (result.isConfirmed) {
                       resetModule();
                       setMode("");
-                      tableRef.current.setSelectedRow(null);
-                      tableRef.current.resetCheckBox();
+                      tableRef.current.resetTable();
                     }
                   });
                 }}
@@ -435,7 +427,6 @@ export default function Bank() {
             inputRef={bankNameRef}
           />
         </fieldset>
-
         <div
           style={{
             marginTop: "10px",
@@ -445,32 +436,30 @@ export default function Bank() {
             display: "flex",
           }}
         >
-          <DataGridViewReact
-            containerStyle={{
-              flex: 1,
-              height: "auto",
-            }}
+          <DataGridViewReactUpgraded
             ref={tableRef}
+            adjustVisibleRowCount={200}
             columns={bankColumn}
-            height="280px"
-            getSelectedItem={(rowItm: any) => {
+            handleSelectionChange={(rowItm: any) => {
               if (rowItm) {
                 setMode("edit");
                 if (bankCodeRef.current) {
-                  bankCodeRef.current.value = rowItm[0];
+                  bankCodeRef.current.value = rowItm.Bank_Code;
                 }
                 if (bankNameRef.current) {
-                  bankNameRef.current.value = rowItm[1];
+                  bankNameRef.current.value = rowItm.Bank;
                 }
                 if (inactiveRef.current) {
-                  inactiveRef.current.checked = rowItm[2] !== "YES";
+                  inactiveRef.current.checked = rowItm.Inactive !== "YES";
                 }
+             
               } else {
                 resetModule();
               }
             }}
           />
         </div>
+
         <div
           className="button-action-mobile"
           style={{
@@ -537,8 +526,8 @@ export default function Bank() {
                   if (result.isConfirmed) {
                     resetModule();
                     setMode("");
-                    tableRef.current.setSelectedRow(null);
-                    tableRef.current.resetCheckBox();
+                    tableRef.current.resetTable();
+                    mutateSearch({search:""})
                   }
                 });
               }}
@@ -582,7 +571,6 @@ export default function Bank() {
     </>
   );
 }
-
 const CheckBoxLabel = ({
   inputRef,
   label,

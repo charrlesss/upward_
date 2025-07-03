@@ -17,7 +17,9 @@ import {
 import PageHelmet from "../../../components/Helmet";
 import { TextInput } from "../../../components/UpwardFields";
 import SearchIcon from "@mui/icons-material/Search";
-import { DataGridViewReact } from "../../../components/DataGridViewReact";
+import {
+  DataGridViewReactUpgraded,
+} from "../../../components/DataGridViewReact";
 import { Loading } from "../../../components/Loading";
 import { Autocomplete } from "../Task/Accounting/PettyCash";
 import "../../../style/monbileview/reference/reference.css";
@@ -50,7 +52,7 @@ export default function Subline() {
       if (response.data.success) {
         console.log(response.data);
         wait(100).then(() => {
-          tableRef.current.setDataFormated(response.data.data);
+          tableRef.current.setData(response.data.data);
         });
       }
     },
@@ -142,8 +144,7 @@ export default function Subline() {
 
   function onSuccess(res: any) {
     if (res.data.success) {
-      tableRef.current.setSelectedRow(null);
-      tableRef.current.resetCheckBox();
+      tableRef.current.resetTable();
       mutateSearchRef.current({ search: "" });
       resetModule();
       setMode("");
@@ -305,8 +306,8 @@ export default function Subline() {
                     if (result.isConfirmed) {
                       resetModule();
                       setMode("");
-                      tableRef.current.setSelectedRow(null);
-                      tableRef.current.resetCheckBox();
+                      tableRef.current.resetTable();
+                      mutateSearch({search:""})
                     }
                   });
                 }}
@@ -421,7 +422,6 @@ export default function Subline() {
             inputRef={sublineRef}
           />
         </fieldset>
-
         <div
           style={{
             marginTop: "10px",
@@ -431,31 +431,26 @@ export default function Subline() {
             display: "flex",
           }}
         >
-          <DataGridViewReact
-            containerStyle={{
-              flex: 1,
-              height: "auto",
-            }}
+          <DataGridViewReactUpgraded
             ref={tableRef}
+            adjustVisibleRowCount={190}
             columns={bankColumn}
-            height="280px"
-            getSelectedItem={(rowItm: any) => {
+            handleSelectionChange={(rowItm: any) => {
               if (rowItm) {
                 setMode("edit");
                 if (lineRef.current) {
-                  lineRef.current.value = rowItm[0];
+                  lineRef.current.value = rowItm.Line;
                 }
                 if (sublineRef.current) {
-                  sublineRef.current.value = rowItm[1];
+                  sublineRef.current.value = rowItm.SublineName;
                 }
-                refId.current = rowItm[2];
+                refId.current = rowItm.ID;
               } else {
                 resetModule();
               }
             }}
           />
         </div>
-
         <div
           className="button-action-mobile"
           style={{
@@ -522,8 +517,8 @@ export default function Subline() {
                   if (result.isConfirmed) {
                     resetModule();
                     setMode("");
-                    tableRef.current.setSelectedRow(null);
-                    tableRef.current.resetCheckBox();
+                        tableRef.current.resetTable();
+                      mutateSearch({search:""})
                   }
                 });
               }}

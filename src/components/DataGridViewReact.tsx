@@ -2270,6 +2270,11 @@ export const DataGridViewReactUpgraded = forwardRef(
           containerRef.current.scrollTop = containerRef.current.scrollHeight;
         }
       },
+      scrollToTop: () => {
+        if (containerRef.current) {
+          containerRef.current.scrollTop = 0;
+        }
+      },
       getSelectedRow: () => {
         return selectedRow;
       },
@@ -2304,6 +2309,8 @@ export const DataGridViewReactUpgraded = forwardRef(
             fontFamily: "'Poppins', sans-serif",
             display: "flex",
             flexDirection: "column",
+            boxShadow: " -1px 3px 5px -3px rgba(0,0,0,0.75)",
+            borderRadius: "5px",
           }}
         >
           {/* Rows */}
@@ -2513,11 +2520,7 @@ export const DataGridViewReactUpgraded = forwardRef(
                                 selectedRowAction(row);
                               }}
                             >
-                              {col.type === "date" &&
-                              row[col.key] &&
-                              row[col.key] !== ""
-                                ? format(new Date(row[col.key]), "MM/dd/yyyy")
-                                : row[col.key]}
+                              {row[col.key]}
                               <div
                                 onMouseDown={(e) => {
                                   onMouseDown(e, col, colIdx);

@@ -1994,7 +1994,7 @@ export default function CashDisbursement() {
       {/* pay to search*/}
       <UpwardTableModalSearch
         ref={paytoRef}
-        link={"/task/accounting/search-pay-to"}
+        link={"/task/accounting/cash-disbursement/search-pay-to"}
         column={[
           { key: "Type", label: "Type", width: 130 },
           { key: "IDNo", label: "ID No.", width: 150 },

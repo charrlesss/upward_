@@ -17,7 +17,7 @@ import {
 import PageHelmet from "../../../components/Helmet";
 import { TextInput } from "../../../components/UpwardFields";
 import SearchIcon from "@mui/icons-material/Search";
-import { DataGridViewReact } from "../../../components/DataGridViewReact";
+import { DataGridViewReactUpgraded } from "../../../components/DataGridViewReact";
 import { Loading } from "../../../components/Loading";
 import "../../../style/monbileview/reference/reference.css";
 
@@ -52,7 +52,7 @@ export default function CareOf() {
       if (response.data.success) {
         console.log(response.data.data);
         wait(100).then(() => {
-          tableRef.current.setDataFormated(response.data.data);
+          tableRef.current.setData(response.data.data);
         });
       }
     },
@@ -150,8 +150,7 @@ export default function CareOf() {
   }
   function onSuccess(res: any) {
     if (res.data.success) {
-      tableRef.current.setSelectedRow(null);
-      tableRef.current.resetCheckBox();
+      tableRef.current.resetTable();
       mutateSearchRef.current({ search: "" });
       resetModule();
       setMode("");
@@ -313,8 +312,8 @@ export default function CareOf() {
                     if (result.isConfirmed) {
                       resetModule();
                       setMode("");
-                      tableRef.current.setSelectedRow(null);
-                      tableRef.current.resetCheckBox();
+                      tableRef.current.resetTable();
+                      mutateSearchRef.current({ search: "" });
                     }
                   });
                 }}
@@ -345,7 +344,7 @@ export default function CareOf() {
                   cb: (userCodeConfirmation) => {
                     mutateDelete({
                       careId: careOfId.current,
-                      careOf:careOfRef.current?.value,
+                      careOf: careOfRef.current?.value,
                       userCodeConfirmation,
                     });
                   },
@@ -442,34 +441,30 @@ export default function CareOf() {
             display: "flex",
           }}
         >
-          <DataGridViewReact
-            containerStyle={{
-              flex: 1,
-              height: "auto",
-            }}
+          <DataGridViewReactUpgraded
             ref={tableRef}
+            adjustVisibleRowCount={240}
             columns={careOfColumn}
-            height="280px"
-            getSelectedItem={(rowItm: any) => {
+            handleSelectionChange={(rowItm: any) => {
               if (rowItm) {
-                console.log(rowItm);
                 setMode("edit");
                 if (careOfRef.current) {
-                  careOfRef.current.value = rowItm[0];
+                  careOfRef.current.value = rowItm.careOf;
                 }
                 if (addressRef.current) {
-                  addressRef.current.value = rowItm[1];
+                  addressRef.current.value = rowItm.address;
                 }
                 if (inactiveRef.current) {
-                  inactiveRef.current.checked = rowItm[2] !== "YES";
+                  inactiveRef.current.checked = rowItm.inactive !== "YES";
                 }
-                careOfId.current = rowItm[3];
+                careOfId.current = rowItm.careId;
               } else {
                 resetModule();
               }
             }}
           />
         </div>
+
         <div
           className="button-action-mobile"
           style={{
@@ -536,8 +531,8 @@ export default function CareOf() {
                   if (result.isConfirmed) {
                     resetModule();
                     setMode("");
-                    tableRef.current.setSelectedRow(null);
-                    tableRef.current.resetCheckBox();
+                    tableRef.current.resetTable();
+                    mutateSearchRef.current({ search: "" });
                   }
                 });
               }}

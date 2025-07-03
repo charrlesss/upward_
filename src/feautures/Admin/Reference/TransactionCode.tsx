@@ -17,7 +17,7 @@ import {
 import PageHelmet from "../../../components/Helmet";
 import { TextInput } from "../../../components/UpwardFields";
 import SearchIcon from "@mui/icons-material/Search";
-import { DataGridViewReact } from "../../../components/DataGridViewReact";
+import { DataGridViewReactUpgraded } from "../../../components/DataGridViewReact";
 import { Loading } from "../../../components/Loading";
 import "../../../style/monbileview/reference/reference.css";
 
@@ -55,7 +55,7 @@ export default function TransactionCode() {
       if (response.data.success) {
         console.log(response.data);
         wait(100).then(() => {
-          tableRef.current.setDataFormated(response.data.data);
+          tableRef.current.setData(response.data.data);
         });
       }
     },
@@ -172,9 +172,8 @@ export default function TransactionCode() {
 
   function onSuccess(res: any) {
     if (res.data.success) {
-      tableRef.current.setSelectedRow(null);
-      tableRef.current.resetCheckBox();
-      mutateSearchRef.current({ search: "" });
+      tableRef.current.resetTable();
+      mutateSearch({ search: "" });
       resetModule();
       setMode("");
       return Swal.fire({
@@ -210,7 +209,7 @@ export default function TransactionCode() {
           height: "100%",
           flex: 1,
           padding: "5px",
-          position:"relative"
+          position: "relative",
         }}
       >
         <div
@@ -335,8 +334,8 @@ export default function TransactionCode() {
                     if (result.isConfirmed) {
                       resetModule();
                       setMode("");
-                      tableRef.current.setSelectedRow(null);
-                      tableRef.current.resetCheckBox();
+                      tableRef.current.resetTable();
+                      mutateSearch({ search: "" });
                     }
                   });
                 }}
@@ -465,7 +464,6 @@ export default function TransactionCode() {
             label="Mark as Inactive"
           />
         </fieldset>
-
         <div
           style={{
             marginTop: "10px",
@@ -475,28 +473,24 @@ export default function TransactionCode() {
             display: "flex",
           }}
         >
-          <DataGridViewReact
-            containerStyle={{
-              flex: 1,
-              height: "auto",
-            }}
+          <DataGridViewReactUpgraded
             ref={tableRef}
+            adjustVisibleRowCount={240}
             columns={bankColumn}
-            height="280px"
-            getSelectedItem={(rowItm: any) => {
+            handleSelectionChange={(rowItm: any) => {
               if (rowItm) {
                 setMode("edit");
                 if (transactionCodeRef.current) {
-                  transactionCodeRef.current.value = rowItm[0];
+                  transactionCodeRef.current.value = rowItm.Code;
                 }
                 if (descriptionRef.current) {
-                  descriptionRef.current.value = rowItm[1];
+                  descriptionRef.current.value = rowItm.Description;
                 }
                 if (accountRef.current) {
-                  accountRef.current.value = rowItm[2];
+                  accountRef.current.value = rowItm.Acct_Code;
                 }
                 if (inactiveRef.current) {
-                  inactiveRef.current.checked = rowItm[3] == "YES";
+                  inactiveRef.current.checked = rowItm.Inactive == "YES";
                 }
               } else {
                 resetModule();
@@ -570,8 +564,8 @@ export default function TransactionCode() {
                   if (result.isConfirmed) {
                     resetModule();
                     setMode("");
-                    tableRef.current.setSelectedRow(null);
-                    tableRef.current.resetCheckBox();
+                    tableRef.current.resetTable();
+                    mutateSearch({ search: "" });
                   }
                 });
               }}

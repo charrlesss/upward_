@@ -5,6 +5,7 @@ import { AuthContext } from "../../../../components/AuthContext";
 import { SelectInput, TextInput } from "../../../../components/UpwardFields";
 import {
   DataGridViewMultiSelectionReact,
+  UpwardTableModalSearch,
   useUpwardTableModalSearchSafeMode,
 } from "../../../../components/DataGridViewReact";
 import { Button } from "@mui/material";
@@ -14,7 +15,6 @@ import PageHelmet from "../../../../components/Helmet";
 import "../../../../style/monbileview/accounting/pullout.css";
 import SearchIcon from "@mui/icons-material/Search";
 import { formatNumber } from "./ReturnCheck";
-import { wait } from "@testing-library/user-event/dist/utils";
 
 const column = [
   {
@@ -44,8 +44,9 @@ export default function CheckPulloutApproved() {
   const nameRef = useRef<HTMLInputElement>(null);
   const reasonRef = useRef<HTMLInputElement>(null);
   const codeRef = useRef<HTMLInputElement>(null);
-
   const btnAddRef = useRef<HTMLButtonElement>(null);
+
+  const rcpnModalRef = useRef<any>(null);
 
   const { isLoading: isLoadingLoadDetails, mutate: mutateDetails } =
     useMutation({
@@ -164,27 +165,6 @@ export default function CheckPulloutApproved() {
       },
     });
 
-  const {
-    UpwardTableModalSearch: RcpnNoSearchUpwardTableModalSearch,
-    openModal: rcpnNoSearchOpenModal,
-    closeModal: rcpnNoSearchCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    link: "/task/accounting/pullout/reqeust/get-rcpn-no",
-    column: [{ key: "RCPNo", label: "RCPN No.", width: 400 }],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        mutateDetails({
-          RCPNo: rowItm[0],
-        });
-
-        if (rcpnRef.current) {
-          rcpnRef.current.value = rowItm[0];
-        }
-        rcpnNoSearchCloseModal();
-      }
-    },
-  });
-
   const { isLoading: isLoadingConfirm, mutate: mutateConfirm } = useMutation({
     mutationKey: "confirm",
     mutationFn: async (variable: any) =>
@@ -235,207 +215,226 @@ export default function CheckPulloutApproved() {
   });
 
   return (
-    <div
-      className="main"
-      style={{
-        flex: "1",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "#F1F1F1",
-      }}
-    >
-      <RcpnNoSearchUpwardTableModalSearch />
-      <PageHelmet title="Pullout Approved" />
-      {(isLoadingLoadDetails ||
-        isLoadingConfirm ||
-        isLoadingConfirmCode ||
-        isLoadingPrint) && <Loading />}
+    <>
       <div
-        className="content"
+        className="main"
         style={{
-          padding: "10px",
-          width: "62%",
-          border: "1px sold black",
-          height: "500px",
-          boxShadow: "1px 1px 2px 2px black",
+          flex: "1",
           display: "flex",
-          flexDirection: "column",
-          boxSizing: "border-box",
+          justifyContent: "center",
+          alignItems: "center",
+          background: "#F1F1F1",
         }}
       >
+        <PageHelmet title="Pullout Approved" />
+        {(isLoadingLoadDetails ||
+          isLoadingConfirm ||
+          isLoadingConfirmCode ||
+          isLoadingPrint) && <Loading />}
         <div
+          className="content"
           style={{
-            height: "auto",
+            padding: "10px",
+            width: "62%",
+            border: "1px sold black",
+            height: "500px",
+            boxShadow: "1px 1px 2px 2px black",
+            display: "flex",
+            flexDirection: "column",
             boxSizing: "border-box",
           }}
         >
-          <TextInput
-            containerClassName="custom-input"
-            containerStyle={{
-              width: "50%",
-              marginBottom: "8px",
-            }}
-            label={{
-              title: "RCP No. :",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-              },
-            }}
-            input={{
-              type: "text",
-              style: { width: "calc(100% - 100px)" },
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  rcpnNoSearchOpenModal(e.currentTarget.value);
-                }
-              },
-            }}
-            icon={<SearchIcon sx={{ fontSize: "18px" }} />}
-            onIconClick={(e) => {
-              e.preventDefault();
-              if (rcpnRef.current) {
-                rcpnNoSearchOpenModal(rcpnRef.current.value);
-              }
-            }}
-            inputRef={rcpnRef}
-          />
-
-          <TextInput
-            containerClassName="custom-input"
-            containerStyle={{
-              width: "50%",
-              marginBottom: "8px",
-              marginLeft: "50px",
-            }}
-            label={{
-              title: "PN No. :",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-              },
-            }}
-            input={{
-              disabled: true,
-              type: "text",
-              style: { width: "calc(100% - 100px)" },
-            }}
-            inputRef={ppnoRef}
-          />
-
-          <TextInput
-            containerClassName="custom-input"
-            containerStyle={{
-              width: "50%",
-              marginBottom: "8px",
-              marginLeft: "50px",
-            }}
-            label={{
-              title: "Client :",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-              },
-            }}
-            input={{
-              disabled: true,
-              type: "text",
-              style: { width: "calc(100% - 100px)" },
-            }}
-            inputRef={nameRef}
-          />
-          <TextInput
-            containerClassName="custom-input"
-            containerStyle={{
-              width: "50%",
-              marginBottom: "8px",
-              marginLeft: "50px",
-            }}
-            label={{
-              title: "Reason :",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-              },
-            }}
-            input={{
-              disabled: true,
-              type: "text",
-              style: { width: "calc(100% - 100px)" },
-            }}
-            inputRef={reasonRef}
-          />
-        </div>
-        <DataGridViewMultiSelectionReact
-          isTableSelectable={false}
-          ref={table}
-          columns={column}
-          rows={[]}
-          containerStyle={{
-            flex: 1,
-          }}
-          getSelectedItem={(rowItm: any) => {
-            if (rowItm) {
-            }
-          }}
-        />
-        <div
-          style={{
-            height: "35px",
-            display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "center",
-            columnGap: "5px",
-          }}
-        >
-          <TextInput
-            containerClassName="custom-input"
-            label={{
-              title: "Authentication Code:",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "140px",
-              },
-            }}
-            input={{
-              type: "text",
-              style: { width: "300px" },
-              onKeyDown: (e) => {
-                if (e.key === "Enter" || e.key === "NumEnter") {
-                  mutateConfirm({
-                    RCPNo: rcpnRef.current?.value,
-                    code: e.currentTarget.value,
-                  });
-                }
-              },
-            }}
-            inputRef={codeRef}
-          />
-          <Button
-            ref={btnAddRef}
-            variant="contained"
-            color="info"
+          <div
             style={{
-              height: "25px",
-              fontSize: "12px",
-            }}
-            onClick={(e) => {
-              mutateConfirm({
-                RCPNo: rcpnRef.current?.value,
-                code: codeRef.current?.value,
-              });
+              height: "auto",
+              boxSizing: "border-box",
             }}
           >
-            Confirm
-          </Button>
+            <TextInput
+              containerClassName="custom-input"
+              containerStyle={{
+                width: "50%",
+                marginBottom: "8px",
+              }}
+              label={{
+                title: "RCP No. :",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
+              }}
+              input={{
+                type: "text",
+                style: { width: "calc(100% - 100px)" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    rcpnModalRef.current.openModal(e.currentTarget.value);
+                  }
+                },
+              }}
+              icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+              onIconClick={(e) => {
+                e.preventDefault();
+                if (rcpnRef.current) {
+                  rcpnModalRef.current.openModal(rcpnRef.current.value);
+                }
+              }}
+              inputRef={rcpnRef}
+            />
+
+            <TextInput
+              containerClassName="custom-input"
+              containerStyle={{
+                width: "50%",
+                marginBottom: "8px",
+                marginLeft: "50px",
+              }}
+              label={{
+                title: "PN No. :",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
+              }}
+              input={{
+                disabled: true,
+                type: "text",
+                style: { width: "calc(100% - 100px)" },
+              }}
+              inputRef={ppnoRef}
+            />
+
+            <TextInput
+              containerClassName="custom-input"
+              containerStyle={{
+                width: "50%",
+                marginBottom: "8px",
+                marginLeft: "50px",
+              }}
+              label={{
+                title: "Client :",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
+              }}
+              input={{
+                disabled: true,
+                type: "text",
+                style: { width: "calc(100% - 100px)" },
+              }}
+              inputRef={nameRef}
+            />
+            <TextInput
+              containerClassName="custom-input"
+              containerStyle={{
+                width: "50%",
+                marginBottom: "8px",
+                marginLeft: "50px",
+              }}
+              label={{
+                title: "Reason :",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
+              }}
+              input={{
+                disabled: true,
+                type: "text",
+                style: { width: "calc(100% - 100px)" },
+              }}
+              inputRef={reasonRef}
+            />
+          </div>
+          <DataGridViewMultiSelectionReact
+            isTableSelectable={false}
+            ref={table}
+            columns={column}
+            rows={[]}
+            containerStyle={{
+              flex: 1,
+            }}
+            getSelectedItem={(rowItm: any) => {
+              if (rowItm) {
+              }
+            }}
+          />
+          <div
+            style={{
+              height: "35px",
+              display: "flex",
+              justifyContent: "flex-end",
+              alignItems: "center",
+              columnGap: "5px",
+            }}
+          >
+            <TextInput
+              containerClassName="custom-input"
+              label={{
+                title: "Authentication Code:",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "140px",
+                },
+              }}
+              input={{
+                type: "text",
+                style: { width: "300px" },
+                onKeyDown: (e) => {
+                  if (e.key === "Enter" || e.key === "NumEnter") {
+                    mutateConfirm({
+                      RCPNo: rcpnRef.current?.value,
+                      code: e.currentTarget.value,
+                    });
+                  }
+                },
+              }}
+              inputRef={codeRef}
+            />
+            <Button
+              ref={btnAddRef}
+              variant="contained"
+              color="info"
+              style={{
+                height: "25px",
+                fontSize: "12px",
+              }}
+              onClick={(e) => {
+                mutateConfirm({
+                  RCPNo: rcpnRef.current?.value,
+                  code: codeRef.current?.value,
+                });
+              }}
+            >
+              Confirm
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+      <UpwardTableModalSearch
+        ref={rcpnModalRef}
+        link={"/task/accounting/pullout/reqeust/get-rcpn-no"}
+        column={[{ key: "RCPNo", label: "RCPN No.", width: 400 }]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            
+            mutateDetails({
+              RCPNo: rowItm.RCPNo,
+            });
+
+            if (rcpnRef.current) {
+              rcpnRef.current.value = rowItm.RCPNo;
+            }
+            rcpnModalRef.current.closeModal();
+          }
+        }}
+      />
+    </>
   );
 }

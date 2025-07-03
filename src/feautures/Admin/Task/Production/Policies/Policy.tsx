@@ -8,6 +8,7 @@ import { createContext, useContext } from "react";
 import { AuthContext } from "../../../../../components/AuthContext";
 import { wait } from "@testing-library/user-event/dist/utils";
 import { Loading } from "../../../../../components/Loading";
+import Swal from "sweetalert2";
 
 export const PolicyContext = createContext<{
   careOfData: Array<any>;
@@ -139,7 +140,22 @@ function ChipsButton() {
               color: selected ? "white" : "",
             }}
             variant="outlined"
-            onClick={(e) => handleClick(e, item.link)}
+            onClick={(e) => {
+              Swal.fire({
+                title: "Are you sure?",
+                text: "You won't be able to revert this!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: `Yes, Change  to ${item.label}!`,
+                cancelButtonText: "Cancel",
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  handleClick(e, item.link);
+                }
+              });
+            }}
             label={item.label}
           />
         );

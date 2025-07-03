@@ -19,6 +19,8 @@ import { TextInput } from "../../../components/UpwardFields";
 import SearchIcon from "@mui/icons-material/Search";
 import {
   DataGridViewReact,
+  DataGridViewReactUpgraded,
+  UpwardTableModalSearch,
   useUpwardTableModalSearchSafeMode,
 } from "../../../components/DataGridViewReact";
 import { Loading } from "../../../components/Loading";
@@ -43,6 +45,8 @@ export default function PettyCashTransaction() {
   const petyyLogRef = useRef("");
   const inactiveRef = useRef<HTMLInputElement>(null);
 
+  const chartAccountModalRef = useRef<any>(null);
+
   const { mutate: mutateSearch, isLoading: loadingSearch } = useMutation({
     mutationKey: "search-mortgagee",
     mutationFn: async (variables: any) => {
@@ -59,7 +63,7 @@ export default function PettyCashTransaction() {
     onSuccess: (response) => {
       if (response.data.success) {
         wait(100).then(() => {
-          tableRef.current.setDataFormated(response.data.data);
+          tableRef.current.setData(response.data.data);
         });
       }
     },
@@ -174,8 +178,7 @@ export default function PettyCashTransaction() {
   }
   function onSuccess(res: any) {
     if (res.data.success) {
-      tableRef.current.setSelectedRow(null);
-      tableRef.current.resetCheckBox();
+      tableRef.current.resetTable();
       mutateSearchRef.current({ search: "" });
       resetModule();
       setMode("");
@@ -195,34 +198,7 @@ export default function PettyCashTransaction() {
       timer: 1500,
     });
   }
-  const {
-    UpwardTableModalSearch: ChartAccountUpwardTableModalSearch,
-    openModal: chartAccountOpenModal,
-    closeModal: chartAccountCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    size: "medium",
-    link: "/reference/search-petty-cash-transaction-chart-account",
-    column: [
-      { key: "Code", label: "Code", width: 100 },
-      { key: "Title", label: "Title", width: 300 },
-      {
-        key: "Short_Name",
-        label: "Short_Name",
-        width: 300,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        if (accountRef.current) {
-          accountRef.current.value = rowItm[0];
-        }
-        accountShortRef.current = rowItm[1];
-
-        chartAccountCloseModal();
-        inactiveRef.current?.focus();
-      }
-    },
-  });
+ 
   useEffect(() => {
     mutateSearchRef.current({ search: "" });
   }, []);
@@ -231,7 +207,6 @@ export default function PettyCashTransaction() {
     <>
       {loadingSearch && <Loading />}
       <PageHelmet title="Petty Cash Transaction" />
-      <ChartAccountUpwardTableModalSearch />
       <div
         style={{
           display: "flex",
@@ -365,8 +340,8 @@ export default function PettyCashTransaction() {
                     if (result.isConfirmed) {
                       resetModule();
                       setMode("");
-                      tableRef.current.setSelectedRow(null);
-                      tableRef.current.resetCheckBox();
+                      tableRef.current.resetTable();
+                      mutateSearchRef.current({ search: "" });
                     }
                   });
                 }}
@@ -469,7 +444,7 @@ export default function PettyCashTransaction() {
                 if (e.key === "Enter" || e.key === "NumpadEnter") {
                   e.preventDefault();
 
-                  chartAccountOpenModal(e.currentTarget.value);
+                  chartAccountModalRef.current.openModal(e.currentTarget.value);
                 }
               },
               style: { width: "500px" },
@@ -484,7 +459,7 @@ export default function PettyCashTransaction() {
             onIconClick={(e) => {
               e.preventDefault();
               if (inputSearchRef.current) {
-                chartAccountOpenModal(inputSearchRef.current.value);
+                chartAccountModalRef.current.openModal(inputSearchRef.current.value);
               }
             }}
             inputRef={accountRef}
@@ -496,7 +471,6 @@ export default function PettyCashTransaction() {
             disabled={mode === ""}
           />
         </fieldset>
-
         <div
           style={{
             marginTop: "10px",
@@ -506,34 +480,31 @@ export default function PettyCashTransaction() {
             display: "flex",
           }}
         >
-          <DataGridViewReact
-            containerStyle={{
-              flex: 1,
-              height: "auto",
-            }}
+          <DataGridViewReactUpgraded
             ref={tableRef}
+            adjustVisibleRowCount={240}
             columns={pettyLogColumn}
-            height="280px"
-            getSelectedItem={(rowItm: any) => {
+            handleSelectionChange={(rowItm: any) => {
               if (rowItm) {
                 setMode("edit");
                 if (purposeRef.current) {
-                  purposeRef.current.value = rowItm[0];
+                  purposeRef.current.value = rowItm.Purpose;
                 }
                 if (accountRef.current) {
-                  accountRef.current.value = rowItm[1];
+                  accountRef.current.value = rowItm.Code;
                 }
                 if (inactiveRef.current) {
-                  inactiveRef.current.checked = rowItm[3] == "YES";
+                  inactiveRef.current.checked = rowItm.Inactive == "YES";
                 }
-                accountShortRef.current = rowItm[2];
-                petyyLogRef.current = rowItm[4];
+                accountShortRef.current = rowItm.Account_Name;
+                petyyLogRef.current = rowItm.Petty_Log;
               } else {
                 resetModule();
               }
             }}
           />
         </div>
+       
         <div
           className="button-action-mobile"
           style={{
@@ -600,8 +571,8 @@ export default function PettyCashTransaction() {
                   if (result.isConfirmed) {
                     resetModule();
                     setMode("");
-                    tableRef.current.setSelectedRow(null);
-                    tableRef.current.resetCheckBox();
+                    tableRef.current.resetTable();
+                    mutateSearchRef.current({ search: "" });
                   }
                 });
               }}
@@ -642,6 +613,31 @@ export default function PettyCashTransaction() {
           </LoadingButton>
         </div>
       </div>
+      <UpwardTableModalSearch
+        ref={chartAccountModalRef}
+        link={"/reference/search-petty-cash-transaction-chart-account"}
+        column={[
+          { key: "Code", label: "Code", width: 100 },
+          { key: "Title", label: "Title", width: 300 },
+          {
+            key: "Short_Name",
+            label: "Short_Name",
+            width: 300,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              if (accountRef.current) {
+                accountRef.current.value = rowItm.Code;
+              }
+              accountShortRef.current = rowItm.Title;
+              inactiveRef.current?.focus();
+            });
+            chartAccountModalRef.current.closeModal();
+          }
+        }}
+      />
     </>
   );
 }

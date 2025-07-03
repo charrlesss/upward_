@@ -13,6 +13,8 @@ import {
 } from "../../../../components/UpwardFields";
 import {
   DataGridViewReact,
+  DataGridViewReactUpgraded,
+  UpwardTableModalSearch,
   useUpwardTableModalSearchSafeMode,
 } from "../../../../components/DataGridViewReact";
 import { useMutation } from "react-query";
@@ -62,6 +64,8 @@ export default function ChekPostponementApproved() {
   const TotalRef = useRef<HTMLInputElement>(null);
   const HowToBePaidRef = useRef<HTMLSelectElement>(null);
   const RemarksRef = useRef<HTMLTextAreaElement>(null);
+
+  const rcpnModalRef = useRef<any>(null);
 
   const { mutate: mutatePrint, isLoading: isLoadingPrint } = useMutation({
     mutationKey: "print-apporved",
@@ -153,7 +157,7 @@ export default function ChekPostponementApproved() {
             };
           });
 
-          table.current.setDataFormated(newData);
+          table.current.setData(newData);
         }
       });
     },
@@ -190,19 +194,7 @@ export default function ChekPostponementApproved() {
                 rcpnNo: RPCDNoRef.current?.value,
                 reportTitle: "",
               },
-              tableData: table.current.getData().map((itm: any) => {
-                return {
-                  CheckNo: itm[1] || "",
-                  OldDepositDate: itm[4] || "",
-                  NewDate: itm[5] || "",
-                  Bank: itm[2] || "",
-                  Amount: itm[3] || "0.00",
-                  Datediff: itm[7] || "0",
-                  Penalty: itm[6] || "0.00",
-                  Reason: itm[8] || "",
-                  ln: itm[0],
-                };
-              }),
+              tableData: table.current.getData(),
             });
           })
           .finally(() => {
@@ -257,25 +249,6 @@ export default function ChekPostponementApproved() {
       },
     });
 
-  const {
-    UpwardTableModalSearch: RCPNopwardTableModalSearch,
-    openModal: rcpnoOpenModal,
-    closeModal: rcpnoCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    size: "medium",
-    link: "/task/accounting/check-postponement/approve/load-rpcdno",
-    column: [{ key: "RPCDNo", label: "Name", width: 300 }],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        if (RPCDNoRef.current) {
-          RPCDNoRef.current.value = rowItm[0];
-        }
-        mutateDetails({ RPCDNo: rowItm[0] });
-        setDisabledButtons(false);
-        rcpnoCloseModal();
-      }
-    },
-  });
   function resetFirstFields() {
     if (RPCDNoRef.current) {
       RPCDNoRef.current.value = "";
@@ -315,32 +288,32 @@ export default function ChekPostponementApproved() {
   }
 
   return (
-    <div
-      style={{
-        padding: "10px",
-        background: "#F1F1F1",
-        height: "100%",
-      }}
-    >
-      <RCPNopwardTableModalSearch />
-      <PageHelmet title="Check Postponement Approved" />
-
-      {(isLoadingDetails ||
-        isLoadingConfirmation ||
-        isLoadingConConfirmation ||
-        isLoadingPrint) && <Loading />}
-      <Modal
-        ref={modal}
-        handleOnSave={(mode: string, code: string) => {
-          mutateConfirmation({
-            code,
-            mode,
-          });
+    <>
+      <div
+        style={{
+          padding: "10px",
+          background: "#F1F1F1",
+          height: "100%",
         }}
-        handleOnClose={() => {}}
-      />
-      {/* ===========  first field  =========== */}
-      {/* <Button
+      >
+        <PageHelmet title="Check Postponement Approved" />
+
+        {(isLoadingDetails ||
+          isLoadingConfirmation ||
+          isLoadingConConfirmation ||
+          isLoadingPrint) && <Loading />}
+        <Modal
+          ref={modal}
+          handleOnSave={(mode: string, code: string) => {
+            mutateConfirmation({
+              code,
+              mode,
+            });
+          }}
+          handleOnClose={() => {}}
+        />
+        {/* ===========  first field  =========== */}
+        {/* <Button
         onClick={() => {
           mutatePrint({
             state: {
@@ -367,480 +340,504 @@ export default function ChekPostponementApproved() {
       >
         print
       </Button> */}
-      <div
-        className="second-field"
-        style={{
-          position: "relative",
-          padding: "12px",
-          border: "1px solid #d1d5db",
-          marginBottom: "10px",
-        }}
-      >
-        <span
-          style={{
-            fontSize: "12px",
-            position: "absolute",
-            top: "-10px",
-            left: "20px",
-            background: "#F1F1F1",
-            padding: "0 5px",
-          }}
-        >
-          Account Informations
-        </span>
         <div
-          className="first-field"
+          className="second-field"
           style={{
-            display: "flex",
-            columnGap: "50px",
+            position: "relative",
+            padding: "12px",
+            border: "1px solid #d1d5db",
+            marginBottom: "10px",
           }}
         >
-          <TextInput
-            containerClassName="custom-input"
-            containerStyle={{
-              width: "50%",
-              marginBottom: "8px",
+          <span
+            style={{
+              fontSize: "12px",
+              position: "absolute",
+              top: "-10px",
+              left: "20px",
+              background: "#F1F1F1",
+              padding: "0 5px",
             }}
-            label={{
-              title: "RPCD no. :",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "80px",
-              },
-            }}
-            input={{
-              type: "text",
-              style: { width: "calc(100% - 80px) " },
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  rcpnoOpenModal(e.currentTarget.value);
-                }
-              },
-            }}
-            icon={<AccountBoxIcon sx={{ fontSize: "18px" }} />}
-            onIconClick={(e) => {
-              e.preventDefault();
-              if (PNNoRef.current) {
-                rcpnoOpenModal(PNNoRef.current.value);
-              }
-            }}
-            inputRef={RPCDNoRef}
-          />
-
-          <TextInput
-            containerClassName="custom-input"
-            containerStyle={{
-              width: "50%",
-              marginBottom: "8px",
-            }}
-            label={{
-              title: "Branch :",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "110px",
-              },
-            }}
-            input={{
-              disabled: true,
-              type: "text",
-              style: { width: "calc(100% - 100px)" },
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === "Enter") {
-                }
-              },
-            }}
-            inputRef={BranchRef}
-          />
-        </div>
-        <div
-          className="first-field"
-          style={{
-            display: "flex",
-            columnGap: "50px",
-          }}
-        >
-          <TextInput
-            containerClassName="custom-input"
-            containerStyle={{
-              width: "50%",
-              marginBottom: "8px",
-            }}
-            label={{
-              title: "PN NO :",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "80px",
-              },
-            }}
-            input={{
-              disabled: true,
-              type: "text",
-              style: { width: "calc(100% - 80px)" },
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === "Enter") {
-                }
-              },
-            }}
-            inputRef={PNNoRef}
-          />
-          <TextInput
-            containerClassName="custom-input"
-            containerStyle={{
-              width: "50%",
-              marginBottom: "8px",
-            }}
-            label={{
-              title: "Account Name :",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "110px",
-              },
-            }}
-            input={{
-              disabled: true,
-              type: "text",
-              style: { width: "calc(100% - 100px)" },
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === "Enter") {
-                }
-              },
-            }}
-            inputRef={NameRef}
-          />
-        </div>
-      </div>
-
-      {/* ========== Table ======= */}
-      <DataGridViewReact
-        ref={table}
-        columns={columns}
-        rows={[]}
-        containerStyle={{
-          height: "180px",
-        }}
-        getSelectedItem={(rowItm: any, _: any, rowIdx: any) => {
-          if (rowItm) {
-            const isConfim = window.confirm(`Are you sure you want to delete?`);
-            if (isConfim) {
-              const tableData = table.current.getData();
-              tableData.splice(rowIdx, 1);
-              table.current.setDataFormated(tableData);
-            }
-
-            table.current.setSelectedRow(null);
-            table.current.resetCheckBox();
-          }
-        }}
-        onKeyDown={(rowItm: any, rowIdx: any, e: any) => {
-          if (e.code === "Delete" || e.code === "Backspace") {
-          }
-        }}
-      />
-      {/* ===========  third field  =========== */}
-      <div
-        style={{
-          position: "relative",
-          padding: "12px",
-          border: "1px solid #d1d5db",
-          marginTop: "10px",
-        }}
-      >
-        <span
-          style={{
-            fontSize: "12px",
-            position: "absolute",
-            top: "-10px",
-            left: "20px",
-            background: "#F1F1F1",
-            padding: "0 5px",
-          }}
-        >
-          Fees and Charges
-        </span>
-        <div
-          className="first-field"
-          style={{
-            display: "flex",
-            columnGap: "50px",
-          }}
-        >
+          >
+            Account Informations
+          </span>
           <div
             className="first-field"
             style={{
-              flex: 1,
               display: "flex",
-              rowGap: "10px",
-              flexDirection: "column",
+              columnGap: "50px",
             }}
           >
-            <TextFormatedInput
+            <TextInput
               containerClassName="custom-input"
-              label={{
-                title: "Holding Fees :",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "100px",
-                },
-              }}
-              containerStyle={{
-                width: "100%",
-              }}
-              input={{
-                defaultValue: "0.00",
-                disabled: true,
-                type: "text",
-                style: { width: "calc(100% - 100px)" },
-                onKeyDown: (e) => {
-                  if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  }
-                },
-              }}
-              inputRef={HoldingFeesRef}
-            />
-            <TextFormatedInput
-              containerClassName="custom-input"
-              label={{
-                title: "Penalty Charge :",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "100px",
-                },
-              }}
-              containerStyle={{
-                width: "100%",
-              }}
-              input={{
-                defaultValue: "0.00",
-                disabled: true,
-                type: "text",
-                style: { width: "calc(100% - 100px)" },
-                onKeyDown: (e) => {
-                  if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  }
-                },
-              }}
-              inputRef={PenaltyChargeRef}
-            />
-            <TextFormatedInput
-              containerClassName="custom-input"
-              label={{
-                title: "Surplus:",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "100px",
-                },
-              }}
-              containerStyle={{
-                width: "100%",
-              }}
-              input={{
-                defaultValue: "0.00",
-                disabled: true,
-                type: "text",
-                style: { width: "calc(100% - 100px)" },
-                onKeyDown: (e) => {
-                  if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  }
-                },
-              }}
-              inputRef={SurplusRef}
-            />
-            <SelectInput
-              containerClassName="custom-input"
-              label={{
-                title: "Deducted to:",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "100px",
-                },
-              }}
-              selectRef={DeductedToRef}
-              select={{
-                disabled: true,
-                style: { flex: 1, height: "22px" },
-                defaultValue: "Non-VAT",
-              }}
-              containerStyle={{
-                width: "100%",
-                marginBottom: "12px",
-              }}
-              datasource={[
-                { key: "", value: "" },
-                { key: "Penalties", value: "Penalties" },
-                { key: "Loan Amortization", value: "Loan Amortization" },
-                {
-                  key: "Loan Amort.-Other Charges",
-                  value: "Loan Amort.-Other Charges",
-                },
-                { key: "Miscellaneous Income", value: "Miscellaneous Income" },
-              ]}
-              values={"value"}
-              display={"key"}
-            />
-            <TextFormatedInput
-              containerClassName="custom-input"
-              label={{
-                title: "Total :",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "100px",
-                },
-              }}
-              containerStyle={{
-                width: "100%",
-              }}
-              input={{
-                defaultValue: "0.00",
-                disabled: true,
-                type: "text",
-                style: { width: "calc(100% - 100px)" },
-                onKeyDown: (e) => {
-                  if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  }
-                },
-              }}
-              inputRef={TotalRef}
-            />
-          </div>
-          <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-            <SelectInput
-              containerClassName="custom-input how-to-be-paid"
-              label={{
-                title: "How to be paid :",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "120px",
-                },
-              }}
-              selectRef={HowToBePaidRef}
-              select={{
-                disabled: true,
-                style: { flex: 1, height: "22px" },
-                defaultValue: "",
-              }}
               containerStyle={{
                 width: "50%",
-                marginBottom: "12px",
+                marginBottom: "8px",
               }}
-              datasource={[
-                { key: "", value: "" },
-                { key: "Over-The-Counter", value: "Over-The-Counter" },
-                { key: "Direct Deposit", value: "Direct Deposit" },
-              ]}
-              values={"value"}
-              display={"key"}
-            />
-            <label
-              htmlFor="remarks"
-              style={{
-                fontSize: "12px",
-                fontWeight: "bold",
-              }}
-            >
-              Name of Bank & Branch / Date & Time of deposit :
-            </label>
-            <TextAreaInput
-              containerClassName="custom-input "
               label={{
-                title: "",
+                title: "RPCD no. :",
                 style: {
-                  display: "none",
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "80px",
                 },
               }}
-              textarea={{
-                disabled: true,
-                rows: 4,
-                style: { flex: 1 },
-                id: "remarks",
-                defaultValue: "",
-                onChange: (e) => {},
+              input={{
+                type: "text",
+                style: { width: "calc(100% - 80px) " },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    rcpnModalRef.current.openModal(e.currentTarget.value);
+                  }
+                },
               }}
-              _inputRef={RemarksRef}
+              icon={<AccountBoxIcon sx={{ fontSize: "18px" }} />}
+              onIconClick={(e) => {
+                e.preventDefault();
+                if (PNNoRef.current) {
+                  rcpnModalRef.current.openModal(PNNoRef.current.value);
+                }
+              }}
+              inputRef={RPCDNoRef}
+            />
+
+            <TextInput
+              containerClassName="custom-input"
+              containerStyle={{
+                width: "50%",
+                marginBottom: "8px",
+              }}
+              label={{
+                title: "Branch :",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "110px",
+                },
+              }}
+              input={{
+                disabled: true,
+                type: "text",
+                style: { width: "calc(100% - 100px)" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  }
+                },
+              }}
+              inputRef={BranchRef}
+            />
+          </div>
+          <div
+            className="first-field"
+            style={{
+              display: "flex",
+              columnGap: "50px",
+            }}
+          >
+            <TextInput
+              containerClassName="custom-input"
+              containerStyle={{
+                width: "50%",
+                marginBottom: "8px",
+              }}
+              label={{
+                title: "PN NO :",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "80px",
+                },
+              }}
+              input={{
+                disabled: true,
+                type: "text",
+                style: { width: "calc(100% - 80px)" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  }
+                },
+              }}
+              inputRef={PNNoRef}
+            />
+            <TextInput
+              containerClassName="custom-input"
+              containerStyle={{
+                width: "50%",
+                marginBottom: "8px",
+              }}
+              label={{
+                title: "Account Name :",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "110px",
+                },
+              }}
+              input={{
+                disabled: true,
+                type: "text",
+                style: { width: "calc(100% - 100px)" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  }
+                },
+              }}
+              inputRef={NameRef}
             />
           </div>
         </div>
-      </div>
-      <div
-        style={{
-          marginTop: "10px",
-          flex: 1,
-          display: "flex",
-          justifyContent: "flex-end",
-          alignItems: "center",
-        }}
-      >
+
+        {/* ========== Table ======= */}
         <div
           style={{
-            border: "1px solid #cbd5e1",
+            width: "100%",
+            position: "relative",
+            flex: 1,
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "5px",
-            columnGap: "10px",
           }}
         >
-          <Button
-            disabled={disabledButtons}
-            sx={{
-              height: "22px",
-              fontSize: "11px",
+          <DataGridViewReactUpgraded
+            ref={table}
+            fixedRowCount={11}
+            columns={columns}
+            handleSelectionChange={async (rowItm: any) => {
+              if (rowItm) {
+                const rowIdx = table.current.getSelectedRow();
+                const isConfim = window.confirm(
+                  `Are you sure you want to delete?`
+                );
+                if (isConfim) {
+                  const tableData = table.current.getData();
+                  tableData.splice(rowIdx, 1);
+                  table.current.setData(tableData);
+                }
+
+                table.current.setSelectedRow(null);
+              } else {
+              }
             }}
-            variant="contained"
-            onClick={() => {
-              modal.current.showModal();
-              modal.current.setMode("Approve");
-            }}
-            color="success"
-          >
-            Approve
-          </Button>
-          <Button
-            disabled={disabledButtons}
-            sx={{
-              height: "22px",
-              fontSize: "11px",
-            }}
-            variant="contained"
-            onClick={() => {
-              modal.current.showModal();
-              modal.current.setMode("Disapprove");
-            }}
-            color="error"
-          >
-            Disapprove
-          </Button>
-          <Button
-            sx={{
-              height: "22px",
-              fontSize: "11px",
-              backgroundColor: grey[700],
-              "&:hover": {
-                backgroundColor: grey[800],
-              },
-            }}
-            variant="contained"
-            onClick={() => {
-              setDisabledButtons(true);
-              resetFirstFields();
-              resetThirdFields();
-              table.current.resetTable();
+          />
+        </div>
+        {/* ===========  third field  =========== */}
+        <div
+          style={{
+            position: "relative",
+            padding: "12px",
+            border: "1px solid #d1d5db",
+            marginTop: "10px",
+          }}
+        >
+          <span
+            style={{
+              fontSize: "12px",
+              position: "absolute",
+              top: "-10px",
+              left: "20px",
+              background: "#F1F1F1",
+              padding: "0 5px",
             }}
           >
-            Clear
-          </Button>
+            Fees and Charges
+          </span>
+          <div
+            className="first-field"
+            style={{
+              display: "flex",
+              columnGap: "50px",
+            }}
+          >
+            <div
+              className="first-field"
+              style={{
+                flex: 1,
+                display: "flex",
+                rowGap: "10px",
+                flexDirection: "column",
+              }}
+            >
+              <TextFormatedInput
+                containerClassName="custom-input"
+                label={{
+                  title: "Holding Fees :",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "100px",
+                  },
+                }}
+                containerStyle={{
+                  width: "100%",
+                }}
+                input={{
+                  defaultValue: "0.00",
+                  disabled: true,
+                  type: "text",
+                  style: { width: "calc(100% - 100px)" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    }
+                  },
+                }}
+                inputRef={HoldingFeesRef}
+              />
+              <TextFormatedInput
+                containerClassName="custom-input"
+                label={{
+                  title: "Penalty Charge :",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "100px",
+                  },
+                }}
+                containerStyle={{
+                  width: "100%",
+                }}
+                input={{
+                  defaultValue: "0.00",
+                  disabled: true,
+                  type: "text",
+                  style: { width: "calc(100% - 100px)" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    }
+                  },
+                }}
+                inputRef={PenaltyChargeRef}
+              />
+              <TextFormatedInput
+                containerClassName="custom-input"
+                label={{
+                  title: "Surplus:",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "100px",
+                  },
+                }}
+                containerStyle={{
+                  width: "100%",
+                }}
+                input={{
+                  defaultValue: "0.00",
+                  disabled: true,
+                  type: "text",
+                  style: { width: "calc(100% - 100px)" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    }
+                  },
+                }}
+                inputRef={SurplusRef}
+              />
+              <SelectInput
+                containerClassName="custom-input"
+                label={{
+                  title: "Deducted to:",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "100px",
+                  },
+                }}
+                selectRef={DeductedToRef}
+                select={{
+                  disabled: true,
+                  style: { flex: 1, height: "22px" },
+                  defaultValue: "Non-VAT",
+                }}
+                containerStyle={{
+                  width: "100%",
+                  marginBottom: "12px",
+                }}
+                datasource={[
+                  { key: "", value: "" },
+                  { key: "Penalties", value: "Penalties" },
+                  { key: "Loan Amortization", value: "Loan Amortization" },
+                  {
+                    key: "Loan Amort.-Other Charges",
+                    value: "Loan Amort.-Other Charges",
+                  },
+                  {
+                    key: "Miscellaneous Income",
+                    value: "Miscellaneous Income",
+                  },
+                ]}
+                values={"value"}
+                display={"key"}
+              />
+              <TextFormatedInput
+                containerClassName="custom-input"
+                label={{
+                  title: "Total :",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "100px",
+                  },
+                }}
+                containerStyle={{
+                  width: "100%",
+                }}
+                input={{
+                  defaultValue: "0.00",
+                  disabled: true,
+                  type: "text",
+                  style: { width: "calc(100% - 100px)" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    }
+                  },
+                }}
+                inputRef={TotalRef}
+              />
+            </div>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+              <SelectInput
+                containerClassName="custom-input how-to-be-paid"
+                label={{
+                  title: "How to be paid :",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "120px",
+                  },
+                }}
+                selectRef={HowToBePaidRef}
+                select={{
+                  disabled: true,
+                  style: { flex: 1, height: "22px" },
+                  defaultValue: "",
+                }}
+                containerStyle={{
+                  width: "50%",
+                  marginBottom: "12px",
+                }}
+                datasource={[
+                  { key: "", value: "" },
+                  { key: "Over-The-Counter", value: "Over-The-Counter" },
+                  { key: "Direct Deposit", value: "Direct Deposit" },
+                ]}
+                values={"value"}
+                display={"key"}
+              />
+              <label
+                htmlFor="remarks"
+                style={{
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                }}
+              >
+                Name of Bank & Branch / Date & Time of deposit :
+              </label>
+              <TextAreaInput
+                containerClassName="custom-input "
+                label={{
+                  title: "",
+                  style: {
+                    display: "none",
+                  },
+                }}
+                textarea={{
+                  disabled: true,
+                  rows: 4,
+                  style: { flex: 1 },
+                  id: "remarks",
+                  defaultValue: "",
+                  onChange: (e) => {},
+                }}
+                _inputRef={RemarksRef}
+              />
+            </div>
+          </div>
+        </div>
+        <div
+          style={{
+            marginTop: "10px",
+            flex: 1,
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
+          }}
+        >
+          <div
+            style={{
+              border: "1px solid #cbd5e1",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "5px",
+              columnGap: "10px",
+            }}
+          >
+            <Button
+              disabled={disabledButtons}
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              onClick={() => {
+                modal.current.showModal();
+                modal.current.setMode("Approve");
+              }}
+              color="success"
+            >
+              Approve
+            </Button>
+            <Button
+              disabled={disabledButtons}
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              onClick={() => {
+                modal.current.showModal();
+                modal.current.setMode("Disapprove");
+              }}
+              color="error"
+            >
+              Disapprove
+            </Button>
+            <Button
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+                backgroundColor: grey[700],
+                "&:hover": {
+                  backgroundColor: grey[800],
+                },
+              }}
+              variant="contained"
+              onClick={() => {
+                setDisabledButtons(true);
+                resetFirstFields();
+                resetThirdFields();
+                table.current.resetTable();
+              }}
+            >
+              Clear
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+      <UpwardTableModalSearch
+        ref={rcpnModalRef}
+        link={"/task/accounting/check-postponement/approve/load-rpcdno"}
+        column={[{ key: "RPCDNo", label: "Name", width: 300 }]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            if (RPCDNoRef.current) {
+              RPCDNoRef.current.value = rowItm.RPCDNo;
+            }
+            mutateDetails({ RPCDNo: rowItm.RPCDNo });
+            setDisabledButtons(false);
+            rcpnModalRef.current.closeModal();
+          }
+        }}
+      />
+    </>
   );
 }
 const Modal = forwardRef(

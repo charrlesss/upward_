@@ -29,7 +29,10 @@ import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import "../../../../style/laoding.css";
 import PageHelmet from "../../../../components/Helmet";
 import SearchIcon from "@mui/icons-material/Search";
-import { useUpwardTableModalSearchSafeMode } from "../../../../components/DataGridViewReact";
+import {
+  UpwardTableModalSearch,
+  useUpwardTableModalSearchSafeMode,
+} from "../../../../components/DataGridViewReact";
 import { formatNumber } from "./ReturnCheck";
 import "../../../../style/monbileview/accounting/deposit.css";
 
@@ -283,6 +286,8 @@ export default function Deposit() {
   const [totalCheck, setTotalCheck] = useState("0.00");
 
   const disabledFields = depositMode === "";
+
+  const bankModalRef = useRef<any>(null);
 
   const TotalCashForDeposit = selectedRows
     .reduce((accumulator: number, currentValue: any) => {
@@ -606,7 +611,7 @@ export default function Deposit() {
         timer: 1500,
       }).then((result) => {
         wait(350).then(() => {
-          bankOpenModal(refBankAcctCode.current?.value);
+          bankModalRef.current.openModal(refBankAcctCode.current?.value);
         });
       });
     }
@@ -639,12 +644,6 @@ export default function Deposit() {
       SubAccount: refSubAccount.current,
       ShortName: refShortName.current,
     };
-
-    console.log({
-      ...state,
-      selectedCollection: JSON.stringify(selectedRows),
-      tableRowsInputValue: JSON.stringify(tableRowsInputValue),
-    });
 
     if (depositMode === "edit") {
       codeCondfirmationAlert({
@@ -693,6 +692,7 @@ export default function Deposit() {
     collectionCheckTable.current.resetTable();
     setTotalCheck("0.00");
   }
+
   const {
     UpwardTableModalSearch: DepositUpwardTableModalSearch,
     openModal: depositOpenModal,
@@ -724,83 +724,6 @@ export default function Deposit() {
           }
         });
         depositCloseModal();
-      }
-    },
-  });
-  const {
-    UpwardTableModalSearch: BankUpwardTableModalSearch,
-    openModal: bankOpenModal,
-    closeModal: bankCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    link: "/task/accounting/getBanks",
-    column: [
-      { key: "Account_Type", label: "Account_Type", width: 80 },
-      { key: "Account_No", label: "Account_No", width: 130 },
-      {
-        key: "Account_Name",
-        label: "Account_Name",
-        width: 200,
-      },
-      {
-        key: "IDNo",
-        label: "",
-        width: 0,
-        hide: true,
-      },
-      {
-        key: "Desc",
-        label: "",
-        width: 0,
-        hide: true,
-      },
-      {
-        key: "Account_ID",
-        label: "",
-        width: 0,
-        hide: true,
-      },
-      {
-        key: "Short",
-        label: "",
-        width: 0,
-        hide: true,
-      },
-      {
-        key: "client_name",
-        label: "",
-        width: 0,
-        hide: true,
-      },
-      {
-        key: "Sub_Acct",
-        label: "",
-        width: 0,
-        hide: true,
-      },
-      {
-        key: "ShortName",
-        label: "",
-        width: 0,
-        hide: true,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        wait(100).then(() => {
-          if (refBankAcctCode.current)
-            refBankAcctCode.current.value = rowItm[1]; // selectedRowData[0]?.Account_No;
-          if (refBankAcctName.current)
-            refBankAcctName.current.value = rowItm[2]; // selectedRowData[0]?.Account_Name;
-
-          refBankAcctCodeTag.current = rowItm[3]; // selectedRowData[0]?.IDNo;
-          refBankAcctNameTag.current = rowItm[4]; // selectedRowData[0]?.Desc;
-          refAcctID.current = rowItm[5]; //selectedRowData[0]?.Account_ID;
-          refAcctName.current = rowItm[6]; //selectedRowData[0]?.Short;
-          refShortName.current = rowItm[7]; //selectedRowData[0]?.client_name;
-          refClassification.current = rowItm[8]; //selectedRowData[0]?.Sub_Acct;
-          refSubAccount.current = rowItm[9]; //selectedRowData[0]?.ShortName;
-        });
-        bankCloseModal();
       }
     },
   });
@@ -836,7 +759,6 @@ export default function Deposit() {
     <>
       <PageHelmet title="Deposit" />
       <DepositUpwardTableModalSearch />
-      <BankUpwardTableModalSearch />
       <div
         className="main"
         style={{
@@ -1048,7 +970,9 @@ export default function Deposit() {
               onKeyDown: (e) => {
                 if (e.key === "Enter" || e.key === "NumpadEnter") {
                   e.preventDefault();
-                  bankOpenModal(refBankAcctCode.current?.value);
+                  bankModalRef.current.openModal(
+                    refBankAcctCode.current?.value
+                  );
                 }
               },
               disabled: disabledFields,
@@ -1064,7 +988,7 @@ export default function Deposit() {
             }
             onIconClick={(e) => {
               e.preventDefault();
-              bankOpenModal(refBankAcctCode.current?.value);
+              bankModalRef.current.openModal(refBankAcctCode.current?.value);
             }}
             disableIcon={disabledFields}
           />
@@ -1336,6 +1260,80 @@ export default function Deposit() {
             `}
         </style>
       </div>
+      <UpwardTableModalSearch
+        ref={bankModalRef}
+        link={"/task/accounting/getBanks"}
+        column={[
+          { key: "Account_Type", label: "Account_Type", width: 80 },
+          { key: "Account_No", label: "Account_No", width: 130 },
+          {
+            key: "Account_Name",
+            label: "Account_Name",
+            width: 200,
+          },
+          {
+            key: "IDNo",
+            label: "",
+            width: 0,
+            hide: true,
+          },
+          {
+            key: "Desc",
+            label: "",
+            width: 0,
+            hide: true,
+          },
+          {
+            key: "Account_ID",
+            label: "",
+            width: 0,
+            hide: true,
+          },
+          {
+            key: "Short",
+            label: "",
+            width: 0,
+            hide: true,
+          },
+          {
+            key: "client_name",
+            label: "",
+            width: 0,
+            hide: true,
+          },
+          {
+            key: "Sub_Acct",
+            label: "",
+            width: 0,
+            hide: true,
+          },
+          {
+            key: "ShortName",
+            label: "",
+            width: 0,
+            hide: true,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              if (refBankAcctCode.current)
+                refBankAcctCode.current.value = rowItm.Account_No; // selectedRowData[0]?.Account_No;
+              if (refBankAcctName.current)
+                refBankAcctName.current.value = rowItm.Account_Name; // selectedRowData[0]?.Account_Name;
+
+              refBankAcctCodeTag.current = rowItm.IDNo; // selectedRowData[0]?.IDNo;
+              refBankAcctNameTag.current = rowItm.Desc; // selectedRowData[0]?.Desc;
+              refAcctID.current = rowItm.Account_ID; //selectedRowData[0]?.Account_ID;
+              refAcctName.current = rowItm.Short; //selectedRowData[0]?.Short;
+              refShortName.current = rowItm.client_name; //selectedRowData[0]?.client_name;
+              refClassification.current = rowItm.Sub_Acct; //selectedRowData[0]?.Sub_Acct;
+              refSubAccount.current = rowItm.ShortName; //selectedRowData[0]?.ShortName;
+            });
+            bankModalRef.current.closeModal();
+          }
+        }}
+      />
     </>
   );
 }
@@ -1924,7 +1922,7 @@ const DepositTable = forwardRef(
       getSelectedItem,
       disbaleTable = false,
       containerStyle,
-      className
+      className,
     }: any,
     ref
   ) => {
@@ -2021,7 +2019,7 @@ const DepositTable = forwardRef(
     return (
       <Fragment>
         <div
-        className={className}
+          className={className}
           ref={parentElementRef}
           style={{
             width: "100%",

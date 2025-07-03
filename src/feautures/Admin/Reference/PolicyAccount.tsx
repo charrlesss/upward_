@@ -25,7 +25,10 @@ import PageHelmet from "../../../components/Helmet";
 import { TextInput } from "../../../components/UpwardFields";
 import SearchIcon from "@mui/icons-material/Search";
 import { Loading } from "../../../components/Loading";
-import { DataGridViewReact } from "../../../components/DataGridViewReact";
+import {
+  DataGridViewReact,
+  DataGridViewReactUpgraded,
+} from "../../../components/DataGridViewReact";
 import "../../../style/monbileview/reference/reference.css";
 
 export const poliyAccountColumn = [
@@ -80,7 +83,8 @@ export default function PolicyAccount() {
     onSuccess: (response) => {
       if (response.data.success) {
         wait(100).then(() => {
-          tableRef.current.setDataFormated(response.data.data);
+          console.log(response.data.data);
+          tableRef.current.setData(response.data.data);
         });
       }
     },
@@ -120,7 +124,6 @@ export default function PolicyAccount() {
     },
     onSuccess,
   });
-
   function handleOnSave(e: any) {
     if (accountCodeRef.current?.value === "") {
       return Swal.fire({
@@ -219,8 +222,7 @@ export default function PolicyAccount() {
   }
   function onSuccess(res: any) {
     if (res.data.success) {
-      tableRef.current.setSelectedRow(null);
-      tableRef.current.resetCheckBox();
+      tableRef.current.resetTable();
       mutateSearchRef.current({ search: "" });
       setMode("");
       resetModule();
@@ -241,7 +243,6 @@ export default function PolicyAccount() {
       timer: 1500,
     });
   }
-
   useEffect(() => {
     mutateSearchRef.current({ search: "" });
   }, []);
@@ -379,8 +380,8 @@ export default function PolicyAccount() {
                     if (result.isConfirmed) {
                       resetModule();
                       setMode("");
-                      tableRef.current.setSelectedRow(null);
-                      tableRef.current.resetCheckBox();
+                      tableRef.current.resetTable();
+                      mutateSearch({ search: "" });
                     }
                   });
                 }}
@@ -569,58 +570,55 @@ export default function PolicyAccount() {
             display: "flex",
           }}
         >
-          <DataGridViewReact
-            containerStyle={{
-              flex: 1,
-              height: "auto",
-            }}
+          <DataGridViewReactUpgraded
             ref={tableRef}
+            adjustVisibleRowCount={260}
             columns={poliyAccountColumn}
-            height="280px"
-            getSelectedItem={(rowItm: any) => {
+            handleSelectionChange={(rowItm: any) => {
               if (rowItm) {
                 setMode("edit");
+                console.log(rowItm);
                 if (accountCodeRef.current) {
-                  accountCodeRef.current.value = rowItm[0];
+                  accountCodeRef.current.value = rowItm.AccountCode;
                 }
                 if (accountRef.current) {
-                  accountRef.current.value = rowItm[1];
+                  accountRef.current.value = rowItm.Account;
                 }
                 if (descriptionRef.current) {
-                  descriptionRef.current.value = rowItm[2];
+                  descriptionRef.current.value = rowItm.Account;
                 }
                 if (inactiveRef.current) {
-                  inactiveRef.current.checked = rowItm[4];
+                  inactiveRef.current.checked = rowItm.Inactive;
                 }
                 if (comRef.current) {
-                  comRef.current.checked = rowItm[5];
+                  comRef.current.checked = rowItm.COM;
                 }
                 if (tplRef.current) {
-                  tplRef.current.checked = rowItm[6];
+                  tplRef.current.checked = rowItm.TPL;
                 }
                 if (marineRef.current) {
-                  marineRef.current.checked = rowItm[7];
+                  marineRef.current.checked = rowItm.MAR;
                 }
                 if (fireRef.current) {
-                  fireRef.current.checked = rowItm[8];
+                  fireRef.current.checked = rowItm.FIRE;
                 }
                 if (bondG02Ref.current) {
-                  bondG02Ref.current.checked = rowItm[9];
+                  bondG02Ref.current.checked = rowItm.G02;
                 }
                 if (bondG13Ref.current) {
-                  bondG13Ref.current.checked = rowItm[10];
+                  bondG13Ref.current.checked = rowItm.G13;
                 }
                 if (bondG16Ref.current) {
-                  bondG16Ref.current.checked = rowItm[11];
+                  bondG16Ref.current.checked = rowItm.G16;
                 }
                 if (msprRef.current) {
-                  msprRef.current.checked = rowItm[12];
+                  msprRef.current.checked = rowItm.MSPR;
                 }
                 if (paRef.current) {
-                  paRef.current.checked = rowItm[13];
+                  paRef.current.checked = rowItm.PA;
                 }
                 if (cglRef.current) {
-                  cglRef.current.checked = rowItm[14];
+                  cglRef.current.checked = rowItm.CGL;
                 }
               } else {
                 resetModule();
@@ -690,8 +688,8 @@ export default function PolicyAccount() {
                   if (result.isConfirmed) {
                     resetModule();
                     setMode("");
-                    tableRef.current.setSelectedRow(null);
-                    tableRef.current.resetCheckBox();
+                    tableRef.current.resetTable();
+                    mutateSearch({ search: "" });
                   }
                 });
               }}

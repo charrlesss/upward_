@@ -17,7 +17,7 @@ import {
 import PageHelmet from "../../../components/Helmet";
 import { TextInput } from "../../../components/UpwardFields";
 import SearchIcon from "@mui/icons-material/Search";
-import { DataGridViewReact } from "../../../components/DataGridViewReact";
+import { DataGridViewReactUpgraded } from "../../../components/DataGridViewReact";
 import { Loading } from "../../../components/Loading";
 import "../../../style/monbileview/reference/reference.css";
 
@@ -52,7 +52,7 @@ export default function SubAccount() {
       if (response.data.success) {
         console.log(response.data);
         wait(100).then(() => {
-          tableRef.current.setDataFormated(response.data.data);
+          tableRef.current.setData(response.data.data);
         });
       }
     },
@@ -159,8 +159,7 @@ export default function SubAccount() {
 
   function onSuccess(res: any) {
     if (res.data.success) {
-      tableRef.current.setSelectedRow(null);
-      tableRef.current.resetCheckBox();
+      tableRef.current.resetTable(null);
       mutateSearchRef.current({ search: "" });
       resetModule();
       setMode("");
@@ -322,8 +321,8 @@ export default function SubAccount() {
                     if (result.isConfirmed) {
                       resetModule();
                       setMode("");
-                      tableRef.current.setSelectedRow(null);
-                      tableRef.current.resetCheckBox();
+                      tableRef.current.resetTable();
+                      mutateSearchRef.current({ search: "" });
                     }
                   });
                 }}
@@ -446,7 +445,6 @@ export default function SubAccount() {
             inputRef={descriptionRef}
           />
         </fieldset>
-
         <div
           style={{
             marginTop: "10px",
@@ -456,33 +454,30 @@ export default function SubAccount() {
             display: "flex",
           }}
         >
-          <DataGridViewReact
-            containerStyle={{
-              flex: 1,
-              height: "auto",
-            }}
+          <DataGridViewReactUpgraded
             ref={tableRef}
+            adjustVisibleRowCount={200}
             columns={bankColumn}
-            height="280px"
-            getSelectedItem={(rowItm: any) => {
+            handleSelectionChange={(rowItm: any) => {
               if (rowItm) {
                 setMode("edit");
                 if (acronmyRef.current) {
-                  acronmyRef.current.value = rowItm[0];
+                  acronmyRef.current.value = rowItm.Acronym;
                 }
                 if (shortnameRef.current) {
-                  shortnameRef.current.value = rowItm[1];
+                  shortnameRef.current.value = rowItm.ShortName;
                 }
                 if (descriptionRef.current) {
-                  descriptionRef.current.value = rowItm[2];
+                  descriptionRef.current.value = rowItm.Description;
                 }
-                subAcctRef.current = rowItm[3];
+                subAcctRef.current = rowItm.Sub_Acct;
               } else {
                 resetModule();
               }
             }}
           />
         </div>
+
         <div
           className="button-action-mobile"
           style={{
@@ -549,8 +544,8 @@ export default function SubAccount() {
                   if (result.isConfirmed) {
                     resetModule();
                     setMode("");
-                    tableRef.current.setSelectedRow(null);
-                    tableRef.current.resetCheckBox();
+                    tableRef.current.resetTable();
+                    mutateSearchRef.current({ search: "" });
                   }
                 });
               }}

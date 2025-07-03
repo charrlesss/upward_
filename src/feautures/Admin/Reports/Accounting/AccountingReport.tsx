@@ -9,7 +9,10 @@ import SearchIcon from "@mui/icons-material/Search";
 import { format, isValid, parse } from "date-fns";
 import { useMutation } from "react-query";
 import { AuthContext } from "../../../../components/AuthContext";
-import { useUpwardTableModalSearchSafeMode } from "../../../../components/DataGridViewReact";
+import {
+  UpwardTableModalSearch,
+  useUpwardTableModalSearchSafeMode,
+} from "../../../../components/DataGridViewReact";
 import { wait } from "../../../../lib/wait";
 import { Loading } from "../../../../components/Loading";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
@@ -302,52 +305,6 @@ function FormScheduleAccount() {
   const sortRef = useRef<HTMLSelectElement>(null);
   const orderRef = useRef<HTMLSelectElement>(null);
 
-  const {
-    UpwardTableModalSearch: ChartAccountUpwardTableModalSearch,
-    openModal: chartAccountOpenModal,
-    closeModal: chartAccountCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    link: "/reports/accounting/report/get-chart-account",
-    column: [
-      { key: "Code", label: "Code", width: 80 },
-      { key: "Title", label: "Title", width: 200 },
-      {
-        key: "Short_Name",
-        label: "Short Name",
-        width: 370,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        wait(100).then(() => {
-          if (accountRef.current) {
-            accountRef.current.value = rowItm[0];
-          }
-          if (_accountRef.current) {
-            _accountRef.current.value = rowItm[1];
-          }
-
-          setTitle(
-            generateTitle({
-              report,
-              subsiText: subsiTextRef.current?.value || "",
-              insuarnceIndex: _subsiRef.current?.selectedIndex,
-              insurance: _subsiRef.current?.value,
-              dateValue: validateDate(dateRef.current?.value as any)
-                ? new Date(dateRef.current?.value as any)
-                : new Date(),
-              account: rowItm[0],
-              accountTitle: rowItm[1],
-            })
-          );
-
-          subsiRef.current?.focus();
-        });
-        chartAccountCloseModal();
-      }
-    },
-  });
-
   const { isLoading: isLoadingInsurance, mutate: mutateInsurance } =
     useMutation({
       mutationKey: "insurance",
@@ -544,7 +501,7 @@ function FormScheduleAccount() {
             },
           }}
           input={{
-            disabled:report === "All Accounts",
+            disabled: report === "All Accounts",
             className: "search-input-up-on-key-down",
             type: "text",
             defaultValue: "7.10.06",
@@ -552,40 +509,9 @@ function FormScheduleAccount() {
               if (e.key === "Enter" || e.key === "NumpadEnter") {
                 e.preventDefault();
 
-                const value = e.currentTarget.value;
-                const response =
-                  await chartAccountUpwardTableModalSearchRef.current.mutateReturnValue(
-                    { search: value }
-                  );
-
-                if (response.data.data.length > 0) {
-                  wait(100).then(() => {
-                    if (accountRef.current) {
-                      accountRef.current.value = response.data.data[0].Code;
-                    }
-                    if (_accountRef.current) {
-                      _accountRef.current.value = response.data.data[0].Title;
-                    }
-
-                    setTitle(
-                      generateTitle({
-                        report,
-                        subsiText: subsiTextRef.current?.value || "",
-                        insuarnceIndex: _subsiRef.current?.selectedIndex,
-                        insurance: _subsiRef.current?.value,
-                        dateValue: validateDate(dateRef.current?.value as any)
-                          ? new Date(dateRef.current?.value as any)
-                          : new Date(),
-                        account: response.data.data[0].Code,
-                        accountTitle: response.data.data[0].Title,
-                      })
-                    );
-
-                    subsiRef.current?.focus();
-                  });
-                } else {
-                  chartAccountOpenModal(value);
-                }
+                chartAccountUpwardTableModalSearchRef.current.openModal(
+                  e.currentTarget.value
+                );
               }
               if (e.key === "ArrowDown") {
                 e.preventDefault();
@@ -604,7 +530,9 @@ function FormScheduleAccount() {
           onIconClick={(e) => {
             e.preventDefault();
             if (accountRef.current) {
-              chartAccountOpenModal(accountRef.current.value);
+              chartAccountUpwardTableModalSearchRef.current.openModal(
+                accountRef.current.value
+              );
             }
           }}
           inputRef={accountRef}
@@ -884,14 +812,56 @@ function FormScheduleAccount() {
           Generate Report
         </Button>
       </div>
-      <ChartAccountUpwardTableModalSearch
+
+      <UpwardTableModalSearch
         ref={chartAccountUpwardTableModalSearchRef}
+        link={"/reports/accounting/report/get-chart-account"}
+        column={[
+          { key: "Code", label: "Code", width: 80 },
+          { key: "Title", label: "Title", width: 200 },
+          {
+            key: "Short_Name",
+            label: "Short Name",
+            width: 370,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              if (accountRef.current) {
+                accountRef.current.value = rowItm.Code;
+              }
+              if (_accountRef.current) {
+                _accountRef.current.value = rowItm.Title;
+              }
+
+              setTitle(
+                generateTitle({
+                  report,
+                  subsiText: subsiTextRef.current?.value || "",
+                  insuarnceIndex: _subsiRef.current?.selectedIndex,
+                  insurance: _subsiRef.current?.value,
+                  dateValue: validateDate(dateRef.current?.value as any)
+                    ? new Date(dateRef.current?.value as any)
+                    : new Date(),
+                  account: rowItm.Code,
+                  accountTitle: rowItm.Title,
+                })
+              );
+
+              subsiRef.current?.focus();
+            });
+            chartAccountUpwardTableModalSearchRef.current.closeModal();
+          }
+        }}
       />
     </>
   );
 }
 function FormSubsidiaryLedger() {
   const chartAccountUpwardTableModalSearchRef = useRef<any>(null);
+  const clientModalSearchRef = useRef<any>(null);
+  const subAcctModalSearchRef = useRef<any>(null);
   const { user, myAxios } = useContext(AuthContext);
   const [title, setTitle] = useState(
     generateTitle({
@@ -922,141 +892,6 @@ function FormSubsidiaryLedger() {
 
   const subAcctRef = useRef<HTMLInputElement>(null);
   const shortNameRef = useRef("");
-
-  const {
-    UpwardTableModalSearch: ChartAccountUpwardTableModalSearch,
-    openModal: chartAccountOpenModal,
-    closeModal: chartAccountCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    link: "/reports/accounting/report/get-chart-account",
-    column: [
-      { key: "Code", label: "Code", width: 80 },
-      { key: "Title", label: "Title", width: 200 },
-      {
-        key: "Short_Name",
-        label: "Short Name",
-        width: 370,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        wait(100).then(() => {
-          if (accountRef.current) {
-            accountRef.current.value = rowItm[0];
-          }
-          if (_accountRef.current) {
-            _accountRef.current.value = rowItm[1];
-          }
-
-          setTitle(
-            generateTitle({
-              subsi: subsiRef.current?.selectedIndex,
-              accountName: rowItm[1],
-              account: rowItm[0],
-              subsiName: nameRef.current,
-              subsiId: idNoRef.current?.value,
-              dateFrom: validateDate(dateFromRef.current?.value as any)
-                ? new Date(dateFromRef.current?.value as any)
-                : new Date(),
-              dateTo: validateDate(dateToRef.current?.value as any)
-                ? new Date(dateToRef.current?.value as any)
-                : new Date(),
-            })
-          );
-
-          subsiRef.current?.focus();
-        });
-
-        chartAccountCloseModal();
-      }
-    },
-  });
-  const {
-    UpwardTableModalSearch: ClientUpwardTableModalSearch,
-    openModal: clientOpenModal,
-    closeModal: clientCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    link: "/task/accounting/search-pdc-policy-id",
-    column: [
-      { key: "Type", label: "Type", width: 60 },
-      { key: "IDNo", label: "ID No.", width: 100 },
-      {
-        key: "Name",
-        label: "Name",
-        width: 350,
-      },
-      {
-        key: "client_id",
-        label: "client_id",
-        width: 0,
-        hide: true,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        wait(100).then(() => {
-          if (idNoRef.current) {
-            idNoRef.current.value = rowItm[1];
-          }
-          nameRef.current = rowItm[2];
-          setTitle(
-            generateTitle({
-              subsi: 1,
-              accountName: _accountRef.current?.value,
-              account: accountRef.current?.value,
-              subsiName: rowItm[2],
-              subsiId: rowItm[1],
-              dateFrom: validateDate(dateFromRef.current?.value as any)
-                ? new Date(dateFromRef.current?.value as any)
-                : new Date(),
-              dateTo: validateDate(dateToRef.current?.value as any)
-                ? new Date(dateToRef.current?.value as any)
-                : new Date(),
-            })
-          );
-        });
-        clientCloseModal();
-      }
-    },
-  });
-  const {
-    UpwardTableModalSearch: SubAccountUpwardTableModalSearch,
-    openModal: subAccountOpenModal,
-    closeModal: subAccountCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    link: "/reports/accounting/report/sub-account-search",
-    column: [
-      { key: "Acronym", label: "Acronym", width: 80 },
-      { key: "ShortName", label: "ShortName", width: 200 },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        wait(100).then(() => {
-          if (subAcctRef.current) {
-            subAcctRef.current.value = rowItm[0];
-          }
-          shortNameRef.current = rowItm[1];
-
-          setTitle(
-            generateTitle({
-              subsi: 2,
-              accountName: _accountRef.current?.value,
-              account: accountRef.current?.value,
-              subsiName: rowItm[1],
-              subsiId: rowItm[0],
-              dateFrom: validateDate(dateFromRef.current?.value as any)
-                ? new Date(dateFromRef.current?.value as any)
-                : new Date(),
-              dateTo: validateDate(dateToRef.current?.value as any)
-                ? new Date(dateToRef.current?.value as any)
-                : new Date(),
-            })
-          );
-        });
-        subAccountCloseModal();
-      }
-    },
-  });
 
   const { isLoading: isLoadingInsurance, mutate: mutateInsurance } =
     useMutation({
@@ -1225,44 +1060,7 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
             onKeyDown: async (e) => {
               if (e.key === "Enter" || e.key === "NumpadEnter") {
                 e.preventDefault();
-                const value = e.currentTarget.value;
-                const response =
-                  await chartAccountUpwardTableModalSearchRef.current.mutateReturnValue(
-                    { search: value }
-                  );
-
-                if (response.data.data.length > 0) {
-                  wait(100).then(() => {
-                    if (accountRef.current) {
-                      accountRef.current.value = response.data.data[0].Code;
-                    }
-                    if (_accountRef.current) {
-                      _accountRef.current.value = response.data.data[0].Title;
-                    }
-
-                    setTitle(
-                      generateTitle({
-                        subsi: subsiRef.current?.selectedIndex,
-                        accountName: response.data.data[0].Title,
-                        account: response.data.data[0].Code,
-                        subsiName: nameRef.current,
-                        subsiId: idNoRef.current?.value,
-                        dateFrom: validateDate(
-                          dateFromRef.current?.value as any
-                        )
-                          ? new Date(dateFromRef.current?.value as any)
-                          : new Date(),
-                        dateTo: validateDate(dateToRef.current?.value as any)
-                          ? new Date(dateToRef.current?.value as any)
-                          : new Date(),
-                      })
-                    );
-
-                    subsiRef.current?.focus();
-                  });
-                } else {
-                  chartAccountOpenModal(value);
-                }
+                chartAccountUpwardTableModalSearchRef.current.openModal(e.currentTarget.value)
               }
               if (e.key === "ArrowDown") {
                 e.preventDefault();
@@ -1280,7 +1078,7 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
           onIconClick={(e) => {
             e.preventDefault();
             if (accountRef.current) {
-              chartAccountOpenModal(accountRef.current.value);
+              chartAccountUpwardTableModalSearchRef.current.openModal(accountRef.current.value)
             }
           }}
           inputRef={accountRef}
@@ -1417,7 +1215,8 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
                 onKeyDown: (e) => {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
-                    clientOpenModal(e.currentTarget.value);
+                    clientModalSearchRef.current.openModal(e.currentTarget.value)
+
                   }
                 },
               }}
@@ -1433,7 +1232,8 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
               onIconClick={(e) => {
                 e.preventDefault();
                 if (idNoRef.current) {
-                  clientOpenModal(idNoRef.current.value);
+                  clientModalSearchRef.current.openModal(idNoRef.current.value)
+
                 }
               }}
             />
@@ -1453,7 +1253,7 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
                 onKeyDown: (e) => {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
-                    subAccountOpenModal(e.currentTarget.value);
+                    subAcctModalSearchRef.current.openModal(e.currentTarget.value)
                   }
                 },
               }}
@@ -1469,7 +1269,7 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
               onIconClick={(e) => {
                 e.preventDefault();
                 if (subAcctRef.current) {
-                  subAccountOpenModal(subAcctRef.current.value);
+                    subAcctModalSearchRef.current.openModal(subAcctRef.current.value)
                 }
               }}
             />
@@ -1707,11 +1507,128 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
           Generate Report
         </Button>
       </div>
-      <ChartAccountUpwardTableModalSearch
+      <UpwardTableModalSearch
         ref={chartAccountUpwardTableModalSearchRef}
+        link={"/reports/accounting/report/get-chart-account"}
+        column={[
+          { key: "Code", label: "Code", width: 80 },
+          { key: "Title", label: "Title", width: 200 },
+          {
+            key: "Short_Name",
+            label: "Short Name",
+            width: 370,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              if (accountRef.current) {
+                accountRef.current.value = rowItm.Code;
+              }
+              if (_accountRef.current) {
+                _accountRef.current.value = rowItm.Title;
+              }
+
+              setTitle(
+                generateTitle({
+                  subsi: subsiRef.current?.selectedIndex,
+                  accountName: rowItm.Title,
+                  account: rowItm.Code,
+                  subsiName: nameRef.current,
+                  subsiId: idNoRef.current?.value,
+                  dateFrom: validateDate(dateFromRef.current?.value as any)
+                    ? new Date(dateFromRef.current?.value as any)
+                    : new Date(),
+                  dateTo: validateDate(dateToRef.current?.value as any)
+                    ? new Date(dateToRef.current?.value as any)
+                    : new Date(),
+                })
+              );
+            });
+            chartAccountUpwardTableModalSearchRef.current.closeModal();
+          }
+        }}
       />
-      <ClientUpwardTableModalSearch />
-      <SubAccountUpwardTableModalSearch />
+      <UpwardTableModalSearch
+        ref={clientModalSearchRef}
+        link={"/task/accounting/search-pdc-policy-id"}
+        column={[
+          { key: "Type", label: "Type", width: 60 },
+          { key: "IDNo", label: "ID No.", width: 100 },
+          {
+            key: "Name",
+            label: "Name",
+            width: 350,
+          },
+          {
+            key: "client_id",
+            label: "client_id",
+            width: 0,
+            hide: true,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              if (idNoRef.current) {
+                idNoRef.current.value = rowItm.IDNo;
+              }
+              nameRef.current = rowItm.Name;
+              setTitle(
+                generateTitle({
+                  subsi: 1,
+                  accountName: _accountRef.current?.value,
+                  account: accountRef.current?.value,
+                  subsiName: rowItm.Name,
+                  subsiId: rowItm.IDNo,
+                  dateFrom: validateDate(dateFromRef.current?.value as any)
+                    ? new Date(dateFromRef.current?.value as any)
+                    : new Date(),
+                  dateTo: validateDate(dateToRef.current?.value as any)
+                    ? new Date(dateToRef.current?.value as any)
+                    : new Date(),
+                })
+              );
+            });
+            clientModalSearchRef.current.closeModal();
+          }
+        }}
+      />
+      <UpwardTableModalSearch
+        ref={subAcctModalSearchRef}
+        link={"/reports/accounting/report/sub-account-search"}
+        column={[
+          { key: "Acronym", label: "Acronym", width: 80 },
+          { key: "ShortName", label: "ShortName", width: 200 },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              if (subAcctRef.current) {
+                subAcctRef.current.value = rowItm.Acronym;
+              }
+              shortNameRef.current = rowItm.ShortName;
+
+              setTitle(
+                generateTitle({
+                  subsi: 2,
+                  accountName: _accountRef.current?.value,
+                  account: accountRef.current?.value,
+                  subsiName: rowItm.ShortName,
+                  subsiId: rowItm.Acronym,
+                  dateFrom: validateDate(dateFromRef.current?.value as any)
+                    ? new Date(dateFromRef.current?.value as any)
+                    : new Date(),
+                  dateTo: validateDate(dateToRef.current?.value as any)
+                    ? new Date(dateToRef.current?.value as any)
+                    : new Date(),
+                })
+              );
+            });
+            subAcctModalSearchRef.current.closeModal();
+          }
+        }}
+      />
     </>
   );
 }

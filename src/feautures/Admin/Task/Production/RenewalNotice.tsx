@@ -8,12 +8,13 @@ import {
 } from "../../../../components/UpwardFields";
 import SearchIcon from "@mui/icons-material/Search";
 import { Button } from "@mui/material";
-import { useUpwardTableModalSearchSafeMode } from "../../../../components/DataGridViewReact";
+import {
+  UpwardTableModalSearch
+} from "../../../../components/DataGridViewReact";
 import { useMutation } from "react-query";
 import { AuthContext } from "../../../../components/AuthContext";
 import { Loading } from "../../../../components/Loading";
 import { isMobile } from "react-device-detect";
-import { wait } from "@testing-library/user-event/dist/utils";
 import { formatNumber } from "../Accounting/ReturnCheck";
 
 function RenewalNotice() {
@@ -39,6 +40,12 @@ function RenewalNotice() {
   const premiumTPPDRef = useRef<HTMLInputElement>(null);
   const premiumAPARef = useRef<HTMLInputElement>(null);
   const balanceRef = useRef<HTMLInputElement>(null);
+
+  const comModalRef = useRef<any>(null);
+  const fireModalRef = useRef<any>(null);
+  const marModalRef = useRef<any>(null);
+  const paModalRef = useRef<any>(null);
+
   const [isEditMode, setIsEditMode] = useState(false);
 
   const { mutate: mutatateRenewalNotice, isLoading: isLoadingRenewalNotice } =
@@ -93,284 +100,6 @@ function RenewalNotice() {
       }
     },
   });
-  const {
-    UpwardTableModalSearch: PolicyComSearchUpwardTableModalSearch,
-    openModal: policyComSearchOpenModal,
-    closeModal: policyComSearchCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    size: "large",
-    link: "/task/production/search-policy-renewal-notice-com",
-    column: [
-      { key: "Date", label: "Date", width: 110 },
-      { key: "PolicyNo", label: "PolicyNo", width: 150 },
-      {
-        key: "Account",
-        label: "Account",
-        width: 100,
-      },
-      {
-        key: "Name",
-        label: "Name",
-        width: 255,
-      },
-      {
-        key: "ChassisNo",
-        label: "Chassis No",
-        width: 255,
-      },
-      {
-        key: "EstimatedValue",
-        label: "EstimatedValue",
-        width: 255,
-        hide: true,
-      },
-      {
-        key: "SecIIPercent",
-        label: "SecIIPercent",
-        width: 255,
-        hide: true,
-      },
-      {
-        key: "BodilyInjury",
-        label: "BodilyInjury",
-        width: 255,
-        hide: true,
-      },
-      {
-        key: "PropertyDamage",
-        label: "PropertyDamage",
-        width: 255,
-        hide: true,
-      },
-      {
-        key: "PersonalAccident",
-        label: "PersonalAccident",
-        width: 255,
-        hide: true,
-      },
-      {
-        key: "Sec4A",
-        label: "Sec4A",
-        width: 255,
-        hide: true,
-      },
-      {
-        key: "Sec4B",
-        label: "Sec4B",
-        width: 255,
-        hide: true,
-      },
-      {
-        key: "Sec4C",
-        label: "Sec4C",
-        width: 255,
-        hide: true,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        if (searchRef.current) {
-          searchRef.current.value = rowItm[1];
-        }
-        if (nameRef.current) {
-          nameRef.current.value = rowItm[3];
-        }
-        if (premiumSec3Ref.current) {
-          premiumSec3Ref.current.value = formatNumber(
-            parseFloat((rowItm[6] || 0)?.toString().replace(/,/g, ""))
-          );
-        }
-
-        if (sumInsuredEBIRef.current) {
-          sumInsuredEBIRef.current.value = formatNumber(
-            parseFloat((rowItm[7] || 0)?.toString().replace(/,/g, ""))
-          );
-        }
-        if (sumInsuredTPPDRef.current) {
-          sumInsuredTPPDRef.current.value = formatNumber(
-            parseFloat((rowItm[8] || 0)?.toString().replace(/,/g, ""))
-          );
-        }
-
-        if (premiumEBIRef.current) {
-          premiumEBIRef.current.value = formatNumber(
-            parseFloat((rowItm[10] || 0)?.toString().replace(/,/g, ""))
-          );
-        }
-        if (premiumTPPDRef.current) {
-          premiumTPPDRef.current.value = formatNumber(
-            parseFloat((rowItm[11] || 0)?.toString().replace(/,/g, ""))
-          );
-        }
-        if (premiumAPARef.current) {
-          premiumAPARef.current.value = formatNumber(
-            parseFloat((rowItm[12] || 0).toString().replace(/,/g, ""))
-          );
-        }
-        setIsEditMode(true);
-        mutatatePayment({ policyNo: rowItm[1] });
-        policyComSearchCloseModal();
-      }
-    },
-  });
-  const {
-    UpwardTableModalSearch: PolicyFireSearchUpwardTableModalSearch,
-    openModal: policyFireSearchOpenModal,
-    closeModal: policyFireSearchCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    size: "large",
-    link: "/task/production/search-policy-renewal-notice-fire",
-    column: [
-      { key: "Date", label: "Date", width: 110 },
-      { key: "PolicyNo", label: "PolicyNo", width: 150 },
-      {
-        key: "Account",
-        label: "Account",
-        width: 100,
-      },
-      {
-        key: "Name",
-        label: "Name",
-        width: 255,
-      },
-      {
-        key: "ChassisNo",
-        label: "Chassis No",
-        width: 255,
-      },
-      {
-        key: "PropertyInsured",
-        label: "PropertyInsured",
-        width: 255,
-        hide: true,
-      },
-      {
-        key: "Mortgage",
-        label: "Mortgage",
-        width: 255,
-        hide: true,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        if (searchRef.current) {
-          searchRef.current.value = rowItm[1];
-        }
-        if (nameRef.current) {
-          nameRef.current.value = rowItm[3];
-        }
-
-        if (firePropertyInsuredRef.current) {
-          firePropertyInsuredRef.current.value = rowItm[5];
-        }
-        if (fireMortgageeRef.current) {
-          fireMortgageeRef.current.value = rowItm[6] || "";
-        }
-        setIsEditMode(true);
-        mutatatePayment({ policyNo: rowItm[1] });
-        policyFireSearchCloseModal();
-      }
-    },
-  });
-  const {
-    UpwardTableModalSearch: PolicyMarSearchUpwardTableModalSearch,
-    openModal: policyMarSearchOpenModal,
-    closeModal: policyMarSearchCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    size: "large",
-    link: "/task/production/search-policy-renewal-notice-mar",
-    column: [
-      { key: "Date", label: "Date", width: 110 },
-      { key: "PolicyNo", label: "PolicyNo", width: 150 },
-      {
-        key: "Account",
-        label: "Account",
-        width: 100,
-      },
-      {
-        key: "Name",
-        label: "Name",
-        width: 255,
-      },
-      {
-        key: "ChassisNo",
-        label: "Chassis No",
-        width: 255,
-      },
-      {
-        key: "SubjectInsured",
-        label: "SubjectInsured",
-        width: 255,
-        hide: true,
-      },
-      {
-        key: "AdditionalInfo",
-        label: "AdditionalInfo",
-        width: 255,
-        hide: true,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        if (searchRef.current) {
-          searchRef.current.value = rowItm[1];
-        }
-        if (nameRef.current) {
-          nameRef.current.value = rowItm[3];
-        }
-
-        if (marPropertyInsuredRef.current) {
-          marPropertyInsuredRef.current.value = rowItm[5];
-        }
-        if (marAdditionalInfoRef.current) {
-          marAdditionalInfoRef.current.value = rowItm[6];
-        }
-        setIsEditMode(true);
-        mutatatePayment({ policyNo: rowItm[1] });
-        policyMarSearchCloseModal();
-      }
-    },
-  });
-  const {
-    UpwardTableModalSearch: PolicyPaSearchUpwardTableModalSearch,
-    openModal: policyPaSearchOpenModal,
-    closeModal: policyPaSearchCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    size: "large",
-    link: "/task/production/search-policy-renewal-notice-pa",
-    column: [
-      { key: "Date", label: "Date", width: 110 },
-      { key: "PolicyNo", label: "PolicyNo", width: 150 },
-      {
-        key: "Account",
-        label: "Account",
-        width: 100,
-      },
-      {
-        key: "Name",
-        label: "Name",
-        width: 255,
-      },
-      {
-        key: "ChassisNo",
-        label: "Chassis No",
-        width: 255,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        if (searchRef.current) {
-          searchRef.current.value = rowItm[1];
-        }
-        if (nameRef.current) {
-          nameRef.current.value = rowItm[3];
-        }
-        setIsEditMode(true);
-        mutatatePayment({ policyNo: rowItm[1] });
-        policyPaSearchCloseModal();
-      }
-    },
-  });
   const generateRenewalNotice = () => {
     mutatateRenewalNotice({
       PolicyNo: searchRef.current?.value,
@@ -395,15 +124,15 @@ function RenewalNotice() {
   };
   function search(search: string, policyType: string) {
     if (policyType === "COM") {
-      policyComSearchOpenModal(search);
+      comModalRef.current.openModal(search);
     } else if (policyType === "FIRE") {
-      policyFireSearchOpenModal(search);
+      fireModalRef.current.openModal(search);
     } else if (policyType === "MAR") {
-      policyMarSearchOpenModal(search);
+      marModalRef.current.openModal(search);
     } else if (policyType === "PA") {
-      policyPaSearchOpenModal(search);
+      paModalRef.current.openModal(search);
     } else {
-      policyComSearchOpenModal(search);
+      comModalRef.current.openModal(search);
     }
   }
 
@@ -411,10 +140,6 @@ function RenewalNotice() {
     <>
       {(isLoadingRenewalNotice || isLoadingPayment) && <Loading />}
       <PageHelmet title="RENEWAL NOTICE" />
-      <PolicyComSearchUpwardTableModalSearch />
-      <PolicyFireSearchUpwardTableModalSearch />
-      <PolicyMarSearchUpwardTableModalSearch />
-      <PolicyPaSearchUpwardTableModalSearch />
       <div
         style={{
           flex: 1,
@@ -1165,8 +890,275 @@ function RenewalNotice() {
           </Button>
         </div>
       </div>
+      <UpwardTableModalSearch
+        ref={comModalRef}
+        link={"/task/production/search-policy-renewal-notice-com"}
+        column={[
+          { key: "Date", label: "Date", width: 110 },
+          { key: "PolicyNo", label: "PolicyNo", width: 150 },
+          {
+            key: "Account",
+            label: "Account",
+            width: 100,
+          },
+          {
+            key: "Name",
+            label: "Name",
+            width: 255,
+          },
+          {
+            key: "ChassisNo",
+            label: "Chassis No",
+            width: 255,
+          },
+          {
+            key: "EstimatedValue",
+            label: "EstimatedValue",
+            width: 255,
+            hide: true,
+          },
+          {
+            key: "SecIIPercent",
+            label: "SecIIPercent",
+            width: 255,
+            hide: true,
+          },
+          {
+            key: "BodilyInjury",
+            label: "BodilyInjury",
+            width: 255,
+            hide: true,
+          },
+          {
+            key: "PropertyDamage",
+            label: "PropertyDamage",
+            width: 255,
+            hide: true,
+          },
+          {
+            key: "PersonalAccident",
+            label: "PersonalAccident",
+            width: 255,
+            hide: true,
+          },
+          {
+            key: "Sec4A",
+            label: "Sec4A",
+            width: 255,
+            hide: true,
+          },
+          {
+            key: "Sec4B",
+            label: "Sec4B",
+            width: 255,
+            hide: true,
+          },
+          {
+            key: "Sec4C",
+            label: "Sec4C",
+            width: 255,
+            hide: true,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            if (searchRef.current) {
+              searchRef.current.value = rowItm.PolicyNo;
+            }
+            if (nameRef.current) {
+              nameRef.current.value = rowItm.Name;
+            }
+            if (premiumSec3Ref.current) {
+              premiumSec3Ref.current.value = formatNumber(
+                parseFloat(
+                  (rowItm.SecIIPercent || 0)?.toString().replace(/,/g, "")
+                )
+              );
+            }
+
+            if (sumInsuredEBIRef.current) {
+              sumInsuredEBIRef.current.value = formatNumber(
+                parseFloat(
+                  (rowItm.BodilyInjury || 0)?.toString().replace(/,/g, "")
+                )
+              );
+            }
+            if (sumInsuredTPPDRef.current) {
+              sumInsuredTPPDRef.current.value = formatNumber(
+                parseFloat(
+                  (rowItm.PropertyDamage || 0)?.toString().replace(/,/g, "")
+                )
+              );
+            }
+
+            if (premiumEBIRef.current) {
+              premiumEBIRef.current.value = formatNumber(
+                parseFloat((rowItm.Sec4A || 0)?.toString().replace(/,/g, ""))
+              );
+            }
+            if (premiumTPPDRef.current) {
+              premiumTPPDRef.current.value = formatNumber(
+                parseFloat((rowItm.Sec4B || 0)?.toString().replace(/,/g, ""))
+              );
+            }
+            if (premiumAPARef.current) {
+              premiumAPARef.current.value = formatNumber(
+                parseFloat((rowItm.Sec4C || 0).toString().replace(/,/g, ""))
+              );
+            }
+            setIsEditMode(true);
+            mutatatePayment({ policyNo: rowItm.PolicyNo });
+            comModalRef.current.closeModal();
+          }
+        }}
+      />
+      <UpwardTableModalSearch
+        ref={fireModalRef}
+        link={"/task/production/search-policy-renewal-notice-fire"}
+        column={[
+          { key: "Date", label: "Date", width: 110 },
+          { key: "PolicyNo", label: "PolicyNo", width: 150 },
+          {
+            key: "Account",
+            label: "Account",
+            width: 100,
+          },
+          {
+            key: "Name",
+            label: "Name",
+            width: 255,
+          },
+          {
+            key: "ChassisNo",
+            label: "Chassis No",
+            width: 255,
+          },
+          {
+            key: "PropertyInsured",
+            label: "PropertyInsured",
+            width: 255,
+            hide: true,
+          },
+          {
+            key: "Mortgage",
+            label: "Mortgage",
+            width: 255,
+            hide: true,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            if (searchRef.current) {
+              searchRef.current.value = rowItm.PolicyNo;
+            }
+            if (nameRef.current) {
+              nameRef.current.value = rowItm.Name;
+            }
+
+            if (firePropertyInsuredRef.current) {
+              firePropertyInsuredRef.current.value = rowItm.PropertyInsured;
+            }
+            if (fireMortgageeRef.current) {
+              fireMortgageeRef.current.value = rowItm.AdditionalInfo || "";
+            }
+            setIsEditMode(true);
+            mutatatePayment({ policyNo: rowItm.PolicyNo });
+            fireModalRef.current.closeModal();
+          }
+        }}
+      />
+      <UpwardTableModalSearch
+        ref={marModalRef}
+        link={"/task/production/search-policy-renewal-notice-mar"}
+        column={[
+          { key: "Date", label: "Date", width: 110 },
+          { key: "PolicyNo", label: "PolicyNo", width: 150 },
+          {
+            key: "Account",
+            label: "Account",
+            width: 100,
+          },
+          {
+            key: "Name",
+            label: "Name",
+            width: 255,
+          },
+          {
+            key: "ChassisNo",
+            label: "Chassis No",
+            width: 255,
+          },
+          {
+            key: "SubjectInsured",
+            label: "SubjectInsured",
+            width: 255,
+            hide: true,
+          },
+          {
+            key: "AdditionalInfo",
+            label: "AdditionalInfo",
+            width: 255,
+            hide: true,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            if (searchRef.current) {
+              searchRef.current.value = rowItm.PolicyNo;
+            }
+            if (nameRef.current) {
+              nameRef.current.value = rowItm.Name;
+            }
+
+            if (marPropertyInsuredRef.current) {
+              marPropertyInsuredRef.current.value = rowItm.SubjectInsured;
+            }
+            if (marAdditionalInfoRef.current) {
+              marAdditionalInfoRef.current.value = rowItm.AdditionalInfo;
+            }
+            setIsEditMode(true);
+            mutatatePayment({ policyNo: rowItm.PolicyNo });
+            paModalRef.current.closeModal();
+          }
+        }}
+      />
+      <UpwardTableModalSearch
+        ref={paModalRef}
+        link={"/task/production/search-policy-renewal-notice-pa"}
+        column={[
+          { key: "Date", label: "Date", width: 110 },
+          { key: "PolicyNo", label: "PolicyNo", width: 150 },
+          {
+            key: "Account",
+            label: "Account",
+            width: 100,
+          },
+          {
+            key: "Name",
+            label: "Name",
+            width: 255,
+          },
+          {
+            key: "ChassisNo",
+            label: "Chassis No",
+            width: 255,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            if (searchRef.current) {
+              searchRef.current.value = rowItm.PolicyNo;
+            }
+            if (nameRef.current) {
+              nameRef.current.value = rowItm.Name;
+            }
+            setIsEditMode(true);
+            mutatatePayment({ policyNo: rowItm.PolicyNo });
+            paModalRef.current.closeModal();
+          }
+        }}
+      />
     </>
   );
 }
-
 export default RenewalNotice;

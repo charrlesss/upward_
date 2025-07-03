@@ -1,26 +1,15 @@
-import React, {
-  useContext,
-  useState,
-  useRef,
-  useReducer,
-  useId,
-  useEffect,
-} from "react";
-import { Box, TextField, Button } from "@mui/material";
+import React, { useContext, useState, useRef, useId, useEffect } from "react";
+import { Button } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { GridRowSelectionModel } from "@mui/x-data-grid";
 import { pink } from "@mui/material/colors";
 import { AuthContext } from "../../../components/AuthContext";
-import { useMutation, useQuery, useQueryClient } from "react-query";
+import { useMutation } from "react-query";
 import Swal from "sweetalert2";
 import { wait } from "../../../lib/wait";
 import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
-import Checkbox from "@mui/material/Checkbox";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import { LoadingButton } from "@mui/lab";
-import Table from "../../../components/Table";
 import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
@@ -29,8 +18,8 @@ import PageHelmet from "../../../components/Helmet";
 import { TextInput } from "../../../components/UpwardFields";
 import SearchIcon from "@mui/icons-material/Search";
 import {
-  DataGridViewReact,
-  useUpwardTableModalSearchSafeMode,
+  DataGridViewReactUpgraded,
+  UpwardTableModalSearch,
 } from "../../../components/DataGridViewReact";
 import { Loading } from "../../../components/Loading";
 import "../../../style/monbileview/reference/reference.css";
@@ -79,6 +68,10 @@ export default function BankAccount() {
   const identityRef = useRef<HTMLInputElement>(null);
   const autoRef = useRef("");
 
+  const bankAccountModalRef = useRef<any>(null);
+  const chartAccountModalRef = useRef<any>(null);
+  const clientBankAccountModalRef = useRef<any>(null);
+
   const { mutate: mutateSearch, isLoading: loadingSearch } = useMutation({
     mutationKey: "search-banck-account",
     mutationFn: async (variables: any) => {
@@ -91,7 +84,7 @@ export default function BankAccount() {
     onSuccess: (response) => {
       if (response.data.success) {
         wait(100).then(() => {
-          tableRef.current.setDataFormated(response.data.data);
+          tableRef.current.setData(response.data.data);
         });
       }
     },
@@ -131,86 +124,6 @@ export default function BankAccount() {
     },
     onSuccess,
   });
-
-  const {
-    UpwardTableModalSearch: BankUpwardTableModalSearch,
-    openModal: bankOpenModal,
-    closeModal: bankCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    link: "/reference/search-bank-from-bank-account",
-    column: [
-      { key: "Code", label: "Code", width: 130 },
-      { key: "Bank_Name", label: "Bank Name", width: 350 },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        wait(100).then(() => {
-          if (bankRef.current) {
-            bankRef.current.value = rowItm[1];
-          }
-          bankCodeRef.current = rowItm[0];
-
-          accountRef.current?.focus();
-        });
-        bankCloseModal();
-      }
-    },
-  });
-
-  const {
-    UpwardTableModalSearch: ChartAccountUpwardTableModalSearch,
-    openModal: chartAccountOpenModal,
-    closeModal: chartAccountCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    size: "medium",
-    link: "/reference/search-chart-account-from-bank-account",
-    column: [
-      { key: "Code", label: "Code", width: 80 },
-      { key: "Title", label: "Title", width: 270 },
-      { key: "Short", label: "Short Name", width: 300 },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        wait(100).then(() => {
-          if (accountRef.current) {
-            accountRef.current.value = rowItm[1];
-          }
-          accountCodeRef.current = rowItm[0];
-          iDNoRef.current?.focus();
-        });
-        chartAccountCloseModal();
-      }
-    },
-  });
-
-  const {
-    UpwardTableModalSearch: ClientUpwardTableModalSearch,
-    openModal: clientOpenModal,
-    closeModal: clientCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    size: "medium",
-    link: "/reference/search-client-from-bank-account",
-    column: [
-      { key: "IDNo", label: "ID. No.", width: 130 },
-      { key: "Name", label: "Name", width: 350 },
-      { key: "IDType", label: "ID Type", width: 80 },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        wait(100).then(() => {
-          if (iDNoRef.current) {
-            iDNoRef.current.value = rowItm[0];
-          }
-          if (identityRef.current) {
-            identityRef.current.value = rowItm[1];
-          }
-          inactiveRef.current?.focus();
-        });
-        clientCloseModal();
-      }
-    },
-  });
-
   function handleOnSave(e: any) {
     e.preventDefault();
     if (accountNoRef.current?.value === "") {
@@ -327,11 +240,9 @@ export default function BankAccount() {
     accountCodeRef.current = "";
     autoRef.current = "";
   }
-
   function onSuccess(res: any) {
     if (res.data.success) {
-      tableRef.current.setSelectedRow(null);
-      tableRef.current.resetCheckBox();
+      tableRef.current.resetTable();
       mutateSearchRef.current({ search: "" });
       resetModule();
       setMode("");
@@ -351,7 +262,6 @@ export default function BankAccount() {
       timer: 1500,
     });
   }
-
   useEffect(() => {
     mutateSearchRef.current({ search: "" });
   }, []);
@@ -360,9 +270,6 @@ export default function BankAccount() {
     <>
       {loadingSearch && <Loading />}
       <PageHelmet title="Bank" />
-      <BankUpwardTableModalSearch />
-      <ChartAccountUpwardTableModalSearch />
-      <ClientUpwardTableModalSearch />
       <div
         style={{
           display: "flex",
@@ -495,8 +402,8 @@ export default function BankAccount() {
                     if (result.isConfirmed) {
                       resetModule();
                       setMode("");
-                      tableRef.current.setSelectedRow(null);
-                      tableRef.current.resetCheckBox();
+                      tableRef.current.resetTable();
+                      mutateSearch({search:""})
                     }
                   });
                 }}
@@ -672,7 +579,9 @@ export default function BankAccount() {
                 onKeyDown: (e) => {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
-                    bankOpenModal(e.currentTarget.value);
+                    bankAccountModalRef.current.openModal(
+                      e.currentTarget.value
+                    );
                   }
                 },
               }}
@@ -686,7 +595,9 @@ export default function BankAccount() {
               onIconClick={(e) => {
                 e.preventDefault();
                 if (inputSearchRef.current) {
-                  bankOpenModal(inputSearchRef.current.value);
+                  bankAccountModalRef.current.openModal(
+                    inputSearchRef.current.value
+                  );
                 }
               }}
               inputRef={bankRef}
@@ -709,7 +620,9 @@ export default function BankAccount() {
                 onKeyDown: (e) => {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
-                    chartAccountOpenModal(e.currentTarget.value);
+                    chartAccountModalRef.current.openModal(
+                      e.currentTarget.value
+                    );
                   }
                 },
               }}
@@ -723,7 +636,9 @@ export default function BankAccount() {
               onIconClick={(e) => {
                 e.preventDefault();
                 if (inputSearchRef.current) {
-                  chartAccountOpenModal(inputSearchRef.current.value);
+                  chartAccountModalRef.current.openModal(
+                    inputSearchRef.current.value
+                  );
                 }
               }}
               inputRef={accountRef}
@@ -746,7 +661,9 @@ export default function BankAccount() {
                 onKeyDown: (e) => {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
-                    clientOpenModal(e.currentTarget.value);
+                    clientBankAccountModalRef.current.openModal(
+                      e.currentTarget.value
+                    );
                   }
                 },
               }}
@@ -760,7 +677,9 @@ export default function BankAccount() {
               onIconClick={(e) => {
                 e.preventDefault();
                 if (inputSearchRef.current) {
-                  clientOpenModal(inputSearchRef.current.value);
+                  clientBankAccountModalRef.current.openModal(
+                    inputSearchRef.current.value
+                  );
                 }
               }}
               inputRef={iDNoRef}
@@ -798,47 +717,41 @@ export default function BankAccount() {
             display: "flex",
           }}
         >
-          <DataGridViewReact
-            containerStyle={{
-              flex: 1,
-              height: "auto",
-            }}
+          <DataGridViewReactUpgraded
             ref={tableRef}
+            adjustVisibleRowCount={280}
             columns={bankAccountColumn}
-            height="280px"
-            getSelectedItem={(rowItm: any) => {
+            handleSelectionChange={(rowItm: any) => {
               if (rowItm) {
                 setMode("edit");
-                console.log(rowItm);
-
                 if (accountNoRef.current) {
-                  accountNoRef.current.value = rowItm[0];
+                  accountNoRef.current.value = rowItm.Account_Number;
                 }
                 if (accountNameRef.current) {
-                  accountNameRef.current.value = rowItm[1];
+                  accountNameRef.current.value = rowItm.Account_Name;
                 }
                 if (accountTypeRef.current) {
-                  accountTypeRef.current.value = rowItm[2];
+                  accountTypeRef.current.value = rowItm.Account_Type;
                 }
                 if (inactiveRef.current) {
-                  inactiveRef.current.checked = rowItm[5] === "YES";
+                  inactiveRef.current.checked = rowItm.Inactive === "YES";
                 }
 
                 if (bankRef.current) {
-                  bankRef.current.value = rowItm[8];
+                  bankRef.current.value = rowItm.Bank;
                 }
                 if (accountRef.current) {
-                  accountRef.current.value = rowItm[9];
+                  accountRef.current.value = rowItm.Acct_Title;
                 }
                 if (iDNoRef.current) {
-                  iDNoRef.current.value = rowItm[6];
+                  iDNoRef.current.value = rowItm.ID_No;
                 }
                 if (identityRef.current) {
-                  identityRef.current.value = rowItm[7];
+                  identityRef.current.value = rowItm.Identity;
                 }
-                bankCodeRef.current = rowItm[3];
-                accountCodeRef.current = rowItm[4];
-                autoRef.current = rowItm[10];
+                bankCodeRef.current = rowItm.Bank_Name;
+                accountCodeRef.current = rowItm.Account_ID;
+                autoRef.current = rowItm.Auto;
               } else {
                 resetModule();
               }
@@ -911,8 +824,8 @@ export default function BankAccount() {
                   if (result.isConfirmed) {
                     resetModule();
                     setMode("");
-                    tableRef.current.setSelectedRow(null);
-                    tableRef.current.resetCheckBox();
+                    tableRef.current.resetTable();
+                    mutateSearch({search:""})
                   }
                 });
               }}
@@ -953,6 +866,71 @@ export default function BankAccount() {
           </LoadingButton>
         </div>
       </div>
+      <UpwardTableModalSearch
+        ref={bankAccountModalRef}
+        link={"/reference/search-bank-from-bank-account"}
+        column={[
+          { key: "Code", label: "Code", width: 130 },
+          { key: "Bank_Name", label: "Bank Name", width: 350 },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              if (bankRef.current) {
+                bankRef.current.value = rowItm.Bank_Name;
+              }
+              bankCodeRef.current = rowItm.Code;
+
+              accountRef.current?.focus();
+            });
+            bankAccountModalRef.current.closeModal();
+          }
+        }}
+      />
+      <UpwardTableModalSearch
+        ref={chartAccountModalRef}
+        link={"/reference/search-chart-account-from-bank-account"}
+        column={[
+          { key: "Code", label: "Code", width: 80 },
+          { key: "Title", label: "Title", width: 270 },
+          { key: "Short", label: "Short Name", width: 300 },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              if (accountRef.current) {
+                accountRef.current.value = rowItm.Title;
+              }
+              accountCodeRef.current = rowItm.Code;
+              iDNoRef.current?.focus();
+            });
+            chartAccountModalRef.current.closeModal();
+          }
+        }}
+      />
+      <UpwardTableModalSearch
+        ref={clientBankAccountModalRef}
+        link={"/reference/search-client-from-bank-account"}
+        column={[
+          { key: "IDNo", label: "ID. No.", width: 130 },
+          { key: "Name", label: "Name", width: 350 },
+          { key: "IDType", label: "ID Type", width: 80 },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              if (iDNoRef.current) {
+                iDNoRef.current.value = rowItm.IDNo;
+              }
+              if (identityRef.current) {
+                identityRef.current.value = rowItm.Name;
+              }
+              inactiveRef.current?.focus();
+            });
+            clientBankAccountModalRef.current.closeModal();
+          }
+        }}
+      />
     </>
   );
 }

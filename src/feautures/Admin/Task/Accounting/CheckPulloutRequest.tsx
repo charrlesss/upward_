@@ -7,6 +7,7 @@ import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
 import { SelectInput, TextInput } from "../../../../components/UpwardFields";
 import {
   DataGridViewMultiSelectionReact,
+  UpwardTableModalSearch,
   useUpwardTableModalSearchSafeMode,
 } from "../../../../components/DataGridViewReact";
 import { Button } from "@mui/material";
@@ -53,6 +54,9 @@ export default function CheckPulloutRequest() {
   const btnEditRef = useRef<HTMLButtonElement>(null);
   const btnSaveRef = useRef<HTMLButtonElement>(null);
   const btnCancelRef = useRef<HTMLButtonElement>(null);
+
+  const PNoModalRef = useRef<any>(null);
+  const rcpnModalRef = useRef<any>(null);
 
   const {
     isLoading: isLoadingSavePulloutRequest,
@@ -123,47 +127,7 @@ export default function CheckPulloutRequest() {
     },
   });
 
-  const {
-    UpwardTableModalSearch: PNoClientSearchUpwardTableModalSearch,
-    openModal: pNoClientSearchOpenModal,
-    closeModal: pNoClientSearchCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    link: "/task/accounting/pullout/reqeust/get-pnno-client",
-    column: [
-      { key: "PNo", label: "PN No.", width: 150 },
-      { key: "Name", label: "Client Name", width: 270 },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        if (ppnoRef.current) {
-          ppnoRef.current.value = rowItm[0];
-        }
-        if (nameRef.current) {
-          nameRef.current.value = rowItm[1];
-        }
 
-        loadChecks(rowItm[0]);
-        pNoClientSearchCloseModal();
-      }
-    },
-  });
-
-  const {
-    UpwardTableModalSearch: RcpnNoSearchUpwardTableModalSearch,
-    openModal: rcpnNoSearchOpenModal,
-    closeModal: rcpnNoSearchCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    link: "/task/accounting/pullout/reqeust/get-rcpn-no",
-    column: [{ key: "RCPNo", label: "RCPN No.", width: 400 }],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        mutateGetSelectedRcpnNoPulloutRequest({
-          rcpno: rowItm[0],
-        });
-        rcpnNoSearchCloseModal();
-      }
-    },
-  });
 
   const AutoID = async () => {
     const qry = `
@@ -267,8 +231,6 @@ export default function CheckPulloutRequest() {
       {(isLoadingSavePulloutRequest ||
         isLoadingGetSelectedRcpnNoPulloutRequest) && <Loading />}
 
-      <PNoClientSearchUpwardTableModalSearch />
-      <RcpnNoSearchUpwardTableModalSearch />
       <div
         className="main"
         style={{
@@ -317,7 +279,7 @@ export default function CheckPulloutRequest() {
                   style: { width: "calc(100% - 100px)" },
                   onKeyDown: (e) => {
                     if (e.code === "NumpadEnter" || e.code === "Enter") {
-                      rcpnNoSearchOpenModal(e.currentTarget.value);
+                       rcpnModalRef.current.openModal(e.currentTarget.value);
                     }
                   },
                 }}
@@ -325,7 +287,7 @@ export default function CheckPulloutRequest() {
                 onIconClick={(e) => {
                   e.preventDefault();
                   if (rcpnRef.current) {
-                    rcpnNoSearchOpenModal(rcpnRef.current.value);
+                     rcpnModalRef.current.openModal(rcpnRef.current.value);
                   }
                 }}
                 inputRef={rcpnRef}
@@ -376,7 +338,7 @@ export default function CheckPulloutRequest() {
                 onKeyDown: (e) => {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
-                    pNoClientSearchOpenModal(e.currentTarget.value);
+                     PNoModalRef.current.openModal(e.currentTarget.value);
                   }
                 },
                 style: {
@@ -389,7 +351,7 @@ export default function CheckPulloutRequest() {
               onIconClick={(e) => {
                 e.preventDefault();
                 if (ppnoRef.current) {
-                  pNoClientSearchOpenModal(ppnoRef.current.value);
+                   PNoModalRef.current.openModal(ppnoRef.current.value);
                 }
               }}
               inputRef={ppnoRef}
@@ -615,6 +577,40 @@ export default function CheckPulloutRequest() {
           </div>
         </div>
       </div>
+      <UpwardTableModalSearch
+        ref={PNoModalRef}
+        link={"/task/accounting/pullout/reqeust/get-pnno-client"}
+        column={[
+          { key: "PNo", label: "PN No.", width: 150 },
+          { key: "Name", label: "Client Name", width: 270 },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            if (ppnoRef.current) {
+              ppnoRef.current.value = rowItm.PNo;
+            }
+            if (nameRef.current) {
+              nameRef.current.value = rowItm.Name;
+            }
+
+            loadChecks(rowItm.PNo);
+            PNoModalRef.current.closeModal();
+          }
+        }}
+      />
+      <UpwardTableModalSearch
+        ref={rcpnModalRef}
+        link={"/task/accounting/pullout/reqeust/get-rcpn-no"}
+        column={[{ key: "RCPNo", label: "RCPN No.", width: 400 }]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            mutateGetSelectedRcpnNoPulloutRequest({
+              rcpno: rowItm.RCPNo,
+            });
+            rcpnModalRef.current.closeModal();
+          }
+        }}
+      />
     </>
   );
 }

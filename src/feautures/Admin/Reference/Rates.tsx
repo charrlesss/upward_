@@ -18,7 +18,7 @@ import {
 import PageHelmet from "../../../components/Helmet";
 import { TextFormatedInput, TextInput } from "../../../components/UpwardFields";
 import SearchIcon from "@mui/icons-material/Search";
-import { DataGridViewReact } from "../../../components/DataGridViewReact";
+import { DataGridViewReactUpgraded } from "../../../components/DataGridViewReact";
 import { Loading } from "../../../components/Loading";
 import { Autocomplete } from "../Task/Accounting/PettyCash";
 import "../../../style/monbileview/reference/reference.css";
@@ -81,7 +81,7 @@ export default function Rates() {
       if (response.data.success) {
         console.log(response.data);
         wait(100).then(() => {
-          tableRef.current.setDataFormated(response.data.data);
+          tableRef.current.setData(response.data.data);
         });
       }
     },
@@ -201,8 +201,7 @@ export default function Rates() {
 
   function onSuccess(res: any) {
     if (res.data.success) {
-      tableRef.current.setSelectedRow(null);
-      tableRef.current.resetCheckBox();
+      tableRef.current.resetTable();
       mutateSearchRef.current({ search: "" });
       resetModule();
       setMode("");
@@ -365,8 +364,8 @@ export default function Rates() {
                     if (result.isConfirmed) {
                       resetModule();
                       setMode("");
-                      tableRef.current.setSelectedRow(null);
-                      tableRef.current.resetCheckBox();
+                      tableRef.current.resetTable();
+                      mutateSearchRef.current({ search: "" });
                     }
                   });
                 }}
@@ -547,36 +546,33 @@ export default function Rates() {
             display: "flex",
           }}
         >
-          <DataGridViewReact
-            containerStyle={{
-              flex: 1,
-              height: "auto",
-            }}
+          <DataGridViewReactUpgraded
             ref={tableRef}
+            adjustVisibleRowCount={240}
             columns={rateColumn}
-            height="280px"
-            getSelectedItem={(rowItm: any) => {
+            handleSelectionChange={(rowItm: any) => {
               if (rowItm) {
                 setMode("edit");
                 if (accountRef.current) {
-                  accountRef.current.value = rowItm[0];
+                  accountRef.current.value = rowItm.Account;
                 }
                 if (lineRef.current) {
-                  lineRef.current.value = rowItm[1];
+                  lineRef.current.value = rowItm.Line;
                 }
                 if (typeRef.current) {
-                  typeRef.current.value = rowItm[2];
+                  typeRef.current.value = rowItm.Type;
                 }
                 if (rateRef.current) {
-                  rateRef.current.value = rowItm[3];
+                  rateRef.current.value = rowItm.Rate;
                 }
-                idRef.current = rowItm[4];
+                idRef.current = rowItm.ID;
               } else {
                 resetModule();
               }
             }}
           />
         </div>
+
         <div
           className="button-action-mobile"
           style={{
@@ -643,8 +639,8 @@ export default function Rates() {
                   if (result.isConfirmed) {
                     resetModule();
                     setMode("");
-                    tableRef.current.setSelectedRow(null);
-                    tableRef.current.resetCheckBox();
+                    tableRef.current.resetTable();
+                    mutateSearchRef.current({ search: "" });
                   }
                 });
               }}

@@ -17,7 +17,10 @@ import { pink } from "@mui/material/colors";
 import PageHelmet from "../../../components/Helmet";
 import { TextFormatedInput, TextInput } from "../../../components/UpwardFields";
 import SearchIcon from "@mui/icons-material/Search";
-import { DataGridViewReact } from "../../../components/DataGridViewReact";
+import {
+  DataGridViewReact,
+  DataGridViewReactUpgraded,
+} from "../../../components/DataGridViewReact";
 import { Loading } from "../../../components/Loading";
 import "../../../style/monbileview/reference/reference.css";
 
@@ -56,7 +59,7 @@ export default function CTPL() {
       if (response.data.success) {
         wait(100).then(() => {
           console.log(response.data);
-          tableRef.current.setDataFormated(response.data.data);
+          tableRef.current.setData(response.data.data);
         });
       }
     },
@@ -119,8 +122,7 @@ export default function CTPL() {
   }
   function onSuccess(res: any) {
     if (res.data.success) {
-      tableRef.current.setSelectedRow(null);
-      tableRef.current.resetCheckBox();
+      tableRef.current.resetTable();
       mutateSearchRef.current({ search: "" });
       resetModule();
       setMode("");
@@ -282,8 +284,8 @@ export default function CTPL() {
                     if (result.isConfirmed) {
                       resetModule();
                       setMode("");
-                      tableRef.current.setSelectedRow(null);
-                      tableRef.current.resetCheckBox();
+                      tableRef.current.resetTable();
+                      mutateSearch({ search: "" });
                     }
                   });
                 }}
@@ -443,31 +445,27 @@ export default function CTPL() {
             display: "flex",
           }}
         >
-          <DataGridViewReact
-            containerStyle={{
-              flex: 1,
-              height: "auto",
-            }}
+          <DataGridViewReactUpgraded
             ref={tableRef}
+            adjustVisibleRowCount={240}
             columns={pettyLogColumn}
-            height="280px"
-            getSelectedItem={(rowItm: any) => {
+            handleSelectionChange={(rowItm: any) => {
               if (rowItm) {
                 setMode("edit");
                 if (prefixRef.current) {
-                  prefixRef.current.value = rowItm[0];
+                  prefixRef.current.value = rowItm.Prefix;
                 }
                 if (numSeriesFromRef.current) {
-                  numSeriesFromRef.current.value = rowItm[1];
+                  numSeriesFromRef.current.value = rowItm.NumSeriesFrom;
                 }
                 if (numSeriesToRef.current) {
-                  numSeriesToRef.current.value = rowItm[2];
+                  numSeriesToRef.current.value = rowItm.NumSeriesTo;
                 }
                 if (costRef.current) {
-                  costRef.current.value = rowItm[3];
+                  costRef.current.value = rowItm.Cost;
                 }
-                ctplId.current = rowItm[4];
-                ctplType.current = rowItm[5];
+                ctplId.current = rowItm.ctplId;
+                ctplType.current = rowItm.ctplType;
               } else {
                 resetModule();
               }
@@ -540,8 +538,8 @@ export default function CTPL() {
                   if (result.isConfirmed) {
                     resetModule();
                     setMode("");
-                    tableRef.current.setSelectedRow(null);
-                    tableRef.current.resetCheckBox();
+                    tableRef.current.resetTable();
+                    mutateSearch({ search: "" });
                   }
                 });
               }}

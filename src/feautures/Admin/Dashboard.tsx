@@ -4,7 +4,10 @@ import { useContext } from "react";
 import { AuthContext } from "../../components/AuthContext";
 import "../../style/dashboard.css";
 import PageHelmet from "../../components/Helmet";
-import { DataGridViewReact } from "../../components/DataGridViewReact";
+import {
+  DataGridViewReact,
+  DataGridViewReactUpgraded,
+} from "../../components/DataGridViewReact";
 import { useMutation } from "react-query";
 import { Loading } from "../../components/Loading";
 
@@ -21,59 +24,7 @@ const policyColumn = [
   { key: "ChassisNo", label: "Chassis No.", width: 160 },
   { key: "DateExpired", label: "Date Expired", width: 100 },
 ];
-const POLICYTABLE = () => {
-  const tableRef = useRef<any>(null);
-  // const [laoding, setLoading] = useState(false);
-  // const { user } = useContext(AuthContext);
 
-  // useEffect(() => {
-  //   setLoading(true);
-  //   myAxios
-  //     .get(`/get-renewal-this-month?policy=${policy}`, {
-  //       headers: {
-  //         Authorization: `Bearer ${user?.accessToken}`,
-  //       },
-  //     })
-  //     .then((data) => {
-  //       setLoading(false);
-  //       console.log(data?.data.renewal);
-  //       if (tableRef.current)
-  //         tableRef.current.setDataFormated(data?.data.renewal);
-  //     });
-  // }, [user, policy]);
-
-  // const width = window.innerWidth - 50;
-  // const height = window.innerHeight - 145;
-  // if (laoding) {
-  //   return <div style={{ textAlign: "center" }}>Loading...</div>;
-  // }
-  return (
-    <div
-      style={{
-        flex: 1,
-        display: "flex",
-      }}
-    >
-      <DataGridViewReact
-        containerStyle={{
-          flex: 1,
-          height: "auto",
-        }}
-        ref={tableRef}
-        width="100%"
-        height="350px"
-        columns={policyColumn}
-        getSelectedItem={(
-          rowItm: any,
-          colItm: any,
-          rowIdx: any,
-          colIdx: any
-        ) => {}}
-        onKeyDown={(rowSelected: any, RowIndex: any, e: any) => {}}
-      />
-    </div>
-  );
-};
 const tabs = [
   {
     id: 0,
@@ -125,7 +76,7 @@ export default function Dashboard() {
         });
       },
       onSuccess: (res) => {
-        tableRef.current.setDataFormated(res?.data.renewal);
+        tableRef.current.setData(res?.data.renewal);
       },
     });
 
@@ -151,31 +102,36 @@ export default function Dashboard() {
           height: "100%",
           padding: "5px",
           background: "#F1F1F1",
-          // rowGap:"0px"
         }}
       >
         <PageHelmet title={"Dashboard"} />
-        <div
-          className="mobile-title"
+        <p
           style={{
-            borderTop: "1px solid #64748b",
-            borderRight: "1px solid #64748b",
-            display: "none",
-            justifyContent: "center",
-            alignItems: "center",
-            background: "#3EA1E2",
-            color: "white",
-            padding: "5px",
-            margin: 0,
-          }}
-        >
-          RENEWAL NOTICE
-        </div>
-        <div
-          style={{
-            display: "flex",
             padding: 0,
             margin: 0,
+            fontFamily: "fantasy",
+            fontSize: "16px",
+            textAlign: "center",
+          }}
+        >
+          Renewal Notice
+        </p>
+        <div
+          className="dashboard-button-selection"
+          style={{
+            width: "auto",
+            margin: "0px auto",
+            height: "auto",
+            borderRadius: "10px",
+            boxShadow: " -1px 3px 10px -3px rgba(0,0,0,0.75)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            columnGap: "10px",
+            background: "white",
+            padding: "7px 10px",
+            boxSizing: "border-box",
+            transition: "all 250ms",
           }}
         >
           {tabs.map((tab, index) => (
@@ -192,41 +148,50 @@ export default function Dashboard() {
               style={{
                 width: "auto",
                 fontSize: "11px",
-                padding: "10px",
+                padding: "7px",
                 cursor: "pointer",
-                backgroundColor: activeTab === tab.id ? "white" : "transparent",
-                color: activeTab === tab.id ? "#0074cc" : "#000",
+                backgroundColor:
+                  activeTab === tab.id ? "#0074cc" : "transparent",
+                color: activeTab === tab.id ? "white" : "#000",
                 border: "none",
-                borderRight:
-                  activeTab === tab.id
-                    ? tab.id === 0
-                      ? "none"
-                      : "1px solid #0074cc"
-                    : tab.id === 0
-                    ? "none"
-                    : "1px solid #64748b",
-                borderLeft:
-                  activeTab === tab.id
-                    ? tab.id === 2
-                      ? "none"
-                      : "1px solid #0074cc"
-                    : tab.id === 2
-                    ? "none"
-                    : "1px solid #64748b",
-                borderTop:
-                  activeTab === tab.id
-                    ? "1px solid #0074cc"
-                    : "1px solid #64748b",
-
-                // borderBottom:
-                //   activeTab === tab.id ? "2px solid #007BFF" : "2px solid #ccc",
                 textTransform: "uppercase",
                 fontWeight: "bold",
+                borderRadius: "5px",
               }}
             >
               {tab.label}
             </button>
           ))}
+        </div>
+        <div
+          style={{
+            marginTop: "10px",
+            width: "100%",
+            position: "relative",
+            flex: 1,
+            display: "flex",
+            borderRadius: "5px",
+            // border:"1px solid red",
+            padding: "5px",
+            boxSizing: "border-box",
+          }}
+        >
+          <DataGridViewReactUpgraded
+            ref={tableRef}
+            adjustVisibleRowCount={200}
+            columns={policyColumn}
+            handleSelectionChange={(rowItm: any) => {}}
+          />
+        </div>
+
+        {/* <div
+          style={{
+            display: "flex",
+            padding: 0,
+            margin: 0,
+          }}
+        >
+         
           <div
             className="desktop-title"
             style={{
@@ -242,8 +207,8 @@ export default function Dashboard() {
           >
             RENEWAL NOTICE
           </div>
-        </div>
-        <div
+        </div> */}
+        {/* <div
           style={{
             // padding: "7px",
             flex: 1,
@@ -298,7 +263,7 @@ export default function Dashboard() {
               onKeyDown={(rowSelected: any, RowIndex: any, e: any) => {}}
             />
           </div>
-        </div>
+        </div> */}
       </div>
     </>
   );

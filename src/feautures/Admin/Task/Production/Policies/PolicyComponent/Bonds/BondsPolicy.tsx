@@ -33,7 +33,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import SaveAsIcon from "@mui/icons-material/SaveAs";
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import { Loading } from "../../../../../../../components/Loading";
-import { useUpwardTableModalSearchSafeMode } from "../../../../../../../components/DataGridViewReact";
+import { UpwardTableModalSearch, useUpwardTableModalSearchSafeMode } from "../../../../../../../components/DataGridViewReact";
 import { PolicyContext } from "../../Policy";
 
 export default function BondsPolicy() {
@@ -47,8 +47,9 @@ export default function BondsPolicy() {
   const _policyInformationRef = useRef<any>(null);
   const _policyPremiumRef = useRef<any>(null);
   const subAccountRef = useRef<HTMLSelectElement>(null);
-  const subAccountRef_ = useRef<any>(null);
   const careOfRef = useRef<HTMLSelectElement>(null);
+  
+  const searchBondModalRef = useRef<any>(null);
 
   const { isLoading: isLoadingBondSubline } = useQuery({
     queryKey: "bond-subline",
@@ -374,120 +375,8 @@ export default function BondsPolicy() {
         }
       },
     });
-  const {
-    UpwardTableModalSearch: ClientUpwardTableModalSearch,
-    openModal: clientOpenModal,
-    closeModal: clientCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    link: "/task/production/search-client-by-id-or-name",
-    column: [
-      { key: "IDNo", label: "ID No", width: 120 },
-      { key: "Name", label: "Name", width: 200 },
-      {
-        key: "IDType",
-        label: "ID Type",
-        width: 90,
-      },
-      {
-        key: "address",
-        label: "Address",
-        width: 90,
-        hide: true,
-      },
-      {
-        key: "sale_officer",
-        label: "Sale Officer",
-        width: 90,
-        hide: true,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        if (_policyInformationRef.current.getRefs().clientIDRef.current) {
-          _policyInformationRef.current.getRefs().clientIDRef.current.value =
-            rowItm[0];
-        }
-        if (_policyInformationRef.current.getRefs().clientNameRef.current) {
-          _policyInformationRef.current.getRefs().clientNameRef.current.value =
-            rowItm[1];
-        }
-        if (_policyInformationRef.current.getRefs().clientAddressRef.current) {
-          _policyInformationRef.current.getRefs().clientAddressRef.current.value =
-            rowItm[3];
-        }
-        if (_policyInformationRef.current.getRefs().saleOfficerRef.current) {
-          _policyInformationRef.current.getRefs().saleOfficerRef.current.value =
-            rowItm[4];
-        }
-        clientCloseModal();
-        wait(100).then(() => {
-          _policyInformationRef.current.getRefs().agentIdRef.current?.focus();
-        });
-      }
-    },
-  });
-  const {
-    UpwardTableModalSearch: AgentUpwardTableModalSearch,
-    openModal: agentOpenModal,
-    closeModal: agentCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    link: "/task/production/search-agent-by-id-or-name",
-    column: [
-      { key: "IDNo", label: "ID No", width: 120 },
-      { key: "Name", label: "Name", width: 200 },
-      {
-        key: "IDType",
-        label: "ID Type",
-        width: 90,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        if (_policyInformationRef.current.getRefs().agentIdRef.current) {
-          _policyInformationRef.current.getRefs().agentIdRef.current.value =
-            rowItm[0];
-        }
-        if (_policyInformationRef.current.getRefs().agentNameRef.current) {
-          _policyInformationRef.current.getRefs().agentNameRef.current.value =
-            rowItm[1];
-        }
-
-        agentCloseModal();
-        wait(100).then(() => {
-          _policyInformationRef.current.getRefs().accountRef.current?.focus();
-        });
-      }
-    },
-  });
-  const {
-    UpwardTableModalSearch: SearchFireUpwardTableModalSearch,
-    openModal: searchFireOpenModal,
-    closeModal: searchFireCloseModal,
-  } = useUpwardTableModalSearchSafeMode({
-    size: "medium",
-    link: "/task/production/search-bonds-policy",
-    column: [
-      { key: "_DateIssued", label: "Date", width: 100 },
-      { key: "PolicyNo", label: "Policy No", width: 150 },
-      {
-        key: "Account",
-        label: "Account",
-        width: 110,
-      },
-      {
-        key: "client_fullname",
-        label: "Full Name",
-        width: 200,
-      },
-    ],
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (rowItm) {
-        setMode("edit");
-        mutateSelectedSearch({ policyNo: rowItm[1] });
-        searchFireCloseModal();
-      }
-    },
-  });
+ 
+  
   function handleSave() {
     if (
       _policyInformationRef.current.requiredField() ||
@@ -545,9 +434,7 @@ export default function BondsPolicy() {
         isLoadingAccount ||
         laodingSelectedSearch ||
         loadingAddUpdate) && <Loading />}
-      <AgentUpwardTableModalSearch />
-      <ClientUpwardTableModalSearch />
-      <SearchFireUpwardTableModalSearch />
+
       <div
         style={{
           flex: 1,
@@ -582,7 +469,7 @@ export default function BondsPolicy() {
               onKeyDown: (e) => {
                 if (e.key === "Enter" || e.key === "NumpadEnter") {
                   e.preventDefault();
-                  searchFireOpenModal(e.currentTarget.value);
+                  searchBondModalRef.current.openModal(e.currentTarget.value);
                 }
               },
               style: { width: "100%", height: "22px" },
@@ -591,7 +478,7 @@ export default function BondsPolicy() {
             onIconClick={(e) => {
               e.preventDefault();
               if (searchRef.current) {
-                searchFireOpenModal(searchRef.current.value);
+                searchBondModalRef.current.openModal(searchRef.current.value);
               }
             }}
             inputRef={searchRef}
@@ -869,12 +756,6 @@ export default function BondsPolicy() {
             user={user}
             disabled={mode === ""}
             ref={_policyInformationRef}
-            clientSearch={(input: string) => {
-              clientOpenModal(input);
-            }}
-            agentSearch={(input: string) => {
-              agentOpenModal(input);
-            }}
             onChangeAccount={(e: any) => {
               mutateAccountRef.current({ policyType: e.currentTarget.value });
             }}
@@ -1010,6 +891,31 @@ export default function BondsPolicy() {
           Cancel
         </Button>
       </div>
+      <UpwardTableModalSearch
+        ref={searchBondModalRef}
+        link={"/task/production/search-bonds-policy"}
+        column={[
+          { key: "_DateIssued", label: "Date", width: 100 },
+          { key: "PolicyNo", label: "Policy No", width: 150 },
+          {
+            key: "Account",
+            label: "Account",
+            width: 110,
+          },
+          {
+            key: "client_fullname",
+            label: "Full Name",
+            width: 200,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            setMode("edit");
+            mutateSelectedSearch({ policyNo: rowItm.PolicyNo });
+            searchBondModalRef.current.closeModal();
+          }
+        }}
+      />
     </>
   );
 }
@@ -1044,6 +950,9 @@ const PolicyInformation = forwardRef((props: any, ref) => {
   // Insured Unit
   const unitRef = useRef<HTMLTextAreaElement>(null);
   const obligeeRef = useRef<HTMLTextAreaElement>(null);
+
+  const clientModalRef = useRef<any>(null)
+  const agentModalRef = useRef<any>(null)
 
   useImperativeHandle(ref, () => ({
     getRefsValue: () => {
@@ -1235,7 +1144,9 @@ const PolicyInformation = forwardRef((props: any, ref) => {
   }));
 
   return (
-    <div
+   
+    <>
+     <div
       className="main-field-container"
       style={{
         display: "flex",
@@ -1299,14 +1210,14 @@ const PolicyInformation = forwardRef((props: any, ref) => {
               style: { width: "calc(100% - 150px) " },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  props.clientSearch(e.currentTarget.value);
+                  clientModalRef.current.openModal(e.currentTarget.value);
                 }
               },
             }}
             icon={<SearchIcon sx={{ fontSize: "18px" }} />}
             onIconClick={(e) => {
               e.preventDefault();
-              props.clientSearch(clientIDRef.current?.value);
+              clientModalRef.current.openModal(clientIDRef.current?.value);
             }}
             inputRef={clientIDRef}
           />
@@ -1400,14 +1311,14 @@ const PolicyInformation = forwardRef((props: any, ref) => {
               style: { width: "calc(100% - 150px) " },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  props.agentSearch(e.currentTarget.value);
+                  agentModalRef.current.openModal(e.currentTarget.value);
                 }
               },
             }}
             icon={<SearchIcon sx={{ fontSize: "18px" }} />}
             onIconClick={(e) => {
               e.preventDefault();
-              props.agentSearch(agentIdRef.current?.value);
+              agentModalRef.current.openModal(agentIdRef.current?.value);
             }}
             inputRef={agentIdRef}
           />
@@ -1876,6 +1787,80 @@ const PolicyInformation = forwardRef((props: any, ref) => {
         </div>
       </div>
     </div>
+      <UpwardTableModalSearch
+        ref={clientModalRef}
+        link={"/task/production/search-client-by-id-or-name"}
+        column={[
+          { key: "IDNo", label: "ID No", width: 120 },
+          { key: "Name", label: "Name", width: 200 },
+          {
+            key: "IDType",
+            label: "ID Type",
+            width: 90,
+          },
+          {
+            key: "address",
+            label: "Address",
+            width: 90,
+            hide: true,
+          },
+          {
+            key: "sale_officer",
+            label: "Sale Officer",
+            width: 90,
+            hide: true,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            if (clientIDRef.current) {
+              clientIDRef.current.value = rowItm.IDNo;
+            }
+            if (clientNameRef.current) {
+              clientNameRef.current.value = rowItm.Name;
+            }
+            if (clientAddressRef.current) {
+              clientAddressRef.current.value = rowItm.address;
+            }
+            if (saleOfficerRef.current) {
+              saleOfficerRef.current.value = rowItm.sale_officer;
+            }
+            wait(100).then(() => {
+              agentIdRef.current?.focus();
+            });
+            clientModalRef.current.closeModal();
+          }
+        }}
+      />
+      <UpwardTableModalSearch
+        ref={agentModalRef}
+        link={"/task/production/search-agent-by-id-or-name"}
+        column={[
+          { key: "IDNo", label: "ID No", width: 120 },
+          { key: "Name", label: "Name", width: 200 },
+          {
+            key: "IDType",
+            label: "ID Type",
+            width: 90,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            if (agentIdRef.current) {
+              agentIdRef.current.value = rowItm.IDNo;
+            }
+            if (agentNameRef.current) {
+              agentNameRef.current.value = rowItm.Name;
+            }
+
+            wait(100).then(() => {
+              accountRef.current?.focus();
+            });
+            agentModalRef.current.closeModal();
+          }
+        }}
+      />
+    </>
   );
 });
 const PolicyPremium = forwardRef((props: any, ref) => {
