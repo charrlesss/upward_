@@ -86,7 +86,7 @@ export default function Employee() {
     queryFn: async () =>
       await myAxios.post(
         "/reference/id-entry-generate-id",
-        { sign: "M", type: "entry employee" },
+        { sign: "E", type: "entry employee" },
         {
           headers: { Authorization: `Bearer ${user?.accessToken}` },
         }

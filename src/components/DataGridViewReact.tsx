@@ -7,7 +7,6 @@ import {
   useContext,
   Fragment,
   useCallback,
-  useId,
 } from "react";
 import useExecuteQueryFromClient from "../lib/executeQueryFromClient";
 import SearchIcon from "@mui/icons-material/Search";
@@ -20,8 +19,6 @@ import { Loading } from "./Loading";
 import ReactDOM from "react-dom";
 import "../style/datagridview.css";
 import { useMutation } from "react-query";
-import { set } from "lodash";
-import { format } from "date-fns";
 
 export const DataGridViewReact = forwardRef(
   (
@@ -1629,7 +1626,7 @@ export const useUpwardTableModalSearchSafeMode = ({
     _dataCache = [];
   }
 
-  const UpwardTableModalSearch = forwardRef(({}: any, ref) => {
+  const UpwardTableModalSearch = forwardRef((_: any, ref) => {
     const { user, myAxios } = useContext(AuthContext);
 
     const modalRef = useRef<HTMLDivElement>(null);
@@ -2016,13 +2013,15 @@ export const DataGridViewReactUpgraded = forwardRef(
       }
 
       if (e.code === "Delete" || e.code === "Backspace") {
+        const rowItm = data.filter((itm: any) => itm.rowIndex === row.rowIndex);
+        if (beforeDelete(rowItm[0])) {
+          return;
+        }
+
         const confirm = window.confirm(
           "Are you sure you want to delete all the rows?"
         );
         if (confirm) {
-          if (beforeDelete()) {
-            return;
-          }
           const newData = data.filter(
             (itm: any) => itm.rowIndex !== row.rowIndex
           );
@@ -2114,7 +2113,7 @@ export const DataGridViewReactUpgraded = forwardRef(
       return () => {
         window.removeEventListener("resize", resize);
       };
-    }, [adjustOnRezise, fixedRowCount]);
+    }, [adjustOnRezise, fixedRowCount, adjustVisibleRowCount]);
     useEffect(() => {
       if (visible && menuRef.current) {
         const menu = menuRef.current;
@@ -2310,7 +2309,6 @@ export const DataGridViewReactUpgraded = forwardRef(
             display: "flex",
             flexDirection: "column",
             boxShadow: " -1px 3px 5px -3px rgba(0,0,0,0.75)",
-            borderRadius: "5px",
           }}
         >
           {/* Rows */}
