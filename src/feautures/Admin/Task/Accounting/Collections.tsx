@@ -621,8 +621,9 @@ export default function Collection() {
           0
         )
       );
-
-      addVat(getSelectedRow, creditTableData);
+      if (vatTypeRef.current && vatTypeRef.current.value === "VAT") {
+        addVat(getSelectedRow, creditTableData);
+      }
     } else {
       const data = {
         transaction: transactionRef.current?.value,
@@ -2458,7 +2459,7 @@ const ModalCheck = forwardRef(({ handleOnSave, handleOnClose }: any, ref) => {
       />
     </>
   ) : null;
-}); 
+});
 const validateDate = (dateStr: any, dateFormat = "yyyy-MM-dd") => {
   const parsedDate = parse(dateStr, dateFormat, new Date());
   const isDateValid =

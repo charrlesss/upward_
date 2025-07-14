@@ -12,7 +12,9 @@ import SaveAsIcon from "@mui/icons-material/SaveAs";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import {
   DataGridViewMultiSelectionReact,
-  useUpwardTableModalSearch,
+  DataGridViewReactMultipleSelection,
+  DataGridViewReactUpgraded,
+  UpwardTableModalSearch,
   useUpwardTableModalSearchSafeMode,
 } from "../../../../components/DataGridViewReact";
 import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
@@ -25,6 +27,8 @@ import { wait } from "@testing-library/user-event/dist/utils";
 import PageHelmet from "../../../../components/Helmet";
 import "../../../../style/monbileview/accounting/warehouse.css";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
+import SaveIcon from "@mui/icons-material/Save";
+import AddIcon from "@mui/icons-material/Add";
 
 const warehouseColumn = [
   { key: "PNo", label: "PN No.", width: 150 },
@@ -43,352 +47,89 @@ const warehouseColumn = [
 ];
 
 export default function WarehouseChecks() {
-  const table = useRef<any>(null);
+  const { myAxios, user } = useContext(AuthContext);
+  const [disableSelection, setDisableSelection] = useState(false);
+  const tableRef = useRef<any>(null);
+  const searchModalRef = useRef<any>(null);
   const modalCheckRef = useRef<any>(null);
+
   const refPDCStatus = useRef<HTMLSelectElement>(null);
   const refRemarks = useRef<HTMLSelectElement>(null);
-  const refSearch = useRef<HTMLSelectElement>(null);
-  const refIDS = useRef<HTMLInputElement>(null);
-  const [monitoring, setMonitoring] = useState({
-    check: "0",
-    unCheck: "0",
-    found: "0",
-  });
+  const searchRef = useRef<HTMLInputElement>(null);
+
   const [warehouseMode, setWarehouseMode] = useState("");
   const { executeQueryToClient } = useExecuteQueryFromClient();
 
-  const {
-    UpwardTableModalSearch: UpwardTableModalSearchPNNo,
-    openModal: openPNNo,
-    closeModal: closePNNo,
-  } = useUpwardTableModalSearch({
-    customWidth: (blink: any) => {
-      return blink ? "751px" : "750px";
-    },
-    column: [
-      { key: "Date", label: "Date", width: 115 },
-      { key: "PolicyNo", label: "Policy No.", width: 160 },
-      {
-        key: "Account",
-        label: "Account",
-        width: 120,
+  const { mutate: mutatePdcChecks, isLoading: isLoadingPdcChecks } =
+    useMutation({
+      mutationKey: "search-pdc",
+      mutationFn: async (variables: any) => {
+        return await myAxios.post(
+          "/task/accounting/warehouse/search-pdc",
+          variables,
+          {
+            headers: {
+              Authorization: `Bearer ${user?.accessToken}`,
+            },
+          }
+        );
       },
-      {
-        key: "Name",
-        label: "Name",
-        width: 300,
+      onSuccess: (res) => {
+        tableRef.current.setData(res.data.data);
       },
-    ],
-    query: (search: string) => {
-      const StrQry = `
-     SELECT 
-          DATE_FORMAT(policy.DateIssued, '%M. %d, %Y') AS Date,
-          policy.PolicyNo,
-          policy.Account,
-          ID_Entry.Shortname AS Name
-      FROM
-          policy
-              LEFT JOIN
-          fpolicy ON policy.PolicyNo = fpolicy.PolicyNo
-              LEFT JOIN
-          vpolicy ON policy.PolicyNo = vpolicy.PolicyNo
-              LEFT JOIN
-          mpolicy ON policy.PolicyNo = mpolicy.PolicyNo
-              LEFT JOIN
-          bpolicy ON policy.PolicyNo = bpolicy.PolicyNo
-              LEFT JOIN
-          msprpolicy ON policy.PolicyNo = msprpolicy.PolicyNo
-              LEFT JOIN
-          papolicy ON policy.PolicyNo = papolicy.PolicyNo
-              LEFT JOIN
-          cglpolicy ON policy.PolicyNo = cglpolicy.PolicyNo
-              LEFT JOIN
-          (SELECT 
-              id_entry.IDNo, id_entry.ShortName AS Shortname, IDType
-          FROM
-              (SELECT 
-              IF(aa.option = 'individual', CONCAT(IF(aa.lastname IS NOT NULL
-                      AND TRIM(aa.lastname) <> '', CONCAT(aa.lastname, ', '), ''), aa.firstname, ' ', aa.suffix, '.'), aa.company) AS ShortName,
-                  aa.entry_client_id AS IDNo,
-                  aa.sub_account,
-                  'Client' AS IDType
-          FROM
-              entry_client aa UNION ALL SELECT 
-              CONCAT(IF(aa.lastname IS NOT NULL
-                      AND TRIM(aa.lastname) <> '', CONCAT(aa.lastname, ', '), ''), aa.firstname) AS ShortName,
-                  aa.entry_agent_id AS IDNo,
-                  aa.sub_account,
-                  'Agent' AS IDType
-          FROM
-              entry_agent aa UNION ALL SELECT 
-              CONCAT(IF(aa.lastname IS NOT NULL
-                      AND TRIM(aa.lastname) <> '', CONCAT(aa.lastname, ', '), ''), aa.firstname) AS ShortName,
-                  aa.entry_employee_id AS IDNo,
-                  aa.sub_account,
-                  'Employee' AS IDType
-          FROM
-              entry_employee aa UNION ALL SELECT 
-              aa.fullname AS ShortName,
-                  aa.entry_fixed_assets_id AS IDNo,
-                  sub_account,
-                  'Fixed Assets' AS IDType
-          FROM
-              entry_fixed_assets aa UNION ALL SELECT 
-              aa.description AS ShortName,
-                  aa.entry_others_id AS IDNo,
-                  aa.sub_account,
-                  'Others' AS IDType
-          FROM
-              entry_others aa UNION ALL SELECT 
-              IF(aa.option = 'individual', CONCAT(IF(aa.lastname IS NOT NULL
-                      AND TRIM(aa.lastname) <> '', CONCAT(aa.lastname, ', '), ''), aa.firstname), aa.company) AS ShortName,
-                  aa.entry_supplier_id AS IDNo,
-                  aa.sub_account,
-                  'Supplier' AS IDType
-          FROM
-              entry_supplier aa) id_entry)  AS ID_Entry ON policy.IDNo = ID_Entry.IDNo
-      WHERE
-          policy.PolicyNo IN (SELECT 
-                  PNo
-              FROM
-                  pdc)
-              AND ((vpolicy.ChassisNo LIKE '%${search}%')
-              OR (vpolicy.MotorNo LIKE '%${search}%')
-              OR (vpolicy.PlateNo LIKE '%${search}%')
-              OR (ID_Entry.Shortname LIKE '%${search}%')
-              OR (vpolicy.PolicyNo LIKE '%${search}%')
-              OR (vpolicy.Account LIKE '%${search}%'))
-      ORDER BY policy.DateIssued DESC
-      LIMIT 500
-        `;
-      return StrQry;
+    });
+  const { mutate: mutateSave, isLoading: isLoadingSave } = useMutation({
+    mutationKey: "save",
+    mutationFn: async (variables: any) => {
+      console.log(variables);
+      return await myAxios.post(
+        "/task/accounting/warehouse/save-checks",
+        variables,
+        {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }
+      );
     },
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (refIDS.current) {
-        refIDS.current.value = rowItm[1];
-      }
-      tsbSearch_Click(rowItm[1]);
+    onSuccess: (res) => {
+      const resposnse = res as any;
+      if (resposnse.data.success) {
+        wait(500).then(() => {
+          setDisableSelection(false);
+          if (refPDCStatus.current) {
+            refPDCStatus.current.disabled = true;
+            refPDCStatus.current.selectedIndex = 0;
+          }
 
-      closePNNo();
-    },
-  });
-  const {
-    UpwardTableModalSearch: UpwardTableModalSearchData,
-    openModal: openData,
-    closeModal: closeData,
-  } = useUpwardTableModalSearch({
-    customWidth: (blink: any) => {
-      return blink ? "601px" : "600px";
-    },
-    column: [
-      { key: "IDNo", label: "I.D. No.", width: 115 },
-      {
-        key: "Name",
-        label: "Name",
-        width: 300,
-      },
-      {
-        key: "IDType",
-        label: "Type",
-        width: 120,
-      },
-    ],
-    query: (search: string) => {
-      const StrQry = `
-      select * from (  SELECT  
-        IDNo AS IDNo, 
-        Shortname AS Name, 
-        IDType 
-      FROM (SELECT 
-       id_entry.IDNo,
-       id_entry.ShortName as Shortname,
-       IDType
-   FROM
-       (SELECT 
-           IF(aa.option = 'individual', 
-           CONCAT(IF(aa.lastname IS NOT NULL AND TRIM(aa.lastname) <> '', CONCAT(aa.lastname, ', '), ''), aa.firstname ,' ',aa.suffix,'.'), aa.company) AS ShortName,
-               aa.entry_client_id AS IDNo,
-               aa.sub_account,
-               'Client' as IDType
-       FROM
-           entry_client aa 
-           UNION ALL SELECT 
-           CONCAT(IF(aa.lastname IS NOT NULL
-                   AND TRIM(aa.lastname) <> '', CONCAT(aa.lastname, ', '), ''), aa.firstname) AS ShortName,
-               aa.entry_agent_id AS IDNo,
-               aa.sub_account,
-               'Agent' as IDType
-       FROM
-           entry_agent aa 
-           UNION ALL SELECT 
-           CONCAT(IF(aa.lastname IS NOT NULL
-                   AND TRIM(aa.lastname) <> '', CONCAT(aa.lastname, ', '), ''), aa.firstname) AS ShortName,
-               aa.entry_employee_id AS IDNo,
-               aa.sub_account,
-               'Employee' as IDType
-       FROM
-           entry_employee aa 
-           UNION ALL SELECT 
-           aa.fullname AS ShortName,
-               aa.entry_fixed_assets_id AS IDNo,
-               sub_account,
-                'Fixed Assets' as IDType
-       FROM
-           entry_fixed_assets aa 
-           UNION ALL SELECT 
-           aa.description AS ShortName,
-               aa.entry_others_id AS IDNo,
-               aa.sub_account,
-               'Others' as IDType
-       FROM
-           entry_others aa 
-           UNION ALL SELECT 
-           IF(aa.option = 'individual', CONCAT(IF(aa.lastname IS NOT NULL
-                   AND TRIM(aa.lastname) <> '', CONCAT(aa.lastname, ', '), ''), aa.firstname), aa.company) AS ShortName,
-               aa.entry_supplier_id AS IDNo,
-               aa.sub_account,
-                'Supplier' as IDType
-       FROM
-           entry_supplier aa) id_entry) as ID_Entry
-      WHERE 
-      ID_Entry.IDNo in (select PNo from pdc)) IDs
-      where 
-      IDs.IDNo LIKE '%${search}%' OR  
-      IDs.Name LIKE '%${search}%'
-      ORDER BY IDs.Name
-      limit 500;`;
+          if (searchRef.current) {
+            searchRef.current.disabled = true;
+            searchRef.current.value = "";
+          }
+          if (refRemarks.current) {
+            refRemarks.current.disabled = true;
+            refRemarks.current.selectedIndex = 0;
+          }
 
-      return StrQry;
-    },
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (refIDS.current) {
-        refIDS.current.value = rowItm[0];
-      }
-      tsbSearch_Click(rowItm[0]);
+          tableRef.current.resetTable();
+          setWarehouseMode("");
+        });
 
-      closeData();
-    },
-  });
-  const {
-    UpwardTableModalSearch: UpwardTableModalSearchBank,
-    openModal: openBank,
-    closeModal: closeBank,
-  } = useUpwardTableModalSearch({
-    customWidth: (blink: any) => {
-      return blink ? "501px" : "500px";
-    },
-    column: [
-      { key: "Code", label: "Code", width: 115 },
-      {
-        key: "Bank_Name",
-        label: "Bank Name",
-        width: 322,
-      },
-    ],
-    query: (search: string) => {
-      const StrQry = `
-      SELECT 
-        Bank_Code AS Code,
-        Bank AS Bank_Name
-       FROM Bank 
-       WHERE 
-       Inactive = 0 AND 
-       Bank_Code in (SELECT Bank FROM pdc group by Bank) and
-       (
-       Bank_Code LIKE '%${search}%' OR  
-       Bank LIKE '%${search}%') 
-       ORDER BY Bank
-       limit 500 
-       `;
-      return StrQry;
-    },
-    getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-      if (refIDS.current) {
-        refIDS.current.value = rowItm[0];
-      }
-      tsbSearch_Click(rowItm[0]);
-
-      closeBank();
-    },
-  });
-  async function LoadPDC(
-    fldSearch: string,
-    valSearch: string,
-    StrWhere: string
-  ) {
-    const qry = `
-      SELECT 
-        PNo, 
-        IDNo, 
-        DATE_FORMAT(Date,'%m/%d/%Y') AS Date, 
-        Name, 
-        date_format(Check_Date,'%m/%d/%Y') AS CheckDate, 
-        Check_No, 
-        Check_Amnt, 
-        Bank, 
-        PDC_Status
-      FROM pdc  
-      WHERE ${fldSearch} = '${valSearch}'  AND ${StrWhere} ORDER BY Check_Date`;
-    const dt = await executeQueryToClient(qry);
-    table.current.resetTable([]);
-
-    if (dt.data) {
-      if (dt.data.data.length > 0) {
-        table.current.setDataFormated(dt.data.data);
-        table.current.setIsTableSelectable(true);
-        setMonitoring({
-          check: "0",
-          unCheck: `${dt.data.data.length}`,
-          found: `${dt.data.data.length}`,
+        return Swal.fire({
+          position: "center",
+          icon: "success",
+          title: resposnse.data.message,
+          timer: 1500,
         });
       }
-    }
-  }
-  function tsbSearch_Click(refIDS: string) {
-    // if (refIDS.current && refIDS.current.value === "") {
-    //   alert("Type field you want to search!");
-    //   refIDS.current?.focus();
-    //   return;
-    // }
-
-    // if ((refSearch.current && refSearch.current.selectedIndex === 2 || refSearch.current?.selectedIndex === 4) && !isValidDate(refIDS.current?.value as string)) {
-    //   alert("Search is not a valid date");
-    //   refIDS.current?.focus();
-    //   return;
-    // }
-    if (refPDCStatus.current && refSearch.current) {
-      let strWhere = "";
-      const statusOptions = ["Received", "Stored", "Stored"];
-      const selectedIndex = refPDCStatus.current.selectedIndex;
-
-      if (selectedIndex >= 0) {
-        const status = statusOptions[selectedIndex];
-        if (selectedIndex !== 2) {
-          strWhere = `(PDC_Status = '${status}')`;
-        } else {
-          strWhere = `(PDC_Status = '${status}' OR (PDC_Status = 'Pulled Out' AND (PDC_Remarks = 'Fully Paid' OR PDC_Remarks = 'Replaced')))`;
-        }
-      }
-
-      const searchField = refSearch.current.value;
-      const searchValue = refIDS.trim();
-      LoadPDC(searchField, searchValue, strWhere);
-    }
-  }
-  function tsbOpen_Click(search: string) {
-    if (refSearch.current) {
-      if (refSearch.current.selectedIndex === 1) {
-        openPNNo(search);
-      } else if (refSearch.current.selectedIndex === 2) {
-        openData(search);
-      } else if (refSearch.current.selectedIndex === 3) {
-        openBank(search);
-      }
-      if (refIDS.current) {
-        refIDS.current.value = "";
-      }
-    }
-  }
+      return Swal.fire({
+        position: "center",
+        icon: "warning",
+        title: resposnse.data.message,
+        timer: 1500,
+      });
+    },
+  });
   function hanldeOnSave() {
     if (
       refPDCStatus.current?.selectedIndex === 2 &&
@@ -396,10 +137,6 @@ export default function WarehouseChecks() {
     ) {
       refRemarks.current.focus();
       return alert("Please provide remarks!");
-    } else if (monitoring.found === "0") {
-      return alert("No current record!");
-    } else if (monitoring.check === "0") {
-      return alert("Please select from list!");
     } else {
       const texts = [
         "store in warehouse?",
@@ -421,90 +158,15 @@ export default function WarehouseChecks() {
           )}`,
         }).then(async (result) => {
           if (result.isConfirmed) {
-            const tableDataSelected = table.current.getSelectedRowsData();
-            if (refPDCStatus.current) {
-              if (refPDCStatus.current.selectedIndex === 2) {
-                for (const itm of tableDataSelected) {
-                  const qry = `selecT 
-                  *
-                  from pullout_request as POR 
-                  left join pullout_request_details as PORD on POR.RCPNo = PORD.RCPNo 
-                  where PNNo ='${itm[0]}' and  checkNo ='${itm[5]}' and status ='APPROVED'`;
-                  const dt = await executeQueryToClient(qry);
-                  if (dt.data?.data.length <= 0) {
-                    alert(
-                      `PN No. : ${itm[0]} Check No.: ${itm[5]} don't have pullout approval!`
-                    );
-                    return;
-                  }
-                }
-              }
-            }
-
-            const status1 = ["Stored", "Endorsed", "Pulled Out"];
-            const status2 = ["Date_Stored", "Date_Endorsed", "Date_Pulled_Out"];
-
-            for (const itm of tableDataSelected) {
-              if (refPDCStatus.current && refRemarks.current) {
-                const qry = `
-                 UPDATE 
-                pdc  SET 
-                  PDC_Status = '${
-                    status1[refPDCStatus.current.selectedIndex]
-                  }' ,
-                  ${status2[refPDCStatus.current.selectedIndex]} = now() 
-                  ${
-                    refPDCStatus.current.selectedIndex === 2
-                      ? `, PDC_Remarks = '${refRemarks.current.value}'`
-                      : ""
-                  }
-                WHERE 
-                  PNo = '${itm[0]}' AND 
-                  IDNo = '${itm[1]}' AND 
-                  DATE_FORMAT(Date,'%m/%d/%Y') = '${itm[2]}' AND
-                  Name = '${itm[3]}' AND 
-                  DATE_FORMAT(Check_Date,'%m/%d/%Y') = '${itm[4]}' AND 
-                  Check_No = '${itm[5]}' AND 
-                  Check_Amnt = '${itm[6]}' AND 
-                  Bank = '${itm[7]}' AND 
-                  PDC_Status = '${itm[8]}'
-                `;
-                await executeQueryToClient(qry);
-              }
-            }
-            if (refPDCStatus.current && refRemarks.current) {
-              const dd = [
-                "Stored In Warehouse!",
-                "Endorsed for Deposit!",
-                `Pulled Out As ${refRemarks.current.value}`,
-              ];
-              Swal.fire({
-                text: `Successfully ${dd[refPDCStatus.current.selectedIndex]}`,
-                icon: "success",
-                timer: 1500,
-              }).then(async () => {
-                if (!table.current.isTableSelectable) {
-                  onClickNew();
-                  return;
-                }
-                if (refIDS.current) tsbSearch_Click(refIDS.current.value);
-              });
-            }
+            mutateSave({
+              pdcStatus: refPDCStatus.current?.selectedIndex,
+              remarksValue: refRemarks.current?.value,
+              tableData: tableRef.current.getSelectedRowData(),
+            });
           }
         });
       }
     }
-  }
-  function updateMonitoring() {
-    setTimeout(() => {
-      const selectedRows = table.current.getSelectedRow();
-      const getData = table.current.getData();
-      setMonitoring({
-        check: selectedRows.length.toString(),
-        unCheck: (getData.length - selectedRows.length).toString(),
-        found: getData.length.toString(),
-      });
-    }, 100);
   }
   function onClickNew() {
     if (refPDCStatus.current) {
@@ -512,21 +174,16 @@ export default function WarehouseChecks() {
       refPDCStatus.current.selectedIndex = 0;
     }
 
-    if (refSearch.current) {
-      refSearch.current.disabled = false;
-      refSearch.current.selectedIndex = 0;
+    if (searchRef.current) {
+      searchRef.current.disabled = false;
+      searchRef.current.value = "";
     }
     if (refRemarks.current) {
       refRemarks.current.disabled = true;
       refRemarks.current.selectedIndex = 0;
     }
 
-    if (refIDS.current) {
-      refIDS.current.disabled = false;
-      refIDS.current.value = "";
-    }
-
-    table.current.resetTable();
+    tableRef.current.resetTable();
     setWarehouseMode("add");
   }
   function onClickCancel() {
@@ -540,286 +197,269 @@ export default function WarehouseChecks() {
       confirmButtonText: `Yes Cancel it!`,
     }).then(async (result) => {
       if (result.isConfirmed) {
+        setDisableSelection(false);
         if (refPDCStatus.current) {
           refPDCStatus.current.disabled = true;
           refPDCStatus.current.selectedIndex = 0;
         }
 
-        if (refSearch.current) {
-          refSearch.current.disabled = true;
-          refSearch.current.selectedIndex = 0;
+        if (searchRef.current) {
+          searchRef.current.disabled = true;
+          searchRef.current.value = "";
         }
         if (refRemarks.current) {
           refRemarks.current.disabled = true;
           refRemarks.current.selectedIndex = 0;
         }
 
-        if (refIDS.current) {
-          refIDS.current.disabled = true;
-          refIDS.current.value = "";
-        }
-
-        table.current.resetTable();
+        tableRef.current.resetTable();
         setWarehouseMode("");
       }
     });
   }
 
   return (
-    <div
-      className="main"
-      style={{
-        padding: "10px",
-        flex: 1,
-        position: "relative",
-      }}
-    >
-      <PageHelmet title="Treasury" />
-      <UpwardTableModalSearchPNNo />
-      <UpwardTableModalSearchData />
-      <UpwardTableModalSearchBank />
+    <>
+      {(isLoadingPdcChecks || isLoadingSave) && <Loading />}
       <div
+        className="main"
         style={{
-          display: "flex",
-          flexDirection: "column",
-          rowGap: "10px",
+          padding: "10px",
           flex: 1,
-          width: "100%",
-          height: "100%",
+          position: "relative",
         }}
       >
+        <PageHelmet title="Treasury" />
         <div
-          className="first-layer"
           style={{
             display: "flex",
-            columnGap: "10px",
-            alignItems: "center",
+            flexDirection: "column",
+            rowGap: "10px",
+            flex: 1,
+            width: "100%",
+            height: "100%",
           }}
         >
-          <SelectInput
-            containerClassName="custom-input"
-            label={{
-              title: "PDC Status: ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "80px",
-              },
-            }}
-            selectRef={refPDCStatus}
-            select={{
-              disabled: true,
-              style: { width: "220px", height: "22px" },
-              defaultValue: "Store in Warehouse",
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  e.preventDefault();
-                  refRemarks.current?.focus();
-                }
-              },
-              onChange: (e) => {
-                if (e.target.selectedIndex !== 2) {
-                  if (refRemarks.current) {
-                    refRemarks.current.selectedIndex = 0;
-                  }
-                } else {
-                  if (refRemarks.current) {
-                    refRemarks.current.selectedIndex = 1;
-                  }
-                }
-                if (refRemarks.current) {
-                  refRemarks.current.disabled = e.target.selectedIndex !== 2;
-                }
-                if (refIDS.current) {
-                  tsbSearch_Click(refIDS.current.value);
-                }
-              },
-            }}
-            datasource={[
-              { key: "Store in Warehouse" },
-              { key: "Endorse for Deposit" },
-              { key: "Pull Out" },
-            ]}
-            values={"key"}
-            display={"key"}
-          />
-          <SelectInput
-            containerClassName="custom-input"
-            label={{
-              title: "Remarks: ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "80px",
-                marginLeft: "10px",
-              },
-            }}
-            selectRef={refRemarks}
-            select={{
-              disabled: true,
-              style: { width: "190px", height: "22px" },
-              defaultValue: "",
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  e.preventDefault();
-                  //  refInvoice.current?.focus()
-                }
-              },
-            }}
-            datasource={[
-              { key: "" },
-              { key: "Fully Paid" },
-              { key: "Cash Replacement" },
-              { key: "Check Replacement" },
-              { key: "Account Closed" },
-              { key: "Hold" },
-              { key: "Not Renewed by Camfin" },
-            ]}
-            values={"key"}
-            display={"key"}
-          />
           <div
-            className="desktop-ctions-buttons"
+            className="first-layer"
             style={{
               display: "flex",
-              columnGap: "5px",
+              columnGap: "10px",
+              alignItems: "center",
             }}
           >
-            <Button
-              disabled={warehouseMode === "add"}
-              sx={{
-                height: "23px",
-                fontSize: "11px",
-                marginLeft: "10px",
+            <SelectInput
+              containerClassName="custom-input"
+              label={{
+                title: "PDC Status: ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "80px",
+                },
               }}
-              variant="contained"
-              color="info"
-              onClick={onClickNew}
-            >
-              New
-            </Button>
-            <Button
-              disabled={warehouseMode !== "add"}
-              sx={{
-                height: "23px",
-                fontSize: "11px",
+              selectRef={refPDCStatus}
+              select={{
+                disabled: true,
+                style: { width: "220px", height: "22px" },
+                defaultValue: "Store in Warehouse",
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    e.preventDefault();
+                    refRemarks.current?.focus();
+                  }
+                },
+                onChange: (e) => {
+                  if (e.target.selectedIndex !== 2) {
+                    if (refRemarks.current) {
+                      refRemarks.current.selectedIndex = 0;
+                    }
+                  } else {
+                    if (refRemarks.current) {
+                      refRemarks.current.selectedIndex = 1;
+                    }
+                  }
+                  if (refRemarks.current) {
+                    refRemarks.current.disabled = e.target.selectedIndex !== 2;
+                  }
+                  if (searchRef.current && searchRef.current.value !== "") {
+                    mutatePdcChecks({
+                      pdcStatus: e.target.selectedIndex,
+                      search: searchRef.current.value,
+                    });
+                  }
+                },
               }}
-              variant="contained"
-              color="error"
-              onClick={onClickCancel}
-            >
-              Cancel
-            </Button>
-          </div>
-        </div>
-        <div
-          className="second-layer"
-          style={{ display: "flex", justifyContent: "space-between" }}
-        >
-          <div
-            className="first-content"
-            style={{ display: "flex", columnGap: "10px" }}
-          >
+              datasource={[
+                { key: "Store in Warehouse" },
+                { key: "Endorse for Deposit" },
+                { key: "Pull Out" },
+              ]}
+              values={"key"}
+              display={"key"}
+            />
+            <SelectInput
+              containerClassName="custom-input"
+              label={{
+                title: "Remarks: ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "80px",
+                  marginLeft: "10px",
+                },
+              }}
+              selectRef={refRemarks}
+              select={{
+                disabled: true,
+                style: { width: "190px", height: "22px" },
+                defaultValue: "",
+                onChange: (e) => {
+                  if (searchRef.current && searchRef.current.value !== "") {
+                    mutatePdcChecks({
+                      pdcStatus: refPDCStatus.current?.value,
+                      search: searchRef.current.value,
+                    });
+                  }
+                },
+              }}
+              datasource={[
+                { key: "" },
+                { key: "Fully Paid" },
+                { key: "Cash Replacement" },
+                { key: "Check Replacement" },
+                { key: "Account Closed" },
+                { key: "Hold" },
+                { key: "Not Renewed by Camfin" },
+              ]}
+              values={"key"}
+              display={"key"}
+            />
             <div
-              className="search-client-checks"
+              className="pdc-desktop-buttons"
               style={{
                 display: "flex",
                 alignItems: "center",
                 columnGap: "5px",
               }}
             >
+              {warehouseMode === "" && (
+                <Button
+                  sx={{
+                    height: "22px",
+                    fontSize: "11px",
+                  }}
+                  variant="contained"
+                  startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+                  id="entry-header-save-button"
+                  color="primary"
+                  onClick={onClickNew}
+                >
+                  New
+                </Button>
+              )}
+              <Button
+                sx={{
+                  height: "22px",
+                  fontSize: "11px",
+                }}
+                id="save-entry-header"
+                color="success"
+                variant="contained"
+                type="submit"
+                onClick={hanldeOnSave}
+                disabled={warehouseMode === ""}
+                startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
+              >
+                Save
+              </Button>
+              {(warehouseMode === "add" || warehouseMode === "update") && (
+                <Button
+                  sx={{
+                    height: "22px",
+                    fontSize: "11px",
+                  }}
+                  variant="contained"
+                  startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
+                  onClick={onClickCancel}
+                  color="error"
+                >
+                  Cancel
+                </Button>
+              )}
+            </div>
+          </div>
+          <div
+            className="second-layer"
+            style={{ display: "flex", justifyContent: "space-between" }}
+          >
+            <div
+              className="first-content"
+              style={{ display: "flex", columnGap: "10px" }}
+            >
+              <TextInput
+                containerStyle={{ width: "500px" }}
+                containerClassName="custom-input search-special"
+                label={{
+                  title: "Search : ",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "80px",
+                  },
+                }}
+                input={{
+                  disabled: true,
+                  type: "text",
+                  style: { width: "calc(100% - 80px)", height: "22px" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      searchModalRef.current.openModal(e.currentTarget.value);
+                    }
+                  },
+                }}
+                icon={<AccountBoxIcon sx={{ fontSize: "18px" }} />}
+                onIconClick={(e) => {
+                  e.preventDefault();
+                  if (searchRef.current)
+                    searchModalRef.current.openModal(searchRef.current.value);
+                }}
+                inputRef={searchRef}
+              />
               <div
+                className="buttons-search-client-container"
                 style={{
                   display: "flex",
-                  columnGap: "3px",
+                  columnGap: "8px",
                   alignItems: "center",
                 }}
               >
-                <SelectInput
-                  containerClassName="custom-input"
-                  label={{
-                    title: "Category : ",
-                    style: {
-                      fontSize: "12px",
-                      fontWeight: "bold",
-                      width: "80px",
+                <Button
+                  className="check-for-pull-out-mobile"
+                  sx={{
+                    height: "23px",
+                    fontSize: "11px",
+                    marginLeft: "10px",
+                    bgcolor: grey[600],
+                    "&:hover": {
+                      bgcolor: grey[700],
                     },
                   }}
-                  selectRef={refSearch}
-                  select={{
-                    disabled: true,
-                    style: { width: "190px", height: "22px" },
-                    defaultValue: "",
-                    onKeyDown: (e) => {
-                      if (e.code === "NumpadEnter" || e.code === "Enter") {
-                        e.preventDefault();
-                      }
-                    },
-                    onChange: () => {
-                      if (refIDS.current) {
-                        tsbSearch_Click(refIDS.current.value);
-                      }
-                    },
+                  variant="contained"
+                  onClick={() => {
+                    modalCheckRef.current?.showModal();
+                    wait(100).then(() => {
+                      modalCheckRef.current?.mutate();
+                    });
                   }}
-                  datasource={[
-                    { key: "", value: "" },
-                    { key: "Policy", value: "PNo" },
-                    { key: "ID No.", value: "IDNo" },
-                    { key: "Bank", value: "Bank" },
-                  ]}
-                  values={"value"}
-                  display={"key"}
-                />
-              </div>
-              <div style={{ display: "flex", columnGap: "10px" }}>
-                <TextInput
-                  containerStyle={{ width: "400px", marginLeft: "20px" }}
-                  containerClassName="custom-input search-special"
-                  label={{
-                    title: "Search : ",
-                    style: {
-                      fontSize: "12px",
-                      fontWeight: "bold",
-                      width: "70px",
-                    },
-                  }}
-                  input={{
-                    disabled: true,
-                    type: "text",
-                    style: { width: "calc(100% - 70px)", height: "22px" },
-                    onKeyDown: (e) => {
-                      if (e.code === "NumpadEnter" || e.code === "Enter") {
-                        tsbOpen_Click(e.currentTarget.value);
-                      }
-                    },
-                  }}
-                  icon={<AccountBoxIcon sx={{ fontSize: "18px" }} />}
-                  onIconClick={(e) => {
-                    e.preventDefault();
-                    if (refIDS.current) {
-                      tsbOpen_Click(refIDS.current.value);
-                    }
-                  }}
-                  inputRef={refIDS}
-                />
+                >
+                  Check for pull-out
+                </Button>
               </div>
             </div>
-            <div
-              className="buttons-search-client-container"
-              style={{
-                display: "flex",
-                columnGap: "8px",
-                alignItems: "center",
-              }}
-            >
-              <IconButton size="small" onClick={hanldeOnSave}>
-                <SaveAsIcon color="success" />
-              </IconButton>
-              <IconButton size="small" color="primary">
-                <AssessmentIcon />
-              </IconButton>
+            <div className="second-content">
               <Button
-                className="check-for-pull-out-mobile"
+                className="check-for-pull-out-desktop"
                 sx={{
                   height: "23px",
                   fontSize: "11px",
@@ -841,210 +481,194 @@ export default function WarehouseChecks() {
               </Button>
             </div>
           </div>
-          <div className="second-content">
-            <Button
-              className="check-for-pull-out-desktop"
-              sx={{
-                height: "23px",
-                fontSize: "11px",
-                marginLeft: "10px",
-                bgcolor: grey[600],
-                "&:hover": {
-                  bgcolor: grey[700],
-                },
-              }}
-              variant="contained"
-              onClick={() => {
-                modalCheckRef.current?.showModal();
-                wait(100).then(() => {
-                  modalCheckRef.current?.mutate();
-                });
-              }}
-            >
-              Check for pull-out
-            </Button>
-          </div>
-        </div>
-        <div style={{ flex: 1 }}>
-          <DataGridViewMultiSelectionReact
-            ref={table}
-            columns={warehouseColumn}
-            containerStyle={{
-              flex: 1,
-              height: "calc(100% - 30px)",
-            }}
-            getSelectedItem={(rowItm: any, rowIdx: any) => {
-              updateMonitoring();
-            }}
-            onCheckAll={() => {
-              const getData = table.current.getData();
-              table.current.setSelectedRow(
-                getData.map((itm: any, idx: any) => idx)
-              );
-              updateMonitoring();
-            }}
-            onUnCheckAll={() => {
-              updateMonitoring();
-              table.current.setSelectedRow([]);
-            }}
-          />
           <div
             style={{
-              height: "30px",
+              flex: 1,
+              position: "relative",
               display: "flex",
-              justifyContent: "space-between",
-              padding: "0 50px",
-              alignItems: "center",
-            }}
+              zIndex: 2,
+            }}      
           >
-            <div
-              style={{
-                display: "flex",
-                columnGap: "10px",
-                fontSize: "13px",
-                fontWeight: "bold",
+            <DataGridViewReactMultipleSelection
+              ref={tableRef}
+              adjustVisibleRowCount={150}
+              columns={warehouseColumn}
+              disableSelection={disableSelection}
+              handleSelectionChange={(row: any) => {
+                if (row) {
+                  if (
+                    row.PDC_Status !== "Stored" &&
+                    row.PDC_Status !== "Received"
+                  ) {
+                    alert("its alredy pullout");
+                    wait(100).then(() => {
+                      const getRowSelected = tableRef.current.getSelectedRow();
+                      const selected = getRowSelected.filter(
+                        (s: any) => s !== row.rowIndex
+                      );
+                      tableRef.current.setSelectedRow(selected);
+                    });
+                    return;
+                  }
+                } else {
+                }
               }}
-            >
-              <span>Check:</span>
-              <span>{monitoring.check}</span>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                columnGap: "10px",
-                fontSize: "13px",
-                fontWeight: "bold",
-              }}
-            >
-              <span>Uncheck:</span>
-              <span>{monitoring.unCheck}</span>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                columnGap: "10px",
-                fontSize: "13px",
-                fontWeight: "bold",
-              }}
-            >
-              <span>Record Found:</span>
-              <span>{monitoring.found}</span>
-            </div>
+            />
           </div>
         </div>
-      </div>
-      <ModalCheck
-        ref={modalCheckRef}
-        handleOnSave={() => {
-          const refs = modalCheckRef.current.getRefs();
-        }}
-        handleOnClose={() => {}}
-        getSelectedItem={async (rowItm: any) => {
-          if (rowItm) {
-            if (
-              refPDCStatus.current &&
-              refPDCStatus.current.value !== "Pull Out"
-            ) {
-              return alert("Status should be for pull-out!");
-            }
-            if (
-              refRemarks.current &&
-              (refRemarks.current.value === null ||
-                refRemarks.current.value === "")
-            ) {
-              return alert("No remarks selected!");
-            }
-            // if (
-            //   refSearch.current &&
-            //   (refSearch.current.value === null ||
-            //     refSearch.current.value === "")
-            // ) {
-            //   return alert("Please enter ID!");
-            // }
-            const { data: response } = await executeQueryToClient(`
+        <ModalCheck
+          ref={modalCheckRef}
+          handleOnSave={() => {
+            const refs = modalCheckRef.current.getRefs();
+          }}
+          handleOnClose={() => {}}
+          getSelectedItem={async (rowItm: any, table: any) => {
+            if (rowItm) {
+              if (
+                refPDCStatus.current &&
+                refPDCStatus.current.value !== "Pull Out"
+              ) {
+                alert("Status should be for pull-out!");
+                return;
+              }
+              if (
+                refRemarks.current &&
+                (refRemarks.current.value === null ||
+                  refRemarks.current.value === "")
+              ) {
+                alert("No remarks selected!");
+                return;
+              }
+              // if (
+              //   refSearch.current &&
+              //   (refSearch.current.value === null ||
+              //     refSearch.current.value === "")
+              // ) {
+              //   return alert("Please enter ID!");
+              // }
+              const { data: response } = await executeQueryToClient(`
               Select 
                 CheckNo 
               From pullout_request a 
               Inner join pullout_request_details b  on a.RCPNo = b.RCPNo 
               Where a.Status = 'APPROVED' 
-              And a.RCPNo = '${rowItm[1]}'`);
+              And a.RCPNo = '${rowItm.RCPNo}'`);
 
-            const dr = response.data.map((itm: any) => itm.CheckNo);
-            if (dr.length > 0) {
-              if (refPDCStatus.current) {
-                refPDCStatus.current.value = "Pull Out";
-              }
-              if (refSearch.current) {
-                refSearch.current.value = "PNo";
-              }
-              if (refRemarks.current) {
-                refRemarks.current.value = rowItm[5];
-              }
-              if (refIDS.current) {
-                refIDS.current.value = rowItm[2];
-              }
+              const dr = response.data.map((itm: any) => itm.CheckNo);
+              setDisableSelection(true);
+              if (dr.length > 0) {
+                if (refPDCStatus.current) {
+                  refPDCStatus.current.value = "Pull Out";
+                }
 
-              if (refIDS.current) {
-                tsbSearch_Click(refIDS.current.value);
-              }
+                if (refRemarks.current) {
+                  refRemarks.current.value = rowItm.Reason;
+                }
+                if (searchRef.current) {
+                  searchRef.current.value = rowItm.PNNo;
+                }
 
-              wait(100).then(() => {
-                const getData = table.current.getData();
-                const selected = getData.map((itm: any, idx: number) => {
-                  if (dr.includes(itm[5])) {
-                    return idx;
-                  }
-                  return null;
+                mutatePdcChecks({
+                  pdcStatus: 2,
+                  search: rowItm.PNNo,
                 });
 
-                table.current.setSelectedRow(selected);
-                table.current.setIsTableSelectable(false);
-                table.current.setSelectedRow(
-                  getData.map((itm: any, idx: any) => idx)
-                );
-                setMonitoring({
-                  check: dr.length,
-                  unCheck: `${getData.length - dr.length}`,
-                  found: getData.length,
+                wait(100).then(() => {
+                  const getData = tableRef.current.getData();
+                  const filtered = getData.filter((itm: any, idx: number) => {
+                    if (dr.includes(itm.Check_No)) {
+                      return itm;
+                    }
+                  });
+                  const selected = filtered.map((itm: any) => itm.rowIndex);
+                  tableRef.current.setSelectedRow(selected);
                 });
-              });
+              } else {
+                return alert("No request for pull-out!");
+              }
             } else {
-              return alert("No request for pull-out!");
             }
-          } else {
-          }
 
-          modalCheckRef.current.closeDelay();
-        }}
-      />
-      <div className="mobile-ctions-buttons">
-        <Button
-          disabled={warehouseMode === "add"}
-          sx={{
-            height: "23px",
-            fontSize: "11px",
-            marginLeft: "10px",
+            modalCheckRef.current.closeDelay();
           }}
-          variant="contained"
-          color="info"
-          onClick={onClickNew}
-        >
-          New
-        </Button>
-        <Button
-          disabled={warehouseMode !== "add"}
-          sx={{
-            height: "23px",
-            fontSize: "11px",
+        />
+        <div className="mobile-ctions-buttons">
+          <Button
+            disabled={warehouseMode === "add"}
+            sx={{
+              height: "23px",
+              fontSize: "11px",
+              marginLeft: "10px",
+            }}
+            variant="contained"
+            color="info"
+            onClick={onClickNew}
+          >
+            New
+          </Button>
+          <Button
+            disabled={warehouseMode !== "add"}
+            sx={{
+              height: "23px",
+              fontSize: "11px",
+            }}
+            variant="contained"
+            color="error"
+            onClick={onClickCancel}
+          >
+            Cancel
+          </Button>
+        </div>
+        <UpwardTableModalSearch
+          ref={searchModalRef}
+          link={"/task/accounting/search-pdc-policy-id"}
+          column={[
+            { key: "Type", label: "Type", width: 100 },
+            { key: "IDNo", label: "ID No.", width: 150 },
+            {
+              key: "Name",
+              label: "Name",
+              width: 300,
+            },
+            {
+              key: "ID",
+              label: "ID",
+              hide: true,
+            },
+            {
+              key: "client_id",
+              label: "client_id",
+              hide: true,
+            },
+            {
+              key: "sub_account",
+              label: "sub_account",
+              hide: true,
+            },
+            {
+              key: "ShortName",
+              label: "ShortName",
+              hide: true,
+            },
+          ]}
+          handleSelectionChange={(rowItm) => {
+            if (rowItm) {
+              wait(100).then(() => {
+                tableRef.current.resetTable([]);
+                if (searchRef.current) {
+                  searchRef.current.value = rowItm.IDNo;
+                  mutatePdcChecks({
+                    pdcStatus: refPDCStatus.current?.selectedIndex,
+                    search: rowItm.IDNo,
+                  });
+                }
+              });
+              searchModalRef.current.closeModal();
+            }
           }}
-          variant="contained"
-          color="error"
-          onClick={onClickCancel}
-        >
-          Cancel
-        </Button>
+        />
       </div>
-    </div>
+    </>
   );
 }
 
@@ -1060,6 +684,7 @@ const ModalCheck = forwardRef(
     const [blick, setBlick] = useState(false);
 
     const table = useRef<any>(null);
+    const searchRCPNoModal = useRef<any>(null);
     const rcpnRef = useRef<HTMLInputElement>(null);
 
     const closeDelay = () => {
@@ -1099,7 +724,7 @@ const ModalCheck = forwardRef(
           },
         }),
       onSuccess(res) {
-        table.current.setDataFormated(
+        table.current.setData(
           res.data.list.map((itm: any, idx: number) => {
             return {
               row_count: idx + 1,
@@ -1110,23 +735,6 @@ const ModalCheck = forwardRef(
       },
     });
 
-    const {
-      UpwardTableModalSearch: SearchCollectionUpwardTableModalSearch,
-      openModal: searchCollectionCreditOpenModal,
-      closeModal: searchCollectionCreditCloseModal,
-    } = useUpwardTableModalSearchSafeMode({
-      link: "/task/accounting/warehouse/get-pullout-rcpno",
-      column: [{ key: "RCPNo", headerName: "RCPNo", width: 200 }],
-      getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-        if (rowItm) {
-          if (rcpnRef.current) {
-            rcpnRef.current.value = rowItm[0];
-          }
-          mutate({ RCPNo: rowItm[0] });
-          searchCollectionCreditCloseModal();
-        }
-      },
-    });
     const handleMouseDown = (e: any) => {
       if (!modalRef.current) return;
 
@@ -1156,6 +764,7 @@ const ModalCheck = forwardRef(
     };
     return showModal ? (
       <>
+        {isLoading && <Loading />}
         <div
           style={{
             position: "fixed",
@@ -1173,7 +782,6 @@ const ModalCheck = forwardRef(
             }, 250);
           }}
         ></div>
-        {isLoading && <Loading />}
         <div
           className="modal-pullout"
           ref={modalRef}
@@ -1261,7 +869,12 @@ const ModalCheck = forwardRef(
                   style: { width: "calc(100% - 70px)", height: "22px" },
                   onKeyDown: (e) => {
                     if (e.code === "NumpadEnter" || e.code === "Enter") {
-                      searchCollectionCreditOpenModal(e.currentTarget.value);
+                      searchRCPNoModal.current.openModal(e.currentTarget.value);
+                    }
+                  },
+                  onInput: (e) => {
+                    if (e.currentTarget.value === "") {
+                      mutate({ RCPNo: "" });
                     }
                   },
                 }}
@@ -1269,50 +882,42 @@ const ModalCheck = forwardRef(
                 onIconClick={(e) => {
                   e.preventDefault();
                   if (rcpnRef.current) {
-                    searchCollectionCreditOpenModal(rcpnRef.current.value);
+                    searchRCPNoModal.current.openModal(rcpnRef.current.value);
                   }
                 }}
                 inputRef={rcpnRef}
               />
-
-              <DataGridViewMultiSelectionReact
-                ref={table}
-                columns={[
-                  { key: "row_count", label: "#", width: 35 },
-                  { key: "RCPNo", label: "RCP No.", width: 100 },
-                  { key: "PNNo", label: "PN No.", width: 150 },
-                  { key: "Name", label: "Name", width: 250 },
-                  { key: "NoOfChecks", label: "# of Checks", width: 70 },
-                  { key: "Reason", label: "Reason", width: 150 },
-                ]}
-                rows={[]}
-                containerStyle={{
+              <div
+                style={{
+                  marginTop: "10px",
+                  width: "100%",
+                  position: "relative",
                   flex: 1,
+                  display: "flex",
                 }}
-                getSelectedItem={(rowItm: any) => {
-                  getSelectedItem(rowItm);
-                }}
-                onCheckAll={() => {
-                  const getData = table.current.getData();
-                  const filteredData = getData.map((itm: any, idx: number) => {
-                    if (
-                      itm.RCPNO !== "--" &&
-                      itm.RCPNO !== "" &&
-                      itm.Status !== "APPROVED"
-                    ) {
-                      return idx;
+              >
+                <DataGridViewReactUpgraded
+                  ref={table}
+                  adjustVisibleRowCount={350}
+                  columns={[
+                    { key: "row_count", label: "#", width: 35 },
+                    { key: "RCPNo", label: "RCP No.", width: 100 },
+                    { key: "PNNo", label: "PN No.", width: 150 },
+                    { key: "Name", label: "Name", width: 250 },
+                    { key: "NoOfChecks", label: "# of Checks", width: 150 },
+                    { key: "Reason", label: "Reason", width: 150 },
+                  ]}
+                  handleSelectionChange={(rowItm: any) => {
+                    if (rowItm) {
+                      getSelectedItem(rowItm, table);
+                      wait(100).then(() => {
+                        table.current.setSelectedRow(null);
+                      });
+                    } else {
                     }
-                    return null;
-                  });
-                  const selectedRows = filteredData.filter(
-                    (itm: any) => itm !== null
-                  );
-                  table.current.setSelectedRow(selectedRows);
-                }}
-                onUnCheckAll={() => {
-                  table.current.setSelectedRow([]);
-                }}
-              />
+                  }}
+                />
+              </div>
             </div>
           </div>
           <style>
@@ -1324,7 +929,22 @@ const ModalCheck = forwardRef(
             `}
           </style>
         </div>
-        <SearchCollectionUpwardTableModalSearch />
+        <UpwardTableModalSearch
+          ref={searchRCPNoModal}
+          link={"/task/accounting/warehouse/get-pullout-rcpno"}
+          column={[{ key: "RCPNo", headerName: "RCPNo", width: 200 }]}
+          handleSelectionChange={(rowItm) => {
+            if (rowItm) {
+              wait(100).then(() => {
+                if (rcpnRef.current) {
+                  rcpnRef.current.value = rowItm.RCPNo;
+                }
+                mutate({ RCPNo: rowItm.RCPNo });
+              });
+              searchRCPNoModal.current.closeModal();
+            }
+          }}
+        />
       </>
     ) : null;
   }

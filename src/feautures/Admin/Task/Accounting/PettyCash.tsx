@@ -27,10 +27,8 @@ import { NumericFormat } from "react-number-format";
 import { format } from "date-fns";
 import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
 import {
-  DataGridViewReact,
   DataGridViewReactUpgraded,
   UpwardTableModalSearch,
-  useUpwardTableModalSearchSafeMode,
 } from "../../../../components/DataGridViewReact";
 import SearchIcon from "@mui/icons-material/Search";
 import { Loading } from "../../../../components/Loading";

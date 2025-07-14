@@ -32,7 +32,6 @@ import { DataGridViewReactMultipleSelection } from "../../../components/UpgradeC
 import {
   DataGridViewReactUpgraded,
   UpwardTableModalSearch,
-  useUpwardTableModalSearchSafeMode,
 } from "../../../components/DataGridViewReact";
 import { formatNumber } from "../Task/Accounting/ReturnCheck";
 import {
