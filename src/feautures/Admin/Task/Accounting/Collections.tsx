@@ -299,6 +299,7 @@ export default function Collection() {
       });
     },
   });
+
   const {
     isLoading: loadingCollectionDataSearch,
     mutate: mutateCollectionDataSearch,
@@ -1432,6 +1433,17 @@ export default function Collection() {
                         sum + parseFloat(subArray[1].replace(/,/g, "")),
                       0
                     )
+                  );
+                }}
+                DisplayData={({ row, col }: any) => {
+                  return (
+                    <>
+                      {col.key === "Check_Date"
+                        ? row.Payment.toLowerCase() === "cash"
+                          ? ""
+                          : format(new Date(row[col.key]), "MM/dd/yyyy")
+                        : row[col.key]}
+                    </>
                   );
                 }}
               />

@@ -1,10 +1,4 @@
-import {
-  useContext,
-  useState,
-  useRef,
-  useEffect,
-  useCallback,
-} from "react";
+import { useContext, useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@mui/material";
 import LoadingButton from "@mui/lab/LoadingButton";
 import AddIcon from "@mui/icons-material/Add";
@@ -1567,6 +1561,17 @@ export default function CashDisbursement() {
             ref={tableRef}
             adjustVisibleRowCount={365}
             columns={columns}
+            DisplayData={({ row, col }: any) => {
+              return (
+                <>
+                  {col.key === "checkDate"
+                    ? row.code.trim() === "1.01.10"
+                      ? format(new Date(row[col.key]), "MM/dd/yyyy")
+                      : ""
+                    : row[col.key]}
+                </>
+              );
+            }}
             handleSelectionChange={(rowItm: any) => {
               if (rowItm) {
                 if (rowItm.code === "1.01.10") {

@@ -7,6 +7,7 @@ import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
 import { SelectInput, TextInput } from "../../../../components/UpwardFields";
 import {
   DataGridViewMultiSelectionReact,
+  DataGridViewReactMultipleSelection,
   UpwardTableModalSearch,
   useUpwardTableModalSearchSafeMode,
 } from "../../../../components/DataGridViewReact";
@@ -19,11 +20,12 @@ import PageHelmet from "../../../../components/Helmet";
 import "../../../../style/monbileview/accounting/pullout.css";
 import SearchIcon from "@mui/icons-material/Search";
 import { saveCondfirmationAlert } from "../../../../lib/confirmationAlert";
+import { format } from "date-fns";
 
 const column = [
   {
     key: "Check_Date",
-    label: "Date",
+    label: "Check Date",
     width: 80,
   },
   {
@@ -39,8 +41,10 @@ const column = [
 
 export default function CheckPulloutRequest() {
   const { myAxios, user } = useContext(AuthContext);
+
   const { executeQueryToClient } = useExecuteQueryFromClient();
   const [flag, setFlag] = useState("");
+  const [disableSelectAll, setDisableSelectAll] = useState(false);
 
   const executeQueryToClientRef = useRef(executeQueryToClient);
   const table = useRef<any>(null);
@@ -77,7 +81,11 @@ export default function CheckPulloutRequest() {
       const response = data as any;
       if (response.data.success) {
         // loadChecks(variable.ppno);
+        table.current.resetTable();
         AutoID();
+        fieldsReset();
+        setDisableSelectAll(false);
+        setFlag("");
         return Swal.fire({
           position: "center",
           icon: "success",
@@ -127,8 +135,6 @@ export default function CheckPulloutRequest() {
     },
   });
 
-
-
   const AutoID = async () => {
     const qry = `
         SELECT
@@ -143,12 +149,13 @@ export default function CheckPulloutRequest() {
       rcpnRef.current.value = `HOPO${response.data[0].Year}${response.data[0].Count}`;
   };
   const loadChecks = async (pnno: string) => {
+    setDisableSelectAll(false);
     table.current.setData([]);
     let rcpn = rcpnRef.current?.value;
 
     const qry = `
     SELECT DISTINCT
-        DATE_FORMAT(Check_Date, '%Y-%d-%m') AS Check_Date,
+        Check_Date,
         Bank,
         Check_No,
         Check_Amnt,
@@ -159,17 +166,19 @@ export default function CheckPulloutRequest() {
         left join (
         SELECT PNNo,a.RCPNo,Status,CheckNo FROM upward_insurance_umis.pullout_request  a
         left join pullout_request_details b on a.RCPNo = b.RCPNo
-        where PNNo = '${ppnoRef.current?.value}' and Approved_By is null and Approved_Date is null
+        where PNNo = '${ppnoRef.current?.value}' 
         ) b on a.Check_No = b.CheckNo
     WHERE
         PNo = '${ppnoRef.current?.value}'
       AND PDC_Status = 'Stored'
     order by Check_Date asc
         `;
-
     const { data: response } = await executeQueryToClientRef.current(qry);
     if (flag == "edit") {
-      const qry1 = `
+      table.current.setData(response.data);
+      wait(250).then(async () => {
+        const tableData = table.current.getData();
+        const qry1 = `
                     SELECT DISTINCT
                       CheckNo
                   FROM
@@ -181,32 +190,25 @@ export default function CheckPulloutRequest() {
                           AND Status = 'PENDING'
                   ORDER BY CheckNo
           `;
-      const { data: response1 } = await executeQueryToClientRef.current(qry1);
-      const checkNoSelected = response1.data.map((itm: any) => itm.CheckNo);
-      const filteredData = response.data.map((itm: any, idx: number) => {
-        if (checkNoSelected.includes(itm.Check_No)) {
-          return idx;
-        }
-        return null;
-      });
 
-      const selectedRows = filteredData.filter((itm: any) => itm !== null);
-      table.current.setDataFormated(response.data);
-      table.current.setSelectedRow(selectedRows);
-    } else {
-      const filteredData = response.data.map((itm: any, idx: number) => {
-        if (
-          itm.RCPNO !== "--" &&
-          itm.RCPNO !== "" &&
-          itm.Status !== "APPROVED"
-        ) {
-          return idx;
-        }
-        return null;
+        const { data: response1 } = await executeQueryToClientRef.current(qry1);
+        const checkNoSelected = response1.data.map((itm: any) => itm.CheckNo);
+
+        const filterTableData = tableData
+          .filter((itm: any) => {
+            if (checkNoSelected.includes(itm.Check_No)) {
+              return itm;
+            }
+          })
+          .map((itm: any) => itm.rowIndex);
+        table.current.setSelectedRowWithoutScroll(filterTableData);
       });
-      const selectedRows = filteredData.filter((itm: any) => itm !== null);
-      table.current.setDataFormated(response.data);
-      table.current.setSelectedRow(selectedRows);
+    } else {
+      table.current.setData(response.data);
+    }
+
+    if (response.data.some((itm: any) => itm.Status === "APPROVED")) {
+      setDisableSelectAll(true);
     }
   };
   const fieldsReset = () => {
@@ -231,6 +233,7 @@ export default function CheckPulloutRequest() {
       {(isLoadingSavePulloutRequest ||
         isLoadingGetSelectedRcpnNoPulloutRequest) && <Loading />}
 
+      <PageHelmet title="Pullout Request" />
       <div
         className="main"
         style={{
@@ -239,35 +242,138 @@ export default function CheckPulloutRequest() {
           justifyContent: "center",
           alignItems: "center",
           background: "#F1F1F1",
+          flexDirection: "column",
         }}
       >
-        <PageHelmet title="Pullout Request" />
         <div
           className="content"
           style={{
-            padding: "10px",
             width: "62%",
-            border: "1px sold black",
             height: "500px",
-            boxShadow: "1px 1px 2px 2px black",
+            boxShadow: "1px 1px 5px 2px #ACB0B0",
             display: "flex",
             flexDirection: "column",
+            boxSizing: "border-box",
+            borderRadius: "15px",
           }}
         >
           <div
             style={{
-              height: "auto",
+              borderTopLeftRadius: "15px",
+              borderTopRightRadius: "15px",
+              background: "#399494",
+              textAlign: "center",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "5px 15px",
             }}
           >
-            {flag === "edit" && (
+            <div
+              style={{
+                height: "15px",
+                width: "15px",
+                background: "white",
+                borderRadius: "50%",
+              }}
+            ></div>
+            <span
+              style={{
+                fontSize: "11px",
+                textAlign: "center",
+                textTransform: "uppercase",
+                padding: "0 20px",
+                color: "white",
+              }}
+            >
+              Pullout Request
+            </span>
+            <div
+              style={{
+                height: "15px",
+                width: "15px",
+                background: "white",
+                borderRadius: "50%",
+              }}
+            ></div>
+          </div>
+          <div
+            style={{
+              padding: "10px",
+              flex: 1,
+            }}
+          >
+            <div
+              style={{
+                height: "auto",
+              }}
+            >
+              {flag === "edit" && (
+                <TextInput
+                  containerClassName="custom-input"
+                  containerStyle={{
+                    width: "50%",
+                    marginBottom: "8px",
+                  }}
+                  label={{
+                    title: "RCP No. :",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "100px",
+                    },
+                  }}
+                  input={{
+                    type: "text",
+                    style: { width: "calc(100% - 100px)" },
+                    onKeyDown: (e) => {
+                      if (e.code === "NumpadEnter" || e.code === "Enter") {
+                        rcpnModalRef.current.openModal(e.currentTarget.value);
+                      }
+                    },
+                  }}
+                  icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+                  onIconClick={(e) => {
+                    e.preventDefault();
+                    if (rcpnRef.current) {
+                      rcpnModalRef.current.openModal(rcpnRef.current.value);
+                    }
+                  }}
+                  inputRef={rcpnRef}
+                />
+              )}
+              {(flag === "" || flag === "add") && (
+                <TextInput
+                  containerClassName="custom-input"
+                  containerStyle={{
+                    width: "50%",
+                    marginBottom: "8px",
+                  }}
+                  label={{
+                    title: "RCP No. :",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "100px",
+                    },
+                  }}
+                  input={{
+                    disabled: true,
+                    type: "text",
+                    style: { width: "calc(100% - 100px)" },
+                    onKeyDown: (e) => {
+                      if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      }
+                    },
+                  }}
+                  inputRef={rcpnRef}
+                />
+              )}
               <TextInput
-                containerClassName="custom-input"
-                containerStyle={{
-                  width: "50%",
-                  marginBottom: "8px",
-                }}
+                containerClassName="custom-input adjust-label-search"
+                containerStyle={{ width: "50%", marginBottom: "8px" }}
                 label={{
-                  title: "RCP No. :",
+                  title: "PN No. : ",
                   style: {
                     fontSize: "12px",
                     fontWeight: "bold",
@@ -275,33 +381,34 @@ export default function CheckPulloutRequest() {
                   },
                 }}
                 input={{
-                  type: "text",
-                  style: { width: "calc(100% - 100px)" },
+                  disabled: flag === "" || flag === "edit",
+                  type: "search",
                   onKeyDown: (e) => {
-                    if (e.code === "NumpadEnter" || e.code === "Enter") {
-                       rcpnModalRef.current.openModal(e.currentTarget.value);
+                    if (e.key === "Enter" || e.key === "NumpadEnter") {
+                      e.preventDefault();
+                      PNoModalRef.current.openModal(e.currentTarget.value);
                     }
                   },
+                  style: {
+                    width: "calc(100% - 100px)",
+                    height: "22px",
+                  },
                 }}
+                disableIcon={flag === "" || flag === "edit"}
                 icon={<SearchIcon sx={{ fontSize: "18px" }} />}
                 onIconClick={(e) => {
                   e.preventDefault();
-                  if (rcpnRef.current) {
-                     rcpnModalRef.current.openModal(rcpnRef.current.value);
+                  if (ppnoRef.current) {
+                    PNoModalRef.current.openModal(ppnoRef.current.value);
                   }
                 }}
-                inputRef={rcpnRef}
+                inputRef={ppnoRef}
               />
-            )}
-            {(flag === "" || flag === "add") && (
               <TextInput
-                containerClassName="custom-input"
-                containerStyle={{
-                  width: "50%",
-                  marginBottom: "8px",
-                }}
+                containerClassName="custom-input adjust-label-search"
+                containerStyle={{ width: "50%", marginBottom: "8px" }}
                 label={{
-                  title: "RCP No. :",
+                  title: "Client : ",
                   style: {
                     fontSize: "12px",
                     fontWeight: "bold",
@@ -309,271 +416,213 @@ export default function CheckPulloutRequest() {
                   },
                 }}
                 input={{
-                  disabled: true,
+                  disabled: flag === "",
+                  readOnly: true,
                   type: "text",
-                  style: { width: "calc(100% - 100px)" },
                   onKeyDown: (e) => {
-                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    if (e.key === "Enter" || e.key === "NumpadEnter") {
+                      e.preventDefault();
                     }
                   },
+                  style: {
+                    width: "calc(100% - 100px)",
+                    height: "22px",
+                  },
                 }}
-                inputRef={rcpnRef}
+                inputRef={nameRef}
               />
-            )}
-
-            <TextInput
-              containerClassName="custom-input adjust-label-search"
-              containerStyle={{ width: "50%", marginBottom: "8px" }}
-              label={{
-                title: "PN No. : ",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "100px",
-                },
-              }}
-              input={{
-                disabled: flag === "" || flag === "edit",
-                type: "search",
-                onKeyDown: (e) => {
-                  if (e.key === "Enter" || e.key === "NumpadEnter") {
-                    e.preventDefault();
-                     PNoModalRef.current.openModal(e.currentTarget.value);
-                  }
-                },
-                style: {
-                  width: "calc(100% - 100px)",
-                  height: "22px",
-                },
-              }}
-              disableIcon={flag === "" || flag === "edit"}
-              icon={<SearchIcon sx={{ fontSize: "18px" }} />}
-              onIconClick={(e) => {
-                e.preventDefault();
-                if (ppnoRef.current) {
-                   PNoModalRef.current.openModal(ppnoRef.current.value);
-                }
-              }}
-              inputRef={ppnoRef}
-            />
-            <TextInput
-              containerClassName="custom-input adjust-label-search"
-              containerStyle={{ width: "50%", marginBottom: "8px" }}
-              label={{
-                title: "Client : ",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "100px",
-                },
-              }}
-              input={{
-                disabled: flag === "",
-                readOnly: true,
-                type: "text",
-                onKeyDown: (e) => {
-                  if (e.key === "Enter" || e.key === "NumpadEnter") {
-                    e.preventDefault();
-                  }
-                },
-                style: {
-                  width: "calc(100% - 100px)",
-                  height: "22px",
-                },
-              }}
-              inputRef={nameRef}
-            />
-            <SelectInput
-              containerClassName="custom-input"
-              label={{
-                title: "Reason : ",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "100px",
-                },
-              }}
-              selectRef={reasonRef}
-              select={{
-                disabled: flag === "",
-                style: { flex: 1, height: "22px" },
-                defaultValue: "Non-VAT",
-                onChange: (e) => {
-                  // if (ppnoRef.current) loadChecks(ppnoRef.current.value);
-                },
-              }}
-              containerStyle={{
-                width: "50%",
-                marginBottom: "12px",
-              }}
-              datasource={[
-                { key: "", value: "" },
-                { key: "Fully Paid", value: "Fully Paid" },
-                { key: "Cash Replacement", value: "Cash Replacement" },
-                { key: "Check Replacement", value: "Check Replacement" },
-                { key: "Account Closed", value: "Account Closed" },
-                { key: "Hold", value: "Hold" },
-                {
-                  key: "Not Renewed by Camfin",
-                  value: "Not Renewed by Camfin",
-                },
-              ]}
-              values={"value"}
-              display={"key"}
-            />
-          </div>
-          <DataGridViewMultiSelectionReact
-            ref={table}
-            columns={column}
-            rows={[]}
-            containerStyle={{
-              flex: 1,
-            }}
-            rowIsSelectable={(rowItm: any) => {
-              return ["APPROVED", "PENDING"].includes(rowItm[4]);
-            }}
-            getSelectedItem={(rowItm: any) => {
-              if (rowItm) {
-              }
-            }}
-            onKeyDown={(rowItm: any, rowIdx: any, e: any) => {}}
-            onCheckAll={() => {
-              const getData = table.current.getData();
-              const filteredData = getData.map((itm: any, idx: number) => {
-                if (
-                  itm.RCPNO !== "--" &&
-                  itm.RCPNO !== "" &&
-                  itm.Status !== "APPROVED"
-                ) {
-                  return idx;
-                }
-                return null;
-              });
-              const selectedRows = filteredData.filter(
-                (itm: any) => itm !== null
-              );
-              table.current.setSelectedRow(selectedRows);
-            }}
-            onUnCheckAll={() => {
-              table.current.setSelectedRow([]);
-            }}
-          />
-          <div
-            style={{
-              height: "35px",
-              display: "flex",
-              justifyContent: "flex-end",
-              alignItems: "center",
-              columnGap: "5px",
-            }}
-          >
-            {flag === "" ? (
-              <>
-                <Button
-                  ref={btnAddRef}
-                  variant="contained"
-                  color="info"
-                  style={{
-                    height: "25px",
+              <SelectInput
+                containerClassName="custom-input"
+                label={{
+                  title: "Reason : ",
+                  style: {
                     fontSize: "12px",
-                  }}
-                  onClick={(e) => {
-                    setFlag("add");
-                    fieldsReset();
-                    if (btnSaveRef.current) btnSaveRef.current.disabled = false;
-                    setTimeout(() => {
-                      AutoID();
-                    }, 100);
-                  }}
-                >
-                  Add
-                </Button>
-                <Button
-                  ref={btnEditRef}
-                  variant="contained"
-                  color="success"
-                  style={{
-                    height: "25px",
-                    fontSize: "12px",
-                    background: orange[800],
-                  }}
-                  onClick={(e) => {
-                    setFlag("edit");
-                    // Load_RCPNo();
-                  }}
-                >
-                  edit
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  ref={btnSaveRef}
-                  variant="contained"
-                  color="success"
-                  style={{
-                    height: "25px",
-                    fontSize: "12px",
-                  }}
-                  onClick={async (e) => {
-                    const getData = table.current.getSelectedRowsData();
-                    if (getData.length <= 0) {
-                      return alert("No selected row found!");
+                    fontWeight: "bold",
+                    width: "100px",
+                  },
+                }}
+                selectRef={reasonRef}
+                select={{
+                  disabled: flag === "",
+                  style: { flex: 1, height: "22px" },
+                  defaultValue: "Non-VAT",
+                  onChange: (e) => {
+                    // if (ppnoRef.current) loadChecks(ppnoRef.current.value);
+                  },
+                }}
+                containerStyle={{
+                  width: "50%",
+                  marginBottom: "12px",
+                }}
+                datasource={[
+                  { key: "", value: "" },
+                  { key: "Fully Paid", value: "Fully Paid" },
+                  { key: "Cash Replacement", value: "Cash Replacement" },
+                  { key: "Check Replacement", value: "Check Replacement" },
+                  { key: "Account Closed", value: "Account Closed" },
+                  { key: "Hold", value: "Hold" },
+                  {
+                    key: "Not Renewed by Camfin",
+                    value: "Not Renewed by Camfin",
+                  },
+                ]}
+                values={"value"}
+                display={"key"}
+              />
+            </div>
+            <div
+              style={{
+                flex: 1,
+                position: "relative",
+                display: "flex",
+                zIndex: 2,
+              }}
+            >
+              <DataGridViewReactMultipleSelection
+                ref={table}
+                adjustOnRezise={false}
+                fixedRowCount={14}
+                adjustVisibleRowCount={320}
+                columns={column}
+                DisplayData={({ row, col }: any) => {
+                  console.log(col.key.trim() === "Check_Date" ? row[col.key] : "")
+                  return (
+                    <>
+                      {col.key.trim() === "Check_Date" ? format(new Date(row[col.key]), 'MM/dd/yyyy') : row[col.key]}
+                    </>
+                  );
+                }}
+                handleSelectionChange={(row: any) => {
+                  if (row) {
+                    if (row.Status !== "--" && row.Status !== "PENDING") {
+                      alert(`Can't select this, its already ${row.Status}!`);
+                      wait(100).then(() => {
+                        const getSelectedRows = table.current.getSelectedRow();
+                        const filteredSelectedRows = getSelectedRows.filter(
+                          (itm: number) => itm !== row.rowIndex
+                        );
+                        table.current.setSelectedRowWithoutScroll(
+                          filteredSelectedRows
+                        );
+                      });
                     }
+                  } else {
+                  }
+                }}
+                disableSelectAll={disableSelectAll}
+              />
+            </div>
+            <div
+              style={{
+                height: "35px",
+                display: "flex",
+                justifyContent: "flex-end",
+                alignItems: "center",
+                columnGap: "5px",
+              }}
+            >
+              {flag === "" ? (
+                <>
+                  <Button
+                    ref={btnAddRef}
+                    variant="contained"
+                    color="info"
+                    style={{
+                      height: "25px",
+                      fontSize: "12px",
+                    }}
+                    onClick={(e) => {
+                      setFlag("add");
+                      fieldsReset();
+                      if (btnSaveRef.current)
+                        btnSaveRef.current.disabled = false;
+                      setTimeout(() => {
+                        AutoID();
+                      }, 100);
+                    }}
+                  >
+                    Add
+                  </Button>
+                  <Button
+                    ref={btnEditRef}
+                    variant="contained"
+                    color="success"
+                    style={{
+                      height: "25px",
+                      fontSize: "12px",
+                      background: orange[800],
+                    }}
+                    onClick={(e) => {
+                      setFlag("edit");
+                      // Load_RCPNo();
+                    }}
+                  >
+                    edit
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    ref={btnSaveRef}
+                    variant="contained"
+                    color="success"
+                    style={{
+                      height: "25px",
+                      fontSize: "12px",
+                    }}
+                    onClick={async (e) => {
+                      console.log(table);
+                      const data = table.current.getSelectedRowData();
+                      if (data.length <= 0) {
+                        return alert("No selected row found!");
+                      }
 
-                    if (reasonRef.current?.value === "") {
-                      return alert("Reason is required!");
-                    }
-                    saveCondfirmationAlert({
-                      isConfirm: () => {
-                        const data = getData.map((itm: any) => {
-                          return {
-                            Check_Date: itm[0],
-                            Bank: itm[1],
-                            Check_No: itm[2],
-                            Check_Amnt: itm[3],
-                            Status: itm[4],
-                            RCPNO: itm[5],
-                          };
-                        });
-                        if (
-                          ppnoRef.current &&
-                          nameRef.current &&
-                          reasonRef.current
-                        ) {
-                          mutateSavePulloutRequest({
-                            flag,
-                            rcpn: rcpnRef.current?.value,
-                            ppno: ppnoRef.current.value,
-                            name: nameRef.current.value,
-                            reason: reasonRef.current.value,
-                            data: JSON.stringify(data),
-                          });
-                        }
-                      },
-                    });
-                  }}
-                >
-                  save
-                </Button>
-                <Button
-                  ref={btnCancelRef}
-                  variant="contained"
-                  color="error"
-                  style={{
-                    height: "25px",
-                    fontSize: "12px",
-                  }}
-                  onClick={(e) => {
-                    setFlag("");
-                    fieldsReset();
-                    table.current.setData([]);
-                  }}
-                >
-                  cancel
-                </Button>
-              </>
-            )}
+                      if (reasonRef.current?.value === "") {
+                        return alert("Reason is required!");
+                      }
+                      saveCondfirmationAlert({
+                        isConfirm: () => {
+                          if (
+                            ppnoRef.current &&
+                            nameRef.current &&
+                            reasonRef.current
+                          ) {
+                            mutateSavePulloutRequest({
+                              flag,
+                              rcpn: rcpnRef.current?.value,
+                              ppno: ppnoRef.current.value,
+                              name: nameRef.current.value,
+                              reason: reasonRef.current.value,
+                              data: JSON.stringify(data),
+                            });
+                          }
+                        },
+                      });
+                    }}
+                  >
+                    save
+                  </Button>
+                  <Button
+                    ref={btnCancelRef}
+                    variant="contained"
+                    color="error"
+                    style={{
+                      height: "25px",
+                      fontSize: "12px",
+                    }}
+                    onClick={(e) => {
+                      setFlag("");
+                      setDisableSelectAll(false);
+                      fieldsReset();
+
+                      table.current.setData([]);
+                    }}
+                  >
+                    cancel
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>

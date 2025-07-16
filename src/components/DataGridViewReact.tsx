@@ -34,6 +34,7 @@ export const DataGridViewReact = forwardRef(
       focusElementOnMaxTop,
       ActionComponent = () => <></>,
       showSequence = false,
+      
     }: any,
     ref
   ) => {
@@ -1947,6 +1948,9 @@ export const DataGridViewReactUpgraded = forwardRef(
       onDelete = (data: any) => {},
       beforeDelete = (data: any) => false,
       fixedRowCount = 0,
+      DisplayData = ({row,col}:any)=> {
+        return <>{row[col.key]}</>
+      }
     }: any,
     ref
   ) => {
@@ -2092,6 +2096,7 @@ export const DataGridViewReactUpgraded = forwardRef(
         ] as any);
       }
     }, [columnHeader]);
+
     useEffect(() => {
       if (fixedRowCount > 0) {
         return setVisibleRowCount(fixedRowCount);
@@ -2113,6 +2118,7 @@ export const DataGridViewReactUpgraded = forwardRef(
         window.removeEventListener("resize", resize);
       };
     }, [adjustOnRezise, fixedRowCount, adjustVisibleRowCount]);
+
     useEffect(() => {
       if (visible && menuRef.current) {
         const menu = menuRef.current;
@@ -2517,7 +2523,8 @@ export const DataGridViewReactUpgraded = forwardRef(
                                 selectedRowAction(row);
                               }}
                             >
-                              {row[col.key]}
+                              {/* {row[col.key]} */}
+                              <DisplayData row={row} col={col} />
                               <div
                                 onMouseDown={(e) => {
                                   onMouseDown(e, col, colIdx);
@@ -2956,6 +2963,12 @@ export const DataGridViewReactMultipleSelection = forwardRef(
       rows = [],
       disableUnselection = false,
       disableSelection = false,
+      disableSelectAll = false,
+      adjustOnRezise = true,
+      fixedRowCount = 0,
+        DisplayData = ({row,col}:any)=> {
+        return <>{row[col.key]}</>
+      }
     }: any,
     ref
   ) => {
@@ -3088,21 +3101,29 @@ export const DataGridViewReactMultipleSelection = forwardRef(
         ] as any);
       }
     }, [columnHeader]);
-    useEffect(() => {
+    
+     useEffect(() => {
+      if (fixedRowCount > 0) {
+        return setVisibleRowCount(fixedRowCount);
+      }
+
       const wH = window.innerHeight - adjustVisibleRowCount;
       const rowCount = Math.round(wH) / rowHeight;
       setVisibleRowCount(rowCount);
 
       const resize = () => {
-        const wH = window.innerHeight - adjustVisibleRowCount;
-        const rowCount = Math.round(wH) / rowHeight;
-        setVisibleRowCount(rowCount);
+        if (adjustOnRezise) {
+          const wH = window.innerHeight - adjustVisibleRowCount;
+          const rowCount = Math.round(wH) / rowHeight;
+          setVisibleRowCount(rowCount);
+        }
       };
       window.addEventListener("resize", resize);
       return () => {
         window.removeEventListener("resize", resize);
       };
-    }, [adjustVisibleRowCount]);
+    }, [adjustOnRezise, fixedRowCount, adjustVisibleRowCount]);
+   
     useEffect(() => {
       if (visible && menuRef.current) {
         const menu = menuRef.current;
@@ -3259,13 +3280,7 @@ export const DataGridViewReactMultipleSelection = forwardRef(
         return selectedRow;
       },
       setSelectedRowWithoutScroll: (_selectedRow: Array<number | null>) => {
-        const startSelected =
-          _selectedRow.length > 0
-            ? (_selectedRow[_selectedRow.length - 1] as number)
-            : 0;
-        setStartIndex(
-          Math.max(0, startSelected - Math.floor(visibleRowCount / 2))
-        );
+        setStartIndex(0);
         setSelectedRow(_selectedRow);
       },
       setSelectedRow: (_selectedRow: Array<number | null>) => {
@@ -3354,7 +3369,7 @@ export const DataGridViewReactMultipleSelection = forwardRef(
                   >
                     {col.key === "checkbox" ? (
                       <input
-                        disabled={disableSelection}
+                        disabled={disableSelection || disableSelectAll}
                         type="checkbox"
                         style={{ cursor: "pointer" }}
                         onClick={(e) => {
@@ -3530,7 +3545,8 @@ export const DataGridViewReactMultipleSelection = forwardRef(
                                 selectedRowAction(row);
                               }}
                             >
-                              {row[col.key]}
+                              {/* {row[col.key]} */}
+                              <DisplayData row={row} col={col} />
                               <div
                                 onMouseDown={(e) => {
                                   onMouseDown(e, col, colIdx);

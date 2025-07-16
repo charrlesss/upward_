@@ -22,6 +22,7 @@ import Swal from "sweetalert2";
 import PageHelmet from "../../../../components/Helmet";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import "../../../../style/monbileview/accounting/checkpostponement.css";
+import { formatNumber } from "./ReturnCheck";
 
 const columns = [
   { key: "ln", label: "#", width: 40 },
@@ -445,7 +446,6 @@ export default function ChekPostponementRequest() {
     setPaid("");
     setRemarks("");
   }
-
   function handleOnSave() {
     const data = table.current.getData();
     if (mode === "add") {
@@ -952,6 +952,18 @@ export default function ChekPostponementRequest() {
             ref={table}
             fixedRowCount={7}
             columns={columns}
+            DisplayData={({ row, col }: any) => {
+              return (
+                <>
+                  {col.key.trim() === "OldDepositDate" || col.key.trim() === "NewDate"
+                    ? format(new Date(row[col.key]), "MM/dd/yyyy")
+                    :col.key.trim() === "Amount"  ? 
+                    formatNumber(parseFloat(row[col.key]))
+                    :
+                    row[col.key]}
+                </>
+              );
+            }}
             handleSelectionChange={async (rowItm: any) => {
               if (rowItm) {
                 const rowIdx = table.current.getSelectedRow();
