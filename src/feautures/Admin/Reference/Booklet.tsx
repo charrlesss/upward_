@@ -730,17 +730,6 @@ export default function Deposit() {
               columns={columnsSelectCheck}
               handleSelectionChange={(rowItm: any) => {
                 if (rowItm) {
-                  // selected.push(row.Deposit_ID);
-
-                  // const selectedChecks =
-                  //   refSelectedCheckToBeReturned.current.getSelectedCheck();
-                  // if (selectedChecks.includes(rowItm[2])) {
-                  //   alert(`Check ${rowItm[2]} already exist!`);
-                  //   table.current.setSelectedRow(null);
-                  //   table.current.resetCheckBox();
-                  //   return;
-                  // }
-
                   if (selected.includes(rowItm.Deposit_ID)) {
                     wait(100).then(() => {
                       alert(`Check ${rowItm.Check_No} already exist!`);
@@ -812,22 +801,18 @@ export default function Deposit() {
       <ModalReturnCheckEntries
         ref={modalReturnCheckEntriesRef}
         handleConfirm={(
-          e: any,
-          itm: Array<any>,
+          row: any,
           state: any,
-          tableData: Array<any>,
-          columns: Array<any>,
-          ref: any
         ) => {
           if (state.lblTextRef !== state.refAmount) {
             return alert("Debit must equal to Credit!");
           }
 
-          // const retDebit = tableData;
-          // const RetReason =
-          //   ref.refReturnReason.current?.selectedIndex === 2
-          //     ? "AC"
-          //     : ref.refReturnReason.current?.value;
+          selected.push(row.Deposit_ID);
+
+          
+          const retDebit = selectedChecksTableRef.current.getData();
+ 
           // const RetDateRet = ref.refDateReturned.current?.value;
           // const retCredit: any = [];
           // retCredit[0] = state.refAccountID;
@@ -939,9 +924,14 @@ export default function Deposit() {
 
           // AccountingEntry
         }}
-        handleCancel={(e: any) => {
-          // table.current.setSelectedRow(null);
-          // table.current.resetCheckBox();
+        handleCancel={(row: any) => {
+          const selectedRows = selectedChecksTableRef.current.getSelectedRow();
+          const newSelectedRows = selectedRows.filter(
+            (itm: any) => itm !== row.rowIndex
+          );
+          selectedChecksTableRef.current.setSelectedRowWithoutScroll(
+            newSelectedRows
+          );
         }}
       />
     </>
@@ -1025,20 +1015,11 @@ const ModalReturnCheckEntries = forwardRef(
       },
     });
 
-    const closeDelay = () => {
-      setHandleDelayClose(true);
-      setTimeout(() => {
-        setShowModal(false);
-        setHandleDelayClose(false);
-        handleCancel();
-      }, 100);
-    };
-
     useImperativeHandle(ref, () => ({
       showModal: () => {
         setShowModal(true);
       },
-      clsoeModal: () => {
+      closeModal: () => {
         setShowModal(false);
       },
       getRefs: () => {
@@ -1058,7 +1039,6 @@ const ModalReturnCheckEntries = forwardRef(
       mutateEntries: (variables: string) => {
         mutateEntries(variables);
       },
-      closeDelay,
     }));
 
     const columns = [
@@ -1191,7 +1171,8 @@ const ModalReturnCheckEntries = forwardRef(
                 right: 0,
               }}
               onClick={() => {
-                closeDelay();
+                setShowModal(false);
+                handleCancel(selectedItem);
               }}
             >
               <CloseIcon sx={{ fontSize: "22px" }} />
@@ -1483,8 +1464,7 @@ const ModalReturnCheckEntries = forwardRef(
                       refAcronym,
                       lblTextRef,
                     };
-                    handleConfirm(e, selectedItem, state, data, columns, ref);
-                    closeDelay();
+                    handleConfirm(selectedItem, state);
                   }}
                 >
                   <span
@@ -1545,8 +1525,8 @@ const ModalReturnCheckEntries = forwardRef(
                     position: "relative",
                   }}
                   onClick={(e: any) => {
-                    handleCancel(e);
-                    closeDelay();
+                    setShowModal(false);
+                    handleCancel(selectedItem);
                   }}
                 >
                   <span

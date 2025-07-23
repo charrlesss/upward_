@@ -73,7 +73,7 @@ export const creditColumn = [
   { key: "Code", label: "Code", width: 150 },
   { key: "Title", label: "Title", width: 350 },
   { key: "TC", label: "TC", width: 200 },
-  { key: "Account_No", label: "Accoount No.", width: 180 },
+  { key: "Account_No", label: "Account No.", width: 180 },
 ];
 export default function Collection() {
   const debitTable = useRef<any>(null);

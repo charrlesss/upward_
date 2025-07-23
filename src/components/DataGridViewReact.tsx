@@ -34,7 +34,6 @@ export const DataGridViewReact = forwardRef(
       focusElementOnMaxTop,
       ActionComponent = () => <></>,
       showSequence = false,
-      
     }: any,
     ref
   ) => {
@@ -1948,9 +1947,9 @@ export const DataGridViewReactUpgraded = forwardRef(
       onDelete = (data: any) => {},
       beforeDelete = (data: any) => false,
       fixedRowCount = 0,
-      DisplayData = ({row,col}:any)=> {
-        return <>{row[col.key]}</>
-      }
+      DisplayData = ({ row, col }: any) => {
+        return <>{row[col.key]}</>;
+      },
     }: any,
     ref
   ) => {
@@ -2294,6 +2293,10 @@ export const DataGridViewReactUpgraded = forwardRef(
           if (el) {
             el.scrollIntoView({ behavior: "smooth", block: "center" });
             el.focus();
+            setTimeout(() => {
+              el.scrollIntoView({ behavior: "smooth", block: "center" });
+              el.focus();
+            });
           }
         }, 10);
       },
@@ -2966,9 +2969,9 @@ export const DataGridViewReactMultipleSelection = forwardRef(
       disableSelectAll = false,
       adjustOnRezise = true,
       fixedRowCount = 0,
-        DisplayData = ({row,col}:any)=> {
-        return <>{row[col.key]}</>
-      }
+      DisplayData = ({ row, col }: any) => {
+        return <>{row[col.key]}</>;
+      },
     }: any,
     ref
   ) => {
@@ -3101,8 +3104,8 @@ export const DataGridViewReactMultipleSelection = forwardRef(
         ] as any);
       }
     }, [columnHeader]);
-    
-     useEffect(() => {
+
+    useEffect(() => {
       if (fixedRowCount > 0) {
         return setVisibleRowCount(fixedRowCount);
       }
@@ -3123,7 +3126,7 @@ export const DataGridViewReactMultipleSelection = forwardRef(
         window.removeEventListener("resize", resize);
       };
     }, [adjustOnRezise, fixedRowCount, adjustVisibleRowCount]);
-   
+
     useEffect(() => {
       if (visible && menuRef.current) {
         const menu = menuRef.current;
@@ -3280,7 +3283,7 @@ export const DataGridViewReactMultipleSelection = forwardRef(
         return selectedRow;
       },
       setSelectedRowWithoutScroll: (_selectedRow: Array<number | null>) => {
-        setStartIndex(0);
+        // setStartIndex(0);
         setSelectedRow(_selectedRow);
       },
       setSelectedRow: (_selectedRow: Array<number | null>) => {

@@ -3958,7 +3958,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
                 fontWeight: "bold",
               }}
             >
-              Insurer Information
+              Insured Information
             </span>
             <TextInput
               containerClassName="custom-input"

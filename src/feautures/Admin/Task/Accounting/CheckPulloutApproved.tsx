@@ -210,6 +210,7 @@ export default function CheckPulloutApproved() {
 
   return (
     <>
+     
       <div
         className="main"
         style={{
