@@ -797,48 +797,48 @@ export default function Deposit() {
           </div>
         </CustomTabPanel>
       </div>
-
       <ModalReturnCheckEntries
         ref={modalReturnCheckEntriesRef}
-        handleConfirm={(
-          row: any,
-          state: any,
-        ) => {
+        handleConfirm={(row: any, state: any, ref: any) => {
           if (state.lblTextRef !== state.refAmount) {
             return alert("Debit must equal to Credit!");
           }
 
           selected.push(row.Deposit_ID);
 
-          
           const retDebit = selectedChecksTableRef.current.getData();
- 
-          // const RetDateRet = ref.refDateReturned.current?.value;
-          // const retCredit: any = [];
-          // retCredit[0] = state.refAccountID;
-          // retCredit[1] = state.refAccountName;
-          // retCredit[2] = state.refAmount;
-          // retCredit[3] = state.refAcronym;
-          // retCredit[4] = state.refSubAccount;
-          // retCredit[5] = state.refAccountId;
+          console.log(retDebit);
+          console.log(row);
+          const RetReason =
+            ref.refReturnReason.current?.selectedIndex === 2
+              ? "AC"
+              : ref.refReturnReason.current?.value;
+          const RetDateRet = ref.refDateReturned.current?.value;
+          const retCredit: any = [];
+          retCredit[0] = state.refAccountID;
+          retCredit[1] = state.refAccountName;
+          retCredit[2] = state.refAmount;
+          retCredit[3] = state.refAcronym;
+          retCredit[4] = state.refSubAccount;
+          retCredit[5] = state.refAccountId;
 
-          // // SelectedCheckToBeReturned
-          // const newSelectedData = [
-          //   ...refSelectedCheckToBeReturned.current.table.current.getData(),
-          //   [
-          //     itm[6],
-          //     itm[7],
-          //     itm[0],
-          //     itm[1],
-          //     itm[2],
-          //     itm[3],
-          //     itm[4],
-          //     itm[5],
-          //     itm[8],
-          //     RetReason,
-          //     format(new Date(RetDateRet), "MM/dd/yyyy"),
-          //   ],
-          // ];
+          // SelectedCheckToBeReturned
+          const newSelectedData = [
+            // ...refSelectedCheckToBeReturned.current.table.current.getData(),
+            [
+              // row[6],
+              // row[7],
+              // row[0],
+              // row[1],
+              // row[2],
+              // row[3],
+              // row[4],
+              // row[5],
+              // row[8],
+              RetReason,
+              format(new Date(RetDateRet), "MM/dd/yyyy"),
+            ],
+          ];
 
           // refSelectedCheckToBeReturned.current.table.current.setData(
           //   newSelectedData
@@ -852,64 +852,65 @@ export default function Deposit() {
           //     }, 0)
           //   )}`;
           // }
-          // let newSelectedDataAccountingEntry: any = [];
-          // for (let i = 0; i < retDebit.length; i++) {
-          //   newSelectedDataAccountingEntry = [
-          //     ...refAccountingEntry.current.table.current.getData(),
-          //     [
-          //       retDebit[i][0],
-          //       retDebit[i][1],
-          //       retDebit[i][2],
-          //       "0.00",
-          //       retDebit[i][3],
-          //       retDebit[i][4],
-          //       retDebit[i][5],
-          //       retDebit[i][6],
-          //       itm[2],
-          //       itm[5],
-          //       itm[3],
-          //       format(new Date(RetDateRet), "MM/dd/yyyy"),
-          //       RetReason,
-          //       itm[2],
-          //       itm[1],
-          //       itm[7],
-          //     ],
-          //   ];
-          // }
-          // newSelectedDataAccountingEntry = [
-          //   ...newSelectedDataAccountingEntry,
-          //   [
-          //     retCredit[0],
-          //     retCredit[1],
-          //     "0.00",
-          //     retCredit[2],
-          //     retCredit[5],
-          //     "",
-          //     retCredit[3],
-          //     retCredit[4],
-          //     itm[2],
-          //     itm[5],
-          //     itm[3],
-          //     format(new Date(RetDateRet), "MM/dd/yyyy"),
-          //     RetReason,
-          //     itm[2],
-          //     itm[1],
-          //     itm[7],
-          //   ],
-          // ];
+
+          let newSelectedDataAccountingEntry: any = [];
+          for (let i = 0; i < retDebit.length; i++) {
+            newSelectedDataAccountingEntry = [
+              // ...refAccountingEntry.current.table.current.getData(),
+              [
+                retDebit[i][0],
+                retDebit[i][1],
+                retDebit[i][2],
+                "0.00",
+                retDebit[i][3],
+                retDebit[i][4],
+                retDebit[i][5],
+                retDebit[i][6],
+                // row[2],
+                // row[5],
+                // row[3],
+                format(new Date(RetDateRet), "MM/dd/yyyy"),
+                RetReason,
+                // row[2],
+                // row[1],
+                // row[7],
+              ],
+            ];
+          }
+          newSelectedDataAccountingEntry = [
+            ...newSelectedDataAccountingEntry,
+            [
+              state.refAccountID,
+              state.refAccountName,
+              "0.00",
+              state.refAmount,
+              state.refAccountId,
+              "",
+              state.refAcronym,
+              state.refSubAccount,
+              // row[2],
+              // row[5],
+              // row[3],
+              format(new Date(RetDateRet), "MM/dd/yyyy"),
+              RetReason,
+              // row[2],
+              // row[1],
+              // row[7],
+            ],
+          ];
 
           // refAccountingEntry.current.table.current.setData(
           //   newSelectedDataAccountingEntry
           // );
 
-          // const reformatData = newSelectedDataAccountingEntry.map(
-          //   (itm: any) => {
-          //     return {
-          //       debit: itm[2],
-          //       credit: itm[3],
-          //     };
-          //   }
-          // );
+          const reformatData = newSelectedDataAccountingEntry.map(
+            (itm: any) => {
+              return {
+                debit: itm[2],
+                credit: itm[3],
+              };
+            }
+          );
           // if (refAccountingEntry.current.debitRef.current) {
           //   refAccountingEntry.current.debitRef.current.value = formatNumber(
           //     getSum(reformatData, "debit")
@@ -1007,7 +1008,7 @@ const ModalReturnCheckEntries = forwardRef(
               SAcctName: itm.ShortName,
             };
           });
-          table.current.setDataFormated(data);
+          table.current.setData(data);
         }
 
         if (lblTextRef.current)
@@ -1464,7 +1465,7 @@ const ModalReturnCheckEntries = forwardRef(
                       refAcronym,
                       lblTextRef,
                     };
-                    handleConfirm(selectedItem, state);
+                    handleConfirm(selectedItem, state, ref);
                   }}
                 >
                   <span

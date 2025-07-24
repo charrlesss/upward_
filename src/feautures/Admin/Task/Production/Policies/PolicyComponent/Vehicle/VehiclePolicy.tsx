@@ -4146,7 +4146,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
                 width: "100%",
               }}
               label={{
-                title: "Sale Officer:",
+                title: "Sales Officer:",
                 style: {
                   fontSize: "12px",
                   fontWeight: "bold",
