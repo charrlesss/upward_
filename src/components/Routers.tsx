@@ -166,6 +166,10 @@ const TEMPTOREG = lazy(
     )
 );
 
+const Endorsement = lazy(
+  () => import("../feautures/Admin/Task/Production/Endorsement")
+);
+
 export default function Routers() {
   const { user } = useContext(AuthContext);
   const department = process.env.REACT_APP_DEPARTMENT;
@@ -317,6 +321,7 @@ export default function Routers() {
       <Route path="pa" element={<PAPolicy />} />
       <Route path="cgl" element={<CGLPolicy />} />
     </Route>,
+
     <Route
       key={`/${department}/dashboard/task/production/statement-of-account`}
       path={`/${department}/dashboard/task/production/statement-of-account`}
@@ -557,17 +562,19 @@ export default function Routers() {
           <Route path="/dashboard/help/index" element={<Index />} />
           <Route path="/dashboard/help/about" element={<About />} /> */}
         </Route>
-
+        <Route
+          path={`/${department}/dashboard/task/production/policy/endorsement`}
+          element={<Endorsement />}
+        />
+        ,
         <Route
           path={`/${department}/dashboard/temp-to-regular`}
           element={<TEMPTOREG />}
         />
-
         <Route
           path={`/${department}/dashboard/report`}
           element={<DisplayReport />}
         />
-
         {/* Reports */}
         <Route path={`/${department}/dashboard`} element={<RenderPage />}>
           <Route

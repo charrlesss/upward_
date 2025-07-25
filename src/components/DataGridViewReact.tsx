@@ -1945,6 +1945,7 @@ export const DataGridViewReactUpgraded = forwardRef(
       adjustRightClickClientXAndY = { x: 0, y: 0 },
       adjustOnRezise = true,
       onDelete = (data: any) => {},
+      onKeyDelete = (data: any) => {},
       beforeDelete = (data: any) => false,
       fixedRowCount = 0,
       DisplayData = ({ row, col }: any) => {
@@ -2016,6 +2017,10 @@ export const DataGridViewReactUpgraded = forwardRef(
 
       if (e.code === "Delete" || e.code === "Backspace") {
         const rowItm = data.filter((itm: any) => itm.rowIndex === row.rowIndex);
+
+        if(onKeyDelete){
+          return onKeyDelete(rowItm[0])
+        }
         if (beforeDelete(rowItm[0])) {
           return;
         }

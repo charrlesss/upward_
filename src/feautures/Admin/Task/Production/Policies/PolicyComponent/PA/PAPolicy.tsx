@@ -36,8 +36,10 @@ import {
   useUpwardTableModalSearchSafeMode,
 } from "../../../../../../../components/DataGridViewReact";
 import { PolicyContext } from "../../Policy";
+import { useNavigate } from "react-router-dom";
 
 export default function PAPolicy() {
+  const navigate = useNavigate();
   const { careOfData, subAccountData } = useContext(PolicyContext);
   const { myAxios, user } = useContext(AuthContext);
   const [mode, setMode] = useState("");
@@ -477,6 +479,30 @@ export default function PAPolicy() {
               }}
             >
               Cancel
+            </Button>
+            <Button
+              variant="contained"
+              color="secondary"
+              startIcon={<SaveAsIcon />}
+              size="small"
+              disabled={mode !== "edit"}
+              onClick={() => {
+                const encodedData = encodeURIComponent(
+                  JSON.stringify({
+                    policyInformation:
+                      _policyInformationRef.current.getRefsValue(),
+                  })
+                );
+                window.open(
+                  `/${process.env.REACT_APP_DEPARTMENT}/dashboard/task/production/policy/endorsement?Mkr44Rt2iuy13R=${encodedData}`
+                );
+              }}
+              sx={{
+                height: "23px",
+                fontSize: "11px",
+              }}
+            >
+              endorsement
             </Button>
           </div>
         </div>
