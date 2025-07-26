@@ -579,7 +579,6 @@ export default function CheckPulloutRequest() {
                       fontSize: "12px",
                     }}
                     onClick={async (e) => {
-                      console.log(table);
                       const data = table.current.getSelectedRowData();
                       if (data.length <= 0) {
                         return alert("No selected row found!");

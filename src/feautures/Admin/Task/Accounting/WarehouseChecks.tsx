@@ -137,6 +137,8 @@ export default function WarehouseChecks() {
     ) {
       refRemarks.current.focus();
       return alert("Please provide remarks!");
+    } else if (tableRef.current.getSelectedRow().length <= 0) {
+      return alert("No selected row to be stored!");
     } else {
       const texts = [
         "store in warehouse?",
@@ -270,6 +272,12 @@ export default function WarehouseChecks() {
                   }
                 },
                 onChange: (e) => {
+                  if (e.currentTarget.selectedIndex === 0) {
+                    setDisableSelection(false);
+                  } else {
+                    setDisableSelection(true);
+                  }
+                  
                   if (e.target.selectedIndex !== 2) {
                     if (refRemarks.current) {
                       refRemarks.current.selectedIndex = 0;
@@ -487,7 +495,7 @@ export default function WarehouseChecks() {
               position: "relative",
               display: "flex",
               zIndex: 2,
-            }}      
+            }}
           >
             <DataGridViewReactMultipleSelection
               ref={tableRef}

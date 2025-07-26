@@ -559,7 +559,7 @@ const Endorsement = () => {
               Cancel
             </Button>
           )}
-          {mode !== "" && (
+          {mode === 'update' && (
             <Button
               sx={{
                 height: "25px",
@@ -712,19 +712,13 @@ const Endorsement = () => {
                       );
                     }
                     if (sumInsuredRef.current) {
-                      sumInsuredRef.current.value = formatNumber(
-                        parseFloat(rowItm.suminsured)
-                      );
+                      sumInsuredRef.current.value = rowItm.suminsured
                     }
                     if (netPremiumRef.current) {
-                      netPremiumRef.current.value = formatNumber(
-                        parseFloat(rowItm.totalpremium)
-                      );
+                      netPremiumRef.current.value = rowItm.totalpremium
                     }
                     if (vatRef.current) {
-                      vatRef.current.value = formatNumber(
-                        parseFloat(rowItm.vat)
-                      );
+                      vatRef.current.value = rowItm.vat
                     }
                     if (docstampRef.current) {
                       docstampRef.current.value = rowItm.docstamp;
@@ -733,14 +727,10 @@ const Endorsement = () => {
                       localGovTaxRef.current.value = rowItm.lgovtaxpercent;
                     }
                     if (_localGovTaxRef.current) {
-                      _localGovTaxRef.current.value = formatNumber(
-                        parseFloat(rowItm.lgovtax)
-                      );
+                      _localGovTaxRef.current.value = rowItm.lgovtax
                     }
                     if (totalDueRef.current) {
-                      totalDueRef.current.value = formatNumber(
-                        parseFloat(rowItm.totaldue)
-                      );
+                      totalDueRef.current.value = rowItm.totaldue
                     }
                     if (deletedRef.current) {
                       deletedRef.current.value = rowItm.deleted;
@@ -773,7 +763,11 @@ const Endorsement = () => {
           </div>
         </div>
       </div>
-      <ModalCheck ref={viewEndorsementListModalRef} />
+      <ModalCheck
+        ref={viewEndorsementListModalRef}
+        myAxios={myAxios}
+        user={user}
+      />
     </>
   );
 };
@@ -1514,22 +1508,50 @@ const PolicyInformation = forwardRef(
 );
 
 const ModalCheck = forwardRef(
-  ({ handleOnSave, handleOnClose, hasSelectedRow }: any, ref) => {
+  (
+    { handleOnSave, handleOnClose, hasSelectedRow, myAxios, user }: any,
+    ref
+  ) => {
     const modalRef = useRef<HTMLDivElement>(null);
     const isMoving = useRef(false);
     const offset = useRef({ x: 0, y: 0 });
 
     const [showModal, setShowModal] = useState(false);
-    const [handleDelayClose, setHandleDelayClose] = useState(false);
     const [blick, setBlick] = useState(false);
-
 
     const tableRef = useRef<any>(null);
     const searchListRef = useRef<HTMLInputElement>(null);
 
+    const {
+      mutate: mutateEndorsementList,
+      isLoading: isLoadingEndorsementList,
+    } = useMutation({
+      mutationKey: "endorsement-list",
+      mutationFn: async (variable: any) =>
+        await myAxios.post(
+          "/task/production/endorsement/endorsement-list",
+          variable,
+          {
+            headers: {
+              Authorization: `Bearer ${user?.accessToken}`,
+            },
+          }
+        ),
+      onSuccess: (response, variable) => {
+        const data = response.data.data;
+
+        tableRef.current.setData(data);
+      },
+    });
+
     useImperativeHandle(ref, () => ({
       showModal: () => {
         setShowModal(true);
+        wait(100).then(() => {
+          mutateEndorsementList({
+            search: searchListRef.current?.value,
+          });
+        });
       },
       clsoeModal: () => {
         setShowModal(false);
@@ -1539,7 +1561,7 @@ const ModalCheck = forwardRef(
     useEffect(() => {
       window.addEventListener("keydown", (e: any) => {
         if (e.key === "Escape") {
-          setShowModal(false)
+          setShowModal(false);
         }
       });
     }, []);
@@ -1574,6 +1596,7 @@ const ModalCheck = forwardRef(
 
     return showModal ? (
       <>
+        {isLoadingEndorsementList && <Loading />}
         <div
           style={{
             position: "fixed",
@@ -1640,14 +1663,14 @@ const ModalCheck = forwardRef(
                 position: "absolute",
                 top: 0,
                 right: 0,
-                display:"flex",
-                alignItems:"center",
-                border:"none",
-                color:"white",
-                cursor:"pointer"
+                display: "flex",
+                alignItems: "center",
+                border: "none",
+                color: "white",
+                cursor: "pointer",
               }}
               onClick={() => {
-                setShowModal(false)
+                setShowModal(false);
               }}
             >
               <CloseIcon sx={{ fontSize: "22px" }} />
@@ -1680,12 +1703,18 @@ const ModalCheck = forwardRef(
                 },
                 onKeyDown: (e) => {
                   if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    mutateEndorsementList({
+                      search: e.currentTarget.value,
+                    });
                   }
                 },
               }}
               icon={<SearchIcon sx={{ fontSize: "18px" }} />}
               onIconClick={(e) => {
                 e.preventDefault();
+                mutateEndorsementList({
+                  search: searchListRef.current?.value,
+                });
               }}
               inputRef={searchListRef}
             />

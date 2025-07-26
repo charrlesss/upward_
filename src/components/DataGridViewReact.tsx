@@ -2408,6 +2408,7 @@ export const DataGridViewReactUpgraded = forwardRef(
                       top: `${actualIndex * rowHeight}px`,
                       display: "flex",
                       height: `${rowHeight}px`,
+                      boxSizing:"border-box"
                     }}
                     draggable
                     onDragStart={() => setDraggedRowIndex(actualIndex)}
