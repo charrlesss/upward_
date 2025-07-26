@@ -462,8 +462,12 @@ export default function CheckPulloutRequest() {
                   { key: "Account Closed", value: "Account Closed" },
                   { key: "Hold", value: "Hold" },
                   {
-                    key: "Not Renewed by Camfin",
-                    value: "Not Renewed by Camfin",
+                    key: "Not Renewed",
+                    value: "Not Renewed",
+                  },
+                  {
+                    key: "Foreclosed",
+                    value: "Foreclosed",
                   },
                 ]}
                 values={"value"}
@@ -485,10 +489,14 @@ export default function CheckPulloutRequest() {
                 adjustVisibleRowCount={320}
                 columns={column}
                 DisplayData={({ row, col }: any) => {
-                  console.log(col.key.trim() === "Check_Date" ? row[col.key] : "")
+                  console.log(
+                    col.key.trim() === "Check_Date" ? row[col.key] : ""
+                  );
                   return (
                     <>
-                      {col.key.trim() === "Check_Date" ? format(new Date(row[col.key]), 'MM/dd/yyyy') : row[col.key]}
+                      {col.key.trim() === "Check_Date"
+                        ? format(new Date(row[col.key]), "MM/dd/yyyy")
+                        : row[col.key]}
                     </>
                   );
                 }}

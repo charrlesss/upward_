@@ -34,6 +34,7 @@ import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../../lib/confirmationAlert";
+import ListAltIcon from "@mui/icons-material/ListAlt";
 
 const columns = [
   {
@@ -140,6 +141,8 @@ const Endorsement = () => {
   const inputfieldRef = useRef<any>(null);
   const searchListRef = useRef<HTMLInputElement>(null);
   const policyModalRef = useRef<any>(null);
+
+  const viewEndorsementListModalRef = useRef<any>(null);
 
   const { mutate: mutateEndorsementList, isLoading: isLoadingEndorsementList } =
     useMutation({
@@ -371,6 +374,21 @@ const Endorsement = () => {
             columnGap: "5px",
           }}
         >
+          <Button
+            sx={{
+              height: "25px",
+              fontSize: "11px",
+            }}
+            size="small"
+            color="secondary"
+            onClick={() => {
+              viewEndorsementListModalRef.current.showModal();
+            }}
+            variant="contained"
+            startIcon={<ListAltIcon />}
+          >
+            View Endorsement List
+          </Button>
           {mode === "" && (
             <Button
               sx={{
@@ -522,8 +540,20 @@ const Endorsement = () => {
               variant="contained"
               startIcon={<CloseIcon />}
               onClick={() => {
-                resetFields();
-                tableRef.current.setSelectedRow(null);
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, cancel it!",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    resetFields();
+                    tableRef.current.setSelectedRow(null);
+                  }
+                });
               }}
             >
               Cancel
@@ -743,6 +773,7 @@ const Endorsement = () => {
           </div>
         </div>
       </div>
+      <ModalCheck ref={viewEndorsementListModalRef} />
     </>
   );
 };
@@ -1482,4 +1513,219 @@ const PolicyInformation = forwardRef(
   }
 );
 
+const ModalCheck = forwardRef(
+  ({ handleOnSave, handleOnClose, hasSelectedRow }: any, ref) => {
+    const modalRef = useRef<HTMLDivElement>(null);
+    const isMoving = useRef(false);
+    const offset = useRef({ x: 0, y: 0 });
+
+    const [showModal, setShowModal] = useState(false);
+    const [handleDelayClose, setHandleDelayClose] = useState(false);
+    const [blick, setBlick] = useState(false);
+
+
+    const tableRef = useRef<any>(null);
+    const searchListRef = useRef<HTMLInputElement>(null);
+
+    useImperativeHandle(ref, () => ({
+      showModal: () => {
+        setShowModal(true);
+      },
+      clsoeModal: () => {
+        setShowModal(false);
+      },
+    }));
+
+    useEffect(() => {
+      window.addEventListener("keydown", (e: any) => {
+        if (e.key === "Escape") {
+          setShowModal(false)
+        }
+      });
+    }, []);
+
+    const handleMouseDown = (e: any) => {
+      if (!modalRef.current) return;
+
+      isMoving.current = true;
+      offset.current = {
+        x: e.clientX - modalRef.current.offsetLeft,
+        y: e.clientY - modalRef.current.offsetTop,
+      };
+
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    };
+
+    // Move modal with mouse
+    const handleMouseMove = (e: any) => {
+      if (!isMoving.current || !modalRef.current) return;
+
+      modalRef.current.style.left = `${e.clientX - offset.current.x}px`;
+      modalRef.current.style.top = `${e.clientY - offset.current.y}px`;
+    };
+
+    // Stop moving when releasing mouse
+    const handleMouseUp = () => {
+      isMoving.current = false;
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    return showModal ? (
+      <>
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            background: "transparent",
+            zIndex: "88",
+          }}
+          onClick={() => {
+            setBlick(true);
+            setTimeout(() => {
+              setBlick(false);
+            }, 250);
+          }}
+        ></div>
+        <div
+          className="modal-add-check"
+          ref={modalRef}
+          style={{
+            height: blick ? "80%" : "80.1%",
+            width: blick ? "80.3%" : "80%",
+            // border: "1px solid #64748b",
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%, -50%)",
+            display: "flex",
+            flexDirection: "column",
+            zIndex: "99",
+            opacity: 1,
+            transition: "all 150ms",
+            boxShadow: `3px 6px 8px -7px rgba(0,0,0,0.75),
+            -3px -8px 20px -12px rgba(112, 107, 107, 0.75) inset`,
+            background: "white",
+          }}
+        >
+          <div
+            style={{
+              height: "22px",
+              display: "flex",
+              justifyContent: "space-between",
+              padding: "5px",
+              position: "relative",
+              alignItems: "center",
+              cursor: "grab",
+              background: "#70acf7ff",
+              boxShadow: "-3px -8px 20px -12px rgba(112, 107, 107, 0.75) inset",
+            }}
+            onMouseDown={handleMouseDown}
+          >
+            <span
+              style={{ fontSize: "13px", fontWeight: "bold", color: "white" }}
+            >
+              View Endorsement List
+            </span>
+            <button
+              className="btn-check-exit-modal"
+              style={{
+                borderRadius: "0px",
+                background: "transparent",
+                height: "100%",
+                position: "absolute",
+                top: 0,
+                right: 0,
+                display:"flex",
+                alignItems:"center",
+                border:"none",
+                color:"white",
+                cursor:"pointer"
+              }}
+              onClick={() => {
+                setShowModal(false)
+              }}
+            >
+              <CloseIcon sx={{ fontSize: "22px" }} />
+            </button>
+          </div>
+          <div
+            style={{
+              flex: 1,
+              padding: "10px",
+            }}
+          >
+            <TextInput
+              containerClassName="custom-input"
+              containerStyle={{
+                width: "50%",
+                marginBottom: "5px",
+              }}
+              label={{
+                title: "Search :",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "50px",
+                },
+              }}
+              input={{
+                type: "text",
+                style: {
+                  width: "calc(100% - 50px) ",
+                },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  }
+                },
+              }}
+              icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+              onIconClick={(e) => {
+                e.preventDefault();
+              }}
+              inputRef={searchListRef}
+            />
+            <div
+              style={{
+                width: "100%",
+                position: "relative",
+                flex: 1,
+                display: "flex",
+              }}
+            >
+              <DataGridViewReactUpgraded
+                ref={tableRef}
+                adjustVisibleRowCount={210}
+                columns={columns}
+                DisplayData={({ row, col }: any) => {
+                  return (
+                    <>
+                      {col.key === "datefrom" || col.key === "dateto"
+                        ? format(new Date(row[col.key]), "MM/dd/yyyy")
+                        : row[col.key]}
+                    </>
+                  );
+                }}
+                handleSelectionChange={(rowItm: any) => {}}
+              />
+            </div>
+          </div>
+
+          <style>
+            {`
+              .btn-check-exit-modal:hover{
+                background:red !important;
+                color:white !important;
+              }
+            `}
+          </style>
+        </div>
+      </>
+    ) : null;
+  }
+);
 export default Endorsement;
