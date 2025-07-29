@@ -2010,14 +2010,12 @@ export const DataGridViewReactUpgraded = forwardRef(
     ) => {
       let targetRow = rowIndex;
       let colIndex = columnHeader.findIndex((col: any) => col.key === colKey);
-
       if (e.key === "Enter") {
         selectedRowAction(row);
       }
 
       if (e.code === "Delete" || e.code === "Backspace") {
         const rowItm = data.filter((itm: any) => itm.rowIndex === row.rowIndex);
-
         if(onKeyDelete){
           return onKeyDelete(rowItm[0])
         }
@@ -2287,7 +2285,8 @@ export const DataGridViewReactUpgraded = forwardRef(
         return selectedRow;
       },
       setSelectedRow: (_selectedRow: number) => {
-        setStartIndex(
+        if(_selectedRow){
+            setStartIndex(
           Math.max(0, _selectedRow - Math.floor(visibleRowCount / 2))
         );
         setSelectedRow(_selectedRow);
@@ -2304,6 +2303,11 @@ export const DataGridViewReactUpgraded = forwardRef(
             });
           }
         }, 10);
+        }else{
+          setSelectedRow(_selectedRow);
+        }
+        
+      
       },
     }));
 
@@ -2968,6 +2972,7 @@ export const DataGridViewReactMultipleSelection = forwardRef(
         return <></>;
       },
       handleSelectionChange,
+      beforeSelectionChange,
       onDelete = (data: any) => {},
       rows = [],
       disableUnselection = false,
@@ -3155,15 +3160,22 @@ export const DataGridViewReactMultipleSelection = forwardRef(
         }
       }
     }, [visible, pos]);
+    
     useEffect(() => {
       window.addEventListener("click", handleClickCloseRightClickModal);
       return () => {
         window.removeEventListener("click", handleClickCloseRightClickModal);
       };
     }, []);
+
     const selectedRowAction = (row: any) => {
       if (disableSelection) {
         return;
+      }
+      if(beforeSelectionChange){
+         if(beforeSelectionChange(row)){
+          return
+         }
       }
       if (selectedRow.length > 0) {
         if (!selectedRow.includes(row.rowIndex)) {

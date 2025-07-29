@@ -43,6 +43,8 @@ const buttons = [
   { label: "Summary of Expenses", id: 19 },
   { label: "List of Purchase", id: 20 },
   { label: "Checklist on Month-End Accrual", id: 21 },
+  { label: "Check Pullout", id: 22 },
+  { label: "Check Postponement", id: 23 },
 ];
 
 export default function AccountingReport() {
@@ -265,6 +267,20 @@ export default function AccountingReport() {
                     "/reports/accounting/report/generate-report-aging-account"
                   }
                   reportTitle={"Aging of Accounts"}
+                />
+              )}
+              {buttonSelected === 22 && (
+                <Pullout
+                  link={"/reports/accounting/report/generate-report-pullout"}
+                  reportTitle={"Post Date Checks Pullout Approved"}
+                />
+              )}
+              {buttonSelected === 23 && (
+                <Postponement
+                  link={
+                    "/reports/accounting/report/generate-report-postponement"
+                  }
+                  reportTitle={"Post Date Checks Postponement Approved"}
                 />
               )}
             </div>
@@ -1060,7 +1076,9 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
             onKeyDown: async (e) => {
               if (e.key === "Enter" || e.key === "NumpadEnter") {
                 e.preventDefault();
-                chartAccountUpwardTableModalSearchRef.current.openModal(e.currentTarget.value)
+                chartAccountUpwardTableModalSearchRef.current.openModal(
+                  e.currentTarget.value
+                );
               }
               if (e.key === "ArrowDown") {
                 e.preventDefault();
@@ -1078,7 +1096,9 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
           onIconClick={(e) => {
             e.preventDefault();
             if (accountRef.current) {
-              chartAccountUpwardTableModalSearchRef.current.openModal(accountRef.current.value)
+              chartAccountUpwardTableModalSearchRef.current.openModal(
+                accountRef.current.value
+              );
             }
           }}
           inputRef={accountRef}
@@ -1215,8 +1235,9 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
                 onKeyDown: (e) => {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
-                    clientModalSearchRef.current.openModal(e.currentTarget.value)
-
+                    clientModalSearchRef.current.openModal(
+                      e.currentTarget.value
+                    );
                   }
                 },
               }}
@@ -1232,8 +1253,7 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
               onIconClick={(e) => {
                 e.preventDefault();
                 if (idNoRef.current) {
-                  clientModalSearchRef.current.openModal(idNoRef.current.value)
-
+                  clientModalSearchRef.current.openModal(idNoRef.current.value);
                 }
               }}
             />
@@ -1253,7 +1273,9 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
                 onKeyDown: (e) => {
                   if (e.key === "Enter" || e.key === "NumpadEnter") {
                     e.preventDefault();
-                    subAcctModalSearchRef.current.openModal(e.currentTarget.value)
+                    subAcctModalSearchRef.current.openModal(
+                      e.currentTarget.value
+                    );
                   }
                 },
               }}
@@ -1269,7 +1291,9 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
               onIconClick={(e) => {
                 e.preventDefault();
                 if (subAcctRef.current) {
-                    subAcctModalSearchRef.current.openModal(subAcctRef.current.value)
+                  subAcctModalSearchRef.current.openModal(
+                    subAcctRef.current.value
+                  );
                 }
               }}
             />
@@ -3073,7 +3097,6 @@ function PettyCashFundDisbursement() {
     </>
   );
 }
-
 function AgingAccounts({ link, reportTitle }: any) {
   const { myAxios, user } = useContext(AuthContext);
 
@@ -3384,6 +3407,602 @@ function AgingAccounts({ link, reportTitle }: any) {
           Generate Report
         </Button>
       </div>
+    </>
+  );
+}
+function Pullout({ link, reportTitle }: any) {
+  const { myAxios, user } = useContext(AuthContext);
+
+  const [title, setTitle] = useState(
+    generateTitle({
+      cmbformat: "Default",
+      report: "Monthly",
+      subAccount: "ALL",
+      date: new Date(),
+    })
+  );
+
+  const [report, setReport] = useState("Monthly");
+  const titleRef = useRef<HTMLTextAreaElement>(null);
+
+  const searchRef = useRef<HTMLInputElement>(null);
+  const rcpnnoRef = useRef<HTMLInputElement>(null);
+  const pnnoRef = useRef<HTMLInputElement>(null);
+  const clientRef = useRef<HTMLInputElement>(null);
+  const reasonRef = useRef<HTMLInputElement>(null);
+
+  const pulloutModalRef = useRef<any>(null);
+
+  const { mutate: mutateGenerateReport, isLoading: isLoadingGenerateReport } =
+    useMutation({
+      mutationKey: "generate-report",
+      mutationFn: async (variables: any) => {
+        return await myAxios.post(link, variables, {
+          responseType: "arraybuffer",
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        });
+      },
+      onSuccess: (response) => {
+        const pdfBlob = new Blob([response.data], { type: "application/pdf" });
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        if (isMobile) {
+          // MOBILE: download directly
+          const link = document.createElement("a");
+          link.href = pdfUrl;
+          link.download = "report.pdf";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          return;
+        } else {
+          window.open(
+            `/${
+              process.env.REACT_APP_DEPARTMENT
+            }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+            "_blank"
+          );
+        }
+      },
+    });
+
+  function generateTitle({ report, cmbformat, subAccount, date }: any) {
+    const _title =
+      process.env.REACT_APP_DEPARTMENT === "UMIS"
+        ? "UPWARD MANAGEMENT INSURANCE SERVICES"
+        : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.";
+
+    return `Post Date Checks Pullout Approved`;
+  }
+
+  function generateReport() {
+    mutateGenerateReport({
+      RCPNo: rcpnnoRef.current?.value,
+      PNNo: pnnoRef.current?.value,
+      Name: clientRef.current?.value,
+      Reason: reasonRef.current?.value,
+      title,
+    });
+  }
+
+  return (
+    <>
+      {isLoadingGenerateReport && <Loading />}
+      <div
+        style={{
+          display: "flex",
+          flex: 1,
+          flexDirection: "column",
+          padding: "5px",
+          rowGap: "10px",
+        }}
+      >
+        <TextAreaInput
+          containerStyle={{
+            marginBottom: "10px",
+          }}
+          label={{
+            title: "Title : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "100px",
+              display: "none",
+            },
+          }}
+          textarea={{
+            rows: 7,
+            style: { flex: 1 },
+            value: title,
+            onChange: (e) => {
+              setTitle(e.currentTarget.value);
+            },
+          }}
+          _inputRef={titleRef}
+        />
+        <TextInput
+          containerStyle={{
+            width: "100%",
+          }}
+          label={{
+            title: "Search : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "80px",
+            },
+          }}
+          input={{
+            type: "text",
+            defaultValue: "",
+            onKeyDown: (e) => {
+              if (e.key === "Enter" || e.key === "NumpadEnter") {
+                e.preventDefault();
+                pulloutModalRef.current.openModal(e.currentTarget.value);
+                // searchCashDisbursementOpenModal(e.currentTarget.value);
+              }
+            },
+
+            style: { width: "calc(100% - 80px)" },
+          }}
+          icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+          onIconClick={(e) => {
+            e.preventDefault();
+            if (searchRef.current)
+              pulloutModalRef.current.openModal(searchRef.current.value);
+          }}
+          inputRef={searchRef}
+        />
+        <TextInput
+          containerStyle={{
+            width: "100%",
+          }}
+          label={{
+            title: "RCPN No. : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "80px",
+            },
+          }}
+          input={{
+            readOnly: true,
+            type: "text",
+            defaultValue: "",
+            onKeyDown: (e) => {
+              if (e.key === "Enter" || e.key === "NumpadEnter") {
+                e.preventDefault();
+                // searchCashDisbursementOpenModal(e.currentTarget.value);
+              }
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+              }
+            },
+            style: { width: "calc(100% - 80px)" },
+          }}
+          inputRef={rcpnnoRef}
+        />
+        <TextInput
+          containerStyle={{
+            width: "100%",
+          }}
+          label={{
+            title: "PN No : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "80px",
+            },
+          }}
+          input={{
+            readOnly: true,
+            type: "text",
+            defaultValue: "",
+            onKeyDown: (e) => {
+              if (e.key === "Enter" || e.key === "NumpadEnter") {
+                e.preventDefault();
+                // searchCashDisbursementOpenModal(e.currentTarget.value);
+              }
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+              }
+            },
+            style: { width: "calc(100% - 80px)" },
+          }}
+          inputRef={pnnoRef}
+        />
+        <TextInput
+          containerStyle={{
+            width: "100%",
+          }}
+          label={{
+            title: "Client : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "80px",
+            },
+          }}
+          input={{
+            readOnly: true,
+            type: "text",
+            defaultValue: "",
+            onKeyDown: (e) => {
+              if (e.key === "Enter" || e.key === "NumpadEnter") {
+                e.preventDefault();
+                // searchCashDisbursementOpenModal(e.currentTarget.value);
+              }
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+              }
+            },
+            style: { width: "calc(100% - 80px)" },
+          }}
+          inputRef={clientRef}
+        />
+
+        <TextInput
+          containerStyle={{
+            width: "100%",
+          }}
+          label={{
+            title: "Reason : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "80px",
+            },
+          }}
+          input={{
+            readOnly: true,
+            type: "text",
+            defaultValue: "",
+            onKeyDown: (e) => {
+              if (e.key === "Enter" || e.key === "NumpadEnter") {
+                e.preventDefault();
+                // searchCashDisbursementOpenModal(e.currentTarget.value);
+              }
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+              }
+            },
+            style: { width: "calc(100% - 80px)" },
+          }}
+          inputRef={reasonRef}
+        />
+
+        <Button
+          onClick={generateReport}
+          color="success"
+          variant="contained"
+          sx={{ height: "22px", fontSize: "12px", width: "100%" }}
+        >
+          Generate Report
+        </Button>
+      </div>
+      <UpwardTableModalSearch
+        ref={pulloutModalRef}
+        link={"/reports/accounting/report/search-pullout"}
+        column={[
+          { key: "RCPNo", label: "RCP No", width: 100 },
+          { key: "PNNo", label: "PN No", width: 150 },
+          {
+            key: "Name",
+            label: "Name",
+            width: 300,
+          },
+          {
+            key: "Reason",
+            label: "Reason",
+            width: 200,
+          },
+          {
+            key: "NoOfChecks",
+            label: "No. of Checks",
+            width: 200,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              if (rcpnnoRef.current) {
+                rcpnnoRef.current.value = rowItm.RCPNo;
+              }
+                if (clientRef.current) {
+                clientRef.current.value = rowItm.Name;
+              }
+                if (pnnoRef.current) {
+                pnnoRef.current.value = rowItm.PNNo;
+              }
+                 if (reasonRef.current) {
+                reasonRef.current.value = rowItm.Reason;
+              }
+            });
+            pulloutModalRef.current.closeModal();
+          }
+        }}
+      />
+    </>
+  );
+}
+function Postponement({ link, reportTitle }: any) {
+  const { myAxios, user } = useContext(AuthContext);
+
+  const [title, setTitle] = useState(
+    generateTitle({
+      cmbformat: "Default",
+      report: "Monthly",
+      subAccount: "ALL",
+      date: new Date(),
+    })
+  );
+
+  const [report, setReport] = useState("Monthly");
+  const titleRef = useRef<HTMLTextAreaElement>(null);
+  const formatRef = useRef<HTMLSelectElement>(null);
+  const reportRef = useRef<HTMLSelectElement>(null);
+  const subAccountRef = useRef<HTMLSelectElement>(null);
+  const _subAccountRef = useRef<any>(null);
+  const policyTypeRef = useRef<HTMLSelectElement>(null);
+  const pulloutModalRef = useRef<any>(null);
+
+  const searchRef = useRef<HTMLInputElement>(null);
+  const rcpnnoRef = useRef<HTMLInputElement>(null);
+  const pnnoRef = useRef<HTMLInputElement>(null);
+  const clientRef = useRef<HTMLInputElement>(null);
+  const reasonRef = useRef<HTMLInputElement>(null);
+
+  const { mutate: mutateGenerateReport, isLoading: isLoadingGenerateReport } =
+    useMutation({
+      mutationKey: "generate-report",
+      mutationFn: async (variables: any) => {
+        return await myAxios.post(link, variables, {
+          responseType: "arraybuffer",
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        });
+      },
+      onSuccess: (response) => {
+        const pdfBlob = new Blob([response.data], { type: "application/pdf" });
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        if (isMobile) {
+          // MOBILE: download directly
+          const link = document.createElement("a");
+          link.href = pdfUrl;
+          link.download = "report.pdf";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          return;
+        } else {
+          window.open(
+            `/${
+              process.env.REACT_APP_DEPARTMENT
+            }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
+            "_blank"
+          );
+        }
+      },
+    });
+
+  function generateTitle({ report, cmbformat, subAccount, date }: any) {
+    const _title =
+      process.env.REACT_APP_DEPARTMENT === "UMIS"
+        ? "UPWARD MANAGEMENT INSURANCE SERVICES"
+        : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.";
+
+    return `Post Date Checks Postponement Approved`;
+  }
+
+  function generateReport() {
+    mutateGenerateReport({
+      RPCDNo: rcpnnoRef.current?.value,
+      PNNo: pnnoRef.current?.value,
+      Name: clientRef.current?.value,
+      title,
+    });
+  }
+
+  return (
+    <>
+      {isLoadingGenerateReport && <Loading />}
+      <div
+        style={{
+          display: "flex",
+          flex: 1,
+          flexDirection: "column",
+          padding: "5px",
+          rowGap: "10px",
+        }}
+      >
+        <TextAreaInput
+          containerStyle={{
+            marginBottom: "10px",
+          }}
+          label={{
+            title: "Title : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "100px",
+              display: "none",
+            },
+          }}
+          textarea={{
+            rows: 7,
+            style: { flex: 1 },
+            value: title,
+            onChange: (e) => {
+              setTitle(e.currentTarget.value);
+            },
+          }}
+          _inputRef={titleRef}
+        />
+        <TextInput
+          containerStyle={{
+            width: "100%",
+          }}
+          label={{
+            title: "Search : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "80px",
+            },
+          }}
+          input={{
+            type: "text",
+            defaultValue: "",
+            onKeyDown: (e) => {
+              if (e.key === "Enter" || e.key === "NumpadEnter") {
+                e.preventDefault();
+                pulloutModalRef.current.openModal(e.currentTarget.value);
+                // searchCashDisbursementOpenModal(e.currentTarget.value);
+              }
+            },
+
+            style: { width: "calc(100% - 80px)" },
+          }}
+          icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+          onIconClick={(e) => {
+            e.preventDefault();
+            if (searchRef.current)
+              pulloutModalRef.current.openModal(searchRef.current.value);
+          }}
+          inputRef={searchRef}
+        />
+        <TextInput
+          containerStyle={{
+            width: "100%",
+          }}
+          label={{
+            title: "RCPN No. : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "80px",
+            },
+          }}
+          input={{
+            readOnly: true,
+            type: "text",
+            defaultValue: "",
+            onKeyDown: (e) => {
+              if (e.key === "Enter" || e.key === "NumpadEnter") {
+                e.preventDefault();
+                // searchCashDisbursementOpenModal(e.currentTarget.value);
+              }
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+              }
+            },
+            style: { width: "calc(100% - 80px)" },
+          }}
+          inputRef={rcpnnoRef}
+        />
+        <TextInput
+          containerStyle={{
+            width: "100%",
+          }}
+          label={{
+            title: "PN No : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "80px",
+            },
+          }}
+          input={{
+            readOnly: true,
+            type: "text",
+            defaultValue: "",
+            onKeyDown: (e) => {
+              if (e.key === "Enter" || e.key === "NumpadEnter") {
+                e.preventDefault();
+                // searchCashDisbursementOpenModal(e.currentTarget.value);
+              }
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+              }
+            },
+            style: { width: "calc(100% - 80px)" },
+          }}
+          inputRef={pnnoRef}
+        />
+        <TextInput
+          containerStyle={{
+            width: "100%",
+          }}
+          label={{
+            title: "Client : ",
+            style: {
+              fontSize: "12px",
+              fontWeight: "bold",
+              width: "80px",
+            },
+          }}
+          input={{
+            readOnly: true,
+            type: "text",
+            defaultValue: "",
+            onKeyDown: (e) => {
+              if (e.key === "Enter" || e.key === "NumpadEnter") {
+                e.preventDefault();
+                // searchCashDisbursementOpenModal(e.currentTarget.value);
+              }
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+              }
+            },
+            style: { width: "calc(100% - 80px)" },
+          }}
+          inputRef={clientRef}
+        />
+        <Button
+          onClick={generateReport}
+          color="success"
+          variant="contained"
+          sx={{ height: "22px", fontSize: "12px", width: "100%" }}
+        >
+          Generate Report
+        </Button>
+      </div>
+      <UpwardTableModalSearch
+        ref={pulloutModalRef}
+        link={"/reports/accounting/report/search-postponement"}
+        column={[
+          { key: "RPCDNo", label: "RCP No", width: 150 },
+          { key: "PNNo", label: "PN No", width: 170 },
+          {
+            key: "Name",
+            label: "Name",
+            width: 300,
+          },
+          {
+            key: "NoOfChecks",
+            label: "No. of Checks",
+            width: 200,
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              if (rcpnnoRef.current) {
+                rcpnnoRef.current.value = rowItm.RPCDNo;
+              }
+              if (pnnoRef.current) {
+                pnnoRef.current.value = rowItm.PNNo;
+              }
+              if (clientRef.current) {
+                clientRef.current.value = rowItm.Name;
+              }
+            });
+            pulloutModalRef.current.closeModal();
+          }
+        }}
+      />
     </>
   );
 }

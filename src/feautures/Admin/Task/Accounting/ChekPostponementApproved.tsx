@@ -314,33 +314,7 @@ export default function ChekPostponementApproved() {
           handleOnClose={() => {}}
         />
         {/* ===========  first field  =========== */}
-        {/* <Button
-        onClick={() => {
-          mutatePrint({
-            state: {
-              PNo: PNNoRef.current?.value,
-              Name: NameRef.current?.value,
-              rcpnNo: RPCDNoRef.current?.value,
-              reportTitle: "",
-            },
-            tableData: table.current.getData().map((itm: any) => {
-              return {
-                CheckNo: itm[1] || "",
-                OldDepositDate: itm[4] || "",
-                NewDate: itm[5] || "",
-                Bank: itm[2] || "",
-                Amount: itm[3] || "0.00",
-                Datediff: itm[7] || "0",
-                Penalty: itm[6] || "0.00",
-                Reason: itm[8] || "",
-                ln: itm[0],
-              };
-            }),
-          });
-        }}
-      >
-        print
-      </Button> */}
+       
         <div
           className="second-field"
           style={{

@@ -38,7 +38,6 @@ const column = [
   { key: "Status", label: "Status", width: 150 },
   { key: "RCPNO", label: "RCPNO", width: 150 },
 ];
-
 export default function CheckPulloutRequest() {
   const { myAxios, user } = useContext(AuthContext);
 
@@ -148,6 +147,7 @@ export default function CheckPulloutRequest() {
     if (rcpnRef.current)
       rcpnRef.current.value = `HOPO${response.data[0].Year}${response.data[0].Count}`;
   };
+
   const loadChecks = async (pnno: string) => {
     setDisableSelectAll(false);
     table.current.setData([]);
@@ -164,7 +164,7 @@ export default function CheckPulloutRequest() {
     FROM
         pdc a
         left join (
-        SELECT PNNo,a.RCPNo,Status,CheckNo FROM upward_insurance_umis.pullout_request  a
+        SELECT PNNo,a.RCPNo,Status,CheckNo FROM pullout_request  a
         left join pullout_request_details b on a.RCPNo = b.RCPNo
         where PNNo = '${ppnoRef.current?.value}' 
         ) b on a.Check_No = b.CheckNo
@@ -174,42 +174,8 @@ export default function CheckPulloutRequest() {
     order by Check_Date asc
         `;
     const { data: response } = await executeQueryToClientRef.current(qry);
-    if (flag == "edit") {
-      table.current.setData(response.data);
-      wait(250).then(async () => {
-        const tableData = table.current.getData();
-        const qry1 = `
-                    SELECT DISTINCT
-                      CheckNo
-                  FROM
-                      pullout_request a
-                          LEFT JOIN
-                      pullout_request_details b ON a.RCPNo = b.RCPNo
-                  WHERE
-                      a.PNNo = '${pnno}'
-                          AND Status = 'PENDING'
-                  ORDER BY CheckNo
-          `;
 
-        const { data: response1 } = await executeQueryToClientRef.current(qry1);
-        const checkNoSelected = response1.data.map((itm: any) => itm.CheckNo);
-
-        const filterTableData = tableData
-          .filter((itm: any) => {
-            if (checkNoSelected.includes(itm.Check_No)) {
-              return itm;
-            }
-          })
-          .map((itm: any) => itm.rowIndex);
-        table.current.setSelectedRowWithoutScroll(filterTableData);
-      });
-    } else {
-      table.current.setData(response.data);
-    }
-
-    if (response.data.some((itm: any) => itm.Status === "APPROVED")) {
-      setDisableSelectAll(true);
-    }
+    table.current.setData(response.data);
   };
   const fieldsReset = () => {
     setTimeout(() => {
@@ -489,32 +455,62 @@ export default function CheckPulloutRequest() {
                 adjustVisibleRowCount={320}
                 columns={column}
                 DisplayData={({ row, col }: any) => {
-                  console.log(
-                    col.key.trim() === "Check_Date" ? row[col.key] : ""
-                  );
                   return (
                     <>
-                      {col.key.trim() === "Check_Date"
-                        ? format(new Date(row[col.key]), "MM/dd/yyyy")
-                        : row[col.key]}
+                      {col.key.trim() === "Check_Date" ? (
+                        format(new Date(row[col.key]), "MM/dd/yyyy")
+                      ) : col.key.trim() === "Status" ? (
+                        <span style={{ color: setStatusColor(row[col.key]) }}>
+                          {row[col.key]}
+                        </span>
+                      ) : (
+                        row[col.key]
+                      )}
                     </>
                   );
                 }}
-                handleSelectionChange={(row: any) => {
-                  if (row) {
+                beforeSelectionChange={(row: any) => {
+                  if (flag === "edit") {
                     if (row.Status !== "--" && row.Status !== "PENDING") {
-                      alert(`Can't select this, its already ${row.Status}!`);
-                      wait(100).then(() => {
-                        const getSelectedRows = table.current.getSelectedRow();
-                        const filteredSelectedRows = getSelectedRows.filter(
-                          (itm: number) => itm !== row.rowIndex
-                        );
-                        table.current.setSelectedRowWithoutScroll(
-                          filteredSelectedRows
-                        );
-                      });
+                      return true;
                     }
                   } else {
+                    if (row.Status !== "--") {
+                      return true;
+                    }
+                  }
+                }}
+                handleSelectionChange={(row: any) => {
+                  if (row) {
+                    // if (flag === "edit") {
+                    //   if (row.Status !== "--" && row.Status !== "PENDING") {
+                    //     alert(`Can't select this, its already ${row.Status}!`);
+                    //     wait(100).then(() => {
+                    //       const getSelectedRows =
+                    //         table.current.getSelectedRow();
+                    //       const filteredSelectedRows = getSelectedRows.filter(
+                    //         (itm: number) => itm !== row.rowIndex
+                    //       );
+                    //       table.current.setSelectedRowWithoutScroll(
+                    //         filteredSelectedRows
+                    //       );
+                    //     });
+                    //   }
+                    // } else {
+                    //   if (row.Status !== "--") {
+                    //     alert(`Can't select this, its already ${row.Status}!`);
+                    //     wait(100).then(() => {
+                    //       const getSelectedRows =
+                    //         table.current.getSelectedRow();
+                    //       const filteredSelectedRows = getSelectedRows.filter(
+                    //         (itm: number) => itm !== row.rowIndex
+                    //       );
+                    //       table.current.setSelectedRowWithoutScroll(
+                    //         filteredSelectedRows
+                    //       );
+                    //     });
+                    //   }
+                    // }
                   }
                 }}
                 disableSelectAll={disableSelectAll}
@@ -580,31 +576,58 @@ export default function CheckPulloutRequest() {
                     }}
                     onClick={async (e) => {
                       const data = table.current.getSelectedRowData();
-                      if (data.length <= 0) {
+                      if (data.length <= 0 && flag === "add") {
+
                         return alert("No selected row found!");
                       }
 
                       if (reasonRef.current?.value === "") {
                         return alert("Reason is required!");
                       }
-                      saveCondfirmationAlert({
-                        isConfirm: () => {
-                          if (
-                            ppnoRef.current &&
-                            nameRef.current &&
-                            reasonRef.current
-                          ) {
-                            mutateSavePulloutRequest({
-                              flag,
-                              rcpn: rcpnRef.current?.value,
-                              ppno: ppnoRef.current.value,
-                              name: nameRef.current.value,
-                              reason: reasonRef.current.value,
-                              data: JSON.stringify(data),
-                            });
-                          }
-                        },
-                      });
+
+                      if (flag === "add") {
+                        saveCondfirmationAlert({
+                          isConfirm: () => {
+                            if (
+                              ppnoRef.current &&
+                              nameRef.current &&
+                              reasonRef.current
+                            ) {
+                              mutateSavePulloutRequest({
+                                flag,
+                                rcpn: rcpnRef.current?.value,
+                                ppno: ppnoRef.current.value,
+                                name: nameRef.current.value,
+                                reason: reasonRef.current.value,
+                                data: JSON.stringify(data),
+                              });
+                            }
+                          },
+                        });
+                      } else {
+
+                        Swal.fire({
+                            title: "Are you sure?",
+                            text:  `${data.length <= 0 ? `No selected found! it means this request RCNo: ${rcpnRef.current?.value} is you want to delete.` : ""} Do you want to proceed with saving?`,
+                            icon: "warning",
+                            showCancelButton: true,
+                            confirmButtonColor: "#3085d6",
+                            cancelButtonColor: "#d33",
+                            confirmButtonText: "Yes, save it!",
+                          }).then((result) => {
+                            if (result.isConfirmed) {
+                                mutateSavePulloutRequest({
+                                flag,
+                                rcpn: rcpnRef.current?.value,
+                                ppno: ppnoRef.current?.value,
+                                name: nameRef.current?.value,
+                                reason: reasonRef.current?.value,
+                                data: JSON.stringify(data),
+                              });
+                            }
+                           
+                          });
+                      }
                     }}
                   >
                     save
@@ -623,6 +646,7 @@ export default function CheckPulloutRequest() {
                       fieldsReset();
 
                       table.current.setData([]);
+                      table.current.setSelectedRow([]);
                     }}
                   >
                     cancel
@@ -669,4 +693,15 @@ export default function CheckPulloutRequest() {
       />
     </>
   );
+}
+function setStatusColor(rowdata: string) {
+  if (rowdata === "PENDING") {
+    return "orange";
+  } else if (rowdata === "APPROVED") {
+    return "green";
+  } else if (rowdata === "DISAPPROVED") {
+    return "red";
+  } else {
+    return "blue";
+  }
 }

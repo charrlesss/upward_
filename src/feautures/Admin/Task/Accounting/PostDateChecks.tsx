@@ -35,10 +35,8 @@ import PageHelmet from "../../../../components/Helmet";
 import { wait } from "@testing-library/user-event/dist/utils";
 import SearchIcon from "@mui/icons-material/Search";
 import {
-  DataGridViewReact,
   DataGridViewReactUpgraded,
   UpwardTableModalSearch,
-  useUpwardTableModalSearchSafeMode,
 } from "../../../../components/DataGridViewReact";
 import { Loading } from "../../../../components/Loading";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
@@ -1248,7 +1246,7 @@ export default function PostDateChecks() {
                 setHasSelectedRow(null);
               }
             }}
-            beforeDelete={(rowItm: any) => {
+            onKeyDelete={(rowItm: any) => {
               if (
                 (rowItm.Deposit_Slip && rowItm.Deposit_Slip !== "") ||
                 (rowItm.DateDeposit && rowItm.DateDeposit !== "") ||
@@ -1264,6 +1262,17 @@ export default function PostDateChecks() {
                   showConfirmButton: false,
                   timer: 1500,
                 });
+              }
+
+              const confirm = window.confirm(
+                "Are you sure you want to delete all the rows?"
+              );
+              if (confirm) {
+                const newData = tableRef.current
+                  .getData()
+                  .filter((itm: any) => itm.rowIndex !== rowItm.rowIndex);
+                tableRef.current.setData(newData);
+                tableRef.current.setSelectedRow(null);
               }
             }}
           />
@@ -1667,6 +1676,8 @@ const ModalCheck = forwardRef(
     };
     const closeDelayRef = useRef<any>(closeDelay);
 
+    const bankModalRef = useRef<any>(null);
+
     useImperativeHandle(ref, () => ({
       showModal: () => {
         setShowModal(true);
@@ -1700,30 +1711,6 @@ const ModalCheck = forwardRef(
       searchModalInputRef,
       closeDelay,
     }));
-
-    const {
-      UpwardTableModalSearch: BankUpwardTableModalSearch,
-      openModal: BankOpenModal,
-      closeModal: BankCloseModal,
-    } = useUpwardTableModalSearchSafeMode({
-      link: "/task/accounting/search-pdc-banks",
-      column: [
-        { key: "Bank_Code", label: "Code", width: 100 },
-        { key: "Bank", label: "Bank Name", width: 350 },
-      ],
-      getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
-        if (rowItm) {
-          wait(100).then(() => {
-            bankCode.current = rowItm[0];
-            if (bankRef.current) {
-              bankRef.current.value = rowItm[1];
-            }
-            branchRef.current?.focus();
-          });
-          BankCloseModal();
-        }
-      },
-    });
 
     useEffect(() => {
       window.addEventListener("keydown", (e: any) => {
@@ -1763,7 +1750,7 @@ const ModalCheck = forwardRef(
 
     return showModal ? (
       <>
-        <BankUpwardTableModalSearch />
+        {/* <BankUpwardTableModalSearch /> */}
         <div
           style={{
             position: "fixed",
@@ -1892,7 +1879,7 @@ const ModalCheck = forwardRef(
                   style: { width: "300px" },
                   onKeyDown: (e) => {
                     if (e.code === "NumpadEnter" || e.code === "Enter") {
-                      BankOpenModal(e.currentTarget.value);
+                      bankModalRef.current.openModal(e.currentTarget.value);
                     }
                   },
                 }}
@@ -1900,7 +1887,7 @@ const ModalCheck = forwardRef(
                 onIconClick={(e) => {
                   e.preventDefault();
                   if (bankRef.current) {
-                    BankOpenModal(bankRef.current.value);
+                    bankModalRef.current.openModal(bankRef.current.value);
                   }
                 }}
                 inputRef={bankRef}
@@ -2082,6 +2069,26 @@ const ModalCheck = forwardRef(
             `}
           </style>
         </div>
+        <UpwardTableModalSearch
+          ref={bankModalRef}
+          link={"/task/accounting/search-pdc-banks"}
+          column={[
+            { key: "Bank_Code", label: "Code", width: 100 },
+            { key: "Bank", label: "Bank Name", width: 350 },
+          ]}
+          handleSelectionChange={(rowItm) => {
+            if (rowItm) {
+              wait(100).then(() => {
+                bankCode.current = rowItm.Bank_Code;
+                if (bankRef.current) {
+                  bankRef.current.value = rowItm.Bank;
+                }
+                branchRef.current?.focus();
+              });
+              bankModalRef.current.closeModal();
+            }
+          }}
+        />
       </>
     ) : null;
   }

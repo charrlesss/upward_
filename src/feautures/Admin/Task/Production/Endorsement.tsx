@@ -62,6 +62,12 @@ const columns = [
     type: "text",
   },
   {
+    key: "dateissued",
+    label: "Date Issued",
+    width: 100,
+    type: "text",
+  },
+  {
     key: "datefrom",
     label: "Date From",
     width: 100,
@@ -306,10 +312,16 @@ const Endorsement = () => {
       deletedRef,
       replacementRef,
       additionalRef,
+      dateIssuedRef,
     } = inputfieldRef.current.getRefs();
 
     setMode("");
     inititalizeFields();
+
+    if (dateIssuedRef.current) {
+      dateIssuedRef.current.value = format(new Date(), "yyyy-MM-dd");
+    }
+
     if (sumInsuredRef.current) {
       sumInsuredRef.current.value = "0.00";
     }
@@ -436,6 +448,8 @@ const Endorsement = () => {
                     replacementRef,
                     additionalRef,
                     endorsementNoRef,
+                    dateIssuedRef
+
                   } = inputfieldRef.current.getRefs();
 
                   if (mode === "update") {
@@ -447,6 +461,7 @@ const Endorsement = () => {
                           policyNo: policyNoRef.current?.value,
                           name: clientNameRef.current?.value,
                           address: clientAddressRef.current?.value,
+                           dateissued: new Date(dateIssuedRef.current?.value),
                           datefrom: new Date(dateFromRef.current?.value),
                           dateto: new Date(dateToRef.current?.value),
                           suminsured: parseFloat(
@@ -487,6 +502,7 @@ const Endorsement = () => {
                           policyNo: policyNoRef.current?.value,
                           name: clientNameRef.current?.value,
                           address: clientAddressRef.current?.value,
+                          dateissued: new Date(dateIssuedRef.current?.value),
                           datefrom: new Date(dateFromRef.current?.value),
                           dateto: new Date(dateToRef.current?.value),
                           suminsured: parseFloat(
@@ -559,7 +575,7 @@ const Endorsement = () => {
               Cancel
             </Button>
           )}
-          {mode === 'update' && (
+          {mode === "update" && (
             <Button
               sx={{
                 height: "25px",
@@ -655,12 +671,12 @@ const Endorsement = () => {
             >
               <DataGridViewReactUpgraded
                 ref={tableRef}
-                adjustVisibleRowCount={330}
+                adjustVisibleRowCount={350}
                 columns={columns}
                 DisplayData={({ row, col }: any) => {
                   return (
                     <>
-                      {col.key === "datefrom" || col.key === "dateto"
+                      {col.key === "datefrom" || col.key === "dateto" || col.key === "dateissued"
                         ? format(new Date(row[col.key]), "MM/dd/yyyy")
                         : row[col.key]}
                     </>
@@ -685,7 +701,9 @@ const Endorsement = () => {
                       replacementRef,
                       additionalRef,
                       endorsementNoRef,
+                      dateIssuedRef,
                     } = inputfieldRef.current.getRefs();
+                    
                     setMode("update");
                     if (endorsementNoRef.current) {
                       endorsementNoRef.current.value = rowItm.endorsement_no;
@@ -699,6 +717,13 @@ const Endorsement = () => {
                     if (clientAddressRef.current) {
                       clientAddressRef.current.value = rowItm.address;
                     }
+                    if (dateIssuedRef.current) {
+                      dateIssuedRef.current.value = format(
+                        new Date(rowItm.dateissued),
+                        "yyyy-MM-dd"
+                      );
+                    }
+
                     if (dateFromRef.current) {
                       dateFromRef.current.value = format(
                         new Date(rowItm.datefrom),
@@ -712,13 +737,13 @@ const Endorsement = () => {
                       );
                     }
                     if (sumInsuredRef.current) {
-                      sumInsuredRef.current.value = rowItm.suminsured
+                      sumInsuredRef.current.value = rowItm.suminsured;
                     }
                     if (netPremiumRef.current) {
-                      netPremiumRef.current.value = rowItm.totalpremium
+                      netPremiumRef.current.value = rowItm.totalpremium;
                     }
                     if (vatRef.current) {
-                      vatRef.current.value = rowItm.vat
+                      vatRef.current.value = rowItm.vat;
                     }
                     if (docstampRef.current) {
                       docstampRef.current.value = rowItm.docstamp;
@@ -727,10 +752,10 @@ const Endorsement = () => {
                       localGovTaxRef.current.value = rowItm.lgovtaxpercent;
                     }
                     if (_localGovTaxRef.current) {
-                      _localGovTaxRef.current.value = rowItm.lgovtax
+                      _localGovTaxRef.current.value = rowItm.lgovtax;
                     }
                     if (totalDueRef.current) {
-                      totalDueRef.current.value = rowItm.totaldue
+                      totalDueRef.current.value = rowItm.totaldue;
                     }
                     if (deletedRef.current) {
                       deletedRef.current.value = rowItm.deleted;
@@ -782,6 +807,7 @@ const PolicyInformation = forwardRef(
     const clientAddressRef = useRef<HTMLTextAreaElement>(null);
     const dateFromRef = useRef<HTMLInputElement>(null);
     const dateToRef = useRef<HTMLInputElement>(null);
+    const dateIssuedRef = useRef<HTMLInputElement>(null);
     const sumInsuredRef = useRef<HTMLInputElement>(null);
 
     const endorsementNoRef = useRef<HTMLInputElement>(null);
@@ -805,6 +831,7 @@ const PolicyInformation = forwardRef(
           clientAddressRef: clientAddressRef.current?.value,
           policyNoRef: policyNoRef.current?.value,
           dateFromRef: dateFromRef.current?.value,
+          dateIssuedRef: dateIssuedRef.current?.value,
           dateToRef: dateToRef.current?.value,
           sumInsuredRef: sumInsuredRef.current?.value,
           netPremiumRef: netPremiumRef.current?.value,
@@ -822,6 +849,7 @@ const PolicyInformation = forwardRef(
           clientNameRef,
           clientAddressRef,
           dateFromRef,
+          dateIssuedRef,
           dateToRef,
           sumInsuredRef,
           netPremiumRef,
@@ -1050,7 +1078,32 @@ const PolicyInformation = forwardRef(
                 }}
                 _inputRef={clientAddressRef}
               />
-
+              <TextInput
+                containerClassName="custom-input"
+                containerStyle={{
+                  width: "100%",
+                }}
+                label={{
+                  title: "Date Issued:",
+                  style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    width: "100px",
+                  },
+                }}
+                input={{
+                  disabled: props.disabled,
+                  type: "date",
+                  defaultValue: format(new Date(), "yyyy-MM-dd"),
+                  style: { width: "calc(100% - 100px)" },
+                  onKeyDown: (e) => {
+                    if (e.code === "NumpadEnter" || e.code === "Enter") {
+                      dateToRef.current?.focus();
+                    }
+                  },
+                }}
+                inputRef={dateIssuedRef}
+              />
               <TextInput
                 containerClassName="custom-input"
                 containerStyle={{
@@ -1077,6 +1130,7 @@ const PolicyInformation = forwardRef(
                 }}
                 inputRef={dateFromRef}
               />
+
               <TextInput
                 containerClassName="custom-input"
                 containerStyle={{
