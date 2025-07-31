@@ -5,7 +5,9 @@ import { RenderPage } from "./Layout";
 import Layout from "./Layout";
 import NotFoundPage from "../feautures/NotFoundPage";
 
+
 const NotFoundPageLazy = lazy(() => import("../feautures/NotFoundPage"));
+const RegtoTpViewer = lazy(() => import("../feautures/Admin/Reference/RegtoTpViewer"));
 const MasterAdminDashboard = lazy(
   () => import("../feautures/MasterAdminDashboard")
 );
@@ -302,6 +304,11 @@ export default function Routers() {
       key={`/${department}/dashboard/reference/care-of`}
       path={`/${department}/dashboard/reference/care-of`}
       element={<CareOf />}
+    />,
+      <Route
+      key={`/${department}/dashboard/reference/temp-to-reg-viewer`}
+      path={`/${department}/dashboard/reference/temp-to-reg-viewer`}
+      element={<RegtoTpViewer />}
     />,
   ];
   const PRODUCTION_TASK = [

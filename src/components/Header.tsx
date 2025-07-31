@@ -179,6 +179,10 @@ export default function Header() {
             name: "Care of",
             path: `/${department.current}/dashboard/reference/care-of`,
           },
+          {
+            name: "Temp To Reg Viewer",
+            path: `/${department.current}/dashboard/reference/temp-to-reg-viewer`,
+          },
         ],
       },
       {
@@ -330,6 +334,10 @@ export default function Header() {
               {
                 name: "Care of",
                 path: `/${department.current}/dashboard/reference/care-of`,
+              },
+              {
+                name: "Temp To Reg Viewer",
+                path: `/${department.current}/dashboard/reference/temp-to-reg-viewer`,
               },
             ],
           },
@@ -487,6 +495,10 @@ export default function Header() {
               name: "Care of",
               path: `/${department.current}/dashboard/reference/care-of`,
             },
+            {
+              name: "Temp To Reg Viewer",
+              path: `/${department.current}/dashboard/reference/temp-to-reg-viewer`,
+            },
           ],
         },
         {
@@ -639,6 +651,10 @@ export default function Header() {
                 name: "Care of",
                 path: `/${department.current}/dashboard/reference/care-of`,
               },
+              {
+                name: "Temp To Reg Viewer",
+                path: `/${department.current}/dashboard/reference/temp-to-reg-viewer`,
+              },
             ],
           },
           {
@@ -768,6 +784,10 @@ export default function Header() {
             {
               name: "Care of",
               path: `/${department.current}/dashboard/reference/care-of`,
+            },
+            {
+              name: "Temp To Reg Viewer",
+              path: `/${department.current}/dashboard/reference/temp-to-reg-viewer`,
             },
           ],
         },
@@ -937,6 +957,10 @@ export default function Header() {
                 name: "Care of",
                 path: `/${department.current}/dashboard/reference/care-of`,
               },
+              {
+                name: "Temp To Reg Viewer",
+                path: `/${department.current}/dashboard/reference/temp-to-reg-viewer`,
+              },
             ],
           },
           {
@@ -1034,6 +1058,10 @@ export default function Header() {
             {
               name: "Care of",
               path: `/${department.current}/dashboard/reference/care-of`,
+            },
+            {
+              name: "Temp To Reg Viewer",
+              path: `/${department.current}/dashboard/reference/temp-to-reg-viewer`,
             },
           ],
         },

@@ -1173,7 +1173,6 @@ const SelectCheck = forwardRef(
             if (state.lblTextRef !== state.refAmount) {
               return alert("Debit must equal to Credit!");
             }
-
             const retDebit = tableData;
             const RetReason =
               ref.refReturnReason.current?.selectedIndex === 2
@@ -1219,10 +1218,14 @@ const SelectCheck = forwardRef(
               )}`;
             }
             let newSelectedDataAccountingEntry: any = [];
+
+            newSelectedDataAccountingEntry = [
+              ...refAccountingEntry.current.table.current.getData(),
+            ]
+
             for (let i = 0; i < retDebit.length; i++) {
-              newSelectedDataAccountingEntry = [
-                ...refAccountingEntry.current.table.current.getData(),
-                [
+                 newSelectedDataAccountingEntry.push(
+                  [
                   retDebit[i][0],
                   retDebit[i][1],
                   retDebit[i][2],
@@ -1240,7 +1243,8 @@ const SelectCheck = forwardRef(
                   itm[1],
                   itm[7],
                 ],
-              ];
+                 )
+         
             }
             newSelectedDataAccountingEntry = [
               ...newSelectedDataAccountingEntry,

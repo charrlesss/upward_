@@ -1951,12 +1951,14 @@ export const DataGridViewReactUpgraded = forwardRef(
       DisplayData = ({ row, col }: any) => {
         return <>{row[col.key]}</>;
       },
+      disableUnselection = false,
     }: any,
     ref
   ) => {
     let lastColIdx: any = null;
     const [draggedRowIndex, setDraggedRowIndex] = useState<number | null>(null);
     const [selectAll, setSelectAll] = useState(false);
+    const [highlightsRow, setHighlightsRow] = useState<Array<number>>([]);
     const [rightClickRowIndex, setRightClickRowIndex] = useState<any>(null);
     const [rightClickColumnIndex, setRightClickColumnIndex] =
       useState<any>(null);
@@ -2016,8 +2018,8 @@ export const DataGridViewReactUpgraded = forwardRef(
 
       if (e.code === "Delete" || e.code === "Backspace") {
         const rowItm = data.filter((itm: any) => itm.rowIndex === row.rowIndex);
-        if(onKeyDelete){
-          return onKeyDelete(rowItm[0])
+        if (onKeyDelete) {
+          return onKeyDelete(rowItm[0]);
         }
         if (beforeDelete(rowItm[0])) {
           return;
@@ -2156,6 +2158,10 @@ export const DataGridViewReactUpgraded = forwardRef(
           setSelectedRow(row.rowIndex);
           handleSelectionChange(_row[0]);
         } else {
+          if (disableUnselection) {
+            return;
+          }
+
           setSelectedRow(null);
           handleSelectionChange(null);
         }
@@ -2281,33 +2287,37 @@ export const DataGridViewReactUpgraded = forwardRef(
           containerRef.current.scrollTop = 0;
         }
       },
+      resetSelectedRow: () => {
+        return setSelectedRow(null);
+      },
       getSelectedRow: () => {
         return selectedRow;
       },
       setSelectedRow: (_selectedRow: number) => {
-        if(_selectedRow){
-            setStartIndex(
-          Math.max(0, _selectedRow - Math.floor(visibleRowCount / 2))
-        );
-        setSelectedRow(_selectedRow);
+        if (_selectedRow) {
+          setStartIndex(
+            Math.max(0, _selectedRow - Math.floor(visibleRowCount / 2))
+          );
+          setSelectedRow(_selectedRow);
 
-        setTimeout(() => {
-          const key = `${_selectedRow}-${columns[0]?.key}`;
-          const el = cellRefs.current[key];
-          if (el) {
-            el.scrollIntoView({ behavior: "smooth", block: "center" });
-            el.focus();
-            setTimeout(() => {
+          setTimeout(() => {
+            const key = `${_selectedRow}-${columns[0]?.key}`;
+            const el = cellRefs.current[key];
+            if (el) {
               el.scrollIntoView({ behavior: "smooth", block: "center" });
               el.focus();
-            });
-          }
-        }, 10);
-        }else{
+              setTimeout(() => {
+                el.scrollIntoView({ behavior: "smooth", block: "center" });
+                el.focus();
+              });
+            }
+          }, 10);
+        } else {
           setSelectedRow(_selectedRow);
         }
-        
-      
+      },
+      setHighlightsRow: (items: Array<number>) => {
+        setHighlightsRow(items);
       },
     }));
 
@@ -2405,14 +2415,19 @@ export const DataGridViewReactUpgraded = forwardRef(
                       selectedRow === row.rowIndex || selectAll
                         ? "row-selected"
                         : "row-notSelected"
-                    }`}
+                    }
+                    ${
+                      highlightsRow.includes(row.rowIndex) ? "row-selected" : ""
+                    }
+                    
+                    `}
                     key={actualIndex}
                     style={{
                       position: "absolute",
                       top: `${actualIndex * rowHeight}px`,
                       display: "flex",
                       height: `${rowHeight}px`,
-                      boxSizing:"border-box"
+                      boxSizing: "border-box",
                     }}
                     draggable
                     onDragStart={() => setDraggedRowIndex(actualIndex)}
@@ -2486,7 +2501,9 @@ export const DataGridViewReactUpgraded = forwardRef(
                             >
                               <input
                                 checked={
-                                  selectedRow === row.rowIndex || selectAll
+                                  selectedRow === row.rowIndex ||
+                                  highlightsRow.includes(row.rowIndex) ||
+                                  selectAll
                                 }
                                 type="checkbox"
                                 readOnly={true}
@@ -2500,7 +2517,7 @@ export const DataGridViewReactUpgraded = forwardRef(
                             <div
                               className={`row-data col-${colIdx} ${
                                 col.freeze ? "freeze" : ""
-                              }`}
+                              } `}
                               ref={(el) => (cellRefs.current[key] = el)}
                               tabIndex={0}
                               onKeyDown={(e) =>
@@ -2683,18 +2700,21 @@ export const UpwardTableModalSearch = forwardRef(
       column,
       handleSelectionChange,
       otherFormData = () => ({}),
+      disableUnselection = false,
     }: {
       link: string;
       size?: "small" | "large" | "medium";
       column: Array<any>;
       handleSelectionChange: (row: any) => void;
       otherFormData?: any;
+      disableUnselection?: Boolean;
     },
     ref
   ) => {
     const { user, myAxios } = useContext(AuthContext);
     const [show, setShow] = useState(false);
     const [blick, setBlick] = useState(false);
+
 
     const modalRef = useRef<HTMLDivElement>(null);
     const searchInputRef = useRef<HTMLInputElement>(null);
@@ -2722,6 +2742,8 @@ export const UpwardTableModalSearch = forwardRef(
           setShow(true);
           setTimeout(() => {
             tableRef.current?.setData(data);
+    
+
             if (searchInputRef.current) {
               searchInputRef.current.value = variables.search;
             }
@@ -2784,8 +2806,8 @@ export const UpwardTableModalSearch = forwardRef(
       setShow(false);
     }
 
-    function openModal(search: string = "") {
-      mutate({ search, ...otherFormData() });
+    function openModal(search: string = "", selectedRow: Array<number>) {
+      mutate({ search, ...otherFormData(), selectedRow });
       // setShow(true);
     }
 
@@ -2793,6 +2815,12 @@ export const UpwardTableModalSearch = forwardRef(
       mutate,
       closeModal,
       openModal,
+      resetSelectedRow: () => {
+        tableRef.current.resetSelectedRow();
+      },
+      setHighlightsRow: (items: Array<number>) => {
+        tableRef.current.setHighlightsRow(items);
+      },
     }));
 
     return (
@@ -2932,6 +2960,7 @@ export const UpwardTableModalSearch = forwardRef(
                 }}
               >
                 <DataGridViewReactUpgraded
+                  disableUnselection={disableUnselection}
                   adjustVisibleRowCount={180}
                   ref={tableRef}
                   columns={column}
@@ -3160,7 +3189,7 @@ export const DataGridViewReactMultipleSelection = forwardRef(
         }
       }
     }, [visible, pos]);
-    
+
     useEffect(() => {
       window.addEventListener("click", handleClickCloseRightClickModal);
       return () => {
@@ -3172,10 +3201,10 @@ export const DataGridViewReactMultipleSelection = forwardRef(
       if (disableSelection) {
         return;
       }
-      if(beforeSelectionChange){
-         if(beforeSelectionChange(row)){
-          return
-         }
+      if (beforeSelectionChange) {
+        if (beforeSelectionChange(row)) {
+          return;
+        }
       }
       if (selectedRow.length > 0) {
         if (!selectedRow.includes(row.rowIndex)) {

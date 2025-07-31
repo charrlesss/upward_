@@ -137,6 +137,7 @@ const columns = [
     hide: true,
   },
 ];
+
 export default function CashDisbursement() {
   const tableRef = useRef<any>(null);
   const { myAxios, user } = useContext(AuthContext);

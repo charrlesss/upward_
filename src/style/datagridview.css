@@ -63,6 +63,8 @@
   background: #1e7fe6 !important;
   color: white !important;
 }
+
+
 .row.row-selected:has(.row-data:focus) {
   background-color: #1e7fe6 !important;
   color: white !important;
@@ -109,4 +111,8 @@
   user-select: none;
   -webkit-user-select: none; /* Safari */
   -ms-user-select: none; /* IE 10+ */
+}
+
+.row.highlights{
+ background: #dcf117 !important;
 }
