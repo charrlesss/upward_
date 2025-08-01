@@ -25,6 +25,7 @@ interface TextInputProps {
   disableIcon?: boolean;
   containerStyle?: CSSProperties;
   containerClassName?: string;
+  buttonStyle?:CSSProperties
 }
 
 interface TextAreaPrps {
@@ -213,6 +214,7 @@ export function TextInput({
   containerStyle,
   onIconClick = (e) => {},
   containerClassName,
+  buttonStyle
 }: TextInputProps) {
   const id = useId();
 
@@ -289,6 +291,7 @@ export function TextInput({
             justifyContent: "center",
             background: "white",
             pointerEvents: disableIcon ? "none" : "auto",
+            ...buttonStyle
           }}
         >
           {icon}

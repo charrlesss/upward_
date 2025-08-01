@@ -1945,7 +1945,7 @@ export const DataGridViewReactUpgraded = forwardRef(
       adjustRightClickClientXAndY = { x: 0, y: 0 },
       adjustOnRezise = true,
       onDelete = (data: any) => {},
-      onKeyDelete = (data: any) => {},
+      onKeyDelete,
       beforeDelete = (data: any) => false,
       fixedRowCount = 0,
       DisplayData = ({ row, col }: any) => {
@@ -2468,13 +2468,15 @@ export const DataGridViewReactUpgraded = forwardRef(
                             <div
                               tabIndex={0}
                               ref={(el) => (cellRefs.current[key] = el)}
-                              onKeyDown={(e) =>
-                                handleCellKeyDown(e, actualIndex, col.key, row)
-                              }
+                              onKeyDown={(e) => {
+                                e.stopPropagation();
+                                handleCellKeyDown(e, actualIndex, col.key, row);
+                              }}
                               className={` row-data row-idx-${
                                 row.rowIndex
                               } col-${colIdx} ${col.freeze ? "freeze" : ""}`}
                               onContextMenu={(e) => {
+                                e.stopPropagation();
                                 handleContextMenu(e, row, col);
                               }}
                               style={{
@@ -2549,7 +2551,8 @@ export const DataGridViewReactUpgraded = forwardRef(
                                 textAlign:
                                   col.type === "number" ? "right" : "left",
                               }}
-                              onDoubleClick={() => {
+                              onDoubleClick={(e) => {
+                                e.stopPropagation();
                                 selectedRowAction(row);
                               }}
                             >
@@ -2701,6 +2704,12 @@ export const UpwardTableModalSearch = forwardRef(
       handleSelectionChange,
       otherFormData = () => ({}),
       disableUnselection = false,
+      DisplayData = ({ row, col }: any) => {
+        return <>{row[col.key]}</>;
+      },
+      autoselection = true,
+      showSearchInput = true,
+      onCloseModal= () => ({}),
     }: {
       link: string;
       size?: "small" | "large" | "medium";
@@ -2708,13 +2717,16 @@ export const UpwardTableModalSearch = forwardRef(
       handleSelectionChange: (row: any) => void;
       otherFormData?: any;
       disableUnselection?: Boolean;
+      DisplayData?: any;
+      autoselection?: Boolean;
+      showSearchInput?: Boolean;
+      onCloseModal?: () => void;
     },
     ref
   ) => {
     const { user, myAxios } = useContext(AuthContext);
     const [show, setShow] = useState(false);
     const [blick, setBlick] = useState(false);
-
 
     const modalRef = useRef<HTMLDivElement>(null);
     const searchInputRef = useRef<HTMLInputElement>(null);
@@ -2736,13 +2748,24 @@ export const UpwardTableModalSearch = forwardRef(
         ),
       onSuccess: (response, variables) => {
         const data = response.data?.data;
-        if (!show && data.length === 1) {
-          handleSelectionChange(data[0]);
+        if (autoselection) {
+          if (!show && data.length === 1) {
+            handleSelectionChange(data[0]);
+          } else {
+            setShow(true);
+            setTimeout(() => {
+              tableRef.current?.setData(data);
+
+              if (searchInputRef.current) {
+                searchInputRef.current.value = variables.search;
+              }
+              searchInputRef.current?.focus();
+            }, 100);
+          }
         } else {
           setShow(true);
           setTimeout(() => {
             tableRef.current?.setData(data);
-    
 
             if (searchInputRef.current) {
               searchInputRef.current.value = variables.search;
@@ -2803,6 +2826,7 @@ export const UpwardTableModalSearch = forwardRef(
     //close Modal
 
     function closeModal() {
+      onCloseModal()
       setShow(false);
     }
 
@@ -2909,6 +2933,9 @@ export const UpwardTableModalSearch = forwardRef(
                   containerStyle={{
                     width: "100%",
                   }}
+                  buttonStyle={{
+                    opacity: showSearchInput ? 1 : 0
+                  }}
                   label={{
                     title: "Search : ",
                     style: {
@@ -2919,10 +2946,12 @@ export const UpwardTableModalSearch = forwardRef(
                     },
                   }}
                   input={{
+                    disabled:!showSearchInput,
                     type: "text",
                     style: { width: "100%" },
                     onKeyDown: async (e) => {
                       if (e.code === "NumpadEnter" || e.code === "Enter") {
+                        tableRef.current.resetSelectedRow();
                         mutate({
                           search: e.currentTarget.value,
                           ...otherFormData(),
@@ -2940,7 +2969,7 @@ export const UpwardTableModalSearch = forwardRef(
                     },
                   }}
                   inputRef={searchInputRef}
-                  icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+                  icon={<SearchIcon sx={{ fontSize: "18px",opacity: showSearchInput ? 1 : 0 }} />}
                   onIconClick={async (e) => {
                     e.preventDefault();
                     if (searchInputRef.current)
@@ -2962,6 +2991,7 @@ export const UpwardTableModalSearch = forwardRef(
                 <DataGridViewReactUpgraded
                   disableUnselection={disableUnselection}
                   adjustVisibleRowCount={180}
+                  DisplayData={DisplayData}
                   ref={tableRef}
                   columns={column}
                   handleSelectionChange={handleSelectionChange}

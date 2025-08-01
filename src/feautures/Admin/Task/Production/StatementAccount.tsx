@@ -1,5 +1,12 @@
 import { Button } from "@mui/material";
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, {
+  forwardRef,
+  useContext,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import {
   SelectInput,
   TextAreaInput,
@@ -9,7 +16,6 @@ import SearchIcon from "@mui/icons-material/Search";
 import {
   DataGridViewReactUpgraded,
   UpwardTableModalSearch,
-  useUpwardTableModalSearchSafeMode,
 } from "../../../../components/DataGridViewReact";
 import { useMutation } from "react-query";
 import { AuthContext } from "../../../../components/AuthContext";
@@ -24,6 +30,8 @@ import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
 } from "../../../../lib/confirmationAlert";
+import Swal from "sweetalert2";
+import { formatNumber } from "../Accounting/ReturnCheck";
 
 const columns = [
   { key: "PolicyNo", label: "Policy No", width: 150 },
@@ -40,7 +48,6 @@ const columns = [
     hide: true,
   },
 ];
-
 export default function StatementAccount() {
   const [mode, setMode] = useState("");
   const { myAxios, user } = useContext(AuthContext);
@@ -49,6 +56,9 @@ export default function StatementAccount() {
   const searchSoaModal = useRef<any>(null);
   const searchPolicyModal = useRef<any>(null);
   const searchClientModal = useRef<any>(null);
+  const confirmationModal = useRef<any>(null);
+  const searchSoaByPolicyModal = useRef<any>(null);
+  const searchEndorsement = useRef<any>(null);
 
   const inputSearchRef = useRef<HTMLInputElement>(null);
   const refNoRef = useRef<HTMLInputElement>(null);
@@ -160,7 +170,6 @@ export default function StatementAccount() {
       }
     },
   });
-
   function resetFields() {
     if (searchPolicyRef.current) {
       searchPolicyRef.current.value = "";
@@ -359,7 +368,22 @@ export default function StatementAccount() {
                 startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
                 id="entry-header-save-button"
                 onClick={() => {
-                  setMode("");
+                  Swal.fire({
+                    title: "Are you sure?",
+                    text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Yes, cancel it!",
+                  }).then((result) => {
+                    if (result.isConfirmed) {
+                      setMode("");
+                      resetFields();
+                      tableRef.current.resetTable();
+                      mutateReferenceNo({});
+                    }
+                  });
                 }}
                 color="error"
               >
@@ -598,6 +622,7 @@ export default function StatementAccount() {
                 </>
               );
             }}
+        
             handleSelectionChange={(rowItm: any) => {}}
           />
         </div>
@@ -623,11 +648,13 @@ export default function StatementAccount() {
         }}
       />
       <UpwardTableModalSearch
+        autoselection={false}
         ref={searchPolicyModal}
         disableUnselection={true}
         size="large"
         link={"/task/production/soa/search-by-policy"}
         column={[
+          { key: "used", label: "", width: 26 },
           { key: "PolicyNo", label: "Policy No", width: 150 },
           { key: "DateIssued", label: "Date Issued", width: 100 },
           { key: "IDNo", label: "ID No.", width: 150 },
@@ -636,24 +663,40 @@ export default function StatementAccount() {
             label: "Name",
             width: 400,
           },
+          {
+            key: "PolicyType",
+            label: "",
+            hide: true,
+          },
         ]}
+        DisplayData={({ row, col }: any) => {
+          return (
+            <>
+              {col.key === "used"
+                ? row[col.key] === "Yes" && <span>🟢</span>
+                : row[col.key]}
+            </>
+          );
+        }}
         handleSelectionChange={(rowItm) => {
           if (rowItm) {
             wait(100).then(() => {
               const tableData = tableRef.current.getData();
 
-              if (
-                tableData.some((itm: any) => itm.PolicyNo === rowItm.PolicyNo)
-              ) {
-                alert(`This Policy - (${rowItm.PolicyNo}) already selected!`);
+              if (rowItm.used === "Yes") {
+                confirmationModal.current.showModal(rowItm);
+              } else {
+                if (
+                  tableData.some((itm: any) => itm.PolicyNo === rowItm.PolicyNo)
+                ) {
+                  alert(`This Policy - (${rowItm.PolicyNo}) already selected!`);
+                  searchPolicyModal.current.resetSelectedRow();
+                  return;
+                }
+                tableRef.current.setData([...tableData, rowItm]);
                 searchPolicyModal.current.resetSelectedRow();
-
-                return;
               }
-
-              tableRef.current.setData([...tableData, rowItm]);
             });
-            // searchPolicyModal.current.closeModal();
           }
         }}
       />
@@ -661,13 +704,13 @@ export default function StatementAccount() {
         ref={searchClientModal}
         link={"/task/production/soa/search-by-client"}
         column={[
-          { key: "address", label: "Address", width: 100 },
-          { key: "IDNo", label: "ID No.", width: 150 },
           {
             key: "Shortname",
             label: "Name",
             width: 300,
           },
+          { key: "IDNo", label: "ID No.", width: 150 },
+          { key: "address", label: "Address", width: 300 },
         ]}
         handleSelectionChange={(rowItm) => {
           if (rowItm) {
@@ -686,45 +729,417 @@ export default function StatementAccount() {
           }
         }}
       />
+      <UpwardTableModalSearch
+        autoselection={false}
+        showSearchInput={false}
+        ref={searchSoaByPolicyModal}
+        link={"/task/production/soa/search-soa-by-policy"}
+        column={[
+          {
+            key: "reference_no",
+            label: "Reference No",
+            width: 150,
+          },
+          { key: "policy_no", label: "Policy No", width: 150 },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              Swal.fire({
+                title: "Are you sure?",
+                text: "You won't be able to revert this!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, view it!",
+                didOpen: () => {
+                  const container: any =
+                    document.querySelector(".swal2-container");
+                  if (container) {
+                    container.style.zIndex = "9999999";
+                  }
+                },
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  setMode("update");
+                  mutateSearchSoaSelected({
+                    reference_no: rowItm.reference_no,
+                  });
+                }
+              });
+            });
+            searchSoaByPolicyModal.current.closeModal();
+            searchPolicyModal.current.closeModal();
+          }
+        }}
+        onCloseModal={() => {
+          searchPolicyModal.current.resetSelectedRow();
+        }}
+      />
+      <UpwardTableModalSearch
+        ref={searchEndorsement}
+        autoselection={false}
+        showSearchInput={false}
+        disableUnselection={true}
+        size="large"
+        link={"/task/production/soa/search-endorsement"}
+        column={[
+          {
+            key: "endorsement_no",
+            label: "Endorsement No.",
+            width: 150,
+            type: "text",
+          },
+          {
+            key: "policyNo",
+            label: "Policy No.",
+            width: 150,
+            type: "text",
+          },
+          {
+            key: "name",
+            label: "Name",
+            width: 200,
+            type: "text",
+          },
+          {
+            key: "address",
+            label: "Address",
+            width: 300,
+            type: "text",
+          },
+          {
+            key: "dateissued",
+            label: "Date Issued",
+            width: 100,
+            type: "text",
+          },
+          {
+            key: "datefrom",
+            label: "Date From",
+            width: 100,
+            type: "text",
+          },
+          {
+            key: "dateto",
+            label: "Date To",
+            width: 100,
+            type: "text",
+          },
+          {
+            key: "suminsured",
+            label: "Sum Insured",
+            width: 100,
+            type: "text",
+          },
+          {
+            key: "deleted",
+            label: "Deleted",
+            width: 300,
+            type: "text",
+          },
+          {
+            key: "replacement",
+            label: "Replacement",
+            width: 300,
+            type: "text",
+          },
+          {
+            key: "additional",
+            label: "Additional",
+            width: 300,
+            type: "text",
+          },
+          {
+            key: "totalpremium",
+            label: "Total Premium",
+            width: 100,
+            type: "text",
+          },
+          {
+            key: "vat",
+            label: "Vat",
+            width: 100,
+            type: "text",
+          },
+          {
+            key: "docstamp",
+            label: "Doc Stamp",
+            width: 100,
+            type: "text",
+          },
+          {
+            key: "lgovtaxpercent",
+            label: "Local Gov Tax Percentage",
+            width: 180,
+            type: "text",
+          },
+          {
+            key: "lgovtax",
+            label: "Local Gov Tax ",
+            width: 100,
+            type: "text",
+          },
+          {
+            key: "totaldue",
+            label: "Total Due ",
+            width: 100,
+            type: "text",
+          },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              const tableData = tableRef.current.getData();
+              if (
+                tableData.some(
+                  (itm: any) => itm.PolicyNo === rowItm.endorsement_no
+                )
+              ) {
+                alert(
+                  `This Policy - (${rowItm.endorsement_no}) already selected!`
+                );
+                searchEndorsement.current.resetSelectedRow();
+
+                return;
+              }
+              const newRowItem = {
+                PolicyNo: rowItm.endorsement_no,
+                DateIssued: format(new Date(rowItm.dateissued), "MM/dd/yyyy"),
+                IDNo: rowItm.policyNo,
+                Shortname: rowItm.name,
+                PolicyType: "PA",
+              };
+              tableRef.current.setData([...tableData, newRowItem]);
+              searchEndorsement.current.resetSelectedRow();
+            });
+
+            // searchEndorsement.current.closeModal();
+          }
+        }}
+        DisplayData={({ row, col }: any) => {
+          return (
+            <>
+              {col.key === "datefrom" ||
+              col.key === "dateto" ||
+              col.key === "dateissued"
+                ? format(new Date(row[col.key]), "MM/dd/yyyy")
+                : col.key === "suminsured" ||
+                  col.key === "totalpremium" ||
+                  col.key === "vat" ||
+                  col.key === "docstamp" ||
+                  col.key === "lgovtax" ||
+                  col.key === "totaldue" 
+                ? formatNumber(parseFloat(row[col.key].toString().replace(/,/g,'')) || 0)
+                : row[col.key]}
+            </>
+          );
+        }}
+        onCloseModal={() => {
+          searchPolicyModal.current.resetSelectedRow();
+        }}
+      />
+      <ConfirmationModalForReference
+        ref={confirmationModal}
+        onClose={() => {
+          searchPolicyModal.current.resetSelectedRow();
+        }}
+        isViewEndorsement={(rowItm: any) => {
+          confirmationModal.current.closeModal();
+          searchEndorsement.current.openModal(rowItm.PolicyNo);
+        }}
+        isViewList={(rowItm: any) => {
+          confirmationModal.current.closeModal();
+          searchSoaByPolicyModal.current.openModal(rowItm.PolicyNo);
+        }}
+        isAddOnly={(rowItm: any) => {
+          const tableData = tableRef.current.getData();
+
+          if (tableData.some((itm: any) => itm.PolicyNo === rowItm.PolicyNo)) {
+            alert(`This Policy - (${rowItm.PolicyNo}) already selected!`);
+            searchPolicyModal.current.resetSelectedRow();
+            return;
+          }
+
+          tableRef.current.setData([...tableData, rowItm]);
+          searchPolicyModal.current.resetSelectedRow();
+          confirmationModal.current.closeModal();
+        }}
+      />
     </>
   );
 }
+const ConfirmationModalForReference = forwardRef(
+  ({ isViewList, isAddOnly, isViewEndorsement, onClose }: any, ref) => {
+    const modalRef = useRef<HTMLDivElement>(null);
+    const isMoving = useRef(false);
+    const offset = useRef({ x: 0, y: 0 });
+    const [showModal, setShowModal] = useState(false);
+    const [blick, setBlick] = useState(false);
+    const [row, setRow] = useState<any>(null);
+    useEffect(() => {
+      window.addEventListener("keydown", (e: any) => {
+        if (e.key === "Escape") {
+        }
+      });
+    }, []);
 
-// const { mutate: mutatateReport, isLoading: isLoadingReport } = useMutation({
-//   mutationKey: "report",
-//   mutationFn: (variables: any) => {
-//     return myAxios.post(
-//       active === "Policy"
-//         ? "/task/production/soa/generate-soa-policy"
-//         : "/task/production/soa/generate-soa-careof",
-//       variables,
-//       {
-//         responseType: "arraybuffer",
-//         headers: {
-//           Authorization: `Bearer ${user?.accessToken}`,
-//         },
-//       }
-//     );
-//   },
-//   onSuccess: (response) => {
-//     const pdfBlob = new Blob([response.data], { type: "application/pdf" });
-//     const pdfUrl = URL.createObjectURL(pdfBlob);
-//     if (isMobile) {
-//       // MOBILE: download directly
-//       const link = document.createElement("a");
-//       link.href = pdfUrl;
-//       link.download = "report.pdf";
-//       document.body.appendChild(link);
-//       link.click();
-//       document.body.removeChild(link);
-//       return;
-//     } else {
-//       window.open(
-//         `/${
-//           process.env.REACT_APP_DEPARTMENT
-//         }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
-//         "_blank"
-//       );
-//     }
-//   },
-// });
+    const handleMouseDown = (e: any) => {
+      if (!modalRef.current) return;
+
+      isMoving.current = true;
+      offset.current = {
+        x: e.clientX - modalRef.current.offsetLeft,
+        y: e.clientY - modalRef.current.offsetTop,
+      };
+
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    };
+
+    // Move modal with mouse
+    const handleMouseMove = (e: any) => {
+      if (!isMoving.current || !modalRef.current) return;
+
+      modalRef.current.style.left = `${e.clientX - offset.current.x}px`;
+      modalRef.current.style.top = `${e.clientY - offset.current.y}px`;
+    };
+
+    // Stop moving when releasing mouse
+    const handleMouseUp = () => {
+      isMoving.current = false;
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    useImperativeHandle(ref, () => ({
+      showModal: (_state: any) => {
+        setRow(_state);
+        setShowModal(true);
+      },
+      closeModal: () => {
+        setShowModal(false);
+      },
+    }));
+
+    return showModal ? (
+      <>
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            background: "transparent",
+            zIndex: 999999,
+          }}
+          onClick={() => {
+            setBlick(true);
+            setTimeout(() => {
+              setBlick(false);
+            }, 250);
+          }}
+        ></div>
+        <div
+          className="modal-add-check"
+          ref={modalRef}
+          style={{
+            height: blick ? "172px" : "170px",
+            width: blick ? "252px" : "250px",
+            border: "1px solid #64748b",
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%, -75%)",
+            display: "flex",
+            flexDirection: "column",
+            zIndex: 999999,
+            opacity: 1,
+            transition: "all 150ms",
+            boxShadow: "3px 6px 32px -7px rgba(0,0,0,0.75)",
+            background: "#F1F1F1",
+          }}
+        >
+          <div
+            style={{
+              height: "22px",
+              background: "white",
+              display: "flex",
+              justifyContent: "space-between",
+              padding: "5px",
+              position: "relative",
+              alignItems: "center",
+              cursor: "grab",
+            }}
+            onMouseDown={handleMouseDown}
+          >
+            <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+              {row?.PolicyNo}
+            </span>
+            <button
+              className="btn-check-exit-modal"
+              style={{
+                padding: "0 5px",
+                borderRadius: "0px",
+                background: "white",
+                color: "black",
+                height: "22px",
+                position: "absolute",
+                top: 0,
+                right: 0,
+              }}
+              onClick={() => {
+                onClose();
+                setShowModal(false);
+              }}
+            >
+              <CloseIcon sx={{ fontSize: "22px" }} />
+            </button>
+          </div>
+          <div
+            className="main-content"
+            style={{
+              flex: 1,
+              background: "#F1F1F1",
+              padding: "5px",
+              display: "flex",
+              flexDirection: "column",
+              rowGap: "10px",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            {row?.PolicyType === "PA" && (
+              <Button
+                onClick={() => isViewEndorsement(row)}
+                sx={{ width: "100%" }}
+                variant="contained"
+                color="success"
+              >
+                View Endorsement
+              </Button>
+            )}
+            <Button
+              onClick={() => isViewList(row)}
+              sx={{ width: "100%" }}
+              variant="contained"
+              color="primary"
+            >
+              View Reference
+            </Button>
+            <Button
+              onClick={() => isAddOnly(row)}
+              sx={{ width: "100%" }}
+              variant="contained"
+              color="secondary"
+            >
+              Add this row
+            </Button>
+          </div>
+        </div>
+      </>
+    ) : null;
+  }
+);
