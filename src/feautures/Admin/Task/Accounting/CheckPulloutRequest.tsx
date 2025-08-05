@@ -19,7 +19,10 @@ import { Loading } from "../../../../components/Loading";
 import PageHelmet from "../../../../components/Helmet";
 import "../../../../style/monbileview/accounting/pullout.css";
 import SearchIcon from "@mui/icons-material/Search";
-import { saveCondfirmationAlert } from "../../../../lib/confirmationAlert";
+import {
+  codeCondfirmationAlert,
+  saveCondfirmationAlert,
+} from "../../../../lib/confirmationAlert";
 import { format } from "date-fns";
 
 const column = [
@@ -577,7 +580,6 @@ export default function CheckPulloutRequest() {
                     onClick={async (e) => {
                       const data = table.current.getSelectedRowData();
                       if (data.length <= 0 && flag === "add") {
-
                         return alert("No selected row found!");
                       }
 
@@ -605,28 +607,36 @@ export default function CheckPulloutRequest() {
                           },
                         });
                       } else {
-
                         Swal.fire({
-                            title: "Are you sure?",
-                            text:  `${data.length <= 0 ? `No selected found! it means this request RCNo: ${rcpnRef.current?.value} is you want to delete.` : ""} Do you want to proceed with saving?`,
-                            icon: "warning",
-                            showCancelButton: true,
-                            confirmButtonColor: "#3085d6",
-                            cancelButtonColor: "#d33",
-                            confirmButtonText: "Yes, save it!",
-                          }).then((result) => {
-                            if (result.isConfirmed) {
+                          title: "Are you sure?",
+                          text: `${
+                            data.length <= 0
+                              ? `No selected found! it means this request RCNo: ${rcpnRef.current?.value} is you want to delete.`
+                              : ""
+                          } Do you want to proceed with saving?`,
+                          icon: "warning",
+                          showCancelButton: true,
+                          confirmButtonColor: "#3085d6",
+                          cancelButtonColor: "#d33",
+                          confirmButtonText: "Yes, save it!",
+                        }).then((result) => {
+                          if (result.isConfirmed) {
+                            codeCondfirmationAlert({
+                              isUpdate: true,
+                              cb: (userCodeConfirmation) => {
                                 mutateSavePulloutRequest({
-                                flag,
-                                rcpn: rcpnRef.current?.value,
-                                ppno: ppnoRef.current?.value,
-                                name: nameRef.current?.value,
-                                reason: reasonRef.current?.value,
-                                data: JSON.stringify(data),
-                              });
-                            }
-                           
-                          });
+                                  flag,
+                                  rcpn: rcpnRef.current?.value,
+                                  ppno: ppnoRef.current?.value,
+                                  name: nameRef.current?.value,
+                                  reason: reasonRef.current?.value,
+                                  data: JSON.stringify(data),
+                                  userCodeConfirmation,
+                                });
+                              },
+                            });
+                          }
+                        });
                       }
                     }}
                   >

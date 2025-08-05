@@ -209,15 +209,23 @@ const Endorsement = () => {
         }
         tableRef.current.setData(data);
         resetFields();
-      }
 
-      return Swal.fire({
-        position: "center",
-        icon: "success",
-        title: response.data.message,
-        showConfirmButton: false,
-        timer: 1500,
-      });
+        return Swal.fire({
+          position: "center",
+          icon: "success",
+          title: response.data.message,
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      } else {
+        return Swal.fire({
+          position: "center",
+          icon: "error",
+          title: response.data.message,
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      }
     },
   });
 
@@ -448,8 +456,7 @@ const Endorsement = () => {
                     replacementRef,
                     additionalRef,
                     endorsementNoRef,
-                    dateIssuedRef
-
+                    dateIssuedRef,
                   } = inputfieldRef.current.getRefs();
 
                   if (mode === "update") {
@@ -461,7 +468,7 @@ const Endorsement = () => {
                           policyNo: policyNoRef.current?.value,
                           name: clientNameRef.current?.value,
                           address: clientAddressRef.current?.value,
-                           dateissued: new Date(dateIssuedRef.current?.value),
+                          dateissued: new Date(dateIssuedRef.current?.value),
                           datefrom: new Date(dateFromRef.current?.value),
                           dateto: new Date(dateToRef.current?.value),
                           suminsured: parseFloat(
@@ -676,7 +683,9 @@ const Endorsement = () => {
                 DisplayData={({ row, col }: any) => {
                   return (
                     <>
-                      {col.key === "datefrom" || col.key === "dateto" || col.key === "dateissued"
+                      {col.key === "datefrom" ||
+                      col.key === "dateto" ||
+                      col.key === "dateissued"
                         ? format(new Date(row[col.key]), "MM/dd/yyyy")
                         : row[col.key]}
                     </>
@@ -703,7 +712,7 @@ const Endorsement = () => {
                       endorsementNoRef,
                       dateIssuedRef,
                     } = inputfieldRef.current.getRefs();
-                    
+
                     setMode("update");
                     if (endorsementNoRef.current) {
                       endorsementNoRef.current.value = rowItm.endorsement_no;

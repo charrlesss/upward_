@@ -622,7 +622,6 @@ export default function StatementAccount() {
                 </>
               );
             }}
-        
             handleSelectionChange={(rowItm: any) => {}}
           />
         </div>
@@ -656,12 +655,27 @@ export default function StatementAccount() {
         column={[
           { key: "used", label: "", width: 26 },
           { key: "PolicyNo", label: "Policy No", width: 150 },
-          { key: "DateIssued", label: "Date Issued", width: 100 },
-          { key: "IDNo", label: "ID No.", width: 150 },
+          { key: "DateIssued", label: "Date Issued", width: 90 },
+          { key: "IDNo", label: "ID No.", width: 120 },
           {
             key: "Shortname",
             label: "Name",
-            width: 400,
+            width: 300,
+          },
+          {
+            key: "totalDue",
+            label: "Total Due",
+            width: 100,
+          },
+          {
+            key: "payment",
+            label: "Payment",
+            width: 100,
+          },
+          {
+            key: "balance",
+            label: "Balance",
+            width: 100,
           },
           {
             key: "PolicyType",
@@ -683,8 +697,12 @@ export default function StatementAccount() {
             wait(100).then(() => {
               const tableData = tableRef.current.getData();
 
-              if (rowItm.used === "Yes") {
-                confirmationModal.current.showModal(rowItm);
+              if (rowItm.used === "Yes" && rowItm.PolicyType !== "PA") {
+                confirmationModal.current.showModal(rowItm, true, false);
+              } else if (rowItm.PolicyType === "PA" && rowItm.used !== "Yes") {
+                confirmationModal.current.showModal(rowItm, false, true);
+              } else if (rowItm.used === "Yes" && rowItm.PolicyType === "PA") {
+                confirmationModal.current.showModal(rowItm, true, true);
               } else {
                 if (
                   tableData.some((itm: any) => itm.PolicyNo === rowItm.PolicyNo)
@@ -693,6 +711,15 @@ export default function StatementAccount() {
                   searchPolicyModal.current.resetSelectedRow();
                   return;
                 }
+                if (
+                  ["G13", "G31", "G02", "G16", "G40", "G41", "G42"].includes(
+                    rowItm.PolicyType
+                  )
+                ) {
+                  rowItm.PolicyType = "Bonds";
+                }
+
+                console.log(rowItm)
                 tableRef.current.setData([...tableData, rowItm]);
                 searchPolicyModal.current.resetSelectedRow();
               }
@@ -909,7 +936,7 @@ export default function StatementAccount() {
                 DateIssued: format(new Date(rowItm.dateissued), "MM/dd/yyyy"),
                 IDNo: rowItm.policyNo,
                 Shortname: rowItm.name,
-                PolicyType: "PA",
+                PolicyType: "ED",
               };
               tableRef.current.setData([...tableData, newRowItem]);
               searchEndorsement.current.resetSelectedRow();
@@ -930,8 +957,10 @@ export default function StatementAccount() {
                   col.key === "vat" ||
                   col.key === "docstamp" ||
                   col.key === "lgovtax" ||
-                  col.key === "totaldue" 
-                ? formatNumber(parseFloat(row[col.key].toString().replace(/,/g,'')) || 0)
+                  col.key === "totaldue"
+                ? formatNumber(
+                    parseFloat(row[col.key].toString().replace(/,/g, "")) || 0
+                  )
                 : row[col.key]}
             </>
           );
@@ -976,6 +1005,8 @@ const ConfirmationModalForReference = forwardRef(
     const isMoving = useRef(false);
     const offset = useRef({ x: 0, y: 0 });
     const [showModal, setShowModal] = useState(false);
+    const [showRef, setShowRef] = useState(false);
+    const [showEndorsement, setShowEndorsement] = useState(false);
     const [blick, setBlick] = useState(false);
     const [row, setRow] = useState<any>(null);
     useEffect(() => {
@@ -1014,9 +1045,11 @@ const ConfirmationModalForReference = forwardRef(
     };
 
     useImperativeHandle(ref, () => ({
-      showModal: (_state: any) => {
+      showModal: (_state: any, showRef: boolean, showEndorsement: boolean) => {
         setRow(_state);
         setShowModal(true);
+        setShowRef(showRef);
+        setShowEndorsement(showEndorsement);
       },
       closeModal: () => {
         setShowModal(false);
@@ -1111,7 +1144,7 @@ const ConfirmationModalForReference = forwardRef(
               alignItems: "center",
             }}
           >
-            {row?.PolicyType === "PA" && (
+            {showEndorsement && row?.PolicyType === "PA" && (
               <Button
                 onClick={() => isViewEndorsement(row)}
                 sx={{ width: "100%" }}
@@ -1121,14 +1154,16 @@ const ConfirmationModalForReference = forwardRef(
                 View Endorsement
               </Button>
             )}
-            <Button
-              onClick={() => isViewList(row)}
-              sx={{ width: "100%" }}
-              variant="contained"
-              color="primary"
-            >
-              View Reference
-            </Button>
+            {showRef && (
+              <Button
+                onClick={() => isViewList(row)}
+                sx={{ width: "100%" }}
+                variant="contained"
+                color="primary"
+              >
+                View Reference
+              </Button>
+            )}
             <Button
               onClick={() => isAddOnly(row)}
               sx={{ width: "100%" }}

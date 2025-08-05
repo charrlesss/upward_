@@ -369,7 +369,6 @@ export const DataGridViewReact = forwardRef(
     );
   }
 );
-
 const RowComponent = forwardRef(
   (
     {
@@ -1579,6 +1578,7 @@ export const useUpwardTableModalSearch = ({
     UpwardTableModalSearch,
   };
 };
+
 let _dataCache: any = [];
 let _searchInputValueCache = "";
 export const useUpwardTableModalSearchSafeMode = ({

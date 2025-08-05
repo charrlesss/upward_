@@ -601,8 +601,8 @@ export default function Collection() {
     const creditTableData = creditTable.current.getData();
 
     if (getSelectedRow !== null) {
-      creditTableData[getSelectedRow].transaction =
-        transactionRef.current?.value;
+      creditTableData[getSelectedRow].transaction = "";
+      // transactionRef.current?.value;
       creditTableData[getSelectedRow].amount = amountCreditRef.current?.value;
       creditTableData[getSelectedRow].Name = faoRef.current?.value;
       creditTableData[getSelectedRow].Remarks = remarksRef.current?.value;
@@ -1434,6 +1434,7 @@ export default function Collection() {
                       0
                     )
                   );
+                  debitTable.current.setSelectedRow(null);
                 }}
                 DisplayData={({ row, col }: any) => {
                   return (
@@ -1798,13 +1799,16 @@ export default function Collection() {
                   );
                 }}
                 onDelete={(data: any) => {
-                  setTotalCredit(
-                    data.reduce(
-                      (sum: any, subArray: any) =>
-                        sum + parseFloat(subArray[1].replace(/,/g, "")),
-                      0
-                    )
-                  );
+                  if (data && data.length > 0) {
+                    setTotalCredit(
+                      data.reduce(
+                        (sum: any, subArray: any) =>
+                          sum + parseFloat(subArray.amount.replace(/,/g, "")),
+                        0
+                      )
+                    );
+                  }
+                  creditTable.current.setSelectedRow(null);
                 }}
               />
             </div>

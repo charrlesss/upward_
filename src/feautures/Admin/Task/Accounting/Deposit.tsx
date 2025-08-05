@@ -1005,7 +1005,7 @@ export default function Deposit() {
               },
             }}
             input={{
-              readOnly: true,
+              readOnly: false,
               disabled: disabledFields,
               className: "search-input-up-on-key-down",
               type: "text",
