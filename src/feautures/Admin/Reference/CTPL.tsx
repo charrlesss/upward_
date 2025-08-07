@@ -15,20 +15,22 @@ import {
 } from "../../../lib/confirmationAlert";
 import { pink } from "@mui/material/colors";
 import PageHelmet from "../../../components/Helmet";
-import { TextFormatedInput, TextInput } from "../../../components/UpwardFields";
-import SearchIcon from "@mui/icons-material/Search";
 import {
-  DataGridViewReact,
-  DataGridViewReactUpgraded,
-} from "../../../components/DataGridViewReact";
+  SelectInput,
+  TextFormatedInput,
+  TextInput,
+} from "../../../components/UpwardFields";
+import SearchIcon from "@mui/icons-material/Search";
+import { DataGridViewReactUpgraded } from "../../../components/DataGridViewReact";
 import { Loading } from "../../../components/Loading";
 import "../../../style/monbileview/reference/reference.css";
 
 const pettyLogColumn = [
-  { key: "Prefix", label: "Prefix", width: 160 },
-  { key: "NumSeriesFrom", label: "Number Series From", width: 160 },
-  { key: "NumSeriesTo", label: "Number Series To", width: 160 },
+  { key: "Prefix", label: "Prefix", width: 100 },
+  { key: "NumSeriesFrom", label: "Number Series From", width: 150 },
+  { key: "NumSeriesTo", label: "Number Series To", width: 150 },
   { key: "Cost", label: "Cost", width: 120 },
+  { key: "Vehicle", label: "Vehicle Type", width: 120 },
   { key: "ctplId", label: "", width: 0, hide: true },
   { key: "ctplType", label: "", width: 0, hide: true },
 ];
@@ -40,9 +42,17 @@ export default function CTPL() {
   const tableRef = useRef<any>(null);
 
   const prefixRef = useRef<HTMLInputElement>(null);
+  const newprefixRef = useRef<HTMLInputElement>(null);
+
   const numSeriesFromRef = useRef<HTMLInputElement>(null);
   const numSeriesToRef = useRef<HTMLInputElement>(null);
+
+  const newSeriesFromRef = useRef<HTMLInputElement>(null);
+  const newSeriesToRef = useRef<HTMLInputElement>(null);
+
   const costRef = useRef<HTMLInputElement>(null);
+  const selectRef = useRef<HTMLSelectElement>(null);
+
   const ctplType = useRef("");
   const ctplId = useRef("");
 
@@ -76,6 +86,17 @@ export default function CTPL() {
     },
     onSuccess,
   });
+  const { mutate: mutateEdit, isLoading: loadingEdit } = useMutation({
+    mutationKey: "edit",
+    mutationFn: async (variables: any) => {
+      return await myAxios.post("/reference/update-ctpl", variables, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      });
+    },
+    onSuccess,
+  });
 
   const { mutate: mutateDelete, isLoading: loadingDelete } = useMutation({
     mutationKey: "delete",
@@ -90,21 +111,52 @@ export default function CTPL() {
   });
   function handleOnSave(e: any) {
     e.preventDefault();
-
-    saveCondfirmationAlert({
-      isConfirm: () => {
-        mutateAdd({
-          Prefix: prefixRef.current?.value,
-          NumSeriesFrom: numSeriesFromRef.current?.value,
-          NumSeriesTo: numSeriesToRef.current?.value,
-          Cost: costRef.current?.value,
-          ctplType: ctplType.current,
-          ctplId: ctplId.current,
-        });
-      },
-    });
+    if (mode === "edit") {
+      codeCondfirmationAlert({
+        isUpdate: true,
+        cb: (userCodeConfirmation) => {
+          mutateEdit({
+            Prefix: prefixRef.current?.value,
+            NewPrefix: newprefixRef.current?.value,
+            NumSeriesFrom: numSeriesFromRef.current?.value,
+            NumSeriesTo: numSeriesToRef.current?.value,
+            NewSeriesFrom: newSeriesFromRef.current?.value,
+            NewSeriesTo: newSeriesToRef.current?.value,
+            Cost: costRef.current?.value,
+            ctplType: ctplType.current,
+            ctplId: ctplId.current,
+            Vehicle: selectRef.current?.value,
+            userCodeConfirmation,
+          });
+        },
+      });
+    } else {
+      saveCondfirmationAlert({
+        isConfirm: () => {
+          mutateAdd({
+            Prefix: prefixRef.current?.value,
+            NumSeriesFrom: numSeriesFromRef.current?.value,
+            NumSeriesTo: numSeriesToRef.current?.value,
+            Cost: costRef.current?.value,
+            ctplType: ctplType.current,
+            ctplId: ctplId.current,
+            Vehicle: selectRef.current?.value,
+          });
+        },
+      });
+    }
   }
   function resetModule() {
+    if (newprefixRef.current) {
+      newprefixRef.current.value = "";
+    }
+    if (newSeriesFromRef.current) {
+      newSeriesFromRef.current.value = "";
+    }
+    if (newSeriesToRef.current) {
+      newSeriesToRef.current.value = "";
+    }
+
     if (prefixRef.current) {
       prefixRef.current.value = "";
     }
@@ -117,6 +169,11 @@ export default function CTPL() {
     if (costRef.current) {
       costRef.current.value = "0.00";
     }
+
+    if (selectRef.current) {
+      selectRef.current.value = "LIGHT";
+    }
+
     ctplType.current = "";
     ctplId.current = "";
   }
@@ -149,7 +206,7 @@ export default function CTPL() {
 
   return (
     <>
-      {loadingSearch && <Loading />}
+      {(loadingSearch || loadingEdit || loadingDelete) && <Loading />}
       <PageHelmet title="CTPL" />
       <div
         style={{
@@ -293,7 +350,7 @@ export default function CTPL() {
                 Cancel
               </Button>
             )}
-            <LoadingButton
+            <Button
               id="save-entry-header"
               variant="contained"
               sx={{
@@ -304,7 +361,6 @@ export default function CTPL() {
                   backgroundColor: pink[600],
                 },
               }}
-              loading={loadingDelete}
               startIcon={<DeleteIcon />}
               disabled={mode !== "edit"}
               onClick={() => {
@@ -315,6 +371,14 @@ export default function CTPL() {
                   text: `Are you sure you want to delete ?`,
                   cb: (userCodeConfirmation) => {
                     mutateDelete({
+                      Prefix: prefixRef.current?.value,
+                      NewPrefix: newprefixRef.current?.value,
+                      NumSeriesFrom: numSeriesFromRef.current?.value,
+                      NumSeriesTo: numSeriesToRef.current?.value,
+                      NewSeriesFrom: newSeriesFromRef.current?.value,
+                      NewSeriesTo: newSeriesToRef.current?.value,
+                      Cost: costRef.current?.value,
+                      ctplType: ctplType.current,
                       ctplId: ctplId.current,
                       userCodeConfirmation,
                     });
@@ -323,98 +387,224 @@ export default function CTPL() {
               }}
             >
               Delete
-            </LoadingButton>
+            </Button>
           </div>
         </div>
-        <fieldset
+        <div
           className="container-max-width"
           style={{
             // border: "1px solid black",
             padding: "5px",
-            width: "590px",
+            width: "auto",
             rowGap: "5px",
             display: "flex",
             flexDirection: "column",
           }}
         >
-          <TextInput
+          <div
+            style={{
+              display: "flex",
+              columnGap: "10px",
+              alignItems: "center",
+            }}
+          >
+            <TextInput
+              containerStyle={{
+                width: "320px",
+              }}
+              label={{
+                title: "Prefix: ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "120px",
+                },
+              }}
+              input={{
+                disabled: mode === "" || mode === "edit",
+                className: "search-input-up-on-key-down",
+                type: "text",
+                onKeyDown: (e) => {
+                  if (e.key === "Enter" || e.key === "NumpadEnter") {
+                    e.preventDefault();
+                    numSeriesFromRef.current?.focus();
+                  }
+                },
+                style: { width: "calc(320px - 120px)" },
+              }}
+              inputRef={prefixRef}
+            />
+            {mode === "edit" && (
+              <>
+                -
+                <TextInput
+                  containerStyle={{
+                    width: "320px",
+                  }}
+                  label={{
+                    title: "New Prefix: ",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "120px",
+                    },
+                  }}
+                  input={{
+                    className: "search-input-up-on-key-down",
+                    type: "text",
+                    onKeyDown: (e) => {
+                      if (e.key === "Enter" || e.key === "NumpadEnter") {
+                        e.preventDefault();
+                        numSeriesFromRef.current?.focus();
+                      }
+                    },
+                    style: { width: "calc(320px - 120px)" },
+                  }}
+                  inputRef={newprefixRef}
+                />
+              </>
+            )}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              columnGap: "10px",
+              alignItems: "center",
+            }}
+          >
+            <TextInput
+              label={{
+                title: "Num Series From : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "120px",
+                },
+              }}
+              input={{
+                disabled: mode === "" || mode === "edit",
+                min: 1,
+                defaultValue: "0",
+                type: "number",
+                style: { width: "200px", textAlign: "right" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    if (mode === "edit") {
+                      newSeriesFromRef.current?.focus();
+                    } else {
+                      numSeriesToRef.current?.focus();
+                    }
+                  }
+                },
+                onFocus: (e) => {
+                  e.currentTarget.select();
+                },
+              }}
+              inputRef={numSeriesFromRef}
+            />
+            {mode === "edit" && (
+              <>
+                -
+                <TextInput
+                  label={{
+                    title: "New Series From : ",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "120px",
+                    },
+                  }}
+                  input={{
+                    min: 1,
+                    defaultValue: "0",
+                    type: "number",
+                    style: { width: "200px", textAlign: "right" },
+                    onKeyDown: (e) => {
+                      if (e.code === "NumpadEnter" || e.code === "Enter") {
+                        numSeriesToRef.current?.focus();
+                      }
+                    },
+                    onFocus: (e) => {
+                      e.currentTarget.select();
+                    },
+                  }}
+                  inputRef={newSeriesFromRef}
+                />
+              </>
+            )}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              columnGap: "10px",
+              alignItems: "center",
+            }}
+          >
+            <TextInput
+              label={{
+                title: "Num Series To : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "120px",
+                },
+              }}
+              input={{
+                disabled: mode === "" || mode === "edit",
+                min: 1,
+                defaultValue: "0",
+                type: "number",
+                style: { width: "200px", textAlign: "right" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    if (mode === "edit") {
+                      newSeriesToRef.current?.focus();
+                    } else {
+                      costRef.current?.focus();
+                    }
+                  }
+                },
+                onFocus: (e) => {
+                  e.currentTarget.select();
+                },
+              }}
+              inputRef={numSeriesToRef}
+            />
+            {mode === "edit" && (
+              <>
+                -
+                <TextInput
+                  label={{
+                    title: "New Series To : ",
+                    style: {
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      width: "120px",
+                    },
+                  }}
+                  input={{
+                    min: 1,
+                    defaultValue: "0",
+                    type: "number",
+                    style: { width: "200px", textAlign: "right" },
+                    onKeyDown: (e) => {
+                      if (e.code === "NumpadEnter" || e.code === "Enter") {
+                        costRef.current?.focus();
+                      }
+                    },
+                    onFocus: (e) => {
+                      e.currentTarget.select();
+                    },
+                  }}
+                  inputRef={newSeriesToRef}
+                />
+              </>
+            )}
+          </div>
+          <TextFormatedInput
             containerStyle={{
               width: "320px",
-              marginRight: "20px",
             }}
-            label={{
-              title: "Prefix: ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "120px",
-              },
-            }}
-            input={{
-              disabled: mode === "",
-              className: "search-input-up-on-key-down",
-              type: "text",
-              onKeyDown: (e) => {
-                if (e.key === "Enter" || e.key === "NumpadEnter") {
-                  e.preventDefault();
-                  numSeriesFromRef.current?.focus();
-                }
-              },
-              style: { width: "calc(320px - 120px)" },
-            }}
-            inputRef={prefixRef}
-          />
-          <TextInput
-            label={{
-              title: "Num Series From : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "120px",
-              },
-            }}
-            input={{
-              min: 1,
-              defaultValue: "0",
-              type: "number",
-              style: { width: "200px", textAlign: "right" },
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  numSeriesToRef.current?.focus();
-                }
-              },
-              onFocus: (e) => {
-                e.currentTarget.select();
-              },
-            }}
-            inputRef={numSeriesFromRef}
-          />
-          <TextInput
-            label={{
-              title: "Num Series To : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "120px",
-              },
-            }}
-            input={{
-              min: 1,
-              defaultValue: "0",
-              type: "number",
-              style: { width: "200px", textAlign: "right" },
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  costRef.current?.focus();
-                }
-              },
-              onFocus: (e) => {
-                e.currentTarget.select();
-              },
-            }}
-            inputRef={numSeriesToRef}
-          />
-          <TextFormatedInput
             label={{
               title: "Cost : ",
               style: {
@@ -424,18 +614,50 @@ export default function CTPL() {
               },
             }}
             input={{
+              disabled: mode === "",
               placeholder: "0.00",
               defaultValue: "",
               type: "text",
-              style: { width: "200px" },
+              style: { width: "calc(100% - 120px)" },
               onKeyDown: (e) => {
                 if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  selectRef.current?.focus();
                 }
               },
             }}
             inputRef={costRef}
           />
-        </fieldset>
+          <SelectInput
+            containerClassName="custom-input"
+            containerStyle={{ width: "320px" }}
+            label={{
+              title: "Vehicle Type : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "120px",
+              },
+            }}
+            selectRef={selectRef}
+            select={{
+              style: { width: "calc(100% - 120px)", height: "22px" },
+              defaultValue: "LIGHT",
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  e.preventDefault();
+                }
+              },
+            }}
+            datasource={[
+              { key: "MOTORCYCLE" },
+              { key: "LIGHT" },
+              { key: "HEAVY" },
+              { key: "TRAILER" },
+            ]}
+            values={"key"}
+            display={"key"}
+          />
+        </div>
         <div
           style={{
             marginTop: "10px",
@@ -452,21 +674,41 @@ export default function CTPL() {
             handleSelectionChange={(rowItm: any) => {
               if (rowItm) {
                 setMode("edit");
-                if (prefixRef.current) {
-                  prefixRef.current.value = rowItm.Prefix;
-                }
-                if (numSeriesFromRef.current) {
-                  numSeriesFromRef.current.value = rowItm.NumSeriesFrom;
-                }
-                if (numSeriesToRef.current) {
-                  numSeriesToRef.current.value = rowItm.NumSeriesTo;
-                }
-                if (costRef.current) {
-                  costRef.current.value = rowItm.Cost;
-                }
-                ctplId.current = rowItm.ctplId;
-                ctplType.current = rowItm.ctplType;
+                wait(100).then(() => {
+                  if (prefixRef.current) {
+                    prefixRef.current.value = rowItm.Prefix;
+                  }
+                  if (newprefixRef.current) {
+                    newprefixRef.current.value = rowItm.Prefix;
+                  }
+
+                  if (numSeriesFromRef.current) {
+                    numSeriesFromRef.current.value = rowItm.NumSeriesFrom;
+                  }
+                  if (numSeriesToRef.current) {
+                    numSeriesToRef.current.value = rowItm.NumSeriesTo;
+                  }
+
+                  if (newSeriesFromRef.current) {
+                    newSeriesFromRef.current.value = rowItm.NumSeriesFrom;
+                  }
+                  if (newSeriesToRef.current) {
+                    newSeriesToRef.current.value = rowItm.NumSeriesTo;
+                  }
+
+                  if (costRef.current) {
+                    costRef.current.value = rowItm.Cost;
+                  }
+
+                  if (selectRef.current) {
+                    selectRef.current.value = rowItm.Vehicle || "LIGHT";
+                  }
+
+                  ctplId.current = rowItm.ctplId;
+                  ctplType.current = rowItm.ctplType;
+                });
               } else {
+                setMode("");
                 resetModule();
               }
             }}
@@ -569,6 +811,14 @@ export default function CTPL() {
                 text: `Are you sure you want to delete ?`,
                 cb: (userCodeConfirmation) => {
                   mutateDelete({
+                    Prefix: prefixRef.current?.value,
+                    NewPrefix: newprefixRef.current?.value,
+                    NumSeriesFrom: numSeriesFromRef.current?.value,
+                    NumSeriesTo: numSeriesToRef.current?.value,
+                    NewSeriesFrom: newSeriesFromRef.current?.value,
+                    NewSeriesTo: newSeriesToRef.current?.value,
+                    Cost: costRef.current?.value,
+                    ctplType: ctplType.current,
                     ctplId: ctplId.current,
                     userCodeConfirmation,
                   });

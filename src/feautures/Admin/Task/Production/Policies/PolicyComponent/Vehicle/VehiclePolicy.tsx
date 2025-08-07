@@ -3590,6 +3590,7 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
         }}
       />
       <UpwardTableModalSearch
+      autoselection={false}
         ref={searchTplIdModalRef}
         link={"/task/production/get-tpl-id"}
         column={[
