@@ -1239,7 +1239,6 @@ const PolicyInformation = forwardRef(
                   },
                 }}
                 input={{
-                  readOnly: true,
                   disabled: props.disabled,
                   type: "text",
                   style: {

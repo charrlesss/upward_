@@ -17,10 +17,10 @@ import {
   DataGridViewReactUpgraded,
   UpwardTableModalSearch,
 } from "../../../../components/DataGridViewReact";
-import { useMutation } from "react-query";
+import { useMutation, useQuery } from "react-query";
 import { AuthContext } from "../../../../components/AuthContext";
 import { Loading } from "../../../../components/Loading";
-import { format } from "date-fns";
+import { addMonths, format } from "date-fns";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
@@ -32,6 +32,8 @@ import {
 } from "../../../../lib/confirmationAlert";
 import Swal from "sweetalert2";
 import { formatNumber } from "../Accounting/ReturnCheck";
+import SegmentIcon from "@mui/icons-material/Segment";
+import SettingsApplicationsIcon from "@mui/icons-material/SettingsApplications";
 
 const columns = [
   { key: "PolicyNo", label: "Policy No", width: 150 },
@@ -48,26 +50,30 @@ const columns = [
     hide: true,
   },
 ];
+
 export default function StatementAccount() {
   const [mode, setMode] = useState("");
+  const [state, setState] = useState<any>(null);
+  const [tplReportSettings, setTplReportSettings] = useState<any>(null);
+
+  const [soaType, setSoaType] = useState("ALL");
+
   const { myAxios, user } = useContext(AuthContext);
 
   const tableRef = useRef<any>(null);
   const searchSoaModal = useRef<any>(null);
   const searchPolicyModal = useRef<any>(null);
-  const searchClientModal = useRef<any>(null);
   const confirmationModal = useRef<any>(null);
   const searchSoaByPolicyModal = useRef<any>(null);
   const searchEndorsement = useRef<any>(null);
+  const generateTplRef = useRef<any>(null);
+  const printDetailsRef = useRef<any>(null);
+
+  const soaTypeRef = useRef<HTMLSelectElement>(null);
 
   const inputSearchRef = useRef<HTMLInputElement>(null);
   const refNoRef = useRef<HTMLInputElement>(null);
   const searchPolicyRef = useRef<HTMLInputElement>(null);
-
-  const idnoRef = useRef<HTMLInputElement>(null);
-  const clientNameRef = useRef<HTMLInputElement>(null);
-  const addressRef = useRef<HTMLTextAreaElement>(null);
-  const attachmentRef = useRef<HTMLTextAreaElement>(null);
 
   const { mutate: mutateReferenceNo, isLoading: isLoadingReferenceNo } =
     useMutation({
@@ -105,9 +111,27 @@ export default function StatementAccount() {
       });
     },
     onSuccess: (response) => {
-      mutateReferenceNo({});
-      resetFields();
-      tableRef.current.resetTable();
+      if (response.data.success) {
+        mutateReferenceNo({});
+        resetFields();
+        tableRef.current.resetTable();
+
+        return Swal.fire({
+          position: "center",
+          icon: "success",
+          title: response.data.message,
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      } else {
+        return Swal.fire({
+          position: "center",
+          icon: "error",
+          title: response.data.message,
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      }
     },
   });
   const { mutate: mutatePrint, isLoading: isLoadingPrint } = useMutation({
@@ -131,6 +155,53 @@ export default function StatementAccount() {
       );
     },
   });
+
+  const { mutate: mutateSearchTPL, isLoading: isLoadingSearchTPL } =
+    useMutation({
+      mutationKey: "search-tpl",
+      mutationFn: (variables: any) => {
+        return myAxios.post("/task/production/soa/search-tpl", variables, {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        });
+      },
+      onSuccess: (response) => {
+        const table = tableRef.current.getData();
+        if (table.length > 0) {
+          Swal.fire({
+            title: "Are you sure?",
+            text: "Are you sure you want to proceed? This will erase the table’s data and replace it.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, proceed!",
+            didOpen: () => {
+              Swal.getPopup()?.style.setProperty("z-index", "999999");
+              Swal.getContainer()?.style.setProperty("z-index", "999999");
+            },
+          }).then((result) => {
+            if (result.isConfirmed) {
+              tableRef.current.setData(response.data.data);
+            }
+          });
+          return;
+        } else {
+          if (response.data.data.length <= 0) {
+            Swal.fire({
+              position: "center",
+              icon: "error",
+              title: "No Found Record!",
+              showConfirmButton: false,
+              timer: 1500,
+            });
+          }
+          tableRef.current.setData(response.data.data);
+          return;
+        }
+      },
+    });
   const {
     mutate: mutateSearchSoaSelected,
     isLoading: isLoadingSeacghSoaSelected,
@@ -152,18 +223,7 @@ export default function StatementAccount() {
         if (refNoRef.current) {
           refNoRef.current.value = response.data.state[0].reference_no;
         }
-        if (idnoRef.current) {
-          idnoRef.current.value = response.data.state[0].idno;
-        }
-        if (clientNameRef.current) {
-          clientNameRef.current.value = response.data.state[0].name;
-        }
-        if (addressRef.current) {
-          addressRef.current.value = response.data.state[0].address;
-        }
-        if (attachmentRef.current) {
-          attachmentRef.current.value = response.data.state[0].attachment;
-        }
+        setState(response.data.state);
       }
       if (response.data.data.length > 0) {
         tableRef.current.setData(response.data.data);
@@ -174,18 +234,7 @@ export default function StatementAccount() {
     if (searchPolicyRef.current) {
       searchPolicyRef.current.value = "";
     }
-    if (idnoRef.current) {
-      idnoRef.current.value = "";
-    }
-    if (clientNameRef.current) {
-      clientNameRef.current.value = "";
-    }
-    if (addressRef.current) {
-      addressRef.current.value = "";
-    }
-    if (attachmentRef.current) {
-      attachmentRef.current.value = "";
-    }
+    setState(null);
   }
 
   return (
@@ -193,7 +242,8 @@ export default function StatementAccount() {
       {(isLoadingReferenceNo ||
         isLoadingPrint ||
         isLoadingSave ||
-        isLoadingSeacghSoaSelected) && <Loading />}
+        isLoadingSeacghSoaSelected ||
+        isLoadingSearchTPL) && <Loading />}
       <div
         style={{
           flex: 1,
@@ -299,10 +349,11 @@ export default function StatementAccount() {
 
                   mutatePrint({
                     reference_no: refNoRef.current?.value,
-                    idno: idnoRef.current?.value,
-                    name: clientNameRef.current?.value,
-                    address: addressRef.current?.value,
-                    attachment: attachmentRef.current?.value,
+                    idno: state?.[0].idno,
+                    name: state?.[0].name,
+                    address: state?.[0].address,
+                    attachment: state?.[0].attachment,
+                    soaType,
                     data,
                   });
                 }}
@@ -321,6 +372,8 @@ export default function StatementAccount() {
                 startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
                 id="entry-header-save-button"
                 onClick={() => {
+                  const { idnoRef, clientNameRef, addressRef, attachmentRef } =
+                    printDetailsRef.current.getRefs();
                   if (mode === "update") {
                     codeCondfirmationAlert({
                       isUpdate: true,
@@ -400,206 +453,155 @@ export default function StatementAccount() {
             flexDirection: "column",
           }}
         >
-          <TextInput
-            containerStyle={{ width: "350px" }}
-            containerClassName="custom-input"
-            label={{
-              title: "Reference: ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-              },
-            }}
-            input={{
-              readOnly: mode === "",
-              type: "text",
-              style: { width: "calc(100% - 100px)" },
-              name: "refNo",
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === "Enter") {
-                }
-              },
-            }}
-            inputRef={refNoRef}
-          />
-          <TextInput
-            containerClassName="search-input"
-            label={{
-              title: "Search Policy : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-              },
-            }}
-            containerStyle={{ width: "500px" }}
-            input={{
-              readOnly: mode === "",
-
-              className: "search-input-up-on-key-down",
-              type: "search",
-              onKeyDown: (e) => {
-                if (e.key === "Enter" || e.key === "NumpadEnter") {
-                  e.preventDefault();
-                  searchPolicyModal.current.openModal(e.currentTarget.value);
-                }
-              },
-              style: { width: "calc(100% - 100px)" },
-            }}
-            icon={
-              <SearchIcon
-                sx={{
-                  fontSize: "18px",
-                }}
-              />
-            }
-            onIconClick={(e) => {
-              e.preventDefault();
-              if (searchPolicyRef.current) {
-                searchPolicyModal.current.openModal(
-                  searchPolicyRef.current.value
-                );
-              }
-            }}
-            inputRef={searchPolicyRef}
-          />
-        </div>
-        <div
-          className="container-max-width"
-          style={{
-            width: "50%",
-            border: "1px solid #e3e7ecff",
-            boxSizing: "border-box",
-            padding: "15px",
-            position: "relative",
-            display: "flex",
-            flexDirection: "column",
-            rowGap: "5px",
-            borderRadius: "5px",
-            boxShadow: "-3px -8px 20px -12px rgba(112, 107, 107, 0.75) inset",
-          }}
-        >
-          <span
+          <div
             style={{
-              position: "absolute",
-              top: "-12px",
-              left: "10px",
-              fontSize: "14px",
-              background: "white",
-              padding: "0 2px",
-              fontWeight: "bold",
+              display: "flex",
+              columnGap: "20px",
+              alignItems: "center",
             }}
           >
-            Print Details
-          </span>
-          <TextInput
-            containerClassName="custom-input"
-            containerStyle={{
-              width: "100%",
-            }}
-            label={{
-              title: "Search Client :",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
+            <TextInput
+              containerStyle={{ width: "300px" }}
+              containerClassName="custom-input"
+              label={{
+                title: "Reference: ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
+              }}
+              input={{
+                readOnly: mode === "",
+                type: "text",
+                style: { width: "calc(100% - 100px)" },
+                name: "refNo",
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  }
+                },
+              }}
+              inputRef={refNoRef}
+            />
+            <SelectInput
+              label={{
+                title: "Type :",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "50px",
+                },
+              }}
+              selectRef={soaTypeRef}
+              select={{
+                style: { width: "calc(100% - 50px)", height: "22px" },
+                value: soaType,
+                onChange: (e) => {
+                  setSoaType(e.target.value);
+                },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    searchPolicyRef.current?.focus();
+                  }
+                },
+              }}
+              containerStyle={{
                 width: "100px",
-              },
+              }}
+              datasource={[
+                {
+                  key: "ALL",
+                },
+                { key: "TPL" },
+              ]}
+              values={"key"}
+              display={"key"}
+            />
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              columnGap: "10px",
+              alignItems: "center",
             }}
-            input={{
-              readOnly: mode === "",
-              type: "text",
-              style: {
-                width: "calc(100% - 100px) ",
-              },
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === "Enter") {
-                  searchClientModal.current.openModal(e.currentTarget.value);
-                }
-              },
-            }}
-            icon={
-              <SearchIcon
-                sx={{
-                  fontSize: "18px",
-                }}
-              />
-            }
-            onIconClick={(e) => {
-              e.preventDefault();
-              if (idnoRef.current) {
-                searchClientModal.current.openModal(idnoRef.current.value);
+          >
+            <TextInput
+              containerClassName="search-input"
+              label={{
+                title: "Search Policy : ",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
+              }}
+              containerStyle={{ width: "500px" }}
+              input={{
+                disabled: soaType === "TPL",
+                readOnly: mode === "",
+
+                className: "search-input-up-on-key-down",
+                type: "search",
+                onKeyDown: (e) => {
+                  if (e.key === "Enter" || e.key === "NumpadEnter") {
+                    e.preventDefault();
+                    searchPolicyModal.current.openModal(e.currentTarget.value);
+                  }
+                },
+                style: { width: "calc(100% - 100px)" },
+              }}
+              icon={
+                <SearchIcon
+                  sx={{
+                    fontSize: "18px",
+                  }}
+                />
               }
-            }}
-            inputRef={idnoRef}
-          />
-          <TextInput
-            containerClassName="custom-input"
-            containerStyle={{
-              width: "100%",
-            }}
-            label={{
-              title: "Acct. Name :",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-              },
-            }}
-            input={{
-              readOnly: true,
-              type: "text",
-              style: {
-                width: "calc(100% - 100px) ",
-              },
-              onKeyDown: (e) => {
-                if (e.code === "NumpadEnter" || e.code === "Enter") {
+              onIconClick={(e) => {
+                e.preventDefault();
+                if (searchPolicyRef.current) {
+                  searchPolicyModal.current.openModal(
+                    searchPolicyRef.current.value
+                  );
                 }
-              },
-            }}
-            inputRef={clientNameRef}
-          />
-          <TextAreaInput
-            containerStyle={{ width: "100%" }}
-            containerClassName="custom-input"
-            label={{
-              title: "Address : ",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-                alignSelf: "flex-start",
-              },
-            }}
-            textarea={{
-              readOnly: true,
-              rows: 3,
-              style: { width: "calc(100% - 100px)" },
-              defaultValue: "",
-            }}
-            _inputRef={addressRef}
-          />
-          <TextAreaInput
-            containerStyle={{ width: "100%" }}
-            containerClassName="custom-input"
-            label={{
-              title: "Attachment :",
-              style: {
-                fontSize: "12px",
-                fontWeight: "bold",
-                width: "100px",
-                alignSelf: "flex-start",
-              },
-            }}
-            textarea={{
-              readOnly: mode === "",
-              rows: 3,
-              style: { width: "calc(100% - 100px)" },
-              defaultValue: `**ATTACHED COPY OF COMPREHENSIVE, BONDS & GPA**`,
-              onChange: (e) => {},
-            }}
-            _inputRef={attachmentRef}
-          />
+              }}
+              inputRef={searchPolicyRef}
+            />
+            <Button
+              disabled={soaType === "ALL"}
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<SegmentIcon sx={{ width: 15, height: 15 }} />}
+              id="entry-header-save-button"
+              onClick={() => {
+                generateTplRef.current.showModal(tplReportSettings);
+              }}
+              color="primary"
+            >
+              Search TPL
+            </Button>
+            <Button
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={
+                <SettingsApplicationsIcon sx={{ width: 15, height: 15 }} />
+              }
+              id="entry-header-save-button"
+              onClick={() => {
+                printDetailsRef.current.showModal(state);
+              }}
+              color="secondary"
+            >
+              Print Details
+            </Button>
+          </div>
         </div>
         <div
           style={{
@@ -611,7 +613,7 @@ export default function StatementAccount() {
         >
           <DataGridViewReactUpgraded
             ref={tableRef}
-            adjustVisibleRowCount={355}
+            adjustVisibleRowCount={160}
             columns={columns}
             DisplayData={({ row, col }: any) => {
               return (
@@ -719,40 +721,11 @@ export default function StatementAccount() {
                   rowItm.PolicyType = "Bonds";
                 }
 
-                console.log(rowItm)
+                console.log(rowItm);
                 tableRef.current.setData([...tableData, rowItm]);
                 searchPolicyModal.current.resetSelectedRow();
               }
             });
-          }
-        }}
-      />
-      <UpwardTableModalSearch
-        ref={searchClientModal}
-        link={"/task/production/soa/search-by-client"}
-        column={[
-          {
-            key: "Shortname",
-            label: "Name",
-            width: 300,
-          },
-          { key: "IDNo", label: "ID No.", width: 150 },
-          { key: "address", label: "Address", width: 300 },
-        ]}
-        handleSelectionChange={(rowItm) => {
-          if (rowItm) {
-            wait(100).then(() => {
-              if (clientNameRef.current) {
-                clientNameRef.current.value = rowItm.Shortname;
-              }
-              if (idnoRef.current) {
-                idnoRef.current.value = rowItm.IDNo;
-              }
-              if (addressRef.current) {
-                addressRef.current.value = rowItm.address;
-              }
-            });
-            searchClientModal.current.closeModal();
           }
         }}
       />
@@ -996,6 +969,24 @@ export default function StatementAccount() {
           confirmationModal.current.closeModal();
         }}
       />
+      <GenerateTPL
+        ref={generateTplRef}
+        myAxios={myAxios}
+        user={user}
+        onGenerateTpl={(state: any, newSettings: any) => {
+          mutateSearchTPL(state);
+          setTplReportSettings(newSettings);
+        }}
+        onClose={(newSettings: any) => {
+          setTplReportSettings(newSettings);
+        }}
+      />
+      <PrintDetails
+        ref={printDetailsRef}
+        onClose={(newstate: any) => {
+          setState(newstate);
+        }}
+      />
     </>
   );
 }
@@ -1079,7 +1070,7 @@ const ConfirmationModalForReference = forwardRef(
           className="modal-add-check"
           ref={modalRef}
           style={{
-            height: blick ? "172px" : "170px",
+            height: blick ? "202px" : "170px",
             width: blick ? "252px" : "250px",
             border: "1px solid #64748b",
             position: "absolute",
@@ -1178,3 +1169,608 @@ const ConfirmationModalForReference = forwardRef(
     ) : null;
   }
 );
+
+const GenerateTPL = forwardRef(
+  ({ onGenerateTpl, onClose, myAxios, user }: any, ref) => {
+    const modalRef = useRef<HTMLDivElement>(null);
+    const careOfRef = useRef<HTMLSelectElement>(null);
+    const dateFromRef = useRef<HTMLInputElement>(null);
+    const dateToRef = useRef<HTMLInputElement>(null);
+    const isMoving = useRef(false);
+    const offset = useRef({ x: 0, y: 0 });
+    const [showModal, setShowModal] = useState(false);
+    const [blick, setBlick] = useState(false);
+
+    const { isLoading: isLoadingcareOf, data: careOfData } = useQuery({
+      queryKey: "care-of",
+      queryFn: () => {
+        return myAxios.get("/task/production/care-of", {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        });
+      },
+      refetchOnWindowFocus: false,
+    });
+
+    useEffect(() => {
+      window.addEventListener("keydown", (e: any) => {
+        if (e.key === "Escape") {
+        }
+      });
+    }, []);
+
+    const handleMouseDown = (e: any) => {
+      if (!modalRef.current) return;
+
+      isMoving.current = true;
+      offset.current = {
+        x: e.clientX - modalRef.current.offsetLeft,
+        y: e.clientY - modalRef.current.offsetTop,
+      };
+
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    };
+
+    // Move modal with mouse
+    const handleMouseMove = (e: any) => {
+      if (!isMoving.current || !modalRef.current) return;
+
+      modalRef.current.style.left = `${e.clientX - offset.current.x}px`;
+      modalRef.current.style.top = `${e.clientY - offset.current.y}px`;
+    };
+
+    // Stop moving when releasing mouse
+    const handleMouseUp = () => {
+      isMoving.current = false;
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    useImperativeHandle(ref, () => ({
+      showModal: (tplReportSettings: any) => {
+        if (tplReportSettings) {
+          wait(100).then(() => {
+            if (careOfRef.current) {
+              careOfRef.current.value = tplReportSettings.careOfRef;
+            }
+            if (dateFromRef.current) {
+              dateFromRef.current.value = tplReportSettings.dateFromRef;
+            }
+            if (dateToRef.current) {
+              dateToRef.current.value = tplReportSettings.dateToRef;
+            }
+          });
+        }
+
+        setShowModal(true);
+      },
+      closeModal: () => {
+        setShowModal(false);
+      },
+    }));
+
+    return showModal ? (
+      <>
+        {isLoadingcareOf && <Loading />}
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            background: "transparent",
+            zIndex: 999999,
+          }}
+          onClick={() => {
+            setBlick(true);
+            setTimeout(() => {
+              setBlick(false);
+            }, 250);
+          }}
+        ></div>
+        <div
+          className="modal-add-check"
+          ref={modalRef}
+          style={{
+            height: blick ? "157px" : "155px",
+            width: blick ? "350px" : "350px",
+            border: "1px solid #64748b",
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%, -75%)",
+            display: "flex",
+            flexDirection: "column",
+            zIndex: 999999,
+            opacity: 1,
+            transition: "all 150ms",
+            boxShadow: "3px 6px 32px -7px rgba(0,0,0,0.75)",
+            background: "#F1F1F1",
+          }}
+        >
+          <div
+            style={{
+              height: "22px",
+              background: "white",
+              display: "flex",
+              justifyContent: "space-between",
+              padding: "5px",
+              position: "relative",
+              alignItems: "center",
+              cursor: "grab",
+            }}
+            onMouseDown={handleMouseDown}
+          >
+            <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+              Generate TPL
+            </span>
+            <button
+              className="btn-check-exit-modal"
+              style={{
+                padding: "0 5px",
+                borderRadius: "0px",
+                background: "white",
+                color: "black",
+                height: "22px",
+                position: "absolute",
+                top: 0,
+                right: 0,
+              }}
+              onClick={() => {
+                onClose({
+                  careOfRef: careOfRef.current?.value,
+                  dateFromRef: dateFromRef.current?.value,
+                  dateToRef: dateToRef.current?.value,
+                });
+                setShowModal(false);
+              }}
+            >
+              <CloseIcon sx={{ fontSize: "22px" }} />
+            </button>
+          </div>
+          <div
+            className="main-content"
+            style={{
+              flex: 1,
+              background: "#F1F1F1",
+              padding: "5px",
+              display: "flex",
+              flexDirection: "column",
+              rowGap: "10px",
+            }}
+          >
+            <SelectInput
+              label={{
+                title: "Care of :",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
+              }}
+              selectRef={careOfRef}
+              select={{
+                style: { width: "calc(100% - 100px)", height: "22px" },
+                defaultValue: "NONE",
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    dateFromRef.current?.focus();
+                  }
+                },
+              }}
+              containerStyle={{
+                width: "100%",
+              }}
+              datasource={careOfData.data.data}
+              values={"careOf"}
+              display={"careOf"}
+            />
+            <TextInput
+              containerClassName="custom-input"
+              containerStyle={{
+                width: "100%",
+              }}
+              label={{
+                title: "Date From:",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
+              }}
+              input={{
+                type: "date",
+                defaultValue: format(new Date(), "yyyy-MM-dd"),
+                style: { width: "calc(100% - 100px)" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                    dateToRef.current?.focus();
+                  }
+                },
+              }}
+              inputRef={dateFromRef}
+            />
+            <TextInput
+              containerClassName="custom-input"
+              containerStyle={{
+                width: "100%",
+              }}
+              label={{
+                title: "Date To:",
+                style: {
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  width: "100px",
+                },
+              }}
+              input={{
+                type: "date",
+                defaultValue: format(addMonths(new Date(), 1), "yyyy-MM-dd"),
+                style: { width: "calc(100% - 100px)" },
+                onKeyDown: (e) => {
+                  if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  }
+                },
+              }}
+              inputRef={dateToRef}
+            />
+            <Button
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              onClick={() => {
+                onGenerateTpl(
+                  {
+                    careOf: careOfRef.current?.value,
+                    dateFrom: dateFromRef.current?.value,
+                    dateTo: dateToRef.current?.value,
+                  },
+                  {
+                    careOfRef: careOfRef.current?.value,
+                    dateFromRef: dateFromRef.current?.value,
+                    dateToRef: dateToRef.current?.value,
+                  }
+                );
+
+                setShowModal(false);
+              }}
+              variant="contained"
+              color="success"
+            >
+              gENERATE
+            </Button>
+          </div>
+        </div>
+      </>
+    ) : null;
+  }
+);
+
+const PrintDetails = forwardRef(({ onGenerateTpl, onClose }: any, ref) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+  const isMoving = useRef(false);
+  const offset = useRef({ x: 0, y: 0 });
+  const [showModal, setShowModal] = useState(false);
+  const [blick, setBlick] = useState(false);
+
+  const idnoRef = useRef<HTMLInputElement>(null);
+  const clientNameRef = useRef<HTMLInputElement>(null);
+  const addressRef = useRef<HTMLTextAreaElement>(null);
+  const attachmentRef = useRef<HTMLTextAreaElement>(null);
+
+  const searchClientModal = useRef<any>(null);
+
+  useEffect(() => {
+    window.addEventListener("keydown", (e: any) => {
+      if (e.key === "Escape") {
+      }
+    });
+  }, []);
+
+  const handleMouseDown = (e: any) => {
+    if (!modalRef.current) return;
+
+    isMoving.current = true;
+    offset.current = {
+      x: e.clientX - modalRef.current.offsetLeft,
+      y: e.clientY - modalRef.current.offsetTop,
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+  };
+
+  // Move modal with mouse
+  const handleMouseMove = (e: any) => {
+    if (!isMoving.current || !modalRef.current) return;
+
+    modalRef.current.style.left = `${e.clientX - offset.current.x}px`;
+    modalRef.current.style.top = `${e.clientY - offset.current.y}px`;
+  };
+
+  // Stop moving when releasing mouse
+  const handleMouseUp = () => {
+    isMoving.current = false;
+    document.removeEventListener("mousemove", handleMouseMove);
+    document.removeEventListener("mouseup", handleMouseUp);
+  };
+
+  useImperativeHandle(ref, () => ({
+    showModal: (state: any) => {
+      setShowModal(true);
+      if (state) {
+        wait(100).then(() => {
+          if (idnoRef.current) {
+            idnoRef.current.value = state[0].idno;
+          }
+          if (clientNameRef.current) {
+            clientNameRef.current.value = state[0].name;
+          }
+          if (addressRef.current) {
+            addressRef.current.value = state[0].address;
+          }
+          if (attachmentRef.current) {
+            attachmentRef.current.value = state[0].attachment;
+          }
+        });
+      }
+    },
+    closeModal: () => {
+      if (idnoRef.current) {
+        idnoRef.current.value = "";
+      }
+      if (clientNameRef.current) {
+        clientNameRef.current.value = "";
+      }
+      if (addressRef.current) {
+        addressRef.current.value = "";
+      }
+      if (attachmentRef.current) {
+        attachmentRef.current.value = `**ATTACHED COPY OF COMPREHENSIVE, BONDS & GPA**`;
+      }
+      setShowModal(false);
+    },
+    getRefs: () => ({
+      idnoRef,
+      clientNameRef,
+      addressRef,
+      attachmentRef,
+    }),
+  }));
+
+  return showModal ? (
+    <>
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: "transparent",
+          zIndex: 999,
+        }}
+        onClick={() => {
+          setBlick(true);
+          setTimeout(() => {
+            setBlick(false);
+          }, 250);
+        }}
+      ></div>
+      <div
+        className="modal-add-check"
+        ref={modalRef}
+        style={{
+          height: blick ? "217px" : "215px",
+          width: blick ? "402px" : "400px",
+          border: "1px solid #64748b",
+          position: "absolute",
+          left: "50%",
+          top: "50%",
+          transform: "translate(-50%, -75%)",
+          display: "flex",
+          flexDirection: "column",
+          zIndex: 9999,
+          opacity: 1,
+          transition: "all 150ms",
+          boxShadow: "3px 6px 32px -7px rgba(0,0,0,0.75)",
+          background: "#F1F1F1",
+        }}
+      >
+        <div
+          style={{
+            height: "22px",
+            background: "white",
+            display: "flex",
+            justifyContent: "space-between",
+            padding: "5px",
+            position: "relative",
+            alignItems: "center",
+            cursor: "grab",
+          }}
+          onMouseDown={handleMouseDown}
+        >
+          <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+            Print Details
+          </span>
+          <button
+            className="btn-check-exit-modal"
+            style={{
+              padding: "0 5px",
+              borderRadius: "0px",
+              background: "white",
+              color: "black",
+              height: "22px",
+              position: "absolute",
+              top: 0,
+              right: 0,
+            }}
+            onClick={() => {
+              onClose([
+                {
+                  idno: idnoRef.current?.value,
+                  name: clientNameRef.current?.value,
+                  address: addressRef.current?.value,
+                  attachment: attachmentRef.current?.value,
+                },
+              ]);
+              setShowModal(false);
+            }}
+          >
+            <CloseIcon sx={{ fontSize: "22px" }} />
+          </button>
+        </div>
+        <div
+          className="main-content"
+          style={{
+            flex: 1,
+            background: "#F1F1F1",
+            padding: "5px",
+            display: "flex",
+            flexDirection: "column",
+            rowGap: "10px",
+          }}
+        >
+          <TextInput
+            containerClassName="custom-input"
+            containerStyle={{
+              width: "100%",
+            }}
+            label={{
+              title: "Search Client :",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "100px",
+              },
+            }}
+            input={{
+              type: "text",
+              style: {
+                width: "calc(100% - 100px) ",
+              },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                  searchClientModal.current.openModal(e.currentTarget.value);
+                }
+              },
+            }}
+            icon={
+              <SearchIcon
+                sx={{
+                  fontSize: "18px",
+                }}
+              />
+            }
+            onIconClick={(e) => {
+              e.preventDefault();
+              if (idnoRef.current) {
+                searchClientModal.current.openModal(idnoRef.current.value);
+              }
+            }}
+            inputRef={idnoRef}
+          />
+          <TextInput
+            containerClassName="custom-input"
+            containerStyle={{
+              width: "100%",
+            }}
+            label={{
+              title: "Acct. Name :",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "100px",
+              },
+            }}
+            input={{
+              readOnly: true,
+              type: "text",
+              style: {
+                width: "calc(100% - 100px) ",
+              },
+              onKeyDown: (e) => {
+                if (e.code === "NumpadEnter" || e.code === "Enter") {
+                }
+              },
+            }}
+            inputRef={clientNameRef}
+          />
+          <TextAreaInput
+            containerStyle={{ width: "100%" }}
+            containerClassName="custom-input"
+            label={{
+              title: "Address : ",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "100px",
+                alignSelf: "flex-start",
+              },
+            }}
+            textarea={{
+              readOnly: true,
+              rows: 3,
+              style: { width: "calc(100% - 100px)" },
+              defaultValue: "",
+            }}
+            _inputRef={addressRef}
+          />
+          <TextAreaInput
+            containerStyle={{ width: "100%" }}
+            containerClassName="custom-input"
+            label={{
+              title: "Attachment :",
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                width: "100px",
+                alignSelf: "flex-start",
+              },
+            }}
+            textarea={{
+              rows: 3,
+              style: { width: "calc(100% - 100px)" },
+              defaultValue: `**ATTACHED COPY OF COMPREHENSIVE, BONDS & GPA**`,
+              onChange: (e) => {},
+            }}
+            _inputRef={attachmentRef}
+          />
+        </div>
+      </div>
+      <UpwardTableModalSearch
+        ref={searchClientModal}
+        link={"/task/production/soa/search-by-client"}
+        column={[
+          {
+            key: "Shortname",
+            label: "Name",
+            width: 300,
+          },
+          { key: "IDNo", label: "ID No.", width: 150 },
+          { key: "address", label: "Address", width: 300 },
+        ]}
+        handleSelectionChange={(rowItm) => {
+          if (rowItm) {
+            wait(100).then(() => {
+              if (clientNameRef.current) {
+                clientNameRef.current.value = rowItm.Shortname;
+              }
+              if (idnoRef.current) {
+                idnoRef.current.value = rowItm.IDNo;
+              }
+              if (addressRef.current) {
+                addressRef.current.value = rowItm.address;
+              }
+            });
+            searchClientModal.current.closeModal();
+          }
+        }}
+      />
+    </>
+  ) : null;
+});
