@@ -517,7 +517,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
                 showCancelButton: true,
                 confirmButtonColor: "#3085d6",
                 cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, cencel it!",
+                confirmButtonText: "Yes, cancel it!",
                 cancelButtonText: "No",
               }).then((result) => {
                 if (result.isConfirmed) {
@@ -980,7 +980,7 @@ function COMPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
               showCancelButton: true,
               confirmButtonColor: "#3085d6",
               cancelButtonColor: "#d33",
-              confirmButtonText: "Yes, cencel it!",
+              confirmButtonText: "Yes, cancel it!",
               cancelButtonText: "No",
             }).then((result) => {
               if (result.isConfirmed) {
@@ -3188,7 +3188,7 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
                 showCancelButton: true,
                 confirmButtonColor: "#3085d6",
                 cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, cencel it!",
+                confirmButtonText: "Yes, cancel it!",
                 cancelButtonText: "No",
               }).then((result) => {
                 if (result.isConfirmed) {
@@ -3549,7 +3549,7 @@ function TPLPolicy({ user, myAxios, policy, setPolicy, _policy }: any) {
               showCancelButton: true,
               confirmButtonColor: "#3085d6",
               cancelButtonColor: "#d33",
-              confirmButtonText: "Yes, cencel it!",
+              confirmButtonText: "Yes, cancel it!",
               cancelButtonText: "No",
             }).then((result) => {
               if (result.isConfirmed) {

@@ -52,7 +52,13 @@ export default function ProductionReport() {
   const accountRef = useRef<HTMLSelectElement>(null);
 
   function generateTitle(props: any) {
-    const newTitle: string = `UPWARD MANAGEMENT INSURANCE SERVICES ${
+     const _title =
+      process.env.REACT_APP_DEPARTMENT === "UMIS"
+        ? "UPWARD MANAGEMENT INSURANCE SERVICES"
+        : "UPWARD CONSULTANCY SERVICES AND MANAGEMENT INC.";
+
+
+    const newTitle: string = `${_title} ${
       props.format2 === "All" ? "" : props.format2
     }\n${props.dateFormat} Production Report (${props.type} - ${
       props.account

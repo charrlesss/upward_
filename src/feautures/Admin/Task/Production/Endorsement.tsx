@@ -209,7 +209,8 @@ const Endorsement = () => {
         }
         tableRef.current.setData(data);
         resetFields();
-
+        tableRef.current.setSelectedRow(null);
+        
         return Swal.fire({
           position: "center",
           icon: "success",

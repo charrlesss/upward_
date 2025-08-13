@@ -539,7 +539,7 @@ export default function BondsPolicy() {
                   showCancelButton: true,
                   confirmButtonColor: "#3085d6",
                   cancelButtonColor: "#d33",
-                  confirmButtonText: "Yes, cencel it!",
+                  confirmButtonText: "Yes, cancel it!",
                   cancelButtonText: "No",
                 }).then((result) => {
                   if (result.isConfirmed) {
@@ -877,7 +877,7 @@ export default function BondsPolicy() {
               showCancelButton: true,
               confirmButtonColor: "#3085d6",
               cancelButtonColor: "#d33",
-              confirmButtonText: "Yes, cencel it!",
+              confirmButtonText: "Yes, cancel it!",
               cancelButtonText: "No",
             }).then((result) => {
               if (result.isConfirmed) {

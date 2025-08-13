@@ -34,6 +34,7 @@ import Swal from "sweetalert2";
 import { formatNumber } from "../Accounting/ReturnCheck";
 import SegmentIcon from "@mui/icons-material/Segment";
 import SettingsApplicationsIcon from "@mui/icons-material/SettingsApplications";
+import { pink } from "@mui/material/colors";
 
 const columns = [
   { key: "PolicyNo", label: "Policy No", width: 150 },
@@ -134,6 +135,39 @@ export default function StatementAccount() {
       }
     },
   });
+  const { mutate: mutateDelete, isLoading: isLoadingDelete } = useMutation({
+    mutationKey: "delete",
+    mutationFn: (variables: any) => {
+      return myAxios.post("/task/production/soa/delete", variables, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      });
+    },
+    onSuccess: (response) => {
+      if (response.data.success) {
+        mutateReferenceNo({});
+        resetFields();
+        tableRef.current.resetTable();
+
+        return Swal.fire({
+          position: "center",
+          icon: "success",
+          title: response.data.message,
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      } else {
+        return Swal.fire({
+          position: "center",
+          icon: "error",
+          title: response.data.message,
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      }
+    },
+  });
   const { mutate: mutatePrint, isLoading: isLoadingPrint } = useMutation({
     mutationKey: "print",
     mutationFn: (variables: any) => {
@@ -155,7 +189,6 @@ export default function StatementAccount() {
       );
     },
   });
-
   const { mutate: mutateSearchTPL, isLoading: isLoadingSearchTPL } =
     useMutation({
       mutationKey: "search-tpl",
@@ -243,7 +276,8 @@ export default function StatementAccount() {
         isLoadingPrint ||
         isLoadingSave ||
         isLoadingSeacghSoaSelected ||
-        isLoadingSearchTPL) && <Loading />}
+        isLoadingSearchTPL ||
+        isLoadingDelete) && <Loading />}
       <div
         style={{
           flex: 1,
@@ -372,18 +406,16 @@ export default function StatementAccount() {
                 startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
                 id="entry-header-save-button"
                 onClick={() => {
-                  const { idnoRef, clientNameRef, addressRef, attachmentRef } =
-                    printDetailsRef.current.getRefs();
                   if (mode === "update") {
                     codeCondfirmationAlert({
                       isUpdate: true,
                       cb: (userCodeConfirmation) => {
                         mutateSave({
                           reference_no: refNoRef.current?.value,
-                          idno: idnoRef.current?.value,
-                          name: clientNameRef.current?.value,
-                          address: addressRef.current?.value,
-                          attachment: attachmentRef.current?.value,
+                          idno: state?.[0].idno,
+                          name: state?.[0].name,
+                          address: state?.[0].address,
+                          attachment: state?.[0].attachment,
                           tableData: tableRef.current.getData(),
                           userCodeConfirmation,
                           mode: "update",
@@ -395,10 +427,10 @@ export default function StatementAccount() {
                       isConfirm: () => {
                         mutateSave({
                           reference_no: refNoRef.current?.value,
-                          idno: idnoRef.current?.value,
-                          name: clientNameRef.current?.value,
-                          address: addressRef.current?.value,
-                          attachment: attachmentRef.current?.value,
+                          idno: state?.[0].idno,
+                          name: state?.[0].name,
+                          address: state?.[0].address,
+                          attachment: state?.[0].attachment,
                           tableData: tableRef.current.getData(),
                           mode: "add",
                         });
@@ -411,6 +443,7 @@ export default function StatementAccount() {
                 Save
               </Button>
             )}
+
             {mode !== "" && (
               <Button
                 sx={{
@@ -441,6 +474,47 @@ export default function StatementAccount() {
                 color="error"
               >
                 Cancel
+              </Button>
+            )}
+            {mode === "update" && (
+              <Button
+                sx={{
+                  height: "22px",
+                  fontSize: "11px",
+                  background: pink[600],
+                  ":hover": {
+                    background: pink[700],
+                  },
+                }}
+                variant="contained"
+                startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
+                id="entry-header-save-button"
+                onClick={() => {
+                  Swal.fire({
+                    title: "Are you sure?",
+                    text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Yes, delete it!",
+                  }).then((result) => {
+                    if (result.isConfirmed) {
+                      codeCondfirmationAlert({
+                        isUpdate: true,
+                        cb: (userCodeConfirmation) => {
+                          mutateDelete({
+                            reference_no: refNoRef.current?.value,
+                            userCodeConfirmation,
+                          });
+                        },
+                      });
+                    }
+                  });
+                }}
+                color="error"
+              >
+                Delete
               </Button>
             )}
           </div>
@@ -1514,7 +1588,9 @@ const PrintDetails = forwardRef(({ onGenerateTpl, onClose }: any, ref) => {
             addressRef.current.value = state[0].address;
           }
           if (attachmentRef.current) {
-            attachmentRef.current.value = state[0].attachment;
+            attachmentRef.current.value =
+              state[0].attachment ||
+              `**ATTACHED COPY OF COMPREHENSIVE, BONDS & GPA**`;
           }
         });
       }

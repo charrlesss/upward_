@@ -228,11 +228,11 @@ function CustomTabPanel(props: TabPanelProps) {
         display: "flex",
         flex: 1,
         position: "absolute",
-        top: "107px",
+        top: "105px",
         bottom: 0,
         left: 0,
         right: 0,
-        padding: "5px",
+        padding: "0px 5px",
         boxSizing: "border-box",
         overflow: "hidden",
       }}
@@ -1565,7 +1565,7 @@ const CashBreakdownTable = ({ tableRows, updateTableRows }: any) => {
       </div>
       {/* Data Rows */}
       {tableRows.map((row: any, index: number) => {
-        return (
+        return row.value1 !== "2.00" ? (
           <TrComponent
             idx={index}
             key={index}
@@ -1574,7 +1574,7 @@ const CashBreakdownTable = ({ tableRows, updateTableRows }: any) => {
               params(row.value1, row.value2, row.value3);
             }}
           />
-        );
+        ) : null;
       })}
     </div>
   );
@@ -1589,7 +1589,7 @@ const TrComponent = forwardRef(
       border: "none",
       textAlign: "right",
       width: "100px",
-      fontSize: "13px",
+      fontSize: "12px",
       fontWeight: isBold ? "bold" : "500",
     });
 

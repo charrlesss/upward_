@@ -322,7 +322,6 @@ export default function CheckPulloutApproved() {
                 }}
                 inputRef={rcpnRef}
               />
-
               <TextInput
                 containerClassName="custom-input"
                 containerStyle={{
@@ -345,7 +344,6 @@ export default function CheckPulloutApproved() {
                 }}
                 inputRef={ppnoRef}
               />
-
               <TextInput
                 containerClassName="custom-input"
                 containerStyle={{
@@ -422,7 +420,6 @@ export default function CheckPulloutApproved() {
                 }}
               />
             </div>
-
             <div
               style={{
                 height: "35px",

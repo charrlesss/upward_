@@ -136,7 +136,6 @@ export default function CheckPulloutRequest() {
       loadChecks(rcpnDetails.PNNo);
     },
   });
-
   const AutoID = async () => {
     const qry = `
         SELECT
@@ -150,7 +149,6 @@ export default function CheckPulloutRequest() {
     if (rcpnRef.current)
       rcpnRef.current.value = `HOPO${response.data[0].Year}${response.data[0].Count}`;
   };
-
   const loadChecks = async (pnno: string) => {
     setDisableSelectAll(false);
     table.current.setData([]);
@@ -167,9 +165,17 @@ export default function CheckPulloutRequest() {
     FROM
         pdc a
         left join (
-        SELECT PNNo,a.RCPNo,Status,CheckNo FROM pullout_request  a
+        SELECT 
+          PNNo,
+          a.RCPNo,
+          Status,
+          CheckNo 
+        FROM pullout_request  a
         left join pullout_request_details b on a.RCPNo = b.RCPNo
-        where PNNo = '${ppnoRef.current?.value}' 
+        where 
+        a.cancel = 0
+        and PNNo = '${ppnoRef.current?.value}' 
+
         ) b on a.Check_No = b.CheckNo
     WHERE
         PNo = '${ppnoRef.current?.value}'
@@ -606,31 +612,48 @@ export default function CheckPulloutRequest() {
                             }
                           },
                         });
-                      } else {
+                      } else if (flag === "edit" && data.length > 0) {
+                        codeCondfirmationAlert({
+                          isUpdate: true,
+                          cb: (userCodeConfirmation) => {
+                            mutateSavePulloutRequest({
+                              flag,
+                              rcpn: rcpnRef.current?.value,
+                              ppno: ppnoRef.current?.value,
+                              name: nameRef.current?.value,
+                              reason: reasonRef.current?.value,
+                              data: JSON.stringify(data),
+                              userCodeConfirmation,
+                            });
+                          },
+                        });
+                      } else if (flag === "edit" && data.length <= 0) {
+                        const newData = table.current.getData();
+                        const dataToSave = newData.filter(
+                          (itm: any) => itm.Status.toUpperCase() === "PENDING"
+                        );
+                        console.log(dataToSave)
                         Swal.fire({
                           title: "Are you sure?",
-                          text: `${
-                            data.length <= 0
-                              ? `No selected found! it means this request RCNo: ${rcpnRef.current?.value} is you want to delete.`
-                              : ""
-                          } Do you want to proceed with saving?`,
+                          text: `No selected found! you want to cancel this request?`,
                           icon: "warning",
                           showCancelButton: true,
                           confirmButtonColor: "#3085d6",
                           cancelButtonColor: "#d33",
-                          confirmButtonText: "Yes, save it!",
+                          confirmButtonText: "Yes, Proceed to save",
+                          cancelButtonText: "Declined",
                         }).then((result) => {
                           if (result.isConfirmed) {
                             codeCondfirmationAlert({
                               isUpdate: true,
                               cb: (userCodeConfirmation) => {
                                 mutateSavePulloutRequest({
-                                  flag,
+                                  flag: "cancel",
                                   rcpn: rcpnRef.current?.value,
                                   ppno: ppnoRef.current?.value,
                                   name: nameRef.current?.value,
                                   reason: reasonRef.current?.value,
-                                  data: JSON.stringify(data),
+                                  data: JSON.stringify(dataToSave),
                                   userCodeConfirmation,
                                 });
                               },
@@ -704,6 +727,7 @@ export default function CheckPulloutRequest() {
     </>
   );
 }
+
 function setStatusColor(rowdata: string) {
   if (rowdata === "PENDING") {
     return "orange";
