@@ -178,7 +178,6 @@ export default function ChekPostponementRequest() {
         }
       },
     });
-
   //load check RPCDNo
   const {
     isLoading: isLoadingLoadRPCDNoDetails,
@@ -249,7 +248,6 @@ export default function ChekPostponementRequest() {
       });
     },
   });
-
   // check add row
   const { isLoading: isLoadingCheckIsPending, mutate: mutateCheckIsPending } =
     useMutation({
@@ -337,7 +335,6 @@ export default function ChekPostponementRequest() {
       });
     },
   });
-
   // saving edit
   const { isLoading: isLoadingEdit, mutate: mutateEdit } = useMutation({
     mutationKey: "edit",

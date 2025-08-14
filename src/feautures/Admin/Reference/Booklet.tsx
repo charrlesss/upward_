@@ -1125,12 +1125,12 @@ const ModalReturnCheckEntries = forwardRef(
           className="modal-accounting-entry"
           ref={modalRef}
           style={{
-            height: blick ? "402px" : "400px",
+            height: blick ? "452px" : "450px",
             width: blick ? "60.3%" : "60%",
             border: "1px solid #64748b",
             position: "absolute",
             left: "50%",
-            top: "50%",
+            top: "65%",
             transform: "translate(-50%, -75%)",
             display: "flex",
             flexDirection: "column",
@@ -1581,9 +1581,11 @@ const ModalReturnCheckEntries = forwardRef(
             >
               <DataGridViewReactUpgraded
                 ref={table}
+                fixedRowCount={10}
+                adjustOnRezise={false}
                 adjustVisibleRowCount={350}
                 columns={columns}
-                getSelectedItem={(rowItm: any) => {
+                handleSelectionChange={(rowItm: any) => {
                   if (rowItm) {
                     wait(100).then(() => {});
                   } else {

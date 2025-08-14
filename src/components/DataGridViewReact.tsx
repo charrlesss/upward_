@@ -1952,6 +1952,7 @@ export const DataGridViewReactUpgraded = forwardRef(
         return <>{row[col.key]}</>;
       },
       disableUnselection = false,
+      isModal = false,
     }: any,
     ref
   ) => {
@@ -2709,7 +2710,7 @@ export const UpwardTableModalSearch = forwardRef(
       },
       autoselection = true,
       showSearchInput = true,
-      onCloseModal= () => ({}),
+      onCloseModal = () => ({}),
     }: {
       link: string;
       size?: "small" | "large" | "medium";
@@ -2826,7 +2827,7 @@ export const UpwardTableModalSearch = forwardRef(
     //close Modal
 
     function closeModal() {
-      onCloseModal()
+      onCloseModal();
       setShow(false);
     }
 
@@ -2934,7 +2935,7 @@ export const UpwardTableModalSearch = forwardRef(
                     width: "100%",
                   }}
                   buttonStyle={{
-                    opacity: showSearchInput ? 1 : 0
+                    opacity: showSearchInput ? 1 : 0,
                   }}
                   label={{
                     title: "Search : ",
@@ -2946,7 +2947,7 @@ export const UpwardTableModalSearch = forwardRef(
                     },
                   }}
                   input={{
-                    disabled:!showSearchInput,
+                    disabled: !showSearchInput,
                     type: "text",
                     style: { width: "100%" },
                     onKeyDown: async (e) => {
@@ -2969,7 +2970,14 @@ export const UpwardTableModalSearch = forwardRef(
                     },
                   }}
                   inputRef={searchInputRef}
-                  icon={<SearchIcon sx={{ fontSize: "18px",opacity: showSearchInput ? 1 : 0 }} />}
+                  icon={
+                    <SearchIcon
+                      sx={{
+                        fontSize: "18px",
+                        opacity: showSearchInput ? 1 : 0,
+                      }}
+                    />
+                  }
                   onIconClick={async (e) => {
                     e.preventDefault();
                     if (searchInputRef.current)
@@ -2998,9 +3006,7 @@ export const UpwardTableModalSearch = forwardRef(
                   onMaxScrollUp={() => {
                     searchInputRef.current?.focus();
                   }}
-                  adjustRightClickClientXAndY={adjustRightClickClientXAndY(
-                    size
-                  )}
+                  fixedRowCount={21}
                   adjustOnRezise={false}
                 />
               </div>

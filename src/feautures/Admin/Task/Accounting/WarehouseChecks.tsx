@@ -5,17 +5,13 @@ import {
   useRef,
   useState,
 } from "react";
-import { Button, IconButton } from "@mui/material";
+import { Button } from "@mui/material";
 import Swal from "sweetalert2";
 import { SelectInput, TextInput } from "../../../../components/UpwardFields";
-import SaveAsIcon from "@mui/icons-material/SaveAs";
-import AssessmentIcon from "@mui/icons-material/Assessment";
 import {
-  DataGridViewMultiSelectionReact,
   DataGridViewReactMultipleSelection,
   DataGridViewReactUpgraded,
   UpwardTableModalSearch,
-  useUpwardTableModalSearchSafeMode,
 } from "../../../../components/DataGridViewReact";
 import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
 import { grey } from "@mui/material/colors";
@@ -799,7 +795,7 @@ const ModalCheck = forwardRef(
             border: "1px solid #64748b",
             position: "absolute",
             left: "50%",
-            top: "50%",
+            top: "60%",
             transform: "translate(-50%, -75%)",
             display: "flex",
             flexDirection: "column",
@@ -906,6 +902,7 @@ const ModalCheck = forwardRef(
               >
                 <DataGridViewReactUpgraded
                   ref={table}
+                   fixedRowCount={14}
                   adjustVisibleRowCount={350}
                   columns={[
                     { key: "row_count", label: "#", width: 35 },
