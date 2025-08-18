@@ -134,10 +134,16 @@ const columnsSelectedCheckToBeReturned = [
     label: "Return Date",
     width: 200,
   },
+  {
+    key: "Temp_OR",
+    label: "",
+    width: 0,
+    hide: true,
+  },
 ];
 const columnsAccountingEntry = [
   { key: "Code", label: "Code", width: 80 },
-  { key: "AccountName", label: "Account Name", width: 130 },
+  { key: "AccountName", label: "Account Name", width: 200 },
   {
     key: "Debit",
     label: "Debit",
@@ -151,12 +157,12 @@ const columnsAccountingEntry = [
   {
     key: "IDNo",
     label: "ID No.",
-    width: 130,
+    width: 200,
   },
   {
     key: "Identity",
     label: "Identity",
-    width: 130,
+    width: 350,
   },
   {
     key: "SubAcct",
@@ -171,12 +177,12 @@ const columnsAccountingEntry = [
   {
     key: "CheckNo",
     label: "Check No",
-    width: 100,
+    width: 120,
   },
   {
     key: "Bank",
     label: "Bank/Branch",
-    width: 200,
+    width: 350,
   },
   {
     key: "CheckDate",
@@ -191,7 +197,7 @@ const columnsAccountingEntry = [
   {
     key: "CheckReason",
     label: "Check Reason",
-    width: 200,
+    width: 150,
   },
   {
     key: "PK",
@@ -261,6 +267,7 @@ function a11yProps(index: number) {
 }
 
 let selected: Array<any> = [];
+let accountingEntry: Array<any> = [];
 
 export default function Deposit() {
   const [value, setValue] = useState(0);
@@ -277,9 +284,7 @@ export default function Deposit() {
   const selectedChecksTableRef = useRef<any>(null);
   const selectedChecksToBeReturnTableRef = useRef<any>(null);
   const accountingEntryTableRef = useRef<any>(null);
-
   const modalReturnCheckEntriesRef = useRef<any>(null);
-  const [checkData, setCheckData] = useState<Array<any>>([]);
 
   const { isLoading: isLoadingReturnChecksID, refetch } = useQuery({
     queryKey: "generate-id",
@@ -308,9 +313,11 @@ export default function Deposit() {
           },
         }),
       onSuccess(res) {
+        console.log(res.data.checkList);
         selectedChecksTableRef.current.setData(res.data.checkList);
       },
     });
+
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     if (newValue === 0) {
       mutateCheckSelected({ search: searchChecksRef.current?.value });
@@ -333,9 +340,7 @@ export default function Deposit() {
     }
     setValue(newValue);
   };
-  const resetAll = () => {
-    selected = [];
-  };
+  const resetAll = () => {};
   const handleSave = (e: any) => {
     e.preventDefault();
 
@@ -418,8 +423,14 @@ export default function Deposit() {
   const handleOnSave = () => {};
 
   useEffect(() => {
-    mutateCheckSelected({ search: searchChecksRef.current?.value });
-  }, [mutateCheckSelected]);
+    if (value === 0) {
+      mutateCheckSelected({ search: searchChecksRef.current?.value });
+    } else if (value === 1) {
+      selectedChecksToBeReturnTableRef.current.setData(selected);
+    } else if (value === 2) {
+      accountingEntryTableRef.current.setData(accountingEntry);
+    }
+  }, [value, mutateCheckSelected]);
 
   return (
     <>
@@ -730,10 +741,15 @@ export default function Deposit() {
               columns={columnsSelectCheck}
               handleSelectionChange={(rowItm: any) => {
                 if (rowItm) {
-                  if (selected.includes(rowItm.Deposit_ID)) {
+                  if (
+                    selected
+                      .map((itm) => itm.ORNo)
+                      .includes(rowItm.Official_Receipt)
+                  ) {
                     wait(100).then(() => {
                       alert(`Check ${rowItm.Check_No} already exist!`);
                     });
+                    selectedChecksTableRef.current.setSelectedRow(null);
                     return;
                   }
 
@@ -804,15 +820,14 @@ export default function Deposit() {
             return alert("Debit must equal to Credit!");
           }
 
-          selected.push(row.Deposit_ID);
+          const retDebit =
+            modalReturnCheckEntriesRef.current.table.current.getData();
 
-          const retDebit = selectedChecksTableRef.current.getData();
-          console.log(retDebit);
-          console.log(row);
           const RetReason =
             ref.refReturnReason.current?.selectedIndex === 2
               ? "AC"
               : ref.refReturnReason.current?.value;
+
           const RetDateRet = ref.refDateReturned.current?.value;
           const retCredit: any = [];
           retCredit[0] = state.refAccountID;
@@ -823,107 +838,67 @@ export default function Deposit() {
           retCredit[5] = state.refAccountId;
 
           // SelectedCheckToBeReturned
-          const newSelectedData = [
-            // ...refSelectedCheckToBeReturned.current.table.current.getData(),
-            [
-              // row[6],
-              // row[7],
-              // row[0],
-              // row[1],
-              // row[2],
-              // row[3],
-              // row[4],
-              // row[5],
-              // row[8],
-              RetReason,
-              format(new Date(RetDateRet), "MM/dd/yyyy"),
-            ],
-          ];
+          selected.push({
+            ORNo: row.Official_Receipt,
+            ORDate: row.Date_OR,
+            DepoSlip: row.Deposit_Slip,
+            DepoDate: row.Depo_Date,
+            CheckNo: row.Check_No,
+            CheckDate: row.Check_Date,
+            Amount: row.Amount,
+            Bank: row.Bank,
+            BankAccount: row.BankAccount,
+            Reason: RetReason,
+            ReturnDate: format(new Date(RetDateRet), "MM/dd/yyyy"),
+          });
 
-          // refSelectedCheckToBeReturned.current.table.current.setData(
-          //   newSelectedData
-          // );
-
-          // if (tssAmountRef.current) {
-          //   tssAmountRef.current.value = `Total Amount:   ${formatNumber(
-          //     newSelectedData.reduce((total: number, row: any) => {
-          //       total += parseFloat(row[6].replace(/,/g, ""));
-          //       return total;
-          //     }, 0)
-          //   )}`;
-          // }
-
+          // Accounting Entry
           let newSelectedDataAccountingEntry: any = [];
           for (let i = 0; i < retDebit.length; i++) {
-            newSelectedDataAccountingEntry = [
-              // ...refAccountingEntry.current.table.current.getData(),
-              [
-                retDebit[i][0],
-                retDebit[i][1],
-                retDebit[i][2],
-                "0.00",
-                retDebit[i][3],
-                retDebit[i][4],
-                retDebit[i][5],
-                retDebit[i][6],
-                // row[2],
-                // row[5],
-                // row[3],
-                format(new Date(RetDateRet), "MM/dd/yyyy"),
-                RetReason,
-                // row[2],
-                // row[1],
-                // row[7],
-              ],
-            ];
+            newSelectedDataAccountingEntry.push({
+              Code: retDebit[i].CRCode,
+              AccountName: retDebit[i].CRTitle,
+              Debit: retDebit[i].Credit,
+              Credit: "0.00",
+              IDNo: retDebit[i].CRLoanID,
+              Identity: retDebit[i].CRLoanName,
+              SubAcct: retDebit[i].SAcctCode,
+              SubAcctName: retDebit[i].SAcctName,
+              CheckNo: row.Check_No,
+              Bank: row.Bank,
+              CheckDate: row.Check_Date,
+              CheckReturn: format(new Date(RetDateRet), "MM/dd/yyyy"),
+              CheckReason: RetReason,
+              PK: row.Check_No,
+              DateDeposit: row.Depo_Date,
+              DateCollection: row.Date_OR,
+              Temp_OR: retDebit[i].Temp_OR,
+            });
           }
-          newSelectedDataAccountingEntry = [
-            ...newSelectedDataAccountingEntry,
-            [
-              state.refAccountID,
-              state.refAccountName,
-              "0.00",
-              state.refAmount,
-              state.refAccountId,
-              "",
-              state.refAcronym,
-              state.refSubAccount,
-              // row[2],
-              // row[5],
-              // row[3],
-              format(new Date(RetDateRet), "MM/dd/yyyy"),
-              RetReason,
-              // row[2],
-              // row[1],
-              // row[7],
-            ],
-          ];
-
-          // refAccountingEntry.current.table.current.setData(
-          //   newSelectedDataAccountingEntry
-          // );
-
-          const reformatData = newSelectedDataAccountingEntry.map(
-            (itm: any) => {
-              return {
-                debit: itm[2],
-                credit: itm[3],
-              };
-            }
-          );
-          // if (refAccountingEntry.current.debitRef.current) {
-          //   refAccountingEntry.current.debitRef.current.value = formatNumber(
-          //     getSum(reformatData, "debit")
-          //   );
-          // }
-
-          // if (refAccountingEntry.current.creditRef.current) {
-          //   refAccountingEntry.current.creditRef.current.value = formatNumber(
-          //     getSum(reformatData, "credit")
-          //   );
-          // }
-
-          // AccountingEntry
+          newSelectedDataAccountingEntry.push({
+            Code: state.refAccountID,
+            AccountName: state.refAccountName,
+            Debit: "0.00",
+            Credit: state.refAmount,
+            IDNo: state.refAccountId,
+            Identity: "",
+            SubAcct: state.refAcronym,
+            SubAcctName: state.refSubAccount,
+            CheckNo: row.Check_No,
+            Bank: row.Bank,
+            CheckDate: row.Check_Date,
+            CheckReturn: format(new Date(RetDateRet), "MM/dd/yyyy"),
+            CheckReason: RetReason,
+            PK: row.Check_No,
+            DateDeposit: row.Depo_Date,
+            DateCollection: row.Date_OR,
+            Temp_OR: row.Official_Receipt,
+          });
+          accountingEntry.push(...newSelectedDataAccountingEntry);
+        
+        
+          selectedChecksTableRef.current.setSelectedRowWithoutScroll([]);
+          modalReturnCheckEntriesRef.current.closeModal();
         }}
         handleCancel={(row: any) => {
           const selectedRows = selectedChecksTableRef.current.getSelectedRow();
@@ -1006,6 +981,7 @@ const ModalReturnCheckEntries = forwardRef(
               CRLoanName: itm.CRLoanName,
               SAcctCode: itm.SubAcct,
               SAcctName: itm.ShortName,
+              Temp_OR: itm.Temp_OR,
             };
           });
           table.current.setData(data);
@@ -1040,6 +1016,7 @@ const ModalReturnCheckEntries = forwardRef(
       mutateEntries: (variables: string) => {
         mutateEntries(variables);
       },
+      table,
     }));
 
     const columns = [
@@ -1069,6 +1046,12 @@ const ModalReturnCheckEntries = forwardRef(
         key: "SAcctName",
         label: "Sub Account Name",
         width: 200,
+      },
+      {
+        key: "Temp_OR",
+        label: "",
+        width: 0,
+        hide: true,
       },
     ];
 

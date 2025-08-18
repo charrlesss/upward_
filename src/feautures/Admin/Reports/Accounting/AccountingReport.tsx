@@ -986,6 +986,53 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
     });
   }
 
+    function generateExcel() {
+    let subsi_options: any = "";
+
+    if (subsi === "ID #") {
+      subsi_options = idNoRef.current?.value;
+    } else if (subsi === "Sub-Acct #") {
+      subsi_options = subAcctRef.current?.value;
+    }
+
+    mutateGenerateExcelReport({
+      title,
+      dateFrom: dateFromRef.current?.value,
+      dateTo: dateToRef.current?.value,
+      account: accountRef.current?.value,
+      mField: fieldRef.current?.value,
+      subsi,
+      subsi_options,
+      format: formatRef.current?.value,
+    });
+  }
+
+  const {
+    mutate: mutateGenerateExcelReport,
+    isLoading: isLoadingGenerateExcelReport,
+  } = useMutation({
+    mutationKey: "generate-excel-report",
+    mutationFn: async (variables: any) => {
+      return await myAxios.post(
+        "/reports/accounting/report/generate-report-excel-subsidiary-ledger",
+        variables,
+        {
+          responseType: "arraybuffer",
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }
+      );
+    },
+    onSuccess: (response) => {
+      const pdfBlob = new Blob([response.data], { type: "application/pdf" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(pdfBlob);
+      link.download = "report.xls"; // Set the desired file name
+      link.click(); // Simulate a click to start the download
+    },
+  });
+
   const { mutate: mutateGenerateReport, isLoading: isLoadingGenerateReport } =
     useMutation({
       mutationKey: "generate-report",
@@ -1027,7 +1074,7 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
 
   return (
     <>
-      {(isLoadingInsurance || isLoadingGenerateReport) && <Loading />}
+      {(isLoadingInsurance || isLoadingGenerateExcelReport || isLoadingGenerateReport) && <Loading />}
       <div
         style={{
           display: "flex",
@@ -1529,6 +1576,14 @@ For the Period: ${format(new Date(dateFrom), "MMMM dd, yyyy")} to ${format(
           sx={{ height: "22px", fontSize: "12px", width: "100%" }}
         >
           Generate Report
+        </Button>
+        <Button
+          onClick={generateExcel}
+          color="success"
+          variant="contained"
+          sx={{ height: "22px", fontSize: "12px", width: "100%" }}
+        >
+          Generate Excel
         </Button>
       </div>
       <UpwardTableModalSearch
@@ -2417,6 +2472,7 @@ function FormPostDatedCheckRegistry() {
         }
       },
     });
+
   const {
     mutate: mutateGenerateExcelReport,
     isLoading: isLoadingGenerateExcelReport,
@@ -3709,13 +3765,13 @@ function Pullout({ link, reportTitle }: any) {
               if (rcpnnoRef.current) {
                 rcpnnoRef.current.value = rowItm.RCPNo;
               }
-                if (clientRef.current) {
+              if (clientRef.current) {
                 clientRef.current.value = rowItm.Name;
               }
-                if (pnnoRef.current) {
+              if (pnnoRef.current) {
                 pnnoRef.current.value = rowItm.PNNo;
               }
-                 if (reasonRef.current) {
+              if (reasonRef.current) {
                 reasonRef.current.value = rowItm.Reason;
               }
             });
