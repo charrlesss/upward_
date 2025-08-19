@@ -2594,7 +2594,8 @@ export const DataGridViewReactUpgraded = forwardRef(
             }}
           >
             <div style={{ width: "120px" }}>
-              Total Rows : {(data.length + 1).toLocaleString("en-US")}
+              Total Rows :{" "}
+              {(data.length > 0 ? data.length : 0).toLocaleString("en-US")}
             </div>
             <FooterComponent />
           </div>

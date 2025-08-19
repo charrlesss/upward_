@@ -734,7 +734,7 @@ export default function Deposit() {
               zIndex: 2,
             }}
           >
-            <DataGridViewReactMultipleSelection
+            <DataGridViewReactUpgraded
               ref={selectedChecksTableRef}
               disableUnselection={true}
               adjustVisibleRowCount={250}
@@ -746,10 +746,10 @@ export default function Deposit() {
                       .map((itm) => itm.ORNo)
                       .includes(rowItm.Official_Receipt)
                   ) {
+                    alert(`Check ${rowItm.Check_No} already exist!`);
                     wait(100).then(() => {
-                      alert(`Check ${rowItm.Check_No} already exist!`);
+                      selectedChecksTableRef.current.setSelectedRow(null);
                     });
-                    selectedChecksTableRef.current.setSelectedRow(null);
                     return;
                   }
 
@@ -897,17 +897,12 @@ export default function Deposit() {
           accountingEntry.push(...newSelectedDataAccountingEntry);
         
         
-          selectedChecksTableRef.current.setSelectedRowWithoutScroll([]);
+          selectedChecksTableRef.current.setSelectedRow(null);
           modalReturnCheckEntriesRef.current.closeModal();
         }}
         handleCancel={(row: any) => {
-          const selectedRows = selectedChecksTableRef.current.getSelectedRow();
-          const newSelectedRows = selectedRows.filter(
-            (itm: any) => itm !== row.rowIndex
-          );
-          selectedChecksTableRef.current.setSelectedRowWithoutScroll(
-            newSelectedRows
-          );
+                selectedChecksTableRef.current.setSelectedRow(null);
+    
         }}
       />
     </>

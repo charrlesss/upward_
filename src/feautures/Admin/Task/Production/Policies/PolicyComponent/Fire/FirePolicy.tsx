@@ -35,7 +35,6 @@ import AddBoxIcon from "@mui/icons-material/AddBox";
 import { Loading } from "../../../../../../../components/Loading";
 import {
   UpwardTableModalSearch,
-  useUpwardTableModalSearchSafeMode,
 } from "../../../../../../../components/DataGridViewReact";
 import "../../../../../../../style/monbileview/production/production.css";
 import { PolicyContext } from "../../Policy";
