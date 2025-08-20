@@ -330,7 +330,7 @@ export default function Deposit() {
               .map((itm: any) => itm.rowIndex);
 
             console.log(getRowIndexs);
-            selectedChecksTableRef.current.setSelectedRowWithoutScroll(
+            selectedChecksTableRef.current.setSelectedRow(
               getRowIndexs
             );
           }
@@ -881,7 +881,7 @@ export default function Deposit() {
             Debit: "0.00",
             Credit: state.refAmount,
             IDNo: state.refAccountId,
-            Identity: "",
+            Identity: state.identityRef,
             SubAcct: state.refAcronym,
             SubAcctName: state.refSubAccount,
             CheckNo: row.Check_No,
@@ -934,6 +934,7 @@ const ModalReturnCheckEntries = forwardRef(
 
     const refAccountID = useRef("");
     const refAcronym = useRef("");
+    const identityRef = useRef("");
 
     const lblTextRef = useRef<HTMLInputElement>(null);
 
@@ -964,6 +965,7 @@ const ModalReturnCheckEntries = forwardRef(
           }
           refAcronym.current = "HO";
           refAccountID.current = dt1[0].Account_ID;
+          identityRef.current = dt1[0].Shortname;
         }
 
         if (dt2.length > 0) {
@@ -1430,6 +1432,7 @@ const ModalReturnCheckEntries = forwardRef(
                       refSubAccount: refSubAccount.current?.value,
                       refAccountID: refAccountID.current,
                       refAcronym: refAcronym.current,
+                      identityRef: identityRef.current,
                       lblTextRef: lblTextRef.current?.value,
                     };
                     const ref = {

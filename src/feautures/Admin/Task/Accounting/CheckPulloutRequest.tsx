@@ -138,16 +138,23 @@ export default function CheckPulloutRequest() {
   });
   const AutoID = async () => {
     const qry = `
-        SELECT
-            right(year(curdate()) ,2) as Year,
-            lpad(COUNT(1) + 1, 4, '0') as Count
-        FROM pullout_request
-            where substring(RCPNo,5,2) = right(year(curdate()) ,2) and Branch = 'HO'`;
+              SELECT CONCAT(
+                'HOPO',
+                DATE_FORMAT(CURDATE(), '%y'),  -- current 2-digit year
+                LPAD(
+                      CAST(RIGHT(RCPNo, 4) AS UNSIGNED) + 1,  -- increment last 4 digits
+                      4,
+                      '0'
+                )
+            ) AS newRCPNo
+      FROM pullout_request
+      ORDER BY RCPNo DESC
+      LIMIT 1;`;
 
     const { data: response } = await executeQueryToClientRef.current(qry);
 
     if (rcpnRef.current)
-      rcpnRef.current.value = `HOPO${response.data[0].Year}${response.data[0].Count}`;
+      rcpnRef.current.value = `${response.data[0].newRCPNo}`;
   };
   const loadChecks = async (pnno: string) => {
     setDisableSelectAll(false);
@@ -173,7 +180,7 @@ export default function CheckPulloutRequest() {
         FROM pullout_request  a
         left join pullout_request_details b on a.RCPNo = b.RCPNo
         where 
-        a.cancel = 0
+        b.cancel = 0
         and PNNo = '${ppnoRef.current?.value}' 
 
         ) b on a.Check_No = b.CheckNo

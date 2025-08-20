@@ -1118,7 +1118,7 @@ function RenewalNotice() {
             }
             setIsEditMode(true);
             mutatatePayment({ policyNo: rowItm.PolicyNo });
-            paModalRef.current.closeModal();
+            marModalRef.current.closeModal();
           }
         }}
       />
