@@ -24,6 +24,7 @@ import {
   saveCondfirmationAlert,
 } from "../../../../lib/confirmationAlert";
 import { format } from "date-fns";
+import { formatNumber } from "./ReturnCheck";
 
 const column = [
   {
@@ -37,7 +38,7 @@ const column = [
     width: 150,
   },
   { key: "Check_No", label: "Check No", width: 150 },
-  { key: "Check_Amnt", label: "Amount", width: 120 },
+  { key: "Check_Amnt", label: "Amount", width: 120, type: "number" },
   { key: "Status", label: "Status", width: 150 },
   { key: "RCPNO", label: "RCPNO", width: 150 },
 ];
@@ -136,6 +137,7 @@ export default function CheckPulloutRequest() {
       loadChecks(rcpnDetails.PNNo);
     },
   });
+
   const AutoID = async () => {
     const qry = `
               SELECT CONCAT(
@@ -153,9 +155,9 @@ export default function CheckPulloutRequest() {
 
     const { data: response } = await executeQueryToClientRef.current(qry);
 
-    if (rcpnRef.current)
-      rcpnRef.current.value = `${response.data[0].newRCPNo}`;
+    if (rcpnRef.current) rcpnRef.current.value = `${response.data[0].newRCPNo}`;
   };
+  
   const loadChecks = async (pnno: string) => {
     setDisableSelectAll(false);
     table.current.setData([]);
@@ -191,7 +193,14 @@ export default function CheckPulloutRequest() {
         `;
     const { data: response } = await executeQueryToClientRef.current(qry);
 
-    table.current.setData(response.data);
+    table.current.setData(
+      response.data.map((itm: any) => {
+        itm.Check_Amnt = formatNumber(
+          parseFloat((itm.Check_Amnt || 0).toString().replace(/,/g, ""))
+        );
+        return itm;
+      })
+    );
   };
   const fieldsReset = () => {
     setTimeout(() => {
@@ -639,7 +648,7 @@ export default function CheckPulloutRequest() {
                         const dataToSave = newData.filter(
                           (itm: any) => itm.Status.toUpperCase() === "PENDING"
                         );
-                        console.log(dataToSave)
+                        console.log(dataToSave);
                         Swal.fire({
                           title: "Are you sure?",
                           text: `No selected found! you want to cancel this request?`,

@@ -27,19 +27,19 @@ import SaveIcon from "@mui/icons-material/Save";
 import AddIcon from "@mui/icons-material/Add";
 
 const warehouseColumn = [
-  { key: "PNo", label: "PN No.", width: 150 },
-  { key: "IDNo", label: "I.D. No.", width: 300 },
+  { key: "PNo", label: "PN No.", width: 180 },
+  { key: "IDNo", label: "I.D. No.", width: 150 },
   {
     key: "Date",
     label: "Date Received",
-    width: 170,
+    width: 100,
   },
   { key: "Name", label: "Name", width: 300 },
-  { key: "CheckDate", label: "Check Date", width: 120 },
+  { key: "CheckDate", label: "Check Date", width: 100 },
   { key: "Check_No", label: "Check No", width: 120 },
-  { key: "Check_Amnt", label: "Check Amount", width: 120 },
-  { key: "Bank", label: "Bank", width: 300 },
-  { key: "PDC_Status", label: "PDC Status", width: 120 },
+  { key: "Check_Amnt", label: "Check Amount", width: 100 },
+  { key: "Bank", label: "Bank", width: 150 },
+  { key: "PDC_Status", label: "PDC Status", width: 100 },
 ];
 
 export default function WarehouseChecks() {

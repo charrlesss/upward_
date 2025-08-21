@@ -43,36 +43,35 @@ import { format, isValid, parse } from "date-fns";
 import "../../../../style/monbileview/accounting/collection.css";
 
 export const debitColumn = [
-  { key: "Payment", label: "Payment", flex: 1, width: 170 },
+  { key: "Payment", label: "Payment", width: 80 },
   {
     key: "Amount",
     label: "Amount",
-    flex: 1,
-    width: 170,
+    width: 90,
     type: "number",
   },
-  { key: "Check_No", label: "Check No", width: 170 },
-  { key: "Check_Date", label: "Check Date", width: 170, type: "date" },
-  { key: "Bank_Branch", label: "Bank/Branch", width: 300 },
-  { key: "Acct_Code", label: "DR Code", width: 170 },
-  { key: "Acct_Title", label: "DR Title", width: 300 },
-  { key: "Deposit_Slip", label: "Deposit Slip", width: 170, type: "date" },
-  { key: "Cntr", label: "Cntr", width: 170 },
-  { key: "Remarks", label: "Remarks", width: 300 },
-  { key: "TC", label: "TC", width: 170 },
+  { key: "Check_No", label: "Check No", width: 100 },
+  { key: "Check_Date", label: "Check Date", width: 100, type: "date" },
+  { key: "Bank_Branch", label: "Bank/Branch", width: 200 },
+  { key: "Acct_Code", label: "DR Code", width: 80 },
+  { key: "Acct_Title", label: "DR Title", width: 200 },
+  { key: "Deposit_Slip", label: "Deposit Slip", width: 100, type: "date" },
+  { key: "Cntr", label: "Cntr", width: 100 },
+  { key: "Remarks", label: "Remarks", width: 250 },
+  { key: "TC", label: "TC", width: 100 },
   { key: "Bank", label: "Bank", hide: true },
   { key: "BankName", label: "BankName", hide: true },
 ];
 export const creditColumn = [
   { key: "transaction", label: "Transaction", width: 200 },
-  { key: "amount", label: "Amount", width: 150, type: "number" },
+  { key: "amount", label: "Amount", width: 90, type: "number" },
   { key: "Name", label: "Name", width: 350 },
   { key: "Remarks", label: "Remarks", width: 350 },
-  { key: "VATType", label: "VAT Type", width: 150 },
+  { key: "VATType", label: "VAT Type", width: 100 },
   { key: "invoiceNo", label: "Invoice No", width: 250 },
   { key: "Code", label: "Code", width: 150 },
   { key: "Title", label: "Title", width: 350 },
-  { key: "TC", label: "TC", width: 200 },
+  { key: "TC", label: "TC", width: 100 },
   { key: "Account_No", label: "Account No.", width: 180 },
 ];
 export default function Collection() {
@@ -364,10 +363,10 @@ export default function Collection() {
           });
         }
 
-        if (
-          dataCollection[i].Purpose !== null &&
-          dataCollection[i].Purpose.toString() !== ""
-        ) {
+        // if (
+        //   dataCollection[i].Purpose !== null &&
+        //   dataCollection[i].Purpose.toString() !== ""
+        // ) {
           credit.push({
             temp_id: `${i}`,
             transaction: dataCollection[i].Purpose,
@@ -383,7 +382,7 @@ export default function Collection() {
             VATType: dataCollection[i].CRVATType,
             invoiceNo: dataCollection[i].CRInvoiceNo,
           });
-        }
+        // }
       }
 
       debitTable.current.setData(debit);
@@ -601,8 +600,8 @@ export default function Collection() {
     const creditTableData = creditTable.current.getData();
 
     if (getSelectedRow !== null) {
-      creditTableData[getSelectedRow].transaction = "";
-      // transactionRef.current?.value;
+      creditTableData[getSelectedRow].transaction =
+        transactionRef.current?.value;
       creditTableData[getSelectedRow].amount = amountCreditRef.current?.value;
       creditTableData[getSelectedRow].Name = faoRef.current?.value;
       creditTableData[getSelectedRow].Remarks = remarksRef.current?.value;

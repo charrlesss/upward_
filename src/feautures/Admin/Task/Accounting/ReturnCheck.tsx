@@ -232,6 +232,7 @@ export default function ReturnCheck() {
       }
     },
   });
+  
   const {
     UpwardTableModalSearch: SearchReturnCheckUpwardTableModalSearch,
     openModal: searchReturnCheckCreditOpenModal,

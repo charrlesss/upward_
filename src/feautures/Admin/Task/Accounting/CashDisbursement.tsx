@@ -37,7 +37,7 @@ const columns = [
   {
     key: "code",
     label: "Code",
-    width: 100,
+    width: 80,
     type: "text",
   },
   {
@@ -50,7 +50,7 @@ const columns = [
   {
     key: "subAcctName",
     label: "Sub Account",
-    width: 120,
+    width: 90,
     type: "text",
     readonly: () => true,
   },
@@ -63,13 +63,13 @@ const columns = [
   {
     key: "debit",
     label: "Debit",
-    width: 100,
+    width: 90,
     type: "number",
   },
   {
     key: "credit",
     label: "Credit",
-    width: 100,
+    width: 90,
     type: "number",
   },
   {
@@ -87,7 +87,7 @@ const columns = [
   {
     key: "TC_Code",
     label: "TC",
-    width: 90,
+    width: 60,
     type: "text",
   },
   {

@@ -59,25 +59,24 @@ const cashColumns = [
   {
     key: "OR_No",
     label: "OR No.",
-    width: 270,
+    width: 100,
   },
   {
     key: "OR_Date",
     label: "OR Date",
-    width: 270,
+    width: 100,
   },
   {
     key: "Amount",
     label: "Amount",
-    width: 200,
+    width: 100,
     type: "number",
     cellClassName: "super-app-theme--cell",
   },
   {
     key: "Client_Name",
     label: "Client Name",
-    flex: 1,
-    width: 540,
+    width: 350,
   },
   {
     key: "DRCode",
@@ -114,7 +113,7 @@ const checkColumns = [
   {
     key: "Check_No",
     label: "Check No",
-    width: 170,
+    width: 150,
   },
   {
     key: "Check_Date",
@@ -124,7 +123,7 @@ const checkColumns = [
   {
     key: "Amount",
     label: "Amount",
-    width: 160,
+    width: 100,
     align: "right",
     type: "number",
   },
@@ -164,21 +163,21 @@ const checkColumns = [
   },
 ];
 const selectedCollectionColumns = [
-  { key: "Deposit", label: "Deposit", width: 170 },
-  { key: "Check_No", label: "Check No", width: 170 },
+  { key: "Deposit", label: "Deposit", width: 80 },
+  { key: "Check_No", label: "Check No", width: 150 },
   {
     key: "Check_Date",
     label: "Check Date",
-    width: 170,
+    width: 100,
   },
-  { key: "Bank", label: "Bank/Branch", width: 200 },
+  { key: "Bank", label: "Bank/Branch", width: 350 },
   {
     key: "Amount",
     label: "Amount",
-    width: 170,
+    width: 100,
     type: "number",
   },
-  { key: "Name", label: "Client Name", width: 400 },
+  { key: "Name", label: "Client Name", width: 350 },
   // hide
   { key: "DRCode", label: "DRCode", hide: true },
   { key: "ORNo", label: "ORNo", hide: true },
@@ -191,7 +190,7 @@ const selectedCollectionForDeposit = [
   {
     key: "Bank",
     label: "Bank/Branch",
-    width: 170,
+    width: 230,
   },
   {
     key: "Check_No",
@@ -201,7 +200,7 @@ const selectedCollectionForDeposit = [
   {
     key: "Amount",
     label: "Amount",
-    width: 150,
+    width: 100,
     type: "number",
   },
 ];

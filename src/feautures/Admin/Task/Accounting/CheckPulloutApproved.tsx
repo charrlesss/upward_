@@ -24,15 +24,15 @@ const column = [
   {
     key: "Check_Date",
     label: "Date",
-    width: 80,
+    width: 90,
   },
   {
     key: "Bank",
     label: "Bank",
-    width: 150,
+    width: 250,
   },
   { key: "CheckNo", label: "Check No", width: 150 },
-  { key: "Check_Amnt", label: "Amount", width: 120, type: "number" },
+  { key: "Check_Amnt", label: "Amount", width: 100, type: "number" },
 ];
 
 export default function CheckPulloutApproved() {

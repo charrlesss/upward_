@@ -1953,6 +1953,7 @@ export const DataGridViewReactUpgraded = forwardRef(
       },
       disableUnselection = false,
       isModal = false,
+      disableDelete = false,
     }: any,
     ref
   ) => {
@@ -2001,7 +2002,6 @@ export const DataGridViewReactUpgraded = forwardRef(
       setVisible(true);
       setPos({ x: clickX, y: clickY });
     };
-
     const handleClickCloseRightClickModal = () => {
       setVisible(false);
     };
@@ -2016,25 +2016,28 @@ export const DataGridViewReactUpgraded = forwardRef(
       if (e.key === "Enter") {
         selectedRowAction(row);
       }
-
-      if (e.code === "Delete" || e.code === "Backspace") {
-        const rowItm = data.filter((itm: any) => itm.rowIndex === row.rowIndex);
-        if (onKeyDelete) {
-          return onKeyDelete(rowItm[0]);
-        }
-        if (beforeDelete(rowItm[0])) {
-          return;
-        }
-
-        const confirm = window.confirm(
-          "Are you sure you want to delete all the rows?"
-        );
-        if (confirm) {
-          const newData = data.filter(
-            (itm: any) => itm.rowIndex !== row.rowIndex
+      if (!disableDelete) {
+        if (e.code === "Delete" || e.code === "Backspace") {
+          const rowItm = data.filter(
+            (itm: any) => itm.rowIndex === row.rowIndex
           );
-          setData(newData);
-          onDelete(newData);
+          if (onKeyDelete) {
+            return onKeyDelete(rowItm[0]);
+          }
+          if (beforeDelete(rowItm[0])) {
+            return;
+          }
+
+          const confirm = window.confirm(
+            "Are you sure you want to delete all the rows?"
+          );
+          if (confirm) {
+            const newData = data.filter(
+              (itm: any) => itm.rowIndex !== row.rowIndex
+            );
+            setData(newData);
+            onDelete(newData);
+          }
         }
       }
 
@@ -2145,6 +2148,7 @@ export const DataGridViewReactUpgraded = forwardRef(
         }
       }
     }, [visible, pos]);
+
     useEffect(() => {
       window.addEventListener("click", handleClickCloseRightClickModal);
       return () => {
@@ -2652,44 +2656,49 @@ export const DataGridViewReactUpgraded = forwardRef(
               >
                 📄 Copy Row
               </div>
-              <div
-                className="modal-action"
-                onClick={() => {
-                  const confirm = window.confirm(
-                    "Are you sure you want to delete all the rows?"
-                  );
-                  if (confirm) {
-                    if (beforeDelete()) {
-                      return;
-                    }
-                    const newData = data.filter(
-                      (itm: any) => itm.rowIndex !== rightClickRowIndex.rowIndex
-                    );
-                    setData(newData);
-                    onDelete(newData);
-                  }
-                }}
-              >
-                🗑️ Delete Row
-              </div>
-              <div
-                className="modal-action"
-                onClick={() => {
-                  setSelectAll(true);
-                  setTimeout(() => {
+              {!disableDelete && (
+                <div
+                  className="modal-action"
+                  onClick={() => {
                     const confirm = window.confirm(
-                      "Are you sure you want to delete this rows?"
+                      "Are you sure you want to delete all the rows?"
                     );
                     if (confirm) {
-                      setData([]);
-                      onDelete([]);
+                      if (beforeDelete()) {
+                        return;
+                      }
+                      const newData = data.filter(
+                        (itm: any) =>
+                          itm.rowIndex !== rightClickRowIndex.rowIndex
+                      );
+                      setData(newData);
+                      onDelete(newData);
                     }
-                    setSelectAll(false);
-                  }, 100);
-                }}
-              >
-                🗑️ Delete All Row
-              </div>
+                  }}
+                >
+                  🗑️ Delete Row
+                </div>
+              )}
+              {!disableDelete && (
+                <div
+                  className="modal-action"
+                  onClick={() => {
+                    setSelectAll(true);
+                    setTimeout(() => {
+                      const confirm = window.confirm(
+                        "Are you sure you want to delete this rows?"
+                      );
+                      if (confirm) {
+                        setData([]);
+                        onDelete([]);
+                      }
+                      setSelectAll(false);
+                    }, 100);
+                  }}
+                >
+                  🗑️ Delete All Row
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -56,26 +56,26 @@ import SearchIcon from "@mui/icons-material/Search";
 import "../../../../style/monbileview/accounting/generaljournal.css";
 
 const selectedCollectionColumns = [
-  { key: "code", label: "Code", width: 100, freeze: true },
+  { key: "code", label: "Code", width: 80, freeze: true },
   { key: "acctName", label: "Account Name", width: 200, freeze: true },
   {
     key: "subAcctName",
     label: "Sub Account",
-    width: 120,
+    width: 90,
   },
-  { key: "IDNo", label: "I.D.", width: 200 },
+  { key: "IDNo", label: "I.D.", width: 150 },
   { key: "ClientName", label: "Name", width: 300, freeze: true },
-  { key: "debit", label: "Debit", width: 120, type: "number" },
-  { key: "credit", label: "Credit", width: 120, type: "number" },
+  { key: "debit", label: "Debit", width: 100, type: "number" },
+  { key: "credit", label: "Credit", width: 100, type: "number" },
   // hide
-  { key: "TC_Code", label: "TC", width: 100 },
+  { key: "TC_Code", label: "TC", width: 60 },
   {
     key: "remarks",
     label: "Remarks",
     flex: 1,
     width: 300,
   },
-  { key: "vatType", label: "Vat Type", width: 120 },
+  { key: "vatType", label: "Vat Type", width: 100 },
   { key: "invoice", label: "Invoice", width: 200 },
   { key: "TempID", label: "TempId", hide: true },
   {

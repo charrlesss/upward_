@@ -38,19 +38,19 @@ import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import "../../../../style/monbileview/accounting/pettycash.css";
 
 const columns = [
-  { key: "purpose", label: "Purpose", width: 400 },
-  { key: "amount", label: "Amount", width: 140 },
+  { key: "purpose", label: "Purpose", width: 250 },
+  { key: "amount", label: "Amount", width: 100, type:"number" },
   {
     key: "usage",
     label: "Usage",
-    width: 450,
+    width: 350,
   },
-  { key: "accountID", label: "Account ID", width: 400 },
-  { key: "sub_account", label: "Sub Account", width: 120 },
-  { key: "clientID", label: "ID No", width: 140 },
+  { key: "accountID", label: "Account ID", width: 250 },
+  { key: "sub_account", label: "Sub Account", width: 100 },
+  { key: "clientID", label: "ID No", width: 100 },
   // hide
   { key: "clientName", label: "Name", width: 350 },
-  { key: "accountCode", label: "Accoount Code", width: 130 },
+  { key: "accountCode", label: "Accoount Code", width: 100 },
   {
     key: "accountShort",
     label: "Account Short",
@@ -59,11 +59,6 @@ const columns = [
   { key: "vatType", label: "Vat Type", width: 100 },
   { key: "invoice", label: "Invoice", width: 200 },
   { key: "TempID", label: "TempId", hide: true },
-];
-export const chartColumn = [
-  { field: "Acct_Code", headerName: "Code", flex: 1 },
-  { field: "Acct_Title", headerName: "Title", flex: 1 },
-  { field: "Short", headerName: "Short Name", flex: 1 },
 ];
 
 export default function PettyCash() {
