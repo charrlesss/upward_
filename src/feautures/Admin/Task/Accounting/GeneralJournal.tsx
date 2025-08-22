@@ -1,10 +1,4 @@
-import {
-  useContext,
-  useState,
-  useRef,
-  useEffect,
-  useCallback,
-} from "react";
+import { useContext, useState, useRef, useEffect, useCallback } from "react";
 import {
   Button,
   FormControl,
@@ -30,7 +24,7 @@ import NotInterestedIcon from "@mui/icons-material/NotInterested";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DatePicker } from "@mui/x-date-pickers";
-import {  brown, deepOrange, grey } from "@mui/material/colors";
+import { brown, deepOrange, grey } from "@mui/material/colors";
 import {
   codeCondfirmationAlert,
   saveCondfirmationAlert,
@@ -51,7 +45,6 @@ import {
   UpwardTableModalSearch,
 } from "../../../../components/DataGridViewReact";
 import { Loading } from "../../../../components/Loading";
-import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
 import SearchIcon from "@mui/icons-material/Search";
 import "../../../../style/monbileview/accounting/generaljournal.css";
 
@@ -87,7 +80,6 @@ const selectedCollectionColumns = [
 ];
 
 export default function GeneralJournal() {
-  const { executeQueryToClient } = useExecuteQueryFromClient();
   const [mode, setMode] = useState<"update" | "add" | "">("");
   const [monitoring, setMonitoring] = useState({
     totalRow: "0",
@@ -99,7 +91,6 @@ export default function GeneralJournal() {
   const [jobType, setJobType] = useState<any>("4");
   const [jobAutoExp, setJobAutoExp] = useState<any>(false);
 
-  const [loadingJob, setLoadingJob] = useState(false);
   const inputSearchRef = useRef<HTMLInputElement>(null);
 
   const refRefNo = useRef<HTMLInputElement>(null);
@@ -276,7 +267,6 @@ export default function GeneralJournal() {
       });
     },
   });
-
   const {
     mutate: getSearchSelectedGeneralJournal,
     isLoading: loadingGetSearchSelectedGeneralJournal,
@@ -334,6 +324,62 @@ export default function GeneralJournal() {
         }/dashboard/report?pdf=${encodeURIComponent(pdfUrl)}`,
         "_blank"
       );
+    },
+  });
+  const {
+    mutate: mutateDoRPTTransactionNILHNASTRA,
+    isLoading: isLoadingDoRPTTransactionNILHNASTRA,
+  } = useMutation({
+    mutationKey: "rpt-transacation-astra",
+    mutationFn: async (variable: any) =>
+      await myAxios.post(
+        "/task/accounting/general-journal/rpt-transacation-astra",
+        variable,
+        {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }
+      ),
+    onSuccess: (res) => {
+      const response = res as any;
+      table.current.setData(response.data.data);
+      setMode("update");
+      setOpenJobs(false);
+      setMonitoring({
+        totalRow: response.data.data.length,
+        totalDebit: formatNumber(response.data.totalAmount),
+        totalCredit: formatNumber(response.data.totalAmount),
+        balance: "0.00",
+      });
+    },
+  });
+  const {
+    mutate: mutateDoRPTTransactionNILHN,
+    isLoading: isLoadingDoRPTTransactionNILHN,
+  } = useMutation({
+    mutationKey: "rpt-transacation-NILHN",
+    mutationFn: async (variable: any) =>
+      await myAxios.post(
+        "/task/accounting/general-journal/rpt-transacation-NILHN",
+        variable,
+        {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }
+      ),
+    onSuccess: (res) => {
+      const response = res as any;
+      table.current.setData(response.data.data);
+      setMode("update");
+      setOpenJobs(false);
+      setMonitoring({
+        totalRow: response.data.data.length,
+        totalDebit: formatNumber(response.data.totalAmount),
+        totalCredit: formatNumber(response.data.totalAmount),
+        balance: "0.00",
+      });
     },
   });
 
@@ -727,223 +773,6 @@ export default function GeneralJournal() {
       maximumFractionDigits: 2,
     });
   }
-  async function DoRPTTransactionNILHNASTRA() {
-    setLoadingJob(true);
-    setOpenJobs(false);
-    setTimeout(async () => {
-      let JobDate = new Date(jobTransactionDate);
-      let dtFrom = format(JobDate, "yyyy-MM-01-");
-      let dtTo = format(lastDayOfMonth(JobDate), "yyyy-MM-dd");
-      let iRow = 0;
-
-      const qry = `
-      select 
-        a.PolicyNo,
-        a.IDNo,
-        (TotalDue - ifnull(b.TotalPaid,0)) as 'Amount',
-        c.Mortgagee 
-      from policy a 
-        left join (
-          select 
-            IDNo,
-            sum(Debit) as 'TotalPaid' 
-          from collection 
-          group by IDNo
-        ) b on b.IDNo = a.PolicyNo 
-        inner join vpolicy c on c.PolicyNo = a.PolicyNo 
-        where
-        (TotalDue - ifnull(b.TotalPaid,0)) <> 0 and 
-        a.PolicyType = 'TPL' and 
-        c.Mortgagee = 'N I L - ASTRA' and 
-        (
-          a.DateIssued >= '${dtFrom}' and 
-          a.DateIssued <= '${dtTo}'
-        ) 
-        order by a.DateIssued
-      `;
-      let dgvJournal: any = [];
-      const { data } = await executeQueryToClient(qry);
-      const dataArray = data.data;
-
-      if (dataArray.length > 0) {
-        let totalAmount = 0;
-        let i = 0;
-        for (const itm of dataArray) {
-          let tmpID = "";
-          if (i === 0) {
-            iRow = 0;
-          } else {
-            iRow = iRow + 1;
-          }
-
-          tmpID = itm.IDNo;
-          const { data: tmpNameRes } = await executeQueryToClient(
-            `SELECT Shortname ,Sub_ShortName, Sub_Acct FROM (${ID_Entry}) id_entry WHERE IDNo = '${tmpID}'`
-          );
-
-          dgvJournal[iRow] = {
-            code: "1.03.01",
-            acctName: "Premium Receivables",
-            subAcctName: tmpNameRes.data[0]?.Sub_ShortName,
-            IDNo: itm.PolicyNo,
-            ClientName: tmpNameRes.data[0]?.Shortname,
-            debit: "0.00",
-            credit: formatNumber(itm.Amount),
-            TC_Code: "RPT",
-            remarks: "",
-            vatType: "Non-VAT",
-            invoice: "",
-            TempID: "",
-            BranchCode: tmpNameRes.data[0]?.Sub_Acct,
-          };
-
-          totalAmount =
-            totalAmount + parseFloat(itm.Amount.toString().replace(/,/g, ""));
-          i += 1;
-        }
-
-        const { data: tmpNameRes } = await executeQueryToClient(
-          `SELECT Shortname ,Sub_ShortName, Sub_Acct FROM (${ID_Entry}) id_entry WHERE IDNo = 'C-1024-04785'`
-        );
-
-        dgvJournal[iRow + 1] = {
-          code: "1.03.01",
-          acctName: "Premium Receivables",
-          subAcctName: tmpNameRes.data[0]?.Sub_ShortName,
-          IDNo: "C-1024-04785",
-          ClientName: tmpNameRes.data[0]?.Shortname,
-          debit: formatNumber(totalAmount),
-          credit: "0.00",
-          TC_Code: "RPT",
-          remarks: "",
-          vatType: "Non-VAT",
-          invoice: "",
-          TempID: "",
-          BranchCode: tmpNameRes.data[0]?.Sub_Acct,
-        };
-
-        table.current.setData(dgvJournal);
-        setMode("update");
-        setOpenJobs(false);
-
-        setMonitoring({
-          totalRow: dgvJournal.length,
-          totalDebit: formatNumber(totalAmount),
-          totalCredit: formatNumber(totalAmount),
-          balance: "0.00",
-        });
-      }
-
-      setLoadingJob(false);
-    }, 300);
-  }
-  async function DoRPTTransactionNILHN() {
-    setLoadingJob(true);
-    setOpenJobs(false);
-    setTimeout(async () => {
-      let JobDate = new Date(jobTransactionDate);
-      let dtFrom = format(JobDate, "yyyy-MM-01-");
-      let dtTo = format(lastDayOfMonth(JobDate), "yyyy-MM-dd");
-      let iRow = 0;
-
-      const qry = `
-    select 
-      a.PolicyNo,
-      a.IDNo,
-      (TotalDue - ifnull(b.TotalPaid,0)) as 'Amount',
-      c.Mortgagee 
-    from policy a 
-      left join (
-        select 
-          IDNo,
-          sum(Debit) as 'TotalPaid' 
-        from collection 
-        group by IDNo
-      ) b on b.IDNo = a.PolicyNo 
-      inner join vpolicy c on c.PolicyNo = a.PolicyNo 
-      where
-      (TotalDue - ifnull(b.TotalPaid,0)) <> 0 and 
-      a.PolicyType = 'TPL' and 
-      c.Mortgagee = 'N I L - HN' and 
-      (
-        a.DateIssued >= '${dtFrom}' and 
-        a.DateIssued <= '${dtTo}'
-      ) 
-      order by a.DateIssued
-      `;
-      let dgvJournal: any = [];
-      const { data } = await executeQueryToClient(qry);
-      const dataArray = data.data;
-      if (dataArray.length > 0) {
-        let totalAmount = 0;
-        let i = 0;
-        for (const itm of dataArray) {
-          let tmpID = "";
-          if (i === 0) {
-            iRow = 0;
-          } else {
-            iRow = iRow + 1;
-          }
-
-          tmpID = itm.IDNo;
-          const { data: tmpNameRes } = await executeQueryToClient(
-            `SELECT Shortname ,Sub_ShortName, Sub_Acct FROM (${ID_Entry}) id_entry WHERE IDNo = '${tmpID}'`
-          );
-
-          dgvJournal[iRow] = {
-            code: "1.03.01",
-            acctName: "Premium Receivables",
-            subAcctName: tmpNameRes.data[0]?.Sub_ShortName,
-            IDNo: itm.PolicyNo,
-            ClientName: tmpNameRes.data[0]?.Shortname,
-            debit: "0.00",
-            credit: formatNumber(itm.Amount),
-            TC_Code: "RPT",
-            remarks: "",
-            vatType: "Non-VAT",
-            invoice: "",
-            TempID: "",
-            BranchCode: tmpNameRes.data[0]?.Sub_Acct,
-          };
-
-          totalAmount =
-            totalAmount + parseFloat(itm.Amount.toString().replace(/,/g, ""));
-          i += 1;
-        }
-
-        const { data: tmpNameRes } = await executeQueryToClient(
-          `SELECT Shortname ,Sub_ShortName, Sub_Acct FROM (${ID_Entry}) id_entry WHERE IDNo = 'C-1024-01370'`
-        );
-
-        dgvJournal[iRow + 1] = {
-          code: "1.03.01",
-          acctName: "Premium Receivables",
-          subAcctName: tmpNameRes.data[0]?.Sub_ShortName,
-          IDNo: "C-1024-01370",
-          ClientName: tmpNameRes.data[0]?.Shortname,
-          debit: formatNumber(totalAmount),
-          credit: "0.00",
-          TC_Code: "RPT",
-          remarks: "",
-          vatType: "Non-VAT",
-          invoice: "",
-          TempID: "",
-          BranchCode: tmpNameRes.data[0]?.Sub_Acct,
-        };
-
-        table.current.setData(dgvJournal);
-        setMode("update");
-        setOpenJobs(false);
-        setMonitoring({
-          totalRow: dgvJournal.length,
-          totalDebit: formatNumber(totalAmount),
-          totalCredit: formatNumber(totalAmount),
-          balance: "0.00",
-        });
-      }
-      setLoadingJob(false);
-    }, 300);
-  }
   const handleOnSave = useCallback(() => {
     if (refRefNo.current?.value === "") {
       return Swal.fire({
@@ -1039,11 +868,12 @@ export default function GeneralJournal() {
     <>
       <PageHelmet title="General Journal" />
       {(loadingGetSearchSelectedGeneralJournal ||
-        loadingJob ||
         loadingGeneralJournalMutate ||
         loadingVoidGeneralJournalMutate ||
         isLoadingPrint ||
-        loadingGeneralJournalGenerator) && <Loading />}
+        loadingGeneralJournalGenerator ||
+        isLoadingDoRPTTransactionNILHNASTRA ||
+        isLoadingDoRPTTransactionNILHN) && <Loading />}
       <div
         className="main"
         style={{
@@ -1984,11 +1814,17 @@ export default function GeneralJournal() {
                 color="success"
                 variant="contained"
                 onClick={() => {
+                  let JobDate = new Date(jobTransactionDate);
+                  let dtFrom = format(JobDate, "yyyy-MM-01-");
+                  let dtTo = format(lastDayOfMonth(JobDate), "yyyy-MM-dd");
                   if (jobType === "4") {
-                    DoRPTTransactionNILHN();
+                    mutateDoRPTTransactionNILHN({ dtFrom, dtTo });
                   }
                   if (jobType === "12") {
-                    DoRPTTransactionNILHNASTRA();
+                    mutateDoRPTTransactionNILHNASTRA({
+                      dtFrom,
+                      dtTo,
+                    });
                   }
                 }}
               >

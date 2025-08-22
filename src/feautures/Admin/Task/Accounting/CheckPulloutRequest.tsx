@@ -1,19 +1,13 @@
-import { LoadingButton } from "@mui/lab";
-import { Autocomplete } from "./PettyCash";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { useMutation } from "react-query";
 import { AuthContext } from "../../../../components/AuthContext";
-import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
 import { SelectInput, TextInput } from "../../../../components/UpwardFields";
 import {
-  DataGridViewMultiSelectionReact,
   DataGridViewReactMultipleSelection,
   UpwardTableModalSearch,
-  useUpwardTableModalSearchSafeMode,
 } from "../../../../components/DataGridViewReact";
 import { Button } from "@mui/material";
 import { orange } from "@mui/material/colors";
-import { wait } from "@testing-library/user-event/dist/utils";
 import Swal from "sweetalert2";
 import { Loading } from "../../../../components/Loading";
 import PageHelmet from "../../../../components/Helmet";
@@ -45,11 +39,9 @@ const column = [
 export default function CheckPulloutRequest() {
   const { myAxios, user } = useContext(AuthContext);
 
-  const { executeQueryToClient } = useExecuteQueryFromClient();
   const [flag, setFlag] = useState("");
   const [disableSelectAll, setDisableSelectAll] = useState(false);
 
-  const executeQueryToClientRef = useRef(executeQueryToClient);
   const table = useRef<any>(null);
 
   const rcpnRef = useRef<HTMLInputElement>(null);
@@ -83,9 +75,8 @@ export default function CheckPulloutRequest() {
     onSuccess: (data, variable) => {
       const response = data as any;
       if (response.data.success) {
-        // loadChecks(variable.ppno);
         table.current.resetTable();
-        AutoID();
+        mutateAutoId({});
         fieldsReset();
         setDisableSelectAll(false);
         setFlag("");
@@ -102,6 +93,49 @@ export default function CheckPulloutRequest() {
         title: response.data.message,
         timer: 1500,
       });
+    },
+  });
+
+  const { isLoading: isLoadingLoadChecks, mutate: mutateLoadChecks } =
+    useMutation({
+      mutationKey: "load-checks",
+      mutationFn: async (variables: any) =>
+        await myAxios.post(
+          `/task/accounting/pullout/reqeust/load-checks`,
+          variables,
+          {
+            headers: {
+              Authorization: `Bearer ${user?.accessToken}`,
+            },
+          }
+        ),
+      onSuccess: (response) => {
+        table.current.setData(
+          response.data.data.map((itm: any) => {
+            itm.Check_Amnt = formatNumber(
+              parseFloat((itm.Check_Amnt || 0).toString().replace(/,/g, ""))
+            );
+            return itm;
+          })
+        );
+      },
+    });
+
+  const { isLoading: isLoadingAutoId, mutate: mutateAutoId } = useMutation({
+    mutationKey: "auto-id",
+    mutationFn: async (variables: any) =>
+      await myAxios.post(
+        `/task/accounting/pullout/reqeust/auto-id`,
+        variables,
+        {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }
+      ),
+    onSuccess: (response) => {
+      if (rcpnRef.current)
+        rcpnRef.current.value = `${response.data.data[0].newRCPNo}`;
     },
   });
 
@@ -138,70 +172,12 @@ export default function CheckPulloutRequest() {
     },
   });
 
-  const AutoID = async () => {
-    const qry = `
-              SELECT CONCAT(
-                'HOPO',
-                DATE_FORMAT(CURDATE(), '%y'),  -- current 2-digit year
-                LPAD(
-                      CAST(RIGHT(RCPNo, 4) AS UNSIGNED) + 1,  -- increment last 4 digits
-                      4,
-                      '0'
-                )
-            ) AS newRCPNo
-      FROM pullout_request
-      ORDER BY RCPNo DESC
-      LIMIT 1;`;
-
-    const { data: response } = await executeQueryToClientRef.current(qry);
-
-    if (rcpnRef.current) rcpnRef.current.value = `${response.data[0].newRCPNo}`;
-  };
-  
   const loadChecks = async (pnno: string) => {
     setDisableSelectAll(false);
     table.current.setData([]);
-    let rcpn = rcpnRef.current?.value;
-
-    const qry = `
-    SELECT DISTINCT
-        Check_Date,
-        Bank,
-        Check_No,
-        Check_Amnt,
-        ifnull(b.Status,'--') AS Status,
-        ifnull(b.RCPNo,'--') AS RCPNO 
-    FROM
-        pdc a
-        left join (
-        SELECT 
-          PNNo,
-          a.RCPNo,
-          Status,
-          CheckNo 
-        FROM pullout_request  a
-        left join pullout_request_details b on a.RCPNo = b.RCPNo
-        where 
-        b.cancel = 0
-        and PNNo = '${ppnoRef.current?.value}' 
-
-        ) b on a.Check_No = b.CheckNo
-    WHERE
-        PNo = '${ppnoRef.current?.value}'
-      AND PDC_Status = 'Stored'
-    order by Check_Date asc
-        `;
-    const { data: response } = await executeQueryToClientRef.current(qry);
-
-    table.current.setData(
-      response.data.map((itm: any) => {
-        itm.Check_Amnt = formatNumber(
-          parseFloat((itm.Check_Amnt || 0).toString().replace(/,/g, ""))
-        );
-        return itm;
-      })
-    );
+    mutateLoadChecks({ PNo: pnno });
   };
+
   const fieldsReset = () => {
     setTimeout(() => {
       if (rcpnRef.current) {
@@ -222,6 +198,8 @@ export default function CheckPulloutRequest() {
   return (
     <>
       {(isLoadingSavePulloutRequest ||
+        isLoadingLoadChecks ||
+        isLoadingAutoId ||
         isLoadingGetSelectedRcpnNoPulloutRequest) && <Loading />}
 
       <PageHelmet title="Pullout Request" />
@@ -437,9 +415,6 @@ export default function CheckPulloutRequest() {
                   disabled: flag === "",
                   style: { flex: 1, height: "22px" },
                   defaultValue: "Non-VAT",
-                  onChange: (e) => {
-                    // if (ppnoRef.current) loadChecks(ppnoRef.current.value);
-                  },
                 }}
                 containerStyle={{
                   width: "50%",
@@ -566,7 +541,7 @@ export default function CheckPulloutRequest() {
                       if (btnSaveRef.current)
                         btnSaveRef.current.disabled = false;
                       setTimeout(() => {
-                        AutoID();
+                        mutateAutoId({});
                       }, 100);
                     }}
                   >

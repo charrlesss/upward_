@@ -31,7 +31,6 @@ import ForwardIcon from "@mui/icons-material/Forward";
 import { Autocomplete } from "./PettyCash";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import SearchIcon from "@mui/icons-material/Search";
-import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
 import LocalPrintshopIcon from "@mui/icons-material/LocalPrintshop";
 import {
   UpwardTableModalSearch,
@@ -115,7 +114,6 @@ export default function Collection() {
   const accTCRef = useRef("");
 
   const { myAxios, user } = useContext(AuthContext);
-  const { executeQueryToClient } = useExecuteQueryFromClient();
 
   const disableFields = collectionMode === "";
 
@@ -170,7 +168,7 @@ export default function Collection() {
   });
 
   const { mutate, isLoading: loadingAddNew } = useMutation({
-    mutationKey: "add-update-collection",
+    mutationKey: "save-debit-checks",
     mutationFn: async (variables: any) => {
       if (collectionMode === "update") {
         delete variables.mode;
@@ -299,6 +297,156 @@ export default function Collection() {
     },
   });
 
+  const { mutate: mutateSaveDebitCheck, isLoading: isLoadingSaveDebitCheck } =
+    useMutation({
+      mutationKey: "save-debit-check",
+      mutationFn: async (variables: any) => {
+        return await myAxios.post(
+          "/task/accounting/save-debit-check",
+          variables,
+          {
+            headers: {
+              Authorization: `Bearer ${user?.accessToken}`,
+            },
+          }
+        );
+      },
+      onSuccess: (res, variables) => {
+        const data = {
+          Payment: "Check",
+          Amount: variables.amount.toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }),
+          Check_No: variables.checkno,
+          Check_Date: variables.checkdate,
+          Bank_Branch: `${variables.bank}/${variables.branch}`,
+          Acct_Code: res.data?.data[0].Acct_Code,
+          Acct_Title: res.data?.data[0].Acct_Title,
+          Deposit_Slip: "",
+          Cntr: "",
+          Remarks: variables.remarks,
+          TC: paymentType,
+          Bank: variables.bank,
+          BankName: variables.bankRefName,
+        };
+        const debitTableData = debitTable.current.getData();
+
+        const newDataTable = [...debitTableData, data];
+        debitTable.current.setData(newDataTable);
+        setTotalDebit(
+          newDataTable.reduce(
+            (sum: any, subArray: any) =>
+              sum + parseFloat(subArray.Amount.replace(/,/g, "")),
+            0
+          )
+        );
+      },
+    });
+  const { mutate: mutateSaveCredit, isLoading: isLoadingSaveCredit } =
+    useMutation({
+      mutationKey: "save-credit",
+      mutationFn: async (variables: any) => {
+        return await myAxios.post("/task/accounting/save-credit", variables, {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        });
+      },
+      onSuccess: (res) => {
+        if (res.data.success) {
+          if (amountCreditRef.current) {
+            if (
+              isNaN(
+                parseFloat(amountCreditRef.current.value.replace(/,/g, ""))
+              ) ||
+              parseFloat(amountCreditRef.current.value.replace(/,/g, "")) <= 0
+            ) {
+              amountCreditRef.current.focus();
+              return alert("Please provide amount!");
+            }
+          }
+          if (invoiceRef.current && invoiceRef.current.value === "") {
+            invoiceRef.current.focus();
+            return alert("Please provide invoice!");
+          }
+          if (foaIDNoRef.current === "") {
+            faoRef.current?.focus();
+            return alert("Please provide usage!");
+          }
+
+          const getSelectedRow = creditTable.current.getSelectedRow();
+          const creditTableData = creditTable.current.getData();
+
+          if (getSelectedRow !== null) {
+            creditTableData[getSelectedRow].transaction =
+              transactionRef.current?.value;
+            creditTableData[getSelectedRow].amount =
+              amountCreditRef.current?.value;
+            creditTableData[getSelectedRow].Name = faoRef.current?.value;
+            creditTableData[getSelectedRow].Remarks = remarksRef.current?.value;
+            creditTableData[getSelectedRow].VATType = vatTypeRef.current?.value;
+            creditTableData[getSelectedRow].invoiceNo =
+              invoiceRef.current?.value;
+            creditTableData[getSelectedRow].Code = accCodeRef.current;
+            creditTableData[getSelectedRow].Title = accTitleRef.current;
+            creditTableData[getSelectedRow].TC = accTCRef.current;
+            creditTableData[getSelectedRow].Account_No = foaIDNoRef.current;
+
+            creditTable.current.setData(creditTableData);
+            creditTable.current.setSelectedRow(null);
+            setTotalCredit(
+              creditTableData.reduce(
+                (sum: any, subArray: any) =>
+                  sum + parseFloat(subArray.amount.replace(/,/g, "")),
+                0
+              )
+            );
+            if (vatTypeRef.current && vatTypeRef.current.value === "VAT") {
+              addVat(getSelectedRow, creditTableData);
+            }
+          } else {
+            const data = {
+              transaction: transactionRef.current?.value,
+              amount: amountCreditRef.current?.value,
+              Name: faoRef.current?.value,
+              Remarks: remarksRef.current?.value,
+              VATType: vatTypeRef.current?.value,
+              invoiceNo: invoiceRef.current?.value,
+              Code: accCodeRef.current,
+              Title: accTitleRef.current,
+              TC: accTCRef.current,
+              Account_No: foaIDNoRef.current,
+            };
+
+            const newCreditTableData = [...creditTableData, data];
+            creditTable.current.setData(newCreditTableData);
+            setTotalCredit(
+              newCreditTableData.reduce(
+                (sum: any, subArray: any) =>
+                  sum + parseFloat(subArray.amount.replace(/,/g, "")),
+                0
+              )
+            );
+
+            if (vatTypeRef.current && vatTypeRef.current.value === "VAT") {
+              addVat(getSelectedRow, newCreditTableData);
+            }
+          }
+
+          resetCredit();
+          return;
+        } else {
+          Swal.fire({
+            position: "center",
+            icon: "error",
+            title: res.data.message,
+            showConfirmButton: false,
+            timer: 1500,
+          });
+        }
+      },
+    });
   const {
     isLoading: loadingCollectionDataSearch,
     mutate: mutateCollectionDataSearch,
@@ -367,21 +515,21 @@ export default function Collection() {
         //   dataCollection[i].Purpose !== null &&
         //   dataCollection[i].Purpose.toString() !== ""
         // ) {
-          credit.push({
-            temp_id: `${i}`,
-            transaction: dataCollection[i].Purpose,
-            amount: formatNumber(
-              parseFloat(dataCollection[i].Credit.toString().replace(/,/g, ""))
-            ),
-            Remarks: dataCollection[i].CRRemarks,
-            Code: dataCollection[i].CRCode,
-            Title: dataCollection[i].CRTitle,
-            TC: dataCollection[i].TC,
-            Account_No: dataCollection[i].CRLoanID,
-            Name: dataCollection[i].CRLoanName,
-            VATType: dataCollection[i].CRVATType,
-            invoiceNo: dataCollection[i].CRInvoiceNo,
-          });
+        credit.push({
+          temp_id: `${i}`,
+          transaction: dataCollection[i].Purpose,
+          amount: formatNumber(
+            parseFloat(dataCollection[i].Credit.toString().replace(/,/g, ""))
+          ),
+          Remarks: dataCollection[i].CRRemarks,
+          Code: dataCollection[i].CRCode,
+          Title: dataCollection[i].CRTitle,
+          TC: dataCollection[i].TC,
+          Account_No: dataCollection[i].CRLoanID,
+          Name: dataCollection[i].CRLoanName,
+          VATType: dataCollection[i].CRVATType,
+          invoiceNo: dataCollection[i].CRInvoiceNo,
+        });
         // }
       }
 
@@ -522,38 +670,15 @@ export default function Collection() {
           )
         );
       } else {
-        const dd = await executeQueryToClient(
-          `select * from transaction_code LEFT JOIN chart_account ON transaction_code.Acct_Code = chart_account.Acct_Code WHERE Code = 'CHK'`
-        );
-        const data = {
-          Payment: "Check",
-          Amount: amount.toLocaleString("en-US", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          }),
-          Check_No: checkno,
-          Check_Date: checkdate,
-          Bank_Branch: `${bank}/${branch}`,
-          Acct_Code: dd.data?.data[0].Acct_Code,
-          Acct_Title: dd.data?.data[0].Acct_Title,
-          Deposit_Slip: "",
-          Cntr: "",
-          Remarks: remarks,
-          TC: paymentType,
-          Bank: bank,
-          BankName: bankRefName,
-        };
-        const debitTableData = debitTable.current.getData();
-
-        const newDataTable = [...debitTableData, data];
-        debitTable.current.setData(newDataTable);
-        setTotalDebit(
-          newDataTable.reduce(
-            (sum: any, subArray: any) =>
-              sum + parseFloat(subArray.Amount.replace(/,/g, "")),
-            0
-          )
-        );
+        mutateSaveDebitCheck({
+          amount,
+          checkno,
+          checkdate,
+          branch,
+          remarks,
+          bank,
+          bankRefName,
+        });
       }
 
       if (autoClose) {
@@ -570,90 +695,10 @@ export default function Collection() {
       transactionRef.current.focus();
       return alert(`Please select a transaction!`);
     }
-    if (transactionRef.current) {
-      const dd = await executeQueryToClient(
-        `SELECT * FROM transaction_code where Description = "${transactionRef.current.value}"`
-      );
-      if (dd.data.data?.length <= 0) {
-        return alert("Transaction not yet defined!");
-      }
-    }
-    if (amountCreditRef.current) {
-      if (
-        isNaN(parseFloat(amountCreditRef.current.value.replace(/,/g, ""))) ||
-        parseFloat(amountCreditRef.current.value.replace(/,/g, "")) <= 0
-      ) {
-        amountCreditRef.current.focus();
-        return alert("Please provide amount!");
-      }
-    }
-    if (invoiceRef.current && invoiceRef.current.value === "") {
-      invoiceRef.current.focus();
-      return alert("Please provide invoice!");
-    }
-    if (foaIDNoRef.current === "") {
-      faoRef.current?.focus();
-      return alert("Please provide usage!");
-    }
 
-    const getSelectedRow = creditTable.current.getSelectedRow();
-    const creditTableData = creditTable.current.getData();
-
-    if (getSelectedRow !== null) {
-      creditTableData[getSelectedRow].transaction =
-        transactionRef.current?.value;
-      creditTableData[getSelectedRow].amount = amountCreditRef.current?.value;
-      creditTableData[getSelectedRow].Name = faoRef.current?.value;
-      creditTableData[getSelectedRow].Remarks = remarksRef.current?.value;
-      creditTableData[getSelectedRow].VATType = vatTypeRef.current?.value;
-      creditTableData[getSelectedRow].invoiceNo = invoiceRef.current?.value;
-      creditTableData[getSelectedRow].Code = accCodeRef.current;
-      creditTableData[getSelectedRow].Title = accTitleRef.current;
-      creditTableData[getSelectedRow].TC = accTCRef.current;
-      creditTableData[getSelectedRow].Account_No = foaIDNoRef.current;
-
-      creditTable.current.setData(creditTableData);
-      creditTable.current.setSelectedRow(null);
-      setTotalCredit(
-        creditTableData.reduce(
-          (sum: any, subArray: any) =>
-            sum + parseFloat(subArray.amount.replace(/,/g, "")),
-          0
-        )
-      );
-      if (vatTypeRef.current && vatTypeRef.current.value === "VAT") {
-        addVat(getSelectedRow, creditTableData);
-      }
-    } else {
-      const data = {
-        transaction: transactionRef.current?.value,
-        amount: amountCreditRef.current?.value,
-        Name: faoRef.current?.value,
-        Remarks: remarksRef.current?.value,
-        VATType: vatTypeRef.current?.value,
-        invoiceNo: invoiceRef.current?.value,
-        Code: accCodeRef.current,
-        Title: accTitleRef.current,
-        TC: accTCRef.current,
-        Account_No: foaIDNoRef.current,
-      };
-
-      const newCreditTableData = [...creditTableData, data];
-      creditTable.current.setData(newCreditTableData);
-      setTotalCredit(
-        newCreditTableData.reduce(
-          (sum: any, subArray: any) =>
-            sum + parseFloat(subArray.amount.replace(/,/g, "")),
-          0
-        )
-      );
-
-      if (vatTypeRef.current && vatTypeRef.current.value === "VAT") {
-        addVat(getSelectedRow, newCreditTableData);
-      }
-    }
-
-    resetCredit();
+    mutateSaveCredit({
+      transactionRef: transactionRef.current?.value,
+    });
   }
   function addVat(getSelectedRow: any, creditTableData: any) {
     const chart_account = outputTaxRef.current.chart_account[0];
@@ -903,9 +948,11 @@ export default function Collection() {
       {(loadingAddNew ||
         NewORNoLoading ||
         isLoadingPrint ||
+        isLoadingSaveCredit ||
         isLoadingGetSearchCheckFromClientId ||
         loadingCollectionDataSearch ||
-        isLoadingOutputTax) && <Loading />}
+        isLoadingOutputTax ||
+        isLoadingSaveDebitCheck) && <Loading />}
 
       <PageHelmet title="Collection" />
       <div
@@ -1982,18 +2029,6 @@ export default function Collection() {
                   PNo: pnClientRef.current.value,
                   checkNo: rowItm.Check_No,
                 });
-                //     const dt = await executeQueryToClient(`
-                // SELECT
-                //   Check_No,
-                //   Check_Date,
-                //   Check_Amnt,
-                //   bank.Bank as Bank,
-                //   CONCAT(bank.Bank, '/', Branch)  AS BName,
-                //   Branch,
-                //   Remarks
-                // FROM pdc
-                // LEFT JOIN bank  ON pdc.Bank = bank.Bank_Code
-                // WHERE PNo = '${pnClientRef.current.value}' AND Check_No = '${rowItm[0]}'`);
               }
             });
             checksFromPDCModalRef.current.closeModal();

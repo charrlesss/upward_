@@ -18,10 +18,8 @@ import PageHelmet from "../../../components/Helmet";
 import { TextInput } from "../../../components/UpwardFields";
 import SearchIcon from "@mui/icons-material/Search";
 import {
-  DataGridViewReact,
   DataGridViewReactUpgraded,
   UpwardTableModalSearch,
-  useUpwardTableModalSearchSafeMode,
 } from "../../../components/DataGridViewReact";
 import { Loading } from "../../../components/Loading";
 import "../../../style/monbileview/reference/reference.css";

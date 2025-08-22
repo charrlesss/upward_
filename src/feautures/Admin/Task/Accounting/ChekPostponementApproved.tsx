@@ -12,10 +12,8 @@ import {
   TextInput,
 } from "../../../../components/UpwardFields";
 import {
-  DataGridViewReact,
   DataGridViewReactUpgraded,
   UpwardTableModalSearch,
-  useUpwardTableModalSearchSafeMode,
 } from "../../../../components/DataGridViewReact";
 import { useMutation } from "react-query";
 import { AuthContext } from "../../../../components/AuthContext";

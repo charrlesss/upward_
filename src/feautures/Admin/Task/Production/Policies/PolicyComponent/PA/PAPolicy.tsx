@@ -30,15 +30,10 @@ import SearchIcon from "@mui/icons-material/Search";
 import SaveAsIcon from "@mui/icons-material/SaveAs";
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import { Loading } from "../../../../../../../components/Loading";
-import {
-  UpwardTableModalSearch,
-  useUpwardTableModalSearchSafeMode,
-} from "../../../../../../../components/DataGridViewReact";
+import { UpwardTableModalSearch } from "../../../../../../../components/DataGridViewReact";
 import { PolicyContext } from "../../Policy";
-import { useNavigate } from "react-router-dom";
 
 export default function PAPolicy() {
-  const navigate = useNavigate();
   const { careOfData, subAccountData } = useContext(PolicyContext);
   const { myAxios, user } = useContext(AuthContext);
   const [mode, setMode] = useState("");

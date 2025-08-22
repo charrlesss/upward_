@@ -1,8 +1,6 @@
 import { useContext } from "react";
 import { AuthContext } from "../components/AuthContext"
 
-
-
 export default function useExecuteQueryFromClient() {
     const { myAxios, user } = useContext(AuthContext);
 

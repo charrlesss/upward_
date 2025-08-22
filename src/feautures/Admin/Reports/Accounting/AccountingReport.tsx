@@ -11,7 +11,6 @@ import { useMutation } from "react-query";
 import { AuthContext } from "../../../../components/AuthContext";
 import {
   UpwardTableModalSearch,
-  useUpwardTableModalSearchSafeMode,
 } from "../../../../components/DataGridViewReact";
 import { wait } from "../../../../lib/wait";
 import { Loading } from "../../../../components/Loading";

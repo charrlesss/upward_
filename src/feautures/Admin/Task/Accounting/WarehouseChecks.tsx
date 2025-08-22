@@ -13,7 +13,6 @@ import {
   DataGridViewReactUpgraded,
   UpwardTableModalSearch,
 } from "../../../../components/DataGridViewReact";
-import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
 import { grey } from "@mui/material/colors";
 import CloseIcon from "@mui/icons-material/Close";
 import { useMutation } from "react-query";
@@ -54,7 +53,6 @@ export default function WarehouseChecks() {
   const searchRef = useRef<HTMLInputElement>(null);
 
   const [warehouseMode, setWarehouseMode] = useState("");
-  const { executeQueryToClient } = useExecuteQueryFromClient();
 
   const { mutate: mutatePdcChecks, isLoading: isLoadingPdcChecks } =
     useMutation({
@@ -126,6 +124,57 @@ export default function WarehouseChecks() {
       });
     },
   });
+  const {
+    mutate: mutateGetPulloutSelectedRow,
+    isLoading: isLoadingGetPulloutSelectedRow,
+  } = useMutation({
+    mutationKey: "get-pullout-selected-row",
+    mutationFn: async (variables: any) => {
+      return await myAxios.post(
+        "/task/accounting/warehouse/get-pullout-selected-row",
+        variables,
+        {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }
+      );
+    },
+    onSuccess: (response, rowItm) => {
+      const dr = response.data.data.map((itm: any) => itm.CheckNo);
+      setDisableSelection(true);
+      if (dr.length > 0) {
+        if (refPDCStatus.current) {
+          refPDCStatus.current.value = "Pull Out";
+        }
+
+        if (refRemarks.current) {
+          refRemarks.current.value = rowItm.Reason;
+        }
+        if (searchRef.current) {
+          searchRef.current.value = rowItm.PNNo;
+        }
+
+        mutatePdcChecks({
+          pdcStatus: 2,
+          search: rowItm.PNNo,
+        });
+
+        wait(100).then(() => {
+          const getData = tableRef.current.getData();
+          const filtered = getData.filter((itm: any, idx: number) => {
+            if (dr.includes(itm.Check_No)) {
+              return itm;
+            }
+          });
+          const selected = filtered.map((itm: any) => itm.rowIndex);
+          tableRef.current.setSelectedRow(selected);
+        });
+      } else {
+        return alert("No request for pull-out!");
+      }
+    },
+  });
   function hanldeOnSave() {
     if (
       refPDCStatus.current?.selectedIndex === 2 &&
@@ -160,6 +209,7 @@ export default function WarehouseChecks() {
               pdcStatus: refPDCStatus.current?.selectedIndex,
               remarksValue: refRemarks.current?.value,
               tableData: tableRef.current.getSelectedRowData(),
+              PNo: searchRef.current?.value,
             });
           }
         });
@@ -218,7 +268,9 @@ export default function WarehouseChecks() {
 
   return (
     <>
-      {(isLoadingPdcChecks || isLoadingSave) && <Loading />}
+      {(isLoadingPdcChecks ||
+        isLoadingGetPulloutSelectedRow ||
+        isLoadingSave) && <Loading />}
       <div
         className="main"
         style={{
@@ -273,7 +325,7 @@ export default function WarehouseChecks() {
                   } else {
                     setDisableSelection(true);
                   }
-                  
+
                   if (e.target.selectedIndex !== 2) {
                     if (refRemarks.current) {
                       refRemarks.current.selectedIndex = 0;
@@ -550,46 +602,13 @@ export default function WarehouseChecks() {
               // ) {
               //   return alert("Please enter ID!");
               // }
-              const { data: response } = await executeQueryToClient(`
-              Select 
-                CheckNo 
-              From pullout_request a 
-              Inner join pullout_request_details b  on a.RCPNo = b.RCPNo 
-              Where a.Status = 'APPROVED' 
-              And a.RCPNo = '${rowItm.RCPNo}'`);
+              mutateGetPulloutSelectedRow({
+                RCPNo: rowItm.RCPNo,
+                Reason: rowItm.Reason,
+                PNNo: rowItm.PNNo,
+              });
 
-              const dr = response.data.map((itm: any) => itm.CheckNo);
-              setDisableSelection(true);
-              if (dr.length > 0) {
-                if (refPDCStatus.current) {
-                  refPDCStatus.current.value = "Pull Out";
-                }
-
-                if (refRemarks.current) {
-                  refRemarks.current.value = rowItm.Reason;
-                }
-                if (searchRef.current) {
-                  searchRef.current.value = rowItm.PNNo;
-                }
-
-                mutatePdcChecks({
-                  pdcStatus: 2,
-                  search: rowItm.PNNo,
-                });
-
-                wait(100).then(() => {
-                  const getData = tableRef.current.getData();
-                  const filtered = getData.filter((itm: any, idx: number) => {
-                    if (dr.includes(itm.Check_No)) {
-                      return itm;
-                    }
-                  });
-                  const selected = filtered.map((itm: any) => itm.rowIndex);
-                  tableRef.current.setSelectedRow(selected);
-                });
-              } else {
-                return alert("No request for pull-out!");
-              }
+     
             } else {
             }
 
@@ -902,7 +921,7 @@ const ModalCheck = forwardRef(
               >
                 <DataGridViewReactUpgraded
                   ref={table}
-                   fixedRowCount={14}
+                  fixedRowCount={14}
                   adjustVisibleRowCount={350}
                   columns={[
                     { key: "row_count", label: "#", width: 35 },

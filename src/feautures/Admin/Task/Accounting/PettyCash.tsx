@@ -25,7 +25,6 @@ import PageHelmet from "../../../../components/Helmet";
 import { SelectInput, TextInput } from "../../../../components/UpwardFields";
 import { NumericFormat } from "react-number-format";
 import { format } from "date-fns";
-import useExecuteQueryFromClient from "../../../../lib/executeQueryFromClient";
 import {
   DataGridViewReactUpgraded,
   UpwardTableModalSearch,
@@ -39,7 +38,7 @@ import "../../../../style/monbileview/accounting/pettycash.css";
 
 const columns = [
   { key: "purpose", label: "Purpose", width: 250 },
-  { key: "amount", label: "Amount", width: 100, type:"number" },
+  { key: "amount", label: "Amount", width: 100, type: "number" },
   {
     key: "usage",
     label: "Usage",
@@ -64,7 +63,6 @@ const columns = [
 export default function PettyCash() {
   const { myAxios, user } = useContext(AuthContext);
   const [pettyCashMode, setPettyCashMode] = useState("");
-  const { executeQueryToClient } = useExecuteQueryFromClient();
   const tableRef = useRef<any>(null);
   const inputSearchRef = useRef<HTMLInputElement>(null);
 
@@ -181,6 +179,61 @@ export default function PettyCash() {
       tableRef.current.setData(loadPettyCash);
     },
   });
+  const {
+    mutate: mutateTransactionDetails,
+    isLoading: isLoadingTransactionDetails,
+  } = useMutation({
+    mutationKey: "load-transcation-details",
+    mutationFn: async (variables: any) =>
+      await myAxios.post(
+        `/task/accounting/load-transcation-details`,
+        variables,
+        {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }
+      ),
+    onSuccess: (response) => {
+      const getSelectedItem = tableRef.current.getSelectedRow();
+      if (getSelectedItem !== null) {
+        const data = tableRef.current.getData();
+        data.splice(getSelectedItem, 1);
+        tableRef.current.setData(data);
+      }
+      wait(100).then(() => {
+        const currentData = tableRef.current.getData();
+        const newData = {
+          purpose: accountRef.current?.value,
+          amount: amountRef.current?.value,
+          usage: `${usageRef.current?.value} > ${clientIdRef.current} > ${subAcctRef.current}`,
+          accountID: `${response.data.data[0].Short} > ${response.data.data[0].Acct_Code}`,
+          sub_account: subAcctRef.current,
+          clientID: clientIdRef.current,
+          clientName: usageRef.current?.value,
+          accountCode: response.data.data[0].Acct_Code,
+          accountShort: response.data.data[0].Short,
+          vatType: vatRef.current?.value,
+          invoice: invoiceRef.current?.value,
+        };
+
+        if (getSelectedItem !== null) {
+          currentData.splice(getSelectedItem, 0, newData);
+          tableRef.current.setData(currentData);
+          tableRef.current.setSelectedRow(null);
+        } else {
+          tableRef.current.setData([...currentData, newData]);
+          tableRef.current.setSelectedRow(null);
+        }
+
+        resetRefs();
+
+        if (accountRef.current) {
+          accountRef.current.focus();
+        }
+      });
+    },
+  });
   const { isLoading: laodPettyCashTransaction } = useQuery({
     queryKey: "load-transcation",
     queryFn: async () =>
@@ -226,7 +279,6 @@ export default function PettyCash() {
     }
 
     const newData = tableRef.current.getData();
-
 
     if (newData.length <= 0) {
       return Swal.fire({
@@ -335,56 +387,8 @@ export default function PettyCash() {
       });
     }
 
-    const TransDetail = await executeQueryToClient(`
-         SELECT DISTINCT
-              Chart_Account.Acct_Code,
-              Chart_Account.Acct_Title,
-              Chart_Account.Short
-          FROM
-             petty_log as  Petty_Log
-                  LEFT JOIN
-             chart_account as  Chart_Account ON Petty_Log.Acct_Code = Chart_Account.Acct_Code
-          WHERE
-              Petty_Log.Acct_Code = '${transactionCodeRef.current}'
-      `);
-
-    const getSelectedItem = tableRef.current.getSelectedRow();
-    if (getSelectedItem !== null) {
-      const data = tableRef.current.getData();
-      data.splice(getSelectedItem, 1);
-      tableRef.current.setData(data);
-    }
-
-    wait(100).then(() => {
-      const currentData = tableRef.current.getData();
-      const newData = {
-        purpose: accountRef.current?.value,
-        amount: amountRef.current?.value,
-        usage: `${usageRef.current?.value} > ${clientIdRef.current} > ${subAcctRef.current}`,
-        accountID: `${TransDetail.data.data[0].Short} > ${TransDetail.data.data[0].Acct_Code}`,
-        sub_account: subAcctRef.current,
-        clientID: clientIdRef.current,
-        clientName: usageRef.current?.value,
-        accountCode: TransDetail.data.data[0].Acct_Code,
-        accountShort: TransDetail.data.data[0].Short,
-        vatType: vatRef.current?.value,
-        invoice: invoiceRef.current?.value,
-      };
-
-      if (getSelectedItem !== null) {
-        currentData.splice(getSelectedItem, 0, newData);
-        tableRef.current.setData(currentData);
-        tableRef.current.setSelectedRow(null);
-      } else {
-        tableRef.current.setData([...currentData, newData]);
-        tableRef.current.setSelectedRow(null);
-      }
-
-      resetRefs();
-
-      if (accountRef.current) {
-        accountRef.current.focus();
-      }
+    mutateTransactionDetails({
+      Acct_Code: transactionCodeRef.current,
     });
   }
   function resetRefs() {
@@ -441,9 +445,9 @@ export default function PettyCash() {
 
   return (
     <>
-      {(isLoadingLoadSelectedPettyCash || loadingAddUpdatePettyCash) && (
-        <Loading />
-      )}
+      {(isLoadingLoadSelectedPettyCash ||
+        isLoadingTransactionDetails ||
+        loadingAddUpdatePettyCash) && <Loading />}
       <PageHelmet title="Petty Cash" />
       <div
         className="main"

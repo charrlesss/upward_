@@ -32,10 +32,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import SaveAsIcon from "@mui/icons-material/SaveAs";
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import { Loading } from "../../../../../../../components/Loading";
-import {
-  UpwardTableModalSearch,
-  useUpwardTableModalSearchSafeMode,
-} from "../../../../../../../components/DataGridViewReact";
+import { UpwardTableModalSearch } from "../../../../../../../components/DataGridViewReact";
 import { PolicyContext } from "../../Policy";
 
 export default function MarinePolicy() {
@@ -351,7 +348,6 @@ export default function MarinePolicy() {
       },
     });
 
-
   function handleSave() {
     if (
       _policyInformationRef.current.requiredField() ||
@@ -408,7 +404,7 @@ export default function MarinePolicy() {
         isLoadingWords ||
         laodingSelectedSearch ||
         loadingAddUpdate) && <Loading />}
-    
+
       <div
         style={{
           flex: 1,
@@ -1268,9 +1264,7 @@ const PolicyInformation = forwardRef((props: any, ref) => {
                 style: { width: "calc(100% - 150px) " },
                 onKeyDown: (e) => {
                   if (e.code === "NumpadEnter" || e.code === "Enter") {
-                    agentModalRef.current.openModal(
-                      e.currentTarget.value
-                    );
+                    agentModalRef.current.openModal(e.currentTarget.value);
                   }
                 },
               }}

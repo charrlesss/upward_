@@ -1,337 +1,44 @@
-import {
-  useState,
-  useContext,
-  useEffect,
-  useRef,
-  forwardRef,
-  useImperativeHandle,
-} from "react";
-import { useMutation, useQuery } from "react-query";
+
+
 import { Button } from "@mui/material";
+import Swal from "sweetalert2";
 import AddIcon from "@mui/icons-material/Add";
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
-import Swal from "sweetalert2";
-import { wait } from "@testing-library/user-event/dist/utils";
-import { format } from "date-fns";
-import AutorenewIcon from "@mui/icons-material/Autorenew";
 import SearchIcon from "@mui/icons-material/Search";
-import Tabs from "@mui/material/Tabs";
-import Tab from "@mui/material/Tab";
-import Box from "@mui/material/Box";
+import {
+  useRef,
+  useState,
+  forwardRef,
+  useImperativeHandle,
+  useContext,
+  useEffect,
+} from "react";
+import AutorenewIcon from "@mui/icons-material/Autorenew";
+import { format } from "date-fns";
+
+import { useMutation, useQuery } from "react-query";
+
+
+import "../../../style/monbileview/accounting/returnchecks.css";
 import { AuthContext } from "../../../components/AuthContext";
+import { wait } from "@testing-library/user-event/dist/utils";
+// import { DataGridViewReact, useUpwardTableModalSearchSafeMode } from "../../../components/DataGridViewReact";
+import { codeCondfirmationAlert, saveCondfirmationAlert } from "../../../lib/confirmationAlert";
+import { Loading } from "../../../components/Loading";
 import PageHelmet from "../../../components/Helmet";
 import { SelectInput, TextInput } from "../../../components/UpwardFields";
-import {
-  DataGridViewReactUpgraded,
-  UpwardTableModalSearch,
-} from "../../../components/DataGridViewReact";
-import "../../../style/laoding.css";
-import "../../../style/monbileview/accounting/deposit.css";
-import { Loading } from "../../../components/Loading";
 import { formatNumber, getSum } from "../Task/Accounting/ReturnCheck";
-import HandshakeIcon from "@mui/icons-material/Handshake";
-import DoDisturbIcon from "@mui/icons-material/DoDisturb";
-import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
-import {
-  codeCondfirmationAlert,
-  saveCondfirmationAlert,
-} from "../../../lib/confirmationAlert";
 
-const columnsSelectCheck = [
-  { key: "Deposit_Slip", label: "Deposit_Slip", width: 100 },
-  { key: "Depo_Date", label: "Depo_Date", width: 100 },
-  {
-    key: "Check_No",
-    label: "Check_No",
-    width: 150,
-  },
-  {
-    key: "Check_Date",
-    label: "Check_Date",
-    width: 100,
-  },
-  {
-    key: "Amount",
-    label: "Amount",
-    width: 100,
-    type: "number",
-  },
-  {
-    key: "Bank",
-    label: "Bank",
-    width: 350,
-  },
-  {
-    key: "Official_Receipt",
-    label: "Official_Receipt",
-    width: 100,
-  },
-  {
-    key: "Date_OR",
-    label: "Date_OR",
-    width: 100,
-  },
-  {
-    key: "BankAccount",
-    label: "BankAccount",
-    width: 0,
-    hide: true,
-  },
-  {
-    key: "_formatted_date",
-    label: "_formatted_date",
-    width: 0,
-    hide: true,
-  },
-  {
-    key: "Deposit_ID",
-    label: "",
-    width: 0,
-    hide: true,
-  },
-];
-const columnsSelectedCheckToBeReturned = [
-  { key: "ORNo", label: "OR No.", width: 80 },
-  { key: "ORDate", label: "OR Date", width: 130 },
-  {
-    key: "DepoSlip",
-    label: "Depo Slip",
-    width: 130,
-  },
-  {
-    key: "DepoDate",
-    label: "Depo Date",
-    width: 130,
-  },
-  {
-    key: "CheckNo",
-    label: "Check No.",
-    width: 130,
-  },
-  {
-    key: "CheckDate",
-    label: "Check Date",
-    width: 90,
-  },
-  {
-    key: "Amount",
-    label: "Amount",
-    width: 100,
-    type: "number",
-  },
-  {
-    key: "Bank",
-    label: "Bank/Branch",
-    width: 250,
-  },
-  {
-    key: "BankAccount",
-    label: "Bank Account",
-    width: 200,
-  },
-  {
-    key: "Reason",
-    label: "Reason",
-    width: 200,
-  },
-  {
-    key: "ReturnDate",
-    label: "Return Date",
-    width: 200,
-  },
-  {
-    key: "Temp_OR",
-    label: "",
-    width: 0,
-    hide: true,
-  },
-];
-const columnsAccountingEntry = [
-  { key: "Code", label: "Code", width: 80 },
-  { key: "AccountName", label: "Account Name", width: 200 },
-  {
-    key: "Debit",
-    label: "Debit",
-    width: 130,
-    type: "number",
-  },
-  {
-    key: "Credit",
-    label: "Credit",
-    width: 130,
-    type: "number",
-  },
-  {
-    key: "IDNo",
-    label: "ID No.",
-    width: 200,
-  },
-  {
-    key: "Identity",
-    label: "Identity",
-    width: 350,
-  },
-  {
-    key: "SubAcct",
-    label: "Sub Acct",
-    width: 130,
-  },
-  {
-    key: "SubAcctName",
-    label: "Sub Acct Name",
-    width: 130,
-  },
-  {
-    key: "CheckNo",
-    label: "Check No",
-    width: 120,
-  },
-  {
-    key: "Bank",
-    label: "Bank/Branch",
-    width: 350,
-  },
-  {
-    key: "CheckDate",
-    label: "Check Date",
-    width: 100,
-  },
-  {
-    key: "CheckReturn",
-    label: "Check Return",
-    width: 100,
-  },
-  {
-    key: "CheckReason",
-    label: "Check Reason",
-    width: 150,
-  },
-  {
-    key: "PK",
-    label: "PK",
-    width: 100,
-  },
-  {
-    key: "DateDeposit",
-    label: "Date Deposit",
-    width: 100,
-  },
-  {
-    key: "DateCollection",
-    label: "Date Collection",
-    width: 100,
-  },
-  {
-    key: "Temp_OR",
-    label: "",
-    width: 0,
-    hide: true,
-  },
-];
-
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-function CustomTabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`simple-tabpanel-${index}`}
-      aria-labelledby={`simple-tab-${index}`}
-      {...other}
-      style={{
-        display: "flex",
-        flex: 1,
-        position: "absolute",
-        top: index === 0 ? "170px" : "145px",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        padding: "5px",
-        boxSizing: "border-box",
-        overflow: "hidden",
-      }}
-    >
-      {value === index && (
-        <Box
-          sx={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            width: "100%",
-          }}
-        >
-          {children}
-        </Box>
-      )}
-    </div>
-  );
-}
-function a11yProps(index: number) {
-  return {
-    id: `simple-tab-${index}`,
-    "aria-controls": `simple-tabpanel-${index}`,
-  };
-}
-
-export default function Deposit() {
-  const [value, setValue] = useState(0);
+export default function ReturnCheck() {
   const { user, myAxios } = useContext(AuthContext);
   const [mode, setMode] = useState("");
-  const [tableData, setTableData] = useState<Array<any>>([]);
-  const [selected, setSelected] = useState<Array<any>>([]);
-  const [accountingEntry, setAccountingEntry] = useState<Array<any>>([]);
-
+  const returnCheckComponentRef = useRef<any>(null);
   const inputSearchRef = useRef<HTMLInputElement>(null);
-  const searchChecksRef = useRef<HTMLInputElement>(null);
   const refNoRef = useRef<HTMLInputElement>(null);
   const refDate = useRef<HTMLInputElement>(null);
   const refExp = useRef<HTMLInputElement>(null);
 
-  const searchReturnCheckModal = useRef<any>(null);
-
-  const selectedChecksTableRef = useRef<any>(null);
-  const selectedChecksToBeReturnTableRef = useRef<any>(null);
-  const accountingEntryTableRef = useRef<any>(null);
-  const modalReturnCheckEntriesRef = useRef<any>(null);
-
-  const { isLoading: isLoadingReturnChecksID, refetch } = useQuery({
-    queryKey: "generate-id",
-    queryFn: async () =>
-      await myAxios.get(`/task/accounting/return-checks/generate-id`, {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      }),
-    refetchOnWindowFocus: false,
-    onSuccess(res) {
-      wait(100).then(() => {
-        if (refNoRef.current) {
-          refNoRef.current.value = res.data.newRefCode;
-        }
-      });
-    },
-  });
-  const { isLoading: isLoadingCheckSelected, mutate: mutateCheckSelected } =
-    useMutation({
-      mutationKey: "load-details",
-      mutationFn: async (variable: any) =>
-        await myAxios.post(`/task/accounting/get-check-list`, variable, {
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
-        }),
-      onSuccess(res) {
-        setTableData(res.data.checkList);
-        selectedChecksTableRef.current.setData(res.data.checkList);
-      },
-    });
   const {
     isLoading: isLoadingReturnChecksSave,
     mutate: mutateReturnChecksSave,
@@ -363,6 +70,7 @@ export default function Deposit() {
       });
     },
   });
+
   const {
     isLoading: isLoadingReturnChecksUpdate,
     mutate: mutateReturnChecksUpdate,
@@ -394,14 +102,169 @@ export default function Deposit() {
       });
     },
   });
+  const { isLoading: isLoadingReturnChecksID, refetch } = useQuery({
+    queryKey: "generate-id",
+    queryFn: async () =>
+      await myAxios.get(`/task/accounting/return-checks/generate-id`, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      }),
+    refetchOnWindowFocus: false,
+    onSuccess(res) {
+      wait(100).then(() => {
+        if (refNoRef.current) {
+          refNoRef.current.value = res.data.newRefCode;
+        }
+      });
+    },
+  });
+
+  const {
+    isLoading: isLoadingReturnChecksSearchSelectedSave,
+    mutate: mutateReturnChecksSearchSelectedSave,
+  } = useMutation({
+    mutationKey: "selected-search",
+    mutationFn: async (variable: any) =>
+      await myAxios.post(
+        `/task/accounting/return-checks/return-checks-search-selected`,
+        variable,
+        {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }
+      ),
+    onSuccess(res) {
+      const data1 = JSON.parse(res.data.data1);
+      const data2 = JSON.parse(res.data.data2);
+      console.log(data1);
+      if (data1.length > 0) {
+        if (refNoRef.current) {
+          refNoRef.current.value = data1[0].RC_No;
+        }
+        if (refDate.current) {
+          refDate.current.value = format(
+            new Date(data1[0].RC_Date),
+            "yyyy-MM-dd"
+          );
+        }
+        if (refExp.current) {
+          refExp.current.value = data1[0].Explanation;
+        }
+        const newSelectedCheck: any = [];
+
+        for (let index = 0; index < data1.length; index++) {
+          newSelectedCheck.push([
+            data1[index].ORNum,
+            format(new Date(data1[index].Date_Collect), "MM/dd/yyy"),
+            data1[index].SlipCode,
+            format(new Date(data1[index].Date_Deposit), "MM/dd/yyy"),
+            data1[index].Check_No,
+            format(new Date(data1[index].Check_Date), "MM/dd/yyy"),
+            formatNumber(
+              parseFloat(data1[index].Amount.toString().replace(/,/g, ""))
+            ),
+            data1[index].Bank,
+            data1[index].BankAccnt,
+            data1[index].Reason,
+            format(new Date(data1[index].Date_Return), "MM/dd/yyy"),
+          ]);
+        }
+
+        returnCheckComponentRef.current.refSelectedCheckToBeReturned.current.table.current.setData(
+          newSelectedCheck
+        );
+        if (returnCheckComponentRef.current.tssAmountRef.current) {
+          returnCheckComponentRef.current.tssAmountRef.current.value = `Total Amount:   ${formatNumber(
+            getSum(data1, "Amount")
+          )}`;
+        }
+
+        if (data2.length > 0) {
+          const newAccoutningEntry: any = [];
+          for (let index = 0; index < data2.length; index++) {
+            newAccoutningEntry.push([
+              data2[index].GL_Acct,
+              data2[index].cGL_Acct,
+              formatNumber(
+                parseFloat(data2[index].Debit.toString().replace(/,/g, ""))
+              ),
+              formatNumber(
+                parseFloat(data2[index].Credit.toString().replace(/,/g, ""))
+              ),
+              data2[index].ID_No,
+              data2[index].cID_No,
+              data2[index].Sub_Acct,
+              data2[index].cSub_Acct,
+              data2[index].Check_No,
+              data2[index].Check_Bank,
+              format(new Date(data2[index].Check_Date), "MM/dd/yyy"),
+              format(new Date(data2[index].Check_Return), "MM/dd/yyy"),
+              data2[index].Check_Reason,
+              data2[index].Check_No,
+              format(new Date(data2[index].Check_Deposit), "MM/dd/yyy"),
+              format(new Date(data2[index].Check_Collect), "MM/dd/yyy"),
+            ]);
+          }
+          returnCheckComponentRef.current.refAccountingEntry.current.table.current.setData(
+            newAccoutningEntry
+          );
+
+          if (
+            returnCheckComponentRef.current.refAccountingEntry.current.debitRef
+              .current
+          ) {
+            returnCheckComponentRef.current.refAccountingEntry.current.debitRef.current.value =
+              formatNumber(getSum(data2, "Debit"));
+          }
+
+          if (
+            returnCheckComponentRef.current.refAccountingEntry.current.creditRef
+              .current
+          ) {
+            returnCheckComponentRef.current.refAccountingEntry.current.creditRef.current.value =
+              formatNumber(getSum(data2, "Credit"));
+          }
+        }
+
+        setMode("update");
+      }
+    },
+  });
+  
+  // const {
+  //   UpwardTableModalSearch: SearchReturnCheckUpwardTableModalSearch,
+  //   openModal: searchReturnCheckCreditOpenModal,
+  //   closeModal: searchReturnCheckCreditCloseModal,
+  // } = useUpwardTableModalSearchSafeMode({
+  //   link: "/task/accounting/return-checks/return-checks-search",
+  //   column: [
+  //     { key: "RefDate", label: "Ref. Date", width: 120 },
+  //     { key: "RefNo", label: "Ref. No.", width: 100 },
+  //     { key: "Explanation", label: "Explanation", width: 200 },
+  //   ],
+  //   getSelectedItem: async (rowItm: any, _: any, rowIdx: any, __: any) => {
+  //     if (rowItm) {
+  //       wait(100).then(() => {
+  //         mutateReturnChecksSearchSelectedSave({ RefNo: rowItm[1] });
+  //       });
+  //       searchReturnCheckCreditCloseModal();
+  //     }
+  //   },
+  // });
+
   const handleOnSave = () => {
+    // tabRef.current.test();
     if (refExp.current?.value === "") {
       alert("Pease provide an explanation");
       refExp.current?.focus();
       return;
     }
-    const dgvSelChecks = selected;
-    const dgvAccountingEntry = accountingEntry;
+    const dgvSelChecks =
+      returnCheckComponentRef.current.refSelectedCheckToBeReturned.current.table.current.getData();
+    const dgvAccountingEntry =
+      returnCheckComponentRef.current.refAccountingEntry.current.table.current.getData();
 
     if (dgvSelChecks.length <= 0) {
       alert("Please provide return entry");
@@ -438,167 +301,76 @@ export default function Deposit() {
     }
   };
 
-  const {
-    isLoading: isLoadingReturnChecksSearchSelected,
-    mutate: mutateReturnChecksSearchSelected,
-  } = useMutation({
-    mutationKey: "selected-search",
-    mutationFn: async (variable: any) =>
-      await myAxios.post(
-        `/task/accounting/return-checks/return-checks-search-selected`,
-        variable,
-        {
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
-        }
-      ),
-    onSuccess(res) {
-      const data1 = JSON.parse(res.data.data1);
-      const data2 = JSON.parse(res.data.data2).map((j: any) => {
-        const match = data1.find(
-          (r: any) => r.RC_No === j.Source_No && r.Check_No === j.Check_No
-        );
-        return {
-          ...j,
-          ORNum: match ? match.ORNum : null,
-        };
-      });
-
-      if (data1.length > 0) {
-        if (refNoRef.current) {
-          refNoRef.current.value = data1[0].RC_No;
-        }
-        if (refDate.current) {
-          refDate.current.value = format(
-            new Date(data1[0].RC_Date),
-            "yyyy-MM-dd"
-          );
-        }
-        if (refExp.current) {
-          refExp.current.value = data1[0].Explanation;
-        }
-        const newSelectedCheck: any = [];
-
-        for (let index = 0; index < data1.length; index++) {
-          newSelectedCheck.push({
-            ORNo: data1[index].ORNum,
-            ORDate: format(new Date(data1[index].Date_Collect), "MM/dd/yyy"),
-            DepoSlip: data1[index].SlipCode,
-            DepoDate: format(new Date(data1[index].Date_Deposit), "MM/dd/yyy"),
-            CheckNo: data1[index].Check_No,
-            CheckDate: format(new Date(data1[index].Check_Date), "MM/dd/yyy"),
-            Amount: formatNumber(
-              parseFloat(data1[index].Amount.toString().replace(/,/g, ""))
-            ),
-            Bank: data1[index].Bank,
-            BankAccount: data1[index].BankAccnt,
-            Reason: data1[index].Reason,
-            ReturnDate: format(new Date(data1[index].Date_Return), "MM/dd/yyy"),
-            Temp_OR: data1[index].ORNum,
-          });
-        }
-        setSelected(newSelectedCheck);
-
-        // if (returnCheckComponentRef.current.tssAmountRef.current) {
-        //   returnCheckComponentRef.current.tssAmountRef.current.value = `Total Amount:   ${formatNumber(
-        //     getSum(data1, "Amount")
-        //   )}`;
-        // }
-
-        if (data2.length > 0) {
-          const newAccoutningEntry: any = [];
-          for (let index = 0; index < data2.length; index++) {
-            newAccoutningEntry.push({
-              Code: data2[index].GL_Acct,
-              AccountName: data2[index].cGL_Acct,
-              Debit: formatNumber(
-                parseFloat(data2[index].Debit.toString().replace(/,/g, ""))
-              ),
-              Credit: formatNumber(
-                parseFloat(data2[index].Credit.toString().replace(/,/g, ""))
-              ),
-              IDNo: data2[index].ID_No,
-              Identity: data2[index].cID_No,
-              SubAcct: data2[index].Sub_Acct,
-              SubAcctName: data2[index].cSub_Acct,
-              CheckNo: data2[index].Check_No,
-              Bank: data2[index].Check_Bank,
-              CheckDate: format(new Date(data2[index].Check_Date), "MM/dd/yyy"),
-              CheckReturn: format(
-                new Date(data2[index].Check_Return),
-                "MM/dd/yyy"
-              ),
-              CheckReason: data2[index].Check_Reason,
-              PK: data2[index].Check_No,
-              DateDeposit: format(
-                new Date(data2[index].Check_Deposit),
-                "MM/dd/yyy"
-              ),
-              DateCollection: format(
-                new Date(data2[index].Check_Collect),
-                "MM/dd/yyy"
-              ),
-              Temp_OR: data2[index].ORNum,
-            });
-          }
-          setAccountingEntry(newAccoutningEntry);
-        }
-
-        setMode("update");
-      }
-    },
-  });
-
   function resetReturnChecks() {
     setMode("");
     refetch();
-    setSelected([]);
-    setAccountingEntry([]);
-
     if (refDate.current) {
       refDate.current.value = format(new Date(), "yyyy-MM-dd");
     }
     if (refExp.current) {
       refExp.current.value = "Returned Checks";
     }
-    if (value === 1) {
-      selectedChecksToBeReturnTableRef.current.setData([]);
+
+    returnCheckComponentRef.current.refSelectCheck.current.table.current.resetCheckBox();
+    returnCheckComponentRef.current.refSelectCheck.current.table.current.setSelectedRow(
+      null
+    );
+    returnCheckComponentRef.current.refSelectCheck.current.table.current.setData(
+      []
+    );
+    returnCheckComponentRef.current.refSelectCheck.current.refetchList();
+
+    returnCheckComponentRef.current.refSelectedCheckToBeReturned.current.table.current.resetCheckBox();
+    returnCheckComponentRef.current.refSelectedCheckToBeReturned.current.table.current.setSelectedRow(
+      null
+    );
+    returnCheckComponentRef.current.refSelectedCheckToBeReturned.current.table.current.setData(
+      []
+    );
+
+    returnCheckComponentRef.current.refAccountingEntry.current.table.current.resetCheckBox();
+    returnCheckComponentRef.current.refAccountingEntry.current.table.current.setSelectedRow(
+      null
+    );
+    returnCheckComponentRef.current.refAccountingEntry.current.table.current.setData(
+      []
+    );
+
+    if (
+      returnCheckComponentRef.current.refAccountingEntry.current.debitRef
+        .current
+    ) {
+      returnCheckComponentRef.current.refAccountingEntry.current.debitRef.current.value =
+        "0.00";
     }
-    if (value === 2) {
-      accountingEntryTableRef.current.setData([]);
+
+    if (
+      returnCheckComponentRef.current.refAccountingEntry.current.creditRef
+        .current
+    ) {
+      returnCheckComponentRef.current.refAccountingEntry.current.creditRef.current.value =
+        "0.00";
     }
+
+    returnCheckComponentRef.current.tssAmountRef.current.value = `Total Amount:   0.00`;
   }
-
-  useEffect(() => {
-    mutateCheckSelected({ search: searchChecksRef.current?.value });
-  }, [mutateCheckSelected]);
-
-  useEffect(() => {
-    if (value === 0) {
-      selectedChecksTableRef.current.setData(tableData);
-    } else if (value === 1) {
-      selectedChecksToBeReturnTableRef.current.setData(selected);
-    } else if (value === 2) {
-      accountingEntryTableRef.current.setData(accountingEntry);
-    }
-  }, [value, selected, accountingEntry, mutateCheckSelected]);
 
   return (
     <>
-      <PageHelmet title="Returned Checks" />
-      {(isLoadingReturnChecksID ||
-        isLoadingReturnChecksSave ||
-        isLoadingReturnChecksUpdate ||
-        isLoadingCheckSelected ||
-        isLoadingReturnChecksSearchSelected) && <Loading />}
+      {(isLoadingReturnChecksSave ||
+        isLoadingReturnChecksID ||
+        isLoadingReturnChecksSearchSelectedSave ||
+        isLoadingReturnChecksUpdate) && <Loading />}
+      <PageHelmet title="Return Checks" />
       <div
+        className="main"
         style={{
           display: "flex",
-          flex: 1,
           flexDirection: "column",
-          position: "relative",
-          padding: "10px",
+          width: "100%",
+          height: "auto",
+          flex: 1,
+          padding: "5px",
           background: "#F1F1F1",
         }}
       >
@@ -626,9 +398,7 @@ export default function Deposit() {
               onKeyDown: (e) => {
                 if (e.key === "Enter" || e.key === "NumpadEnter") {
                   e.preventDefault();
-                  searchReturnCheckModal.current.openModal(
-                    e.currentTarget.value
-                  );
+                  // searchReturnCheckCreditOpenModal(e.currentTarget.value);
                 }
               },
               style: { width: "500px" },
@@ -636,10 +406,8 @@ export default function Deposit() {
             icon={<SearchIcon sx={{ fontSize: "18px" }} />}
             onIconClick={(e) => {
               e.preventDefault();
-              if (inputSearchRef.current)
-                searchReturnCheckModal.current.openModal(
-                  inputSearchRef.current.value
-                );
+              // if (inputSearchRef.current)
+                // searchReturnCheckCreditOpenModal(inputSearchRef.current.value);
             }}
             inputRef={inputSearchRef}
           />
@@ -719,11 +487,11 @@ export default function Deposit() {
           style={{
             display: "flex",
             width: "100%",
-            padding: "5px 10px",
+            padding: "10px 40px",
             flexDirection: "column",
             rowGap: "10px",
+            border: "1px solid #64748b",
             marginBottom: "10px",
-            position: "relative",
           }}
         >
           <div
@@ -745,7 +513,7 @@ export default function Deposit() {
               }}
               input={{
                 disabled: mode === "",
-                readOnly: true,
+                // readOnly: true,
                 className: "ref_no",
                 type: "text",
                 style: { width: "200px" },
@@ -755,7 +523,7 @@ export default function Deposit() {
               icon={<AutorenewIcon sx={{ fontSize: "18px" }} />}
               onIconClick={(e) => {
                 e.preventDefault();
-                refetch();
+                // RefetchDepositSlipCode();
               }}
             />
             <TextInput
@@ -798,337 +566,915 @@ export default function Deposit() {
             inputRef={refExp}
           />
         </div>
-        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-          <Tabs
-            value={value}
-            onChange={(event: React.SyntheticEvent, newValue: number) => {
-              setValue(newValue);
+        <TabPage ref={returnCheckComponentRef} mode={mode} />
+        <div
+          className="return-checks-mobile-buttons"
+          style={{
+            display: "none",
+            alignItems: "center",
+            columnGap: "10px",
+          }}
+        >
+          {mode === "" && (
+            <Button
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              variant="contained"
+              startIcon={<AddIcon sx={{ width: 15, height: 15 }} />}
+              id="entry-header-save-button"
+              onClick={() => {
+                setMode("add");
+              }}
+            >
+              New
+            </Button>
+          )}
+          {mode !== "" && (
+            <Button
+              sx={{
+                height: "22px",
+                fontSize: "11px",
+              }}
+              id="save-entry-header"
+              color="primary"
+              variant="contained"
+              type="submit"
+              startIcon={<SaveIcon sx={{ width: 15, height: 15 }} />}
+              onClick={handleOnSave}
+            >
+              Save
+            </Button>
+          )}
+          <Button
+            sx={{
+              height: "22px",
+              fontSize: "11px",
             }}
-            aria-label="basic tabs example"
-            style={{
-              minHeight: "25px",
+            disabled={mode === ""}
+            variant="contained"
+            startIcon={<CloseIcon sx={{ width: 15, height: 15 }} />}
+            color="error"
+            onClick={() => {
+              Swal.fire({
+                title: "Are you sure?",
+                text: "You won't be able to revert this!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, cancel it!",
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  wait(100).then(() => {
+                    resetReturnChecks();
+                  });
+                }
+              });
             }}
           >
-            <Tab
-              label={
-                <span style={{ fontSize: "11px", fontWeight: "bold" }}>
-                  SELECT CHECK
-                </span>
-              }
-              sx={{
-                width: "250px",
-                minHeight: "30px",
-                padding: 0,
-                color: "black",
-              }}
-              {...a11yProps(0)}
-            />
-            <Tab
-              sx={{
-                width: "250px",
-                minHeight: "30px",
-                padding: 0,
-                color: "black",
-              }}
-              label={
-                <span style={{ fontSize: "11px", fontWeight: "bold" }}>
-                  SELECTED CHECK TO BE RETURNED
-                </span>
-              }
-              {...a11yProps(1)}
-            />
-            <Tab
-              sx={{
-                width: "250px",
-                minHeight: "30px",
-                padding: 0,
-                color: "black",
-              }}
-              label={
-                <span style={{ fontSize: "11px", fontWeight: "bold" }}>
-                  ACCOUNTING ENTRY
-                </span>
-              }
-              {...a11yProps(2)}
-            />
-          </Tabs>
-        </Box>
-        <TextInput
-          containerStyle={{
-            marginTop: "5px",
-            zIndex: value === 0 ? 5 : 0,
+            Cancel
+          </Button>
+        </div>
+      </div>
+
+      {/* <SearchReturnCheckUpwardTableModalSearch /> */}
+    </>
+  );
+}
+
+const TabPage = forwardRef(({ mode }: any, ref) => {
+  const [activeTab, setActiveTab] = useState(0);
+  const [buttonPosition, setButtonPosition] = useState<any>({});
+  const buttonsRef = useRef<Array<HTMLButtonElement | null>>([]);
+  const refSelectCheck = useRef<any>(null);
+  const refSelectedCheckToBeReturned = useRef<any>(null);
+  const refAccountingEntry = useRef<any>(null);
+  const tssAmountRef = useRef<HTMLInputElement>(null);
+  const chkFndRef = useRef<HTMLInputElement>(null);
+
+  const tabs = [
+    {
+      id: 0,
+      label: "Select Check",
+      content: (
+        <SelectCheck
+          ref={refSelectCheck}
+          refSelectedCheckToBeReturned={refSelectedCheckToBeReturned}
+          refAccountingEntry={refAccountingEntry}
+          tssAmountRef={tssAmountRef}
+          chkFndRef={chkFndRef}
+          mode={mode}
+        />
+      ),
+    },
+    {
+      id: 1,
+      label: "Selected Check To Be Returned",
+      content: (
+        <SelectedCheckToBeReturned
+          ref={refSelectedCheckToBeReturned}
+          refAccountingEntry={refAccountingEntry}
+        />
+      ),
+    },
+    {
+      id: 2,
+      label: "Accounting Entry",
+      content: <AccountingEntry ref={refAccountingEntry} />,
+    },
+  ];
+
+  useEffect(() => {
+    setButtonPosition(buttonsRef.current[0]?.getBoundingClientRect());
+  }, []);
+
+  useImperativeHandle(ref, () => ({
+    test: () => {
+      refSelectCheck.current.test();
+      refSelectedCheckToBeReturned.current.test();
+      refAccountingEntry.current.test();
+    },
+    refSelectCheck,
+    refSelectedCheckToBeReturned,
+    refAccountingEntry,
+    tssAmountRef,
+  }));
+
+  return (
+    <div
+      style={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      {/* Tab Buttons */}
+      <div style={{ display: "flex" }}>
+        {tabs.map((tab, index) => (
+          <button
+            className="return-checks-buttons"
+            ref={(el) => (buttonsRef.current[index] = el)}
+            key={tab.id}
+            onClick={(el) => {
+              setActiveTab(tab.id);
+              setButtonPosition(el.currentTarget.getBoundingClientRect());
+            }}
+            style={{
+              width: "auto",
+              fontSize: "11px",
+              padding: "10px",
+              cursor: "pointer",
+              backgroundColor: activeTab === tab.id ? "white" : "transparent",
+              color: activeTab === tab.id ? "#0074cc" : "#000",
+              border: "none",
+              borderRight:
+                activeTab === tab.id
+                  ? tab.id === 0
+                    ? "none"
+                    : "1px solid #0074cc"
+                  : tab.id === 0
+                  ? "none"
+                  : "1px solid #64748b",
+              borderLeft:
+                activeTab === tab.id
+                  ? tab.id === 2
+                    ? "none"
+                    : "1px solid #0074cc"
+                  : tab.id === 2
+                  ? "none"
+                  : "1px solid #64748b",
+              borderTop:
+                activeTab === tab.id
+                  ? "1px solid #0074cc"
+                  : "1px solid #64748b",
+
+              // borderBottom:
+              //   activeTab === tab.id ? "2px solid #007BFF" : "2px solid #ccc",
+              textTransform: "uppercase",
+              fontWeight: "bold",
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Render All Tab Contents */}
+      <div
+        style={{
+          padding: "7px",
+          flex: 1,
+          display: "flex",
+          // borderTop: "2px solid #007BFF",
+          position: "relative",
+          flexDirection: "column",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: "-2px",
+            left: 0,
+            width: `${(buttonPosition?.left as number) - 5 || 0}px`,
+            height: "1px",
+            background: "#64748b",
           }}
-          containerClassName="search-input"
+        ></div>
+        <div
+          style={{
+            position: "absolute",
+            top: "-2px",
+            right: 0,
+            left: `${(buttonPosition?.right as number) - 5 || 0}px`,
+            height: "1px",
+            background: "#64748b",
+          }}
+        ></div>
+        {tabs.map((tab) => (
+          <div
+            key={tab.id}
+            style={{
+              display: activeTab === tab.id ? "flex" : "none", // Show only the active tab
+              flex: 1,
+              flexDirection: "column",
+            }}
+          >
+            {tab.content}
+          </div>
+        ))}
+        <div
+          className="total-container"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            paddingTop: "5px",
+          }}
+        >
+          <input
+            ref={chkFndRef}
+            readOnly={true}
+            defaultValue={"0.00"}
+            style={{
+              textAlign: "left",
+              fontWeight: "bold",
+              width: "200px",
+              border: "none",
+            }}
+          />
+          <input
+            ref={tssAmountRef}
+            readOnly={true}
+            defaultValue={"0.00"}
+            style={{
+              textAlign: "right",
+              fontWeight: "bold",
+              width: "200px",
+              border: "none",
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+});
+const columnsSelectCheck = [
+  { key: "Deposit_Slip", label: "Deposit_Slip", width: 100 },
+  { key: "Depo_Date", label: "Depo_Date", width: 130 },
+  {
+    key: "Check_No",
+    label: "Check_No",
+    width: 200,
+  },
+  {
+    key: "Check_Date",
+    label: "Check_Date",
+    width: 200,
+  },
+  {
+    key: "Amount",
+    label: "Amount",
+    width: 200,
+  },
+  {
+    key: "Bank",
+    label: "Bank",
+    width: 200,
+  },
+  {
+    key: "Official_Receipt",
+    label: "Official_Receipt",
+    width: 100,
+  },
+  {
+    key: "Date_OR",
+    label: "Date_OR",
+    width: 100,
+  },
+  {
+    key: "BankAccount",
+    label: "BankAccount",
+    width: 0,
+    hide: true,
+  },
+  {
+    key: "_formatted_date",
+    label: "_formatted_date",
+    width: 0,
+    hide: true,
+  },
+];
+const columnsSelectedCheckToBeReturned = [
+  { key: "ORNo", label: "OR No.", width: 80 },
+  { key: "ORDate", label: "OR Date", width: 130 },
+  {
+    key: "DepoSlip",
+    label: "Depo Slip",
+    width: 130,
+  },
+  {
+    key: "DepoDate",
+    label: "Depo Date",
+    width: 130,
+  },
+  {
+    key: "CheckNo",
+    label: "Check No.",
+    width: 130,
+  },
+  {
+    key: "CheckDate",
+    label: "Check Date",
+    width: 130,
+  },
+  {
+    key: "Amount",
+    label: "Amount",
+    width: 130,
+  },
+  {
+    key: "Bank",
+    label: "Bank/Branch",
+    width: 100,
+  },
+  {
+    key: "BankAccount",
+    label: "Bank Account",
+    width: 200,
+  },
+  {
+    key: "Reason",
+    label: "Reason",
+    width: 200,
+  },
+  {
+    key: "ReturnDate",
+    label: "Return Date",
+    width: 200,
+  },
+];
+const columnsAccountingEntry = [
+  { key: "Code", label: "Code", width: 80 },
+  { key: "AccountName", label: "Account Name", width: 130 },
+  {
+    key: "Debit",
+    label: "Debit",
+    width: 130,
+  },
+  {
+    key: "Credit",
+    label: "Credit",
+    width: 130,
+  },
+  {
+    key: "IDNo",
+    label: "ID No.",
+    width: 130,
+  },
+  {
+    key: "Identity",
+    label: "Identity",
+    width: 130,
+  },
+  {
+    key: "SubAcct",
+    label: "Sub Acct",
+    width: 130,
+  },
+  {
+    key: "SubAcctName",
+    label: "Sub Acct Name",
+    width: 130,
+  },
+  {
+    key: "CheckNo",
+    label: "Check No",
+    width: 100,
+  },
+  {
+    key: "Bank",
+    label: "Bank/Branch",
+    width: 200,
+  },
+  {
+    key: "CheckDate",
+    label: "Check Date",
+    width: 100,
+  },
+  {
+    key: "CheckReturn",
+    label: "Check Return",
+    width: 100,
+  },
+  {
+    key: "CheckReason",
+    label: "Check Reason",
+    width: 200,
+  },
+  {
+    key: "PK",
+    label: "PK",
+    width: 100,
+  },
+  {
+    key: "DateDeposit",
+    label: "Date Deposit",
+    width: 100,
+  },
+  {
+    key: "DateCollection",
+    label: "Date Collection",
+    width: 100,
+  },
+];
+const SelectCheck = forwardRef(
+  (
+    {
+      refAccountingEntry,
+      refSelectedCheckToBeReturned,
+      tssAmountRef,
+      chkFndRef,
+      mode,
+    }: any,
+    ref
+  ) => {
+    const { user, myAxios } = useContext(AuthContext);
+    const searchSelectCheckRef = useRef<HTMLInputElement>(null);
+    const table = useRef<any>(null);
+    const modalReturnCheckEntriesRef = useRef<any>(null);
+
+    const { isLoading: isLoadingCheckSelected, mutate: mutateCheckSelected } =
+      useMutation({
+        mutationKey: "load-details",
+        mutationFn: async (variable: any) =>
+          await myAxios.post(`/task/accounting/get-check-list`, variable, {
+            headers: {
+              Authorization: `Bearer ${user?.accessToken}`,
+            },
+          }),
+        onSuccess(res) {
+          table.current.setDataFormated(res.data.checkList);
+          if (chkFndRef.current) {
+            chkFndRef.current.value = `Check Found: Top ${res.data.checkList.length}`;
+          }
+        },
+      });
+    const mutateCheckSelectedRef = useRef<any>(mutateCheckSelected);
+    useEffect(() => {
+      mutateCheckSelectedRef.current({
+        search: searchSelectCheckRef.current?.value,
+      });
+    }, []);
+    useImperativeHandle(ref, () => ({
+      test: () => {
+        alert("qweqweqweqwe1");
+      },
+      refetchList: () => {
+        mutateCheckSelectedRef.current({
+          search: "",
+        });
+      },
+      table,
+    }));
+
+    return (
+      <div
+        style={{
+          display: "flex",
+          flex: 1,
+          flexDirection: "column",
+          rowGap: "10px",
+        }}
+      >
+        {isLoadingCheckSelected && <Loading />}
+        <TextInput
           label={{
-            title: "Search Check : ",
+            title: "Search: ",
             style: {
               fontSize: "12px",
               fontWeight: "bold",
-              width: "100px",
+              width: "50px",
             },
           }}
           input={{
             className: "search-input-up-on-key-down",
             type: "search",
-            defaultValue: "",
             onKeyDown: (e) => {
               if (e.key === "Enter" || e.key === "NumpadEnter") {
                 e.preventDefault();
-                mutateCheckSelected({ search: e.currentTarget.value });
+                mutateCheckSelectedRef.current({
+                  search: e.currentTarget.value,
+                });
               }
             },
-            style: { width: "calc(100% - 100px)" },
+            onChange: (e) => {
+              if (e.target.value === "") {
+                mutateCheckSelectedRef.current({
+                  search: "",
+                });
+              }
+            },
+            style: { width: "100%" },
           }}
           icon={<SearchIcon sx={{ fontSize: "18px" }} />}
           onIconClick={(e) => {
             e.preventDefault();
-            if (inputSearchRef.current)
-              mutateCheckSelected({ search: inputSearchRef.current.value });
+            if (searchSelectCheckRef.current)
+              mutateCheckSelectedRef.current({
+                search: searchSelectCheckRef.current?.value,
+              });
           }}
-          inputRef={searchChecksRef}
+          inputRef={searchSelectCheckRef}
         />
-        <CustomTabPanel value={value} index={0}>
-          <div
-            style={{
+        <div
+          style={{
+            display: "flex",
+            flex: 1,
+          }}
+        >
+          {/* <DataGridViewReact
+            disbaleTable={mode === ""}
+            ref={table}
+            columns={columnsSelectCheck}
+            rows={[]}
+            containerStyle={{
+              height: "auto",
+              minHeight: "200px",
               flex: 1,
-              position: "relative",
-              display: "flex",
-              zIndex: 2,
             }}
-          >
-            <DataGridViewReactUpgraded
-              ref={selectedChecksTableRef}
-              disableUnselection={true}
-              adjustVisibleRowCount={250}
-              columns={columnsSelectCheck}
-              handleSelectionChange={(rowItm: any) => {
-                if (rowItm) {
-                  if (
-                    selected
-                      .map((itm) => itm.ORNo)
-                      .includes(rowItm.Official_Receipt)
-                  ) {
-                    alert(`Check ${rowItm.Check_No} already exist!`);
-                    wait(100).then(() => {
-                      selectedChecksTableRef.current.setSelectedRow(null);
-                    });
+            getSelectedItem={(rowItm: any) => {
+              if (rowItm) {
+                wait(100).then(() => {
+                  const selectedChecks =
+                    refSelectedCheckToBeReturned.current.getSelectedCheck();
+                  if (selectedChecks.includes(rowItm[2])) {
+                    alert(`Check ${rowItm[2]} already exist!`);
+                    table.current.setSelectedRow(null);
+                    table.current.resetCheckBox();
                     return;
                   }
+                  modalReturnCheckEntriesRef.current.showModal();
+                  modalReturnCheckEntriesRef.current.setRefs({
+                    checkNo: rowItm[2],
+                    amount: rowItm[4],
+                  });
+                  modalReturnCheckEntriesRef.current.mutateEntries({
+                    ORNo: rowItm[6],
+                    Account_No: rowItm[8],
+                  });
+                  modalReturnCheckEntriesRef.current.selectItem(rowItm);
+                });
+              } else {
+                wait(100).then(() => {});
+              }
+            }}
+            onKeyDown={(rowItm: any, rowIdx: any, e: any) => {
+              if (e.code === "Delete" || e.code === "Backspace") {
+                const isConfim = window.confirm(
+                  `Are you sure you want to delete?`
+                );
+                if (isConfim) {
+                  return;
+                }
+              }
+            }}
+          /> */}
+        </div>
+        <ModalReturnCheckEntries
+          ref={modalReturnCheckEntriesRef}
+          handleConfirm={(
+            e: any,
+            itm: Array<any>,
+            state: any,
+            tableData: Array<any>,
+            columns: Array<any>,
+            ref: any
+          ) => {
+            if (state.lblTextRef !== state.refAmount) {
+              return alert("Debit must equal to Credit!");
+            }
+            const retDebit = tableData;
+            const RetReason =
+              ref.refReturnReason.current?.selectedIndex === 2
+                ? "AC"
+                : ref.refReturnReason.current?.value;
+            const RetDateRet = ref.refDateReturned.current?.value;
+            const retCredit: any = [];
+            retCredit[0] = state.refAccountID;
+            retCredit[1] = state.refAccountName;
+            retCredit[2] = state.refAmount;
+            retCredit[3] = state.refAcronym;
+            retCredit[4] = state.refSubAccount;
+            retCredit[5] = state.refAccountId;
 
-                  modalReturnCheckEntriesRef.current.showModal();
-                  modalReturnCheckEntriesRef.current.setRefs({
-                    checkNo: rowItm.Check_No,
-                    amount: rowItm.Amount,
-                  });
-                  modalReturnCheckEntriesRef.current.mutateEntries({
-                    ORNo: rowItm.Official_Receipt,
-                    Account_No: rowItm.BankAccount,
-                  });
-                  modalReturnCheckEntriesRef.current.selectItem(rowItm);
-                  modalReturnCheckEntriesRef.current.viewer(false);
-                } else {
-                }
-              }}
-            />
-          </div>
-        </CustomTabPanel>
-        <CustomTabPanel value={value} index={1}>
-          <div
-            style={{
-              flex: 1,
-              position: "relative",
-              display: "flex",
-              zIndex: 2,
-            }}
-          >
-            <DataGridViewReactUpgraded
-              ref={selectedChecksToBeReturnTableRef}
-              disableUnselection={true}
-              disableDelete={true}
-              adjustVisibleRowCount={210}
-              columns={columnsSelectedCheckToBeReturned}
-              handleSelectionChange={(rowItm: any) => {
-                if (rowItm) {
-                  modalReturnCheckEntriesRef.current.showModal();
-                  modalReturnCheckEntriesRef.current.setRefs({
-                    checkNo: rowItm.CheckNo,
-                    amount: rowItm.Amount,
-                  });
-                  modalReturnCheckEntriesRef.current.mutateEntries({
-                    ORNo: rowItm.ORNo,
-                    Account_No: rowItm.BankAccount,
-                  });
-                  modalReturnCheckEntriesRef.current.selectItem(rowItm);
-                  modalReturnCheckEntriesRef.current.viewer(true);
-                } else {
-                }
-              }}
-            />
-          </div>
-        </CustomTabPanel>
-        <CustomTabPanel value={value} index={2}>
-          <div
-            style={{
-              flex: 1,
-              position: "relative",
-              display: "flex",
-              zIndex: 2,
-            }}
-          >
-            <DataGridViewReactUpgraded
-              ref={accountingEntryTableRef}
-              disableDelete={true}
-              adjustVisibleRowCount={210}
-              columns={columnsAccountingEntry}
-              handleSelectionChange={(rowItm: any) => {
-                if (rowItm) {
-                } else {
-                }
-              }}
-            />
-          </div>
-        </CustomTabPanel>
+            // SelectedCheckToBeReturned
+            const newSelectedData = [
+              ...refSelectedCheckToBeReturned.current.table.current.getData(),
+              [
+                itm[6],
+                itm[7],
+                itm[0],
+                itm[1],
+                itm[2],
+                itm[3],
+                itm[4],
+                itm[5],
+                itm[8],
+                RetReason,
+                format(new Date(RetDateRet), "MM/dd/yyyy"),
+              ],
+            ];
+
+            refSelectedCheckToBeReturned.current.table.current.setData(
+              newSelectedData
+            );
+
+            if (tssAmountRef.current) {
+              tssAmountRef.current.value = `Total Amount:   ${formatNumber(
+                newSelectedData.reduce((total: number, row: any) => {
+                  total += parseFloat(row[6].replace(/,/g, ""));
+                  return total;
+                }, 0)
+              )}`;
+            }
+            let newSelectedDataAccountingEntry: any = [];
+
+            newSelectedDataAccountingEntry = [
+              ...refAccountingEntry.current.table.current.getData(),
+            ]
+
+            for (let i = 0; i < retDebit.length; i++) {
+                 newSelectedDataAccountingEntry.push(
+                  [
+                  retDebit[i][0],
+                  retDebit[i][1],
+                  retDebit[i][2],
+                  "0.00",
+                  retDebit[i][3],
+                  retDebit[i][4],
+                  retDebit[i][5],
+                  retDebit[i][6],
+                  itm[2],
+                  itm[5],
+                  itm[3],
+                  format(new Date(RetDateRet), "MM/dd/yyyy"),
+                  RetReason,
+                  itm[2],
+                  itm[1],
+                  itm[7],
+                ],
+                 )
+         
+            }
+            newSelectedDataAccountingEntry = [
+              ...newSelectedDataAccountingEntry,
+              [
+                retCredit[0],
+                retCredit[1],
+                "0.00",
+                retCredit[2],
+                retCredit[5],
+                "",
+                retCredit[3],
+                retCredit[4],
+                itm[2],
+                itm[5],
+                itm[3],
+                format(new Date(RetDateRet), "MM/dd/yyyy"),
+                RetReason,
+                itm[2],
+                itm[1],
+                itm[7],
+              ],
+            ];
+
+            refAccountingEntry.current.table.current.setData(
+              newSelectedDataAccountingEntry
+            );
+
+            const reformatData = newSelectedDataAccountingEntry.map(
+              (itm: any) => {
+                return {
+                  debit: itm[2],
+                  credit: itm[3],
+                };
+              }
+            );
+            if (refAccountingEntry.current.debitRef.current) {
+              refAccountingEntry.current.debitRef.current.value = formatNumber(
+                getSum(reformatData, "debit")
+              );
+            }
+
+            if (refAccountingEntry.current.creditRef.current) {
+              refAccountingEntry.current.creditRef.current.value = formatNumber(
+                getSum(reformatData, "credit")
+              );
+            }
+
+            // AccountingEntry
+          }}
+          handleCancel={(e: any) => {
+            table.current.setSelectedRow(null);
+            table.current.resetCheckBox();
+          }}
+        />
       </div>
-      <ModalReturnCheckEntries
-        ref={modalReturnCheckEntriesRef}
-        handleConfirm={(row: any, state: any, ref: any) => {
-          if (mode === "") {
-            setMode("add");
-          }
+    );
+  }
+);
+const SelectedCheckToBeReturned = forwardRef(
+  ({ refAccountingEntry }: any, ref) => {
+    const table = useRef<any>(null);
 
-          if (state.lblTextRef !== state.refAmount) {
-            return alert("Debit must equal to Credit!");
-          }
-
-          const retDebit =
-            modalReturnCheckEntriesRef.current.table.current.getData();
-
-          const RetReason =
-            ref.refReturnReason.current?.selectedIndex === 2
-              ? "AC"
-              : ref.refReturnReason.current?.value;
-
-          const RetDateRet = ref.refDateReturned.current?.value;
-          const retCredit: any = [];
-          retCredit[0] = state.refAccountID;
-          retCredit[1] = state.refAccountName;
-          retCredit[2] = state.refAmount;
-          retCredit[3] = state.refAcronym;
-          retCredit[4] = state.refSubAccount;
-          retCredit[5] = state.refAccountId;
-
-          // SelectedCheckToBeReturned
-          selected.push({
-            ORNo: row.Official_Receipt,
-            ORDate: row.Date_OR,
-            DepoSlip: row.Deposit_Slip,
-            DepoDate: row.Depo_Date,
-            CheckNo: row.Check_No,
-            CheckDate: row.Check_Date,
-            Amount: row.Amount,
-            Bank: row.Bank,
-            BankAccount: row.BankAccount,
-            Reason: RetReason,
-            ReturnDate: format(new Date(RetDateRet), "MM/dd/yyyy"),
+    useImperativeHandle(ref, () => ({
+      test: () => {
+        alert("qweqweqweqwe2");
+      },
+      table,
+      getSelectedCheck: () => {
+        const checkList = table.current.getData();
+        if (checkList.length > 0) {
+          return checkList.map((itm: any) => {
+            return itm[4];
           });
+        }
+        return [];
+      },
+    }));
 
-          // Accounting Entry
-          let newSelectedDataAccountingEntry: any = [];
-          for (let i = 0; i < retDebit.length; i++) {
-            newSelectedDataAccountingEntry.push({
-              Code: retDebit[i].CRCode,
-              AccountName: retDebit[i].CRTitle,
-              Debit: retDebit[i].Credit,
-              Credit: "0.00",
-              IDNo: retDebit[i].CRLoanID,
-              Identity: retDebit[i].CRLoanName,
-              SubAcct: retDebit[i].SAcctCode,
-              SubAcctName: retDebit[i].SAcctName,
-              CheckNo: row.Check_No,
-              Bank: row.Bank,
-              CheckDate: row.Check_Date,
-              CheckReturn: format(new Date(RetDateRet), "MM/dd/yyyy"),
-              CheckReason: RetReason,
-              PK: row.Check_No,
-              DateDeposit: row.Depo_Date,
-              DateCollection: row.Date_OR,
-              Temp_OR: retDebit[i].Temp_OR,
-            });
-          }
-          newSelectedDataAccountingEntry.push({
-            Code: state.refAccountID,
-            AccountName: state.refAccountName,
-            Debit: "0.00",
-            Credit: state.refAmount,
-            IDNo: state.refAccountId,
-            Identity: state.identityRef,
-            SubAcct: state.refAcronym,
-            SubAcctName: state.refSubAccount,
-            CheckNo: row.Check_No,
-            Bank: row.Bank,
-            CheckDate: row.Check_Date,
-            CheckReturn: format(new Date(RetDateRet), "MM/dd/yyyy"),
-            CheckReason: RetReason,
-            PK: row.Check_No,
-            DateDeposit: row.Depo_Date,
-            DateCollection: row.Date_OR,
-            Temp_OR: row.Official_Receipt,
-          });
-          accountingEntry.push(...newSelectedDataAccountingEntry);
-
-          selectedChecksTableRef.current.setSelectedRow(null);
-          modalReturnCheckEntriesRef.current.closeModal();
+    return (
+      <div
+        style={{
+          display: "flex",
+          flex: 1,
         }}
-        handleCancel={(row: any) => {
-          if (selectedChecksTableRef.current)
-            selectedChecksTableRef.current.setSelectedRow(null);
+      >
+        {/* <DataGridViewReact
+          ref={table}
+          columns={columnsSelectedCheckToBeReturned}
+          rows={[]}
+          containerStyle={{
+            height: "auto",
+            flex: 1,
+            minHeight: "200px",
+          }}
+          getSelectedItem={(rowItm: any) => {
+            if (rowItm) {
+              wait(100).then(() => {});
+            } else {
+              wait(100).then(() => {});
+            }
+          }}
+          onKeyDown={(rowItm: any, rowIdx: any, e: any) => {
+            if (e.code === "Delete" || e.code === "Backspace") {
+              const isConfim = window.confirm(
+                `Are you sure you want to delete?`
+              );
+              if (isConfim) {
+                const data = table.current.getData();
+                data.splice(rowIdx, 1);
+                const accountingEntryData =
+                  refAccountingEntry.current.table.current.getData();
+                const deleteIndex = [];
+                for (
+                  let index = 0;
+                  index < accountingEntryData.length;
+                  index++
+                ) {
+                  if (rowItm[4] === accountingEntryData[index][8]) {
+                    deleteIndex.push(index);
+                  }
+                }
 
-          if (selectedChecksToBeReturnTableRef.current)
-            selectedChecksToBeReturnTableRef.current.setSelectedRow(null);
-        }}
-        handleDelete={(selectedItem: any) => {
-          if (selectedItem) {
-            const newSelected = selected.filter(
-              (itm: any) => itm.ORNo !== selectedItem.ORNo
-            );
-            setSelected(newSelected);
-            const newAccountingEntry = accountingEntry.filter(
-              (itm: any) => itm.Temp_OR !== selectedItem.ORNo
-            );
-            setAccountingEntry(newAccountingEntry);
+                table.current.setData(data);
+                refAccountingEntry.current.table.current.setData(
+                  removeIndices(accountingEntryData, deleteIndex)
+                );
 
-            wait(100).then(() => {
-              if (selectedChecksToBeReturnTableRef.current)
-                selectedChecksToBeReturnTableRef.current.setSelectedRow(null);
+                return;
+              }
+            }
+          }}
+        /> */}
+      </div>
+    );
+  }
+);
 
-              modalReturnCheckEntriesRef.current.closeModal();
-            });
-          }
+const AccountingEntry = forwardRef((props: any, ref) => {
+  const table = useRef<any>(null);
+  const debitRef = useRef<HTMLInputElement>(null);
+  const creditRef = useRef<HTMLInputElement>(null);
+  useImperativeHandle(ref, () => ({
+    test: () => {
+      alert("qweqweqweqwe3");
+    },
+    table,
+    debitRef,
+    creditRef,
+  }));
+
+  return (
+    <>
+      <div
+        style={{
+          display: "flex",
+          flex: 1,
         }}
-      />
-      <UpwardTableModalSearch
-        ref={searchReturnCheckModal}
-        link={"/task/accounting/return-checks/return-checks-search"}
-        column={[
-          { key: "RefDate", label: "Ref. Date", width: 120 },
-          { key: "RefNo", label: "Ref. No.", width: 100 },
-          { key: "Explanation", label: "Explanation", width: 200 },
-        ]}
-        handleSelectionChange={(rowItm) => {
-          if (rowItm) {
-            wait(100).then(() => {
-              mutateReturnChecksSearchSelected({ RefNo: rowItm.RefNo });
-            });
-            searchReturnCheckModal.current.closeModal();
-          }
+      >
+        {/* <DataGridViewReact
+          ref={table}
+          columns={columnsAccountingEntry}
+          rows={[]}
+          containerStyle={{
+            height: "auto",
+            flex: 1,
+            minHeight: "200px",
+          }}
+          getSelectedItem={(rowItm: any) => {
+            if (rowItm) {
+              wait(100).then(() => {});
+            } else {
+              wait(100).then(() => {});
+            }
+          }}
+          onKeyDown={(rowItm: any, rowIdx: any, e: any) => {
+            if (e.code === "Delete" || e.code === "Backspace") {
+              const isConfim = window.confirm(
+                `Are you sure you want to delete?`
+              );
+              if (isConfim) {
+                return;
+              }
+            }
+          }}
+        /> */}
+      </div>
+      <div
+        className="total-container"
+        style={{
+          display: "flex",
+          width: "100%",
+          justifyContent: "flex-end",
+          padding: "5px 0",
+          columnGap: "5px",
         }}
-      />
+      >
+        <span
+          style={{ fontSize: "13px", fontWeight: "bold", marginRight: "10px" }}
+        >
+          Total:
+        </span>
+        <input
+          ref={debitRef}
+          readOnly={true}
+          defaultValue={"0.00"}
+          style={{
+            textAlign: "right",
+            fontWeight: "bold",
+            width: "140px",
+            border: "none",
+          }}
+        />
+        <input
+          ref={creditRef}
+          readOnly={true}
+          defaultValue={"0.00"}
+          style={{
+            textAlign: "right",
+            fontWeight: "bold",
+            width: "140px",
+            border: "none",
+          }}
+        />
+      </div>
     </>
   );
-}
-
+});
 const ModalReturnCheckEntries = forwardRef(
-  ({ handleConfirm, handleCancel, handleDelete }: any, ref) => {
+  ({ handleConfirm, handleCancel, hasSelectedRow }: any, ref) => {
     const modalRef = useRef<HTMLDivElement>(null);
     const isMoving = useRef(false);
     const offset = useRef({ x: 0, y: 0 });
@@ -1136,7 +1482,6 @@ const ModalReturnCheckEntries = forwardRef(
     const { user, myAxios } = useContext(AuthContext);
     const table = useRef<any>(null);
     const [showModal, setShowModal] = useState(false);
-    const [isViewer, setIsViewer] = useState(false);
     const [handleDelayClose, setHandleDelayClose] = useState(false);
     const [selectedItem, setSelectedItem] = useState([]);
     const [blick, setBlick] = useState(false);
@@ -1153,7 +1498,6 @@ const ModalReturnCheckEntries = forwardRef(
 
     const refAccountID = useRef("");
     const refAcronym = useRef("");
-    const identityRef = useRef("");
 
     const lblTextRef = useRef<HTMLInputElement>(null);
 
@@ -1184,7 +1528,6 @@ const ModalReturnCheckEntries = forwardRef(
           }
           refAcronym.current = "HO";
           refAccountID.current = dt1[0].Account_ID;
-          identityRef.current = dt1[0].Shortname;
         }
 
         if (dt2.length > 0) {
@@ -1197,10 +1540,9 @@ const ModalReturnCheckEntries = forwardRef(
               CRLoanName: itm.CRLoanName,
               SAcctCode: itm.SubAcct,
               SAcctName: itm.ShortName,
-              Temp_OR: itm.Official_Receipt,
             };
           });
-          table.current.setData(data);
+          table.current.setDataFormated(data);
         }
 
         if (lblTextRef.current)
@@ -1208,11 +1550,20 @@ const ModalReturnCheckEntries = forwardRef(
       },
     });
 
+    const closeDelay = () => {
+      setHandleDelayClose(true);
+      setTimeout(() => {
+        setShowModal(false);
+        setHandleDelayClose(false);
+        handleCancel();
+      }, 100);
+    };
+
     useImperativeHandle(ref, () => ({
       showModal: () => {
         setShowModal(true);
       },
-      closeModal: () => {
+      clsoeModal: () => {
         setShowModal(false);
       },
       getRefs: () => {
@@ -1232,10 +1583,7 @@ const ModalReturnCheckEntries = forwardRef(
       mutateEntries: (variables: string) => {
         mutateEntries(variables);
       },
-      viewer: (value: boolean) => {
-        setIsViewer(value);
-      },
-      table,
+      closeDelay,
     }));
 
     const columns = [
@@ -1265,12 +1613,6 @@ const ModalReturnCheckEntries = forwardRef(
         key: "SAcctName",
         label: "Sub Account Name",
         width: 200,
-      },
-      {
-        key: "Temp_OR",
-        label: "",
-        width: 0,
-        hide: true,
       },
     ];
 
@@ -1302,12 +1644,6 @@ const ModalReturnCheckEntries = forwardRef(
       document.removeEventListener("mouseup", handleMouseUp);
     };
 
-    useEffect(() => {
-      if (showModal) {
-        if (refReturnReason.current) refReturnReason.current.focus();
-      }
-    }, [showModal]);
-
     return showModal ? (
       <>
         {isLoadingEntries && <Loading />}
@@ -1333,12 +1669,12 @@ const ModalReturnCheckEntries = forwardRef(
           className="modal-accounting-entry"
           ref={modalRef}
           style={{
-            height: blick ? "482px" : "480px",
+            height: blick ? "402px" : "400px",
             width: blick ? "60.3%" : "60%",
             border: "1px solid #64748b",
             position: "absolute",
             left: "50%",
-            top: "65%",
+            top: "35%",
             transform: "translate(-50%, -75%)",
             display: "flex",
             flexDirection: "column",
@@ -1365,8 +1701,7 @@ const ModalReturnCheckEntries = forwardRef(
               className="modal-title"
               style={{ fontSize: "13px", fontWeight: "bold" }}
             >
-              Return Detail and Accounting Entry (Check No.:{" "}
-              <span style={{ color: "#df31c8ff" }}>{checkNo}</span>)
+              Return Detail and Accounting Entry (Check No.: {checkNo})
             </span>
             <button
               className="btn-check-exit-modal"
@@ -1381,8 +1716,7 @@ const ModalReturnCheckEntries = forwardRef(
                 right: 0,
               }}
               onClick={() => {
-                setShowModal(false);
-                handleCancel(selectedItem);
+                closeDelay();
               }}
             >
               <CloseIcon sx={{ fontSize: "22px" }} />
@@ -1412,7 +1746,6 @@ const ModalReturnCheckEntries = forwardRef(
                   flexDirection: "column",
                   padding: "10px",
                   rowGap: "20px",
-                  flex: 1,
                 }}
               >
                 <div
@@ -1457,7 +1790,6 @@ const ModalReturnCheckEntries = forwardRef(
                       }}
                       selectRef={refReturnReason}
                       select={{
-                        disabled: isViewer,
                         style: { width: "calc(85% - 100px)", height: "22px" },
                         defaultValue: "",
                       }}
@@ -1489,7 +1821,6 @@ const ModalReturnCheckEntries = forwardRef(
                         },
                       }}
                       input={{
-                        disabled: isViewer,
                         defaultValue: format(new Date(), "yyyy-MM-dd"),
                         className: "date",
                         type: "date",
@@ -1622,25 +1953,186 @@ const ModalReturnCheckEntries = forwardRef(
                   </div>
                 </div>
               </div>
+              <div
+                className="modal-buttons"
+                style={{
+                  width: "100px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  rowGap: "20px",
+                  height: "auto",
+                }}
+              >
+                <BlinkingButton
+                  style={{
+                    width: "80px",
+                    height: "50px",
+                    border: "1px solid #153002",
+                    fontSize: "12px",
+                    padding: 0,
+                    margin: 0,
+                    boxSizing: "border-box",
+                    background: "#8fbc8b",
+                    color: "black",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    fontFamily: "arial",
+                    cursor: "pointer",
+                    position: "relative",
+                  }}
+                  onClick={(e: any) => {
+                    const data = table.current.getData();
+                    const state = {
+                      refReturnReason: refReturnReason.current?.value,
+                      refDateReturned: refDateReturned.current?.value,
+                      refAccountName: refAccountName.current?.value,
+                      refAmount: refAmount.current?.value,
+                      refAccountId: refAccountId.current?.value,
+                      refSubAccount: refSubAccount.current?.value,
+                      refAccountID: refAccountID.current,
+                      refAcronym: refAcronym.current,
+                      lblTextRef: lblTextRef.current?.value,
+                    };
+                    const ref = {
+                      refReturnReason,
+                      refDateReturned,
+                      refAccountName,
+                      refAmount,
+                      refAccountId,
+                      refSubAccount,
+                      refAccountID,
+                      refAcronym,
+                      lblTextRef,
+                    };
+                    handleConfirm(e, selectedItem, state, data, columns, ref);
+                    closeDelay();
+                  }}
+                >
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: "2px",
+                    }}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="22px"
+                      height="22px"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <path
+                        d="M8.5 12.5L10.5 14.5L15.5 9.5"
+                        stroke="white"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M7 3.33782C8.47087 2.48697 10.1786 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 10.1786 2.48697 8.47087 3.33782 7"
+                        stroke="#a5e15b"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </span>
+                  <span
+                    className="button-tittle"
+                    style={{
+                      position: "absolute",
+                      top: "25px",
+                    }}
+                  >
+                    Accept
+                  </span>
+                </BlinkingButton>
+                <BlinkingButton
+                  style={{
+                    width: "80px",
+                    height: "50px",
+                    border: "1px solid #153002",
+                    fontSize: "12px",
+                    padding: 0,
+                    margin: 0,
+                    boxSizing: "border-box",
+                    background: "#8fbc8b",
+                    color: "black",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    fontFamily: "arial",
+                    cursor: "pointer",
+                    position: "relative",
+                  }}
+                  onClick={(e: any) => {
+                    handleCancel(e);
+                    closeDelay();
+                  }}
+                >
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: "2px",
+                    }}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="red"
+                      width="21px"
+                      height="21px"
+                      viewBox="0 0 36 36"
+                      version="1.1"
+                      preserveAspectRatio="xMidYMid meet"
+                    >
+                      <title>ban-line</title>
+                      <path
+                        className="clr-i-outline clr-i-outline-path-1"
+                        d="M18,2A16,16,0,1,0,34,18,16,16,0,0,0,18,2ZM4,18A13.93,13.93,0,0,1,7.43,8.85L27.15,28.57A14,14,0,0,1,4,18Zm24.57,9.15L8.85,7.43A14,14,0,0,1,28.57,27.15Z"
+                      />
+                      <rect
+                        x="0"
+                        y="0"
+                        width="36"
+                        height="36"
+                        fillOpacity="0"
+                      />
+                    </svg>
+                  </span>
+                  <span
+                    className="button-tittle"
+                    style={{
+                      position: "absolute",
+                      top: "25px",
+                    }}
+                  >
+                    Cancel
+                  </span>
+                </BlinkingButton>
+              </div>
             </div>
             <div
               style={{
                 flex: 1,
-                position: "relative",
-                display: "flex",
-                zIndex: 2,
               }}
             >
-              <DataGridViewReactUpgraded
+              {/* <DataGridViewReact
                 ref={table}
-                fixedRowCount={10}
-                adjustOnRezise={false}
-                disableDelete={true}
-                adjustVisibleRowCount={350}
                 columns={columns}
-                handleSelectionChange={(rowItm: any) => {
+                rows={[]}
+                containerStyle={{
+                  height: "200px",
+                  flex: 1,
+                }}
+                getSelectedItem={(rowItm: any) => {
                   if (rowItm) {
+                    wait(100).then(() => {});
                   } else {
+                    wait(100).then(() => {});
                   }
                 }}
                 onKeyDown={(rowItm: any, rowIdx: any, e: any) => {
@@ -1653,158 +2145,19 @@ const ModalReturnCheckEntries = forwardRef(
                     }
                   }
                 }}
-              />
+              /> */}
             </div>
-
-            <div
+            <input
               style={{
                 width: "100%",
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginTop: "6px",
-                columnGap: "5px",
+                textAlign: "right",
+                fontWeight: "bold",
+                paddingRight: "10px",
               }}
-            >
-              <TextInput
-                containerClassName="search-input"
-                containerStyle={{
-                  width: "300px",
-                }}
-                label={{
-                  title: "Total Amount : ",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "100px",
-                  },
-                }}
-                input={{
-                  readOnly: true,
-                  className: "search-input-up-on-key-down",
-                  type: "text",
-                  onKeyDown: (e) => {
-                    if (e.key === "Enter" || e.key === "NumpadEnter") {
-                      e.preventDefault();
-                    }
-                  },
-                  style: {
-                    width: "calc(100% - 100px)",
-                    textAlign: "right",
-                    fontWeight: "bold",
-                    color: "#0c42d8ff",
-                  },
-                }}
-                inputRef={lblTextRef}
-              />
-              <div
-                style={{
-                  width: "100%",
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "flex-end",
-                  marginTop: "6px",
-                  columnGap: "5px",
-                }}
-              >
-                {isViewer && (
-                  <Button
-                    sx={{
-                      height: "22px",
-                      fontSize: "11px",
-                    }}
-                    variant="contained"
-                    startIcon={
-                      <DeleteForeverIcon sx={{ width: 15, height: 15 }} />
-                    }
-                    color="error"
-                    onClick={() => {
-                      Swal.fire({
-                        title: "Are you sure?",
-                        text: "You want to delete this row.",
-                        icon: "warning",
-                        showCancelButton: true,
-                        confirmButtonColor: "#3085d6",
-                        cancelButtonColor: "#d33",
-                        confirmButtonText: "Yes, proceed!",
-                        didOpen: () => {
-                          Swal.getPopup()?.style.setProperty(
-                            "z-index",
-                            "999999"
-                          );
-                          Swal.getContainer()?.style.setProperty(
-                            "z-index",
-                            "999999"
-                          );
-                        },
-                      }).then((result) => {
-                        if (result.isConfirmed) {
-                          handleDelete(selectedItem);
-                        }
-                      });
-                    }}
-                  >
-                    DELETE
-                  </Button>
-                )}
-                {!isViewer && (
-                  <Button
-                    sx={{
-                      height: "22px",
-                      fontSize: "11px",
-                    }}
-                    variant="contained"
-                    startIcon={<HandshakeIcon sx={{ width: 15, height: 15 }} />}
-                    color="success"
-                    onClick={() => {
-                      const state = {
-                        refReturnReason: refReturnReason.current?.value,
-                        refDateReturned: refDateReturned.current?.value,
-                        refAccountName: refAccountName.current?.value,
-                        refAmount: refAmount.current?.value,
-                        refAccountId: refAccountId.current?.value,
-                        refSubAccount: refSubAccount.current?.value,
-                        refAccountID: refAccountID.current,
-                        refAcronym: refAcronym.current,
-                        identityRef: identityRef.current,
-                        lblTextRef: lblTextRef.current?.value,
-                      };
-                      const ref = {
-                        refReturnReason,
-                        refDateReturned,
-                        refAccountName,
-                        refAmount,
-                        refAccountId,
-                        refSubAccount,
-                        refAccountID,
-                        refAcronym,
-                        lblTextRef,
-                      };
-                      handleConfirm(selectedItem, state, ref);
-                    }}
-                  >
-                    ACCEPT
-                  </Button>
-                )}
-                <Button
-                  sx={{
-                    height: "22px",
-                    fontSize: "11px",
-                  }}
-                  variant="contained"
-                  startIcon={<DoDisturbIcon sx={{ width: 15, height: 15 }} />}
-                  color="warning"
-                  onClick={() => {
-                    setShowModal(false);
-                    handleCancel(selectedItem);
-                  }}
-                >
-                  CANCEL
-                </Button>
-              </div>
-            </div>
+              ref={lblTextRef}
+              defaultValue={"0.00"}
+              readOnly
+            />
           </div>
           <style>
             {`
@@ -1819,7 +2172,6 @@ const ModalReturnCheckEntries = forwardRef(
     ) : null;
   }
 );
-
 const BlinkingButton = ({ onClick, style, children }: any) => {
   const uniClass = `btn-${Date.now()}-${Math.random()
     .toString(36)
@@ -1880,3 +2232,8 @@ const BlinkingButton = ({ onClick, style, children }: any) => {
     </>
   );
 };
+
+function removeIndices(arr: any, indices: any) {
+  const toRemove = new Set(indices); // Use Set for faster lookup
+  return arr.filter((_: any, index: any) => !toRemove.has(index));
+}

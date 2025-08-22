@@ -6,7 +6,6 @@ import {
   useImperativeHandle,
 } from "react";
 import { Button, IconButton } from "@mui/material";
-import { blue, grey } from "@mui/material/colors";
 import { AuthContext } from "../../../../../../../components/AuthContext";
 import { useQuery, useMutation } from "react-query";
 import CloseIcon from "@mui/icons-material/Close";
@@ -31,13 +30,8 @@ import SearchIcon from "@mui/icons-material/Search";
 import SaveAsIcon from "@mui/icons-material/SaveAs";
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import { Loading } from "../../../../../../../components/Loading";
-import {
-  UpwardTableModalSearch,
-  useUpwardTableModalSearchSafeMode,
-} from "../../../../../../../components/DataGridViewReact";
+import { UpwardTableModalSearch } from "../../../../../../../components/DataGridViewReact";
 import { PolicyContext } from "../../Policy";
-
-
 
 export default function CGLPolicy() {
   const { careOfData, subAccountData } = useContext(PolicyContext);
@@ -1933,4 +1927,3 @@ const PolicyInformation = forwardRef((props: any, ref) => {
     </>
   );
 });
-

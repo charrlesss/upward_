@@ -8,12 +8,10 @@ import {
   Fragment,
   useCallback,
 } from "react";
-import useExecuteQueryFromClient from "../lib/executeQueryFromClient";
 import SearchIcon from "@mui/icons-material/Search";
 import { TextInput } from "./UpwardFields";
 import { wait } from "../lib/wait";
 import CloseIcon from "@mui/icons-material/Close";
-import ReactDOMServer from "react-dom/server";
 import { AuthContext } from "./AuthContext";
 import { Loading } from "./Loading";
 import ReactDOM from "react-dom";
@@ -635,7 +633,6 @@ const CheckBoxSelection = forwardRef(
     );
   }
 );
-
 const ActionModal = forwardRef(
   ({ handleOnSave, handleOnClose, hasSelectedRow, Component }: any, ref) => {
     const [showModal, setShowModal] = useState(false);
@@ -752,1169 +749,1169 @@ const ActionModal = forwardRef(
     ) : null;
   }
 );
-export const DataGridViewMultiSelectionReact = forwardRef(
-  (
-    {
-      columns,
-      rows = [],
-      height = "400px",
-      getSelectedItem,
-      onKeyDown,
-      disbaleTable = false,
-      isTableSelectable: _isTableSelectable = true,
-      containerStyle,
-      focusElementOnMaxTop,
-      onCheckAll,
-      onUnCheckAll,
-      rowIsSelectable,
-    }: any,
-    ref
-  ) => {
-    const parentElementRef = useRef<any>(null);
-    const tbodyRef = useRef<HTMLTableSectionElement>(null);
-    const [data, setData] = useState([]);
-    const [column, setColumn] = useState([]);
-    const [selectedRow, setSelectedRow] = useState<any>(0);
-    const [selectedRowIndex, setSelectedRowIndex] = useState<Array<any>>([]);
-    const totalRowWidth = column.reduce((a: any, b: any) => a + b.width, 0);
-    const [isTableSelectable, setIsTableSelectable] =
-      useState(_isTableSelectable);
+// export const DataGridViewMultiSelectionReact = forwardRef(
+//   (
+//     {
+//       columns,
+//       rows = [],
+//       height = "400px",
+//       getSelectedItem,
+//       onKeyDown,
+//       disbaleTable = false,
+//       isTableSelectable: _isTableSelectable = true,
+//       containerStyle,
+//       focusElementOnMaxTop,
+//       onCheckAll,
+//       onUnCheckAll,
+//       rowIsSelectable,
+//     }: any,
+//     ref
+//   ) => {
+//     const parentElementRef = useRef<any>(null);
+//     const tbodyRef = useRef<HTMLTableSectionElement>(null);
+//     const [data, setData] = useState([]);
+//     const [column, setColumn] = useState([]);
+//     const [selectedRow, setSelectedRow] = useState<any>(0);
+//     const [selectedRowIndex, setSelectedRowIndex] = useState<Array<any>>([]);
+//     const totalRowWidth = column.reduce((a: any, b: any) => a + b.width, 0);
+//     const [isTableSelectable, setIsTableSelectable] =
+//       useState(_isTableSelectable);
 
-    const [columnHeader, setColumnHeader] = useState(
-      columns.filter((itm: any) => !itm.hide)
-    );
-    const [hoveredColumn, setHoveredColumn] = useState(null);
+//     const [columnHeader, setColumnHeader] = useState(
+//       columns.filter((itm: any) => !itm.hide)
+//     );
+//     const [hoveredColumn, setHoveredColumn] = useState(null);
 
-    useEffect(() => {
-      if (columns.length > 0) {
-        setColumn(columns.filter((itm: any) => !itm.hide));
-      }
-    }, [columns]);
+//     useEffect(() => {
+//       if (columns.length > 0) {
+//         setColumn(columns.filter((itm: any) => !itm.hide));
+//       }
+//     }, [columns]);
 
-    useImperativeHandle(ref, () => ({
-      checkNoIsExist: (checkNo: string) => {
-        return data.some((subArray: any) => subArray[2] === checkNo);
-      },
-      selectedRow: () => selectedRow,
-      getData: () => {
-        const newData = [...data];
-        return newData;
-      },
-      getSelectedRowsData: () => {
-        const newData = [...data];
-        return selectedRowIndex
-          .map((index) => newData[index])
-          .filter((item) => item !== undefined);
-      },
-      setData: (newData: any) => {
-        setData(newData);
-      },
-      getColumns: () => {
-        return columns;
-      },
-      resetTable: () => {
-        setData([]);
-        setSelectedRow(0);
-        setSelectedRowIndex([]);
-      },
-      getSelectedRow: () => {
-        return selectedRowIndex;
-      },
-      setSelectedRow: (value: any) => {
-        return setSelectedRowIndex(value);
-      },
-      _setSelectedRow: (value: any) => {
-        return setSelectedRow(value);
-      },
-      setDataFormated: (newData: any) => {
-        setData(
-          newData.map((itm: any) => {
-            return columns.map((col: any) => itm[col.key]);
-          })
-        );
-      },
-      setIsTableSelectable: (param: boolean) => {
-        setIsTableSelectable(param);
-      },
-      getDataFormatted: () => {
-        const newData = [...data];
-        const newDataFormatted = newData.map((itm: any) => {
-          let newItm = {
-            Check_No: itm[0],
-            Check_Date: itm[1],
-            Check_Amnt: itm[2],
-            BankName: itm[3],
-            Branch: itm[4],
-            Check_Remarks: itm[5],
-            Deposit_Slip: itm[6],
-            DateDeposit: itm[7],
-            OR_No: itm[8],
-            BankCode: itm[9],
-          };
-          return newItm;
-        });
+//     useImperativeHandle(ref, () => ({
+//       checkNoIsExist: (checkNo: string) => {
+//         return data.some((subArray: any) => subArray[2] === checkNo);
+//       },
+//       selectedRow: () => selectedRow,
+//       getData: () => {
+//         const newData = [...data];
+//         return newData;
+//       },
+//       getSelectedRowsData: () => {
+//         const newData = [...data];
+//         return selectedRowIndex
+//           .map((index) => newData[index])
+//           .filter((item) => item !== undefined);
+//       },
+//       setData: (newData: any) => {
+//         setData(newData);
+//       },
+//       getColumns: () => {
+//         return columns;
+//       },
+//       resetTable: () => {
+//         setData([]);
+//         setSelectedRow(0);
+//         setSelectedRowIndex([]);
+//       },
+//       getSelectedRow: () => {
+//         return selectedRowIndex;
+//       },
+//       setSelectedRow: (value: any) => {
+//         return setSelectedRowIndex(value);
+//       },
+//       _setSelectedRow: (value: any) => {
+//         return setSelectedRow(value);
+//       },
+//       setDataFormated: (newData: any) => {
+//         setData(
+//           newData.map((itm: any) => {
+//             return columns.map((col: any) => itm[col.key]);
+//           })
+//         );
+//       },
+//       setIsTableSelectable: (param: boolean) => {
+//         setIsTableSelectable(param);
+//       },
+//       getDataFormatted: () => {
+//         const newData = [...data];
+//         const newDataFormatted = newData.map((itm: any) => {
+//           let newItm = {
+//             Check_No: itm[0],
+//             Check_Date: itm[1],
+//             Check_Amnt: itm[2],
+//             BankName: itm[3],
+//             Branch: itm[4],
+//             Check_Remarks: itm[5],
+//             Deposit_Slip: itm[6],
+//             DateDeposit: itm[7],
+//             OR_No: itm[8],
+//             BankCode: itm[9],
+//           };
+//           return newItm;
+//         });
 
-        return newDataFormatted;
-      },
-      getElementBody: () => tbodyRef.current,
-      getParentElement: () => parentElementRef.current,
-      isTableSelectable,
-    }));
+//         return newDataFormatted;
+//       },
+//       getElementBody: () => tbodyRef.current,
+//       getParentElement: () => parentElementRef.current,
+//       isTableSelectable,
+//     }));
 
-    const startResize = (index: any, e: any) => {
-      e.preventDefault();
-      e.stopPropagation();
+//     const startResize = (index: any, e: any) => {
+//       e.preventDefault();
+//       e.stopPropagation();
 
-      const startX = e.clientX;
-      const startWidth = columnHeader[index].width;
+//       const startX = e.clientX;
+//       const startWidth = columnHeader[index].width;
 
-      const doDrag = (moveEvent: any) => {
-        const newWidth = startWidth + (moveEvent.clientX - startX);
-        const updatedColumns = [...columnHeader];
-        updatedColumns[index].width = newWidth > 50 ? newWidth : 50; // Set minimum column width
-        setColumnHeader(updatedColumns);
-      };
+//       const doDrag = (moveEvent: any) => {
+//         const newWidth = startWidth + (moveEvent.clientX - startX);
+//         const updatedColumns = [...columnHeader];
+//         updatedColumns[index].width = newWidth > 50 ? newWidth : 50; // Set minimum column width
+//         setColumnHeader(updatedColumns);
+//       };
 
-      const stopDrag = () => {
-        document.removeEventListener("mousemove", doDrag);
-        document.removeEventListener("mouseup", stopDrag);
-      };
+//       const stopDrag = () => {
+//         document.removeEventListener("mousemove", doDrag);
+//         document.removeEventListener("mouseup", stopDrag);
+//       };
 
-      document.addEventListener("mousemove", doDrag);
-      document.addEventListener("mouseup", stopDrag);
-    };
-    const handleMouseEnter = (index: any) => {
-      setHoveredColumn(index); // Set the hovered column index
-    };
-    const handleMouseLeave = () => {
-      setHoveredColumn(null); // Reset hovered column index
-    };
+//       document.addEventListener("mousemove", doDrag);
+//       document.addEventListener("mouseup", stopDrag);
+//     };
+//     const handleMouseEnter = (index: any) => {
+//       setHoveredColumn(index); // Set the hovered column index
+//     };
+//     const handleMouseLeave = () => {
+//       setHoveredColumn(null); // Reset hovered column index
+//     };
 
-    return (
-      <div
-        ref={parentElementRef}
-        style={{
-          width: "100%",
-          height,
-          overflow: "auto",
-          position: "relative",
-          pointerEvents: disbaleTable ? "none" : "auto",
-          border: disbaleTable ? "2px solid #8c8f8e" : "2px solid #c0c0c0",
-          boxShadow: `inset -2px -2px 0 #ffffff, 
-                        inset 2px 2px 0 #808080`,
-          ...containerStyle,
-          background: "#dcdcdc",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            width: `${totalRowWidth}px`,
-            height: "auto",
-          }}
-        >
-          <table
-            id="upward-cutom-table-multi"
-            style={{
-              borderCollapse: "collapse",
-              width: "100%",
-              position: "relative",
-              background: "#dcdcdc",
-            }}
-          >
-            <thead>
-              <tr>
-                {isTableSelectable && (
-                  <th
-                    style={{
-                      width: "30px",
-                      border: "none",
-                      position: "sticky",
-                      top: 0,
-                      zIndex: 1,
-                      background: "#f0f0f0",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: "18px",
-                        height: "18px",
-                        position: "relative",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <input
-                        style={{
-                          cursor: "pointer",
-                          margin: "0px !important",
-                          position: "absolute",
-                        }}
-                        readOnly={true}
-                        type="checkbox"
-                        onClick={(e) => {
-                          if (e.currentTarget.checked) {
-                            if (onCheckAll) {
-                              onCheckAll();
-                            }
-                          } else {
-                            if (onUnCheckAll) {
-                              onUnCheckAll();
-                            }
-                          }
-                        }}
-                      />
-                    </div>
-                  </th>
-                )}
-                {column.map((colItm: any, idx: number) => {
-                  return (
-                    <th
-                      key={idx}
-                      style={{
-                        width: colItm.width,
-                        borderRight: "1px solid #e2e8f0",
-                        position: "sticky",
-                        top: 0,
-                        zIndex: 1,
-                        background: "#f0f0f0",
-                        fontSize: "12px",
-                        padding: "0px 5px",
-                        textAlign: colItm.type === "number" ? "center" : "left",
-                      }}
-                    >
-                      <div
-                        key={idx}
-                        className={` ${
-                          hoveredColumn === idx ? `highlight-column` : ""
-                        }`} // Add the class if hovered
-                        style={{ width: colItm.width, height: "20px" }}
-                      >
-                        {colItm.label}
+//     return (
+//       <div
+//         ref={parentElementRef}
+//         style={{
+//           width: "100%",
+//           height,
+//           overflow: "auto",
+//           position: "relative",
+//           pointerEvents: disbaleTable ? "none" : "auto",
+//           border: disbaleTable ? "2px solid #8c8f8e" : "2px solid #c0c0c0",
+//           boxShadow: `inset -2px -2px 0 #ffffff, 
+//                         inset 2px 2px 0 #808080`,
+//           ...containerStyle,
+//           background: "#dcdcdc",
+//         }}
+//       >
+//         <div
+//           style={{
+//             position: "absolute",
+//             width: `${totalRowWidth}px`,
+//             height: "auto",
+//           }}
+//         >
+//           <table
+//             id="upward-cutom-table-multi"
+//             style={{
+//               borderCollapse: "collapse",
+//               width: "100%",
+//               position: "relative",
+//               background: "#dcdcdc",
+//             }}
+//           >
+//             <thead>
+//               <tr>
+//                 {isTableSelectable && (
+//                   <th
+//                     style={{
+//                       width: "30px",
+//                       border: "none",
+//                       position: "sticky",
+//                       top: 0,
+//                       zIndex: 1,
+//                       background: "#f0f0f0",
+//                     }}
+//                   >
+//                     <div
+//                       style={{
+//                         width: "18px",
+//                         height: "18px",
+//                         position: "relative",
+//                         display: "flex",
+//                         alignItems: "center",
+//                         justifyContent: "center",
+//                       }}
+//                     >
+//                       <input
+//                         style={{
+//                           cursor: "pointer",
+//                           margin: "0px !important",
+//                           position: "absolute",
+//                         }}
+//                         readOnly={true}
+//                         type="checkbox"
+//                         onClick={(e) => {
+//                           if (e.currentTarget.checked) {
+//                             if (onCheckAll) {
+//                               onCheckAll();
+//                             }
+//                           } else {
+//                             if (onUnCheckAll) {
+//                               onUnCheckAll();
+//                             }
+//                           }
+//                         }}
+//                       />
+//                     </div>
+//                   </th>
+//                 )}
+//                 {column.map((colItm: any, idx: number) => {
+//                   return (
+//                     <th
+//                       key={idx}
+//                       style={{
+//                         width: colItm.width,
+//                         borderRight: "1px solid #e2e8f0",
+//                         position: "sticky",
+//                         top: 0,
+//                         zIndex: 1,
+//                         background: "#f0f0f0",
+//                         fontSize: "12px",
+//                         padding: "0px 5px",
+//                         textAlign: colItm.type === "number" ? "center" : "left",
+//                       }}
+//                     >
+//                       <div
+//                         key={idx}
+//                         className={` ${
+//                           hoveredColumn === idx ? `highlight-column` : ""
+//                         }`} // Add the class if hovered
+//                         style={{ width: colItm.width, height: "20px" }}
+//                       >
+//                         {colItm.label}
 
-                        <div
-                          className="resize-handle"
-                          onMouseDown={(e) => startResize(idx, e)}
-                          onMouseEnter={(e) => {
-                            e.preventDefault();
-                            handleMouseEnter(idx);
-                          }} // On hover
-                          onMouseLeave={(e) => {
-                            e.preventDefault();
-                            handleMouseLeave();
-                          }} // On mouse leave
-                        />
-                      </div>
-                    </th>
-                  );
-                })}
-              </tr>
-            </thead>
-            <tbody ref={tbodyRef}>
-              {data?.map((rowItm: any, rowIdx: number) => {
-                return (
-                  <tr
-                    data-index={rowIdx}
-                    key={rowIdx}
-                    className={`row ${
-                      selectedRow === rowIdx &&
-                      selectedRowIndex.includes(rowIdx)
-                        ? "multi-selected-row-item"
-                        : selectedRow === rowIdx
-                        ? "multi-selected-row"
-                        : selectedRowIndex.includes(rowIdx)
-                        ? "multi-selected-item"
-                        : ""
-                    }`}
-                  >
-                    {isTableSelectable && (
-                      <td
-                        style={{
-                          position: "relative",
-                          border: "none",
-                          cursor: "pointer",
-                          background: selectedRow === rowIdx ? "#0076d" : "",
-                          padding: 0,
-                          margin: 0,
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: "18px",
-                            height: "18px",
-                            position: "relative",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <input
-                            style={{
-                              cursor: "pointer",
-                              margin: "0px !important",
-                              position: "absolute",
-                            }}
-                            readOnly={true}
-                            checked={selectedRowIndex.includes(rowIdx)}
-                            type="checkbox"
-                            onClick={() => {
-                              if (rowIsSelectable && rowIsSelectable(rowItm)) {
-                                return;
-                              }
-                              if (!isTableSelectable) {
-                                return;
-                              }
+//                         <div
+//                           className="resize-handle"
+//                           onMouseDown={(e) => startResize(idx, e)}
+//                           onMouseEnter={(e) => {
+//                             e.preventDefault();
+//                             handleMouseEnter(idx);
+//                           }} // On hover
+//                           onMouseLeave={(e) => {
+//                             e.preventDefault();
+//                             handleMouseLeave();
+//                           }} // On mouse leave
+//                         />
+//                       </div>
+//                     </th>
+//                   );
+//                 })}
+//               </tr>
+//             </thead>
+//             <tbody ref={tbodyRef}>
+//               {data?.map((rowItm: any, rowIdx: number) => {
+//                 return (
+//                   <tr
+//                     data-index={rowIdx}
+//                     key={rowIdx}
+//                     className={`row ${
+//                       selectedRow === rowIdx &&
+//                       selectedRowIndex.includes(rowIdx)
+//                         ? "multi-selected-row-item"
+//                         : selectedRow === rowIdx
+//                         ? "multi-selected-row"
+//                         : selectedRowIndex.includes(rowIdx)
+//                         ? "multi-selected-item"
+//                         : ""
+//                     }`}
+//                   >
+//                     {isTableSelectable && (
+//                       <td
+//                         style={{
+//                           position: "relative",
+//                           border: "none",
+//                           cursor: "pointer",
+//                           background: selectedRow === rowIdx ? "#0076d" : "",
+//                           padding: 0,
+//                           margin: 0,
+//                         }}
+//                       >
+//                         <div
+//                           style={{
+//                             width: "18px",
+//                             height: "18px",
+//                             position: "relative",
+//                             display: "flex",
+//                             alignItems: "center",
+//                             justifyContent: "center",
+//                           }}
+//                         >
+//                           <input
+//                             style={{
+//                               cursor: "pointer",
+//                               margin: "0px !important",
+//                               position: "absolute",
+//                             }}
+//                             readOnly={true}
+//                             checked={selectedRowIndex.includes(rowIdx)}
+//                             type="checkbox"
+//                             onClick={() => {
+//                               if (rowIsSelectable && rowIsSelectable(rowItm)) {
+//                                 return;
+//                               }
+//                               if (!isTableSelectable) {
+//                                 return;
+//                               }
 
-                              if (selectedRowIndex.includes(rowIdx)) {
-                                setSelectedRowIndex((d: any) =>
-                                  d.filter((i: any) => i !== rowIdx)
-                                );
-                              } else {
-                                setSelectedRowIndex((d: any) => [...d, rowIdx]);
-                              }
+//                               if (selectedRowIndex.includes(rowIdx)) {
+//                                 setSelectedRowIndex((d: any) =>
+//                                   d.filter((i: any) => i !== rowIdx)
+//                                 );
+//                               } else {
+//                                 setSelectedRowIndex((d: any) => [...d, rowIdx]);
+//                               }
 
-                              if (getSelectedItem) {
-                                getSelectedItem(rowItm, null, rowIdx, null);
-                              }
-                            }}
-                          />
-                        </div>
-                      </td>
-                    )}
+//                               if (getSelectedItem) {
+//                                 getSelectedItem(rowItm, null, rowIdx, null);
+//                               }
+//                             }}
+//                           />
+//                         </div>
+//                       </td>
+//                     )}
 
-                    {column.map((colItm: any, colIdx: number) => {
-                      return (
-                        <td
-                          className={`td row-${rowIdx} col-${colIdx} `}
-                          tabIndex={0}
-                          onDoubleClick={() => {
-                            if (rowIsSelectable && rowIsSelectable(rowItm)) {
-                              return;
-                            }
-                            if (!isTableSelectable) {
-                              return;
-                            }
+//                     {column.map((colItm: any, colIdx: number) => {
+//                       return (
+//                         <td
+//                           className={`td row-${rowIdx} col-${colIdx} `}
+//                           tabIndex={0}
+//                           onDoubleClick={() => {
+//                             if (rowIsSelectable && rowIsSelectable(rowItm)) {
+//                               return;
+//                             }
+//                             if (!isTableSelectable) {
+//                               return;
+//                             }
 
-                            if (selectedRowIndex.includes(rowIdx)) {
-                              setSelectedRowIndex((d: any) =>
-                                d.filter((i: any) => i !== rowIdx)
-                              );
+//                             if (selectedRowIndex.includes(rowIdx)) {
+//                               setSelectedRowIndex((d: any) =>
+//                                 d.filter((i: any) => i !== rowIdx)
+//                               );
 
-                              if (getSelectedItem) {
-                                getSelectedItem(null, null, rowIdx, null);
-                              }
+//                               if (getSelectedItem) {
+//                                 getSelectedItem(null, null, rowIdx, null);
+//                               }
 
-                              return;
-                            } else {
-                              setSelectedRowIndex((d: any) => [...d, rowIdx]);
+//                               return;
+//                             } else {
+//                               setSelectedRowIndex((d: any) => [...d, rowIdx]);
 
-                              if (getSelectedItem) {
-                                getSelectedItem(rowItm, null, rowIdx, null);
-                              }
-                            }
-                          }}
-                          onClick={() => {
-                            setSelectedRow(rowIdx);
-                          }}
-                          onKeyDown={(e) => {
-                            if (onKeyDown) {
-                              onKeyDown(rowItm, rowIdx, e);
-                            }
-                            if (e.key === "ArrowUp") {
-                              setSelectedRow((prev: any) => {
-                                const index = Math.max(prev - 1, -1);
-                                const td = document.querySelector(
-                                  `.td.row-${index}`
-                                ) as HTMLTableDataCellElement;
-                                if (index < 0) {
-                                  if (focusElementOnMaxTop) {
-                                    focusElementOnMaxTop();
-                                  }
-                                  return;
-                                }
-                                if (td) {
-                                  td.focus();
-                                }
-                                return index;
-                              });
-                            } else if (e.key === "ArrowDown") {
-                              setSelectedRow((prev: any) => {
-                                const index = Math.min(
-                                  prev + 1,
-                                  data.length - 1
-                                );
-                                const td = document.querySelector(
-                                  `.td.row-${index}`
-                                ) as HTMLTableDataCellElement;
-                                if (td) {
-                                  td.focus();
-                                  if (index <= 15) {
-                                    parentElementRef.current.style.overflow =
-                                      "hidden";
-                                    setTimeout(() => {
-                                      parentElementRef.current.style.overflow =
-                                        "auto";
-                                    }, 100);
-                                    return index;
-                                  }
-                                }
-                                return index;
-                              });
-                            }
-                            if (
-                              e.code === "Enter" ||
-                              e.code === "NumpadEnter"
-                            ) {
-                              e.preventDefault();
+//                               if (getSelectedItem) {
+//                                 getSelectedItem(rowItm, null, rowIdx, null);
+//                               }
+//                             }
+//                           }}
+//                           onClick={() => {
+//                             setSelectedRow(rowIdx);
+//                           }}
+//                           onKeyDown={(e) => {
+//                             if (onKeyDown) {
+//                               onKeyDown(rowItm, rowIdx, e);
+//                             }
+//                             if (e.key === "ArrowUp") {
+//                               setSelectedRow((prev: any) => {
+//                                 const index = Math.max(prev - 1, -1);
+//                                 const td = document.querySelector(
+//                                   `.td.row-${index}`
+//                                 ) as HTMLTableDataCellElement;
+//                                 if (index < 0) {
+//                                   if (focusElementOnMaxTop) {
+//                                     focusElementOnMaxTop();
+//                                   }
+//                                   return;
+//                                 }
+//                                 if (td) {
+//                                   td.focus();
+//                                 }
+//                                 return index;
+//                               });
+//                             } else if (e.key === "ArrowDown") {
+//                               setSelectedRow((prev: any) => {
+//                                 const index = Math.min(
+//                                   prev + 1,
+//                                   data.length - 1
+//                                 );
+//                                 const td = document.querySelector(
+//                                   `.td.row-${index}`
+//                                 ) as HTMLTableDataCellElement;
+//                                 if (td) {
+//                                   td.focus();
+//                                   if (index <= 15) {
+//                                     parentElementRef.current.style.overflow =
+//                                       "hidden";
+//                                     setTimeout(() => {
+//                                       parentElementRef.current.style.overflow =
+//                                         "auto";
+//                                     }, 100);
+//                                     return index;
+//                                   }
+//                                 }
+//                                 return index;
+//                               });
+//                             }
+//                             if (
+//                               e.code === "Enter" ||
+//                               e.code === "NumpadEnter"
+//                             ) {
+//                               e.preventDefault();
 
-                              if (!isTableSelectable) {
-                                return;
-                              }
+//                               if (!isTableSelectable) {
+//                                 return;
+//                               }
 
-                              if (selectedRowIndex.includes(rowIdx)) {
-                                setSelectedRowIndex((d: any) =>
-                                  d.filter((i: any) => i !== rowIdx)
-                                );
-                              } else {
-                                setSelectedRowIndex((d: any) => [...d, rowIdx]);
-                              }
-                              if (getSelectedItem) {
-                                getSelectedItem(rowItm, null, rowIdx, null);
-                              }
-                            }
-                          }}
-                          key={colIdx}
-                          style={{
-                            border: "none",
-                            fontSize: "12px",
-                            padding: "0px 5px",
-                            cursor: "pointer",
-                            height: "20px",
-                            userSelect: "none",
-                          }}
-                        >
-                          {
-                            <input
-                              type={
-                                isValidDateStrict(rowItm[colIdx])
-                                  ? "date"
-                                  : "text"
-                              }
-                              readOnly={true}
-                              value={rowItm[colIdx]}
-                              style={{
-                                width: colItm.width,
-                                pointerEvents: "none",
-                                border: "none",
-                                background: "transparent",
-                                userSelect: "none",
-                                height: "100%",
-                                textAlign:
-                                  colItm.type === "number" ? "right" : "left",
-                              }}
-                            />
-                          }
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          <style>
-            {`
-             #upward-cutom-table-multi tr td{
-               border-right:1px solid #f1f5f9 !important;
-             }
+//                               if (selectedRowIndex.includes(rowIdx)) {
+//                                 setSelectedRowIndex((d: any) =>
+//                                   d.filter((i: any) => i !== rowIdx)
+//                                 );
+//                               } else {
+//                                 setSelectedRowIndex((d: any) => [...d, rowIdx]);
+//                               }
+//                               if (getSelectedItem) {
+//                                 getSelectedItem(rowItm, null, rowIdx, null);
+//                               }
+//                             }
+//                           }}
+//                           key={colIdx}
+//                           style={{
+//                             border: "none",
+//                             fontSize: "12px",
+//                             padding: "0px 5px",
+//                             cursor: "pointer",
+//                             height: "20px",
+//                             userSelect: "none",
+//                           }}
+//                         >
+//                           {
+//                             <input
+//                               type={
+//                                 isValidDateStrict(rowItm[colIdx])
+//                                   ? "date"
+//                                   : "text"
+//                               }
+//                               readOnly={true}
+//                               value={rowItm[colIdx]}
+//                               style={{
+//                                 width: colItm.width,
+//                                 pointerEvents: "none",
+//                                 border: "none",
+//                                 background: "transparent",
+//                                 userSelect: "none",
+//                                 height: "100%",
+//                                 textAlign:
+//                                   colItm.type === "number" ? "right" : "left",
+//                               }}
+//                             />
+//                           }
+//                         </td>
+//                       );
+//                     })}
+//                   </tr>
+//                 );
+//               })}
+//             </tbody>
+//           </table>
+//           <style>
+//             {`
+//              #upward-cutom-table-multi tr td{
+//                border-right:1px solid #f1f5f9 !important;
+//              }
           
-              #upward-cutom-table-multi tr:nth-child(odd) td {
-                  background-color: #ffffff !important;
-              }
-              #upward-cutom-table-multi tr:nth-child(even) td {
-                  background-color: #f5f5f5 !important;
-              }
+//               #upward-cutom-table-multi tr:nth-child(odd) td {
+//                   background-color: #ffffff !important;
+//               }
+//               #upward-cutom-table-multi tr:nth-child(even) td {
+//                   background-color: #f5f5f5 !important;
+//               }
 
-             #upward-cutom-table-multi tr.multi-selected-row-item td {
-                background-color: rgba(84, 84, 82, 0.73) !important;
-                border-right:1px solid white !important;
-                border-bottom:1px solid white !important;
-              }
-              #upward-cutom-table-multi tr.multi-selected-row-item td input {
-                  color: #ffffff !important;
-              }
+//              #upward-cutom-table-multi tr.multi-selected-row-item td {
+//                 background-color: rgba(84, 84, 82, 0.73) !important;
+//                 border-right:1px solid white !important;
+//                 border-bottom:1px solid white !important;
+//               }
+//               #upward-cutom-table-multi tr.multi-selected-row-item td input {
+//                   color: #ffffff !important;
+//               }
 
-            #upward-cutom-table-multi tr.multi-selected-item td {
-                background-color: rgba(232, 232, 226, 0.99) !important;
-                border-right:1px solid white !important;
-                border-bottom:1px solid white !important;
-              }
-              #upward-cutom-table-multi tr.multi-selected-item td input {
-                  color: black !important;
-              }
+//             #upward-cutom-table-multi tr.multi-selected-item td {
+//                 background-color: rgba(232, 232, 226, 0.99) !important;
+//                 border-right:1px solid white !important;
+//                 border-bottom:1px solid white !important;
+//               }
+//               #upward-cutom-table-multi tr.multi-selected-item td input {
+//                   color: black !important;
+//               }
 
-              #upward-cutom-table-multi tr.multi-selected-row td {
-                  background-color: #0076d7 !important;
-                  border-right:1px solid white !important;
-                  border-bottom:1px solid white !important;
-              }
-              #upward-cutom-table-multi tr.multi-selected-row td input {
-                  color: #ffffff !important;
-              }
-                  .resize-handle {
-                    position: absolute;
-                    right: 0;
-                    top: 0;
-                    width: 5px;
-                    height: 100%;
-                    cursor: col-resize;
-                    background-color: transparent;
-                  }
+//               #upward-cutom-table-multi tr.multi-selected-row td {
+//                   background-color: #0076d7 !important;
+//                   border-right:1px solid white !important;
+//                   border-bottom:1px solid white !important;
+//               }
+//               #upward-cutom-table-multi tr.multi-selected-row td input {
+//                   color: #ffffff !important;
+//               }
+//                   .resize-handle {
+//                     position: absolute;
+//                     right: 0;
+//                     top: 0;
+//                     width: 5px;
+//                     height: 100%;
+//                     cursor: col-resize;
+//                     background-color: transparent;
+//                   }
 
-                  .resize-handle:hover {
-                    background-color: #101111;
-                  }
+//                   .resize-handle:hover {
+//                     background-color: #101111;
+//                   }
 
-                  .highlight-column {
-                    border-right: 2px solid #007bff !important;
-                  }
+//                   .highlight-column {
+//                     border-right: 2px solid #007bff !important;
+//                   }
   
   
-              `}
-          </style>
-        </div>
-      </div>
-    );
-  }
-);
-let dataCache: any = [];
-let searchInputValueCache = "";
-export const useUpwardTableModalSearch = ({
-  column,
-  query,
-  getSelectedItem,
-  onKeyDown,
-  customWidth,
-  onClose,
-}: any) => {
-  const [show, setShow] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
+//               `}
+//           </style>
+//         </div>
+//       </div>
+//     );
+//   }
+// );
+// let dataCache: any = [];
+// let searchInputValueCache = "";
+// export const useUpwardTableModalSearch = ({
+//   column,
+//   query,
+//   getSelectedItem,
+//   onKeyDown,
+//   customWidth,
+//   onClose,
+// }: any) => {
+//   const [show, setShow] = useState(false);
+//   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  function openModal(search: string) {
-    const body = document.body;
-    const div = document.createElement("div");
-    div.id = "modal-portal";
+//   function openModal(search: string) {
+//     const body = document.body;
+//     const div = document.createElement("div");
+//     div.id = "modal-portal";
 
-    if (document.getElementById("modal-portal"))
-      body.removeChild(document.getElementById("modal-portal") as HTMLElement);
+//     if (document.getElementById("modal-portal"))
+//       body.removeChild(document.getElementById("modal-portal") as HTMLElement);
 
-    body.insertBefore(div, document.getElementById("root"));
-    wait(100).then(() => {
-      div.innerHTML = ReactDOMServer.renderToString(<UpwardTableModalSearch />);
-    });
+//     body.insertBefore(div, document.getElementById("root"));
+//     wait(100).then(() => {
+//       div.innerHTML = ReactDOMServer.renderToString(<UpwardTableModalSearch />);
+//     });
 
-    setShow(true);
+//     setShow(true);
 
-    wait(100).then(() => {
-      if (searchInputRef.current) {
-        searchInputRef.current.value = search;
-        const event = new KeyboardEvent("keydown", {
-          code: "Enter",
-          bubbles: true,
-        });
-        searchInputRef.current.focus(); // Ensure the element has focus
-        searchInputRef.current.dispatchEvent(event); // Dispatch the native event
-        wait(100).then(() => {
-          searchInputRef.current?.focus();
-        });
-      }
-    });
-  }
-  function closeModal(muteOnClose = true) {
-    if (onClose && muteOnClose) {
-      onClose();
-    }
-    setShow(false);
-    dataCache = [];
-  }
+//     wait(100).then(() => {
+//       if (searchInputRef.current) {
+//         searchInputRef.current.value = search;
+//         const event = new KeyboardEvent("keydown", {
+//           code: "Enter",
+//           bubbles: true,
+//         });
+//         searchInputRef.current.focus(); // Ensure the element has focus
+//         searchInputRef.current.dispatchEvent(event); // Dispatch the native event
+//         wait(100).then(() => {
+//           searchInputRef.current?.focus();
+//         });
+//       }
+//     });
+//   }
+//   function closeModal(muteOnClose = true) {
+//     if (onClose && muteOnClose) {
+//       onClose();
+//     }
+//     setShow(false);
+//     dataCache = [];
+//   }
 
-  const UpwardTableModalSearch = () => {
-    const modalRef = useRef<HTMLDivElement>(null);
-    const isMoving = useRef(false);
-    const offset = useRef({ x: 0, y: 0 });
+//   const UpwardTableModalSearch = () => {
+//     const modalRef = useRef<HTMLDivElement>(null);
+//     const isMoving = useRef(false);
+//     const offset = useRef({ x: 0, y: 0 });
 
-    const tableRef = useRef<any>(null);
-    const [blick, setBlick] = useState(false);
-    const [data, setData] = useState([]);
-    const { executeQueryToClient } = useExecuteQueryFromClient();
+//     const tableRef = useRef<any>(null);
+//     const [blick, setBlick] = useState(false);
+//     const [data, setData] = useState([]);
+//     const { executeQueryToClient } = useExecuteQueryFromClient();
 
-    useEffect(() => {
-      if (dataCache.length > 0) {
-        if (searchInputRef.current) {
-          searchInputRef.current.value = searchInputValueCache;
-        }
-        setData(dataCache);
-      }
-    }, [setData]);
+//     useEffect(() => {
+//       if (dataCache.length > 0) {
+//         if (searchInputRef.current) {
+//           searchInputRef.current.value = searchInputValueCache;
+//         }
+//         setData(dataCache);
+//       }
+//     }, [setData]);
 
-    useEffect(() => {
-      if (data.length > 0) {
-        dataCache = data;
-        tableRef.current?.setDataFormated(data);
-      }
-    }, [data]);
+//     useEffect(() => {
+//       if (data.length > 0) {
+//         dataCache = data;
+//         tableRef.current?.setDataFormated(data);
+//       }
+//     }, [data]);
 
-    const handleMouseDown = (e: any) => {
-      if (!modalRef.current) return;
+//     const handleMouseDown = (e: any) => {
+//       if (!modalRef.current) return;
 
-      isMoving.current = true;
-      offset.current = {
-        x: e.clientX - modalRef.current.offsetLeft,
-        y: e.clientY - modalRef.current.offsetTop,
-      };
+//       isMoving.current = true;
+//       offset.current = {
+//         x: e.clientX - modalRef.current.offsetLeft,
+//         y: e.clientY - modalRef.current.offsetTop,
+//       };
 
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-    };
+//       document.addEventListener("mousemove", handleMouseMove);
+//       document.addEventListener("mouseup", handleMouseUp);
+//     };
 
-    // Move modal with mouse
-    const handleMouseMove = (e: any) => {
-      if (!isMoving.current || !modalRef.current) return;
+//     // Move modal with mouse
+//     const handleMouseMove = (e: any) => {
+//       if (!isMoving.current || !modalRef.current) return;
 
-      modalRef.current.style.left = `${e.clientX - offset.current.x}px`;
-      modalRef.current.style.top = `${e.clientY - offset.current.y}px`;
-    };
+//       modalRef.current.style.left = `${e.clientX - offset.current.x}px`;
+//       modalRef.current.style.top = `${e.clientY - offset.current.y}px`;
+//     };
 
-    // Stop moving when releasing mouse
-    const handleMouseUp = () => {
-      isMoving.current = false;
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
+//     // Stop moving when releasing mouse
+//     const handleMouseUp = () => {
+//       isMoving.current = false;
+//       document.removeEventListener("mousemove", handleMouseMove);
+//       document.removeEventListener("mouseup", handleMouseUp);
+//     };
 
-    return show ? (
-      <div id="modal-inject">
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            bottom: 0,
-            left: 0,
-            right: 0,
-            background: "transparent",
-            zIndex: "88",
-          }}
-          onClick={() => {
-            setBlick(true);
-            setTimeout(() => {
-              setBlick(false);
-            }, 250);
-          }}
-        ></div>
+//     return show ? (
+//       <div id="modal-inject">
+//         <div
+//           style={{
+//             position: "fixed",
+//             top: 0,
+//             bottom: 0,
+//             left: 0,
+//             right: 0,
+//             background: "transparent",
+//             zIndex: "88",
+//           }}
+//           onClick={() => {
+//             setBlick(true);
+//             setTimeout(() => {
+//               setBlick(false);
+//             }, 250);
+//           }}
+//         ></div>
 
-        <div
-          className="modal-table-datagridview"
-          ref={modalRef}
-          style={{
-            background: "#F1F1F1",
-            width: customWidth
-              ? customWidth(blick, column)
-              : blick
-              ? "451px"
-              : "450px",
-            height: blick ? "501px" : "500px",
-            position: "absolute",
-            zIndex: 111111,
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%,-50%)",
-            boxShadow: "3px 6px 32px -7px rgba(0,0,0,0.75)",
-            boxSizing: "border-box",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <div
-            style={{
-              height: "22px",
-              background: "white",
-              display: "flex",
-              justifyContent: "space-between",
-              padding: "5px",
-              position: "relative",
-              alignItems: "center",
-              cursor: "grab",
-            }}
-            onMouseDown={handleMouseDown}
-          >
-            <span style={{ fontSize: "13px", fontWeight: "bold" }}>Search</span>
-            <button
-              className="btn-check-exit-modal"
-              style={{
-                padding: "0 5px",
-                borderRadius: "0px",
-                background: "white",
-                color: "black",
-                height: "22px",
-                position: "absolute",
-                top: 0,
-                right: 0,
-              }}
-              onClick={() => {
-                closeModal();
-              }}
-            >
-              <CloseIcon sx={{ fontSize: "22px" }} />
-            </button>
-          </div>
-          <div
-            style={{
-              padding: "5px",
-            }}
-          >
-            <TextInput
-              containerStyle={{
-                width: "100%",
-              }}
-              label={{
-                title: "Search : ",
-                style: {
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  width: "70px",
-                  display: "none",
-                },
-              }}
-              input={{
-                type: "text",
-                style: { width: "100%" },
-                onKeyDown: async (e) => {
-                  if (e.code === "NumpadEnter" || e.code === "Enter") {
-                    searchInputValueCache = e.currentTarget.value;
-                    const searchQuery = query(e.currentTarget.value);
-                    console.log(searchQuery);
-                    const dd = await executeQueryToClient(searchQuery);
-                    setData(dd.data.data);
-                  }
+//         <div
+//           className="modal-table-datagridview"
+//           ref={modalRef}
+//           style={{
+//             background: "#F1F1F1",
+//             width: customWidth
+//               ? customWidth(blick, column)
+//               : blick
+//               ? "451px"
+//               : "450px",
+//             height: blick ? "501px" : "500px",
+//             position: "absolute",
+//             zIndex: 111111,
+//             top: "50%",
+//             left: "50%",
+//             transform: "translate(-50%,-50%)",
+//             boxShadow: "3px 6px 32px -7px rgba(0,0,0,0.75)",
+//             boxSizing: "border-box",
+//             display: "flex",
+//             flexDirection: "column",
+//           }}
+//         >
+//           <div
+//             style={{
+//               height: "22px",
+//               background: "white",
+//               display: "flex",
+//               justifyContent: "space-between",
+//               padding: "5px",
+//               position: "relative",
+//               alignItems: "center",
+//               cursor: "grab",
+//             }}
+//             onMouseDown={handleMouseDown}
+//           >
+//             <span style={{ fontSize: "13px", fontWeight: "bold" }}>Search</span>
+//             <button
+//               className="btn-check-exit-modal"
+//               style={{
+//                 padding: "0 5px",
+//                 borderRadius: "0px",
+//                 background: "white",
+//                 color: "black",
+//                 height: "22px",
+//                 position: "absolute",
+//                 top: 0,
+//                 right: 0,
+//               }}
+//               onClick={() => {
+//                 closeModal();
+//               }}
+//             >
+//               <CloseIcon sx={{ fontSize: "22px" }} />
+//             </button>
+//           </div>
+//           <div
+//             style={{
+//               padding: "5px",
+//             }}
+//           >
+//             <TextInput
+//               containerStyle={{
+//                 width: "100%",
+//               }}
+//               label={{
+//                 title: "Search : ",
+//                 style: {
+//                   fontSize: "12px",
+//                   fontWeight: "bold",
+//                   width: "70px",
+//                   display: "none",
+//                 },
+//               }}
+//               input={{
+//                 type: "text",
+//                 style: { width: "100%" },
+//                 onKeyDown: async (e) => {
+//                   if (e.code === "NumpadEnter" || e.code === "Enter") {
+//                     searchInputValueCache = e.currentTarget.value;
+//                     const searchQuery = query(e.currentTarget.value);
+//                     console.log(searchQuery);
+//                     const dd = await executeQueryToClient(searchQuery);
+//                     setData(dd.data.data);
+//                   }
 
-                  if (e.code === "ArrowDown") {
-                    const td = document.querySelector(
-                      `.td.row-0`
-                    ) as HTMLTableDataCellElement;
-                    if (td) {
-                      const parentElement = tableRef.current.getParentElement();
+//                   if (e.code === "ArrowDown") {
+//                     const td = document.querySelector(
+//                       `.td.row-0`
+//                     ) as HTMLTableDataCellElement;
+//                     if (td) {
+//                       const parentElement = tableRef.current.getParentElement();
 
-                      td.focus({
-                        preventScroll: true,
-                      });
-                      parentElement.style.overflow = "hidden";
-                      wait(100).then(() => {
-                        parentElement.style.overflow = "auto";
-                      });
-                    }
-                    tableRef.current?._setSelectedRow(0);
-                  }
-                },
-                onInput: async (e) => {
-                  if (e.currentTarget.value === "") {
-                    const searchQuery = query(searchInputRef.current?.value);
-                    const dd = await executeQueryToClient(searchQuery);
-                    setData(dd.data.data);
-                  }
-                },
-              }}
-              inputRef={searchInputRef}
-              icon={<SearchIcon sx={{ fontSize: "18px" }} />}
-              onIconClick={async (e) => {
-                e.preventDefault();
-                if (searchInputRef.current)
-                  searchInputValueCache = searchInputRef.current.value;
-                const searchQuery = query(searchInputRef.current?.value);
-                const dd = await executeQueryToClient(searchQuery);
-                setData(dd.data.data);
-              }}
-            />
-          </div>
-          <div
-            style={{
-              flex: 1,
-            }}
-          >
-            <DataGridViewReact
-              columns={column}
-              height={"100%"}
-              ref={tableRef}
-              getSelectedItem={getSelectedItem}
-              onKeyDown={onKeyDown}
-              focusElementOnMaxTop={() => {
-                searchInputRef.current?.focus();
-              }}
-            />
-          </div>
-          <div style={{ padding: "0 10px" }}>
-            <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-              Records: Top {data.length}
-            </span>
-          </div>
-          <style>
-            {`
-                .btn-check-exit-modal:hover{
-                    background:red !important;
-                    color:white !important;
-                }
-            `}
-          </style>
-        </div>
-      </div>
-    ) : (
-      <></>
-    );
-  };
+//                       td.focus({
+//                         preventScroll: true,
+//                       });
+//                       parentElement.style.overflow = "hidden";
+//                       wait(100).then(() => {
+//                         parentElement.style.overflow = "auto";
+//                       });
+//                     }
+//                     tableRef.current?._setSelectedRow(0);
+//                   }
+//                 },
+//                 onInput: async (e) => {
+//                   if (e.currentTarget.value === "") {
+//                     const searchQuery = query(searchInputRef.current?.value);
+//                     const dd = await executeQueryToClient(searchQuery);
+//                     setData(dd.data.data);
+//                   }
+//                 },
+//               }}
+//               inputRef={searchInputRef}
+//               icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+//               onIconClick={async (e) => {
+//                 e.preventDefault();
+//                 if (searchInputRef.current)
+//                   searchInputValueCache = searchInputRef.current.value;
+//                 const searchQuery = query(searchInputRef.current?.value);
+//                 const dd = await executeQueryToClient(searchQuery);
+//                 setData(dd.data.data);
+//               }}
+//             />
+//           </div>
+//           <div
+//             style={{
+//               flex: 1,
+//             }}
+//           >
+//             <DataGridViewReact
+//               columns={column}
+//               height={"100%"}
+//               ref={tableRef}
+//               getSelectedItem={getSelectedItem}
+//               onKeyDown={onKeyDown}
+//               focusElementOnMaxTop={() => {
+//                 searchInputRef.current?.focus();
+//               }}
+//             />
+//           </div>
+//           <div style={{ padding: "0 10px" }}>
+//             <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+//               Records: Top {data.length}
+//             </span>
+//           </div>
+//           <style>
+//             {`
+//                 .btn-check-exit-modal:hover{
+//                     background:red !important;
+//                     color:white !important;
+//                 }
+//             `}
+//           </style>
+//         </div>
+//       </div>
+//     ) : (
+//       <></>
+//     );
+//   };
 
-  return {
-    openModal,
-    closeModal,
-    UpwardTableModalSearch,
-  };
-};
+//   return {
+//     openModal,
+//     closeModal,
+//     UpwardTableModalSearch,
+//   };
+// };
 
-let _dataCache: any = [];
-let _searchInputValueCache = "";
-export const useUpwardTableModalSearchSafeMode = ({
-  column,
-  link,
-  getSelectedItem,
-  onKeyDown,
-  customWidth,
-  onClose,
-  size = "small",
-}: any) => {
-  const [show, setShow] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
+// let _dataCache: any = [];
+// let _searchInputValueCache = "";
+// export const useUpwardTableModalSearchSafeMode = ({
+//   column,
+//   link,
+//   getSelectedItem,
+//   onKeyDown,
+//   customWidth,
+//   onClose,
+//   size = "small",
+// }: any) => {
+//   const [show, setShow] = useState(false);
+//   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  function openModal(search: string = "") {
-    const body = document.body;
-    const div = document.createElement("div");
-    div.id = "modal-portal";
+//   function openModal(search: string = "") {
+//     const body = document.body;
+//     const div = document.createElement("div");
+//     div.id = "modal-portal";
 
-    if (document.getElementById("modal-portal"))
-      body.removeChild(document.getElementById("modal-portal") as HTMLElement);
-    body.insertBefore(div, body.firstChild);
+//     if (document.getElementById("modal-portal"))
+//       body.removeChild(document.getElementById("modal-portal") as HTMLElement);
+//     body.insertBefore(div, body.firstChild);
 
-    setShow(true);
-    wait(100).then(() => {
-      if (searchInputRef.current) {
-        searchInputRef.current.value = search;
-        const event = new KeyboardEvent("keydown", {
-          code: "Enter",
-          bubbles: true,
-        });
-        searchInputRef.current.focus(); // Ensure the element has focus
-        searchInputRef.current.dispatchEvent(event); // Dispatch the native event
-        wait(100).then(() => {
-          searchInputRef.current?.focus();
-        });
-      }
-    });
-  }
-  function closeModal(muteOnClose = true) {
-    if (onClose && muteOnClose) {
-      onClose();
-    }
-    setShow(false);
-    _dataCache = [];
-  }
+//     setShow(true);
+//     wait(100).then(() => {
+//       if (searchInputRef.current) {
+//         searchInputRef.current.value = search;
+//         const event = new KeyboardEvent("keydown", {
+//           code: "Enter",
+//           bubbles: true,
+//         });
+//         searchInputRef.current.focus(); // Ensure the element has focus
+//         searchInputRef.current.dispatchEvent(event); // Dispatch the native event
+//         wait(100).then(() => {
+//           searchInputRef.current?.focus();
+//         });
+//       }
+//     });
+//   }
+//   function closeModal(muteOnClose = true) {
+//     if (onClose && muteOnClose) {
+//       onClose();
+//     }
+//     setShow(false);
+//     _dataCache = [];
+//   }
 
-  const UpwardTableModalSearch = forwardRef((_: any, ref) => {
-    const { user, myAxios } = useContext(AuthContext);
+//   const UpwardTableModalSearch = forwardRef((_: any, ref) => {
+//     const { user, myAxios } = useContext(AuthContext);
 
-    const modalRef = useRef<HTMLDivElement>(null);
-    const isMoving = useRef(false);
-    const offset = useRef({ x: 0, y: 0 });
+//     const modalRef = useRef<HTMLDivElement>(null);
+//     const isMoving = useRef(false);
+//     const offset = useRef({ x: 0, y: 0 });
 
-    const tableRef = useRef<any>(null);
-    const [blick, setBlick] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-    const [data, setData] = useState([]);
+//     const tableRef = useRef<any>(null);
+//     const [blick, setBlick] = useState(false);
+//     const [isLoading, setIsLoading] = useState(false);
+//     const [data, setData] = useState([]);
 
-    function mutate(variable: any) {
-      setIsLoading(true);
-      myAxios
-        .post(link, variable, {
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
-        })
-        .then((response) => {
-          setData(response.data?.data);
-          setIsLoading(false);
-        })
-        .catch((err) => {
-          setIsLoading(false);
-          console.log(err);
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    }
+//     function mutate(variable: any) {
+//       setIsLoading(true);
+//       myAxios
+//         .post(link, variable, {
+//           headers: {
+//             Authorization: `Bearer ${user?.accessToken}`,
+//           },
+//         })
+//         .then((response) => {
+//           setData(response.data?.data);
+//           setIsLoading(false);
+//         })
+//         .catch((err) => {
+//           setIsLoading(false);
+//           console.log(err);
+//         })
+//         .finally(() => {
+//           setIsLoading(false);
+//         });
+//     }
 
-    async function mutateReturnValue(variable: any) {
-      try {
-        setIsLoading(true);
-        return await myAxios.post(link, variable, {
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
-        });
-      } catch (error) {
-        console.log(error);
-        setIsLoading(false);
-      }
-    }
+//     async function mutateReturnValue(variable: any) {
+//       try {
+//         setIsLoading(true);
+//         return await myAxios.post(link, variable, {
+//           headers: {
+//             Authorization: `Bearer ${user?.accessToken}`,
+//           },
+//         });
+//       } catch (error) {
+//         console.log(error);
+//         setIsLoading(false);
+//       }
+//     }
 
-    useEffect(() => {
-      if (_dataCache.length > 0) {
-        if (searchInputRef.current) {
-          searchInputRef.current.value = _searchInputValueCache;
-        }
-        setData(_dataCache);
-      }
-    }, [setData]);
+//     useEffect(() => {
+//       if (_dataCache.length > 0) {
+//         if (searchInputRef.current) {
+//           searchInputRef.current.value = _searchInputValueCache;
+//         }
+//         setData(_dataCache);
+//       }
+//     }, [setData]);
 
-    useEffect(() => {
-      if (data.length > 0) {
-        _dataCache = data;
-      }
-      tableRef.current?.setDataFormated(data);
-    }, [data]);
+//     useEffect(() => {
+//       if (data.length > 0) {
+//         _dataCache = data;
+//       }
+//       tableRef.current?.setDataFormated(data);
+//     }, [data]);
 
-    function customWidth(blick: boolean) {
-      if (size === "large") {
-        return blick ? "851px" : "850px";
-      } else if (size === "medium") {
-        return blick ? "651px" : "650px";
-      } else {
-        return blick ? "451px" : "450px";
-      }
-    }
+//     function customWidth(blick: boolean) {
+//       if (size === "large") {
+//         return blick ? "851px" : "850px";
+//       } else if (size === "medium") {
+//         return blick ? "651px" : "650px";
+//       } else {
+//         return blick ? "451px" : "450px";
+//       }
+//     }
 
-    const handleMouseDown = (e: any) => {
-      if (!modalRef.current) return;
+//     const handleMouseDown = (e: any) => {
+//       if (!modalRef.current) return;
 
-      isMoving.current = true;
-      offset.current = {
-        x: e.clientX - modalRef.current.offsetLeft,
-        y: e.clientY - modalRef.current.offsetTop,
-      };
+//       isMoving.current = true;
+//       offset.current = {
+//         x: e.clientX - modalRef.current.offsetLeft,
+//         y: e.clientY - modalRef.current.offsetTop,
+//       };
 
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-    };
+//       document.addEventListener("mousemove", handleMouseMove);
+//       document.addEventListener("mouseup", handleMouseUp);
+//     };
 
-    // Move modal with mouse
-    const handleMouseMove = (e: any) => {
-      if (!isMoving.current || !modalRef.current) return;
+//     // Move modal with mouse
+//     const handleMouseMove = (e: any) => {
+//       if (!isMoving.current || !modalRef.current) return;
 
-      modalRef.current.style.left = `${e.clientX - offset.current.x}px`;
-      modalRef.current.style.top = `${e.clientY - offset.current.y}px`;
-    };
+//       modalRef.current.style.left = `${e.clientX - offset.current.x}px`;
+//       modalRef.current.style.top = `${e.clientY - offset.current.y}px`;
+//     };
 
-    // Stop moving when releasing mouse
-    const handleMouseUp = () => {
-      isMoving.current = false;
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
+//     // Stop moving when releasing mouse
+//     const handleMouseUp = () => {
+//       isMoving.current = false;
+//       document.removeEventListener("mousemove", handleMouseMove);
+//       document.removeEventListener("mouseup", handleMouseUp);
+//     };
 
-    useImperativeHandle(ref, () => ({
-      mutate,
-      mutateReturnValue,
-    }));
+//     useImperativeHandle(ref, () => ({
+//       mutate,
+//       mutateReturnValue,
+//     }));
 
-    return show ? (
-      ReactDOM.createPortal(
-        <div id="modal-inject">
-          <div
-            style={{
-              position: "fixed",
-              top: 0,
-              bottom: 0,
-              left: 0,
-              right: 0,
-              background: "transparent",
-              zIndex: "88",
-            }}
-            onClick={() => {
-              setBlick(true);
-              setTimeout(() => {
-                setBlick(false);
-              }, 250);
-            }}
-          ></div>
+//     return show ? (
+//       ReactDOM.createPortal(
+//         <div id="modal-inject">
+//           <div
+//             style={{
+//               position: "fixed",
+//               top: 0,
+//               bottom: 0,
+//               left: 0,
+//               right: 0,
+//               background: "transparent",
+//               zIndex: "88",
+//             }}
+//             onClick={() => {
+//               setBlick(true);
+//               setTimeout(() => {
+//                 setBlick(false);
+//               }, 250);
+//             }}
+//           ></div>
 
-          <div
-            className="modal-table-datagridview"
-            ref={modalRef}
-            style={{
-              background: "#F1F1F1",
-              width: customWidth(blick),
-              height: blick ? "501px" : "500px",
-              position: "absolute",
-              zIndex: 111111,
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%,-50%)",
-              boxShadow: "3px 6px 32px -7px rgba(0,0,0,0.75)",
-              boxSizing: "border-box",
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
-            {isLoading && <Loading />}
-            <div
-              style={{
-                height: "22px",
-                background: "white",
-                display: "flex",
-                justifyContent: "space-between",
-                padding: "5px",
-                position: "relative",
-                alignItems: "center",
-                cursor: "grab",
-              }}
-              onMouseDown={handleMouseDown}
-            >
-              <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                Search
-              </span>
-              <button
-                className="btn-check-exit-modal"
-                style={{
-                  padding: "0 5px",
-                  borderRadius: "0px",
-                  background: "white",
-                  color: "black",
-                  height: "22px",
-                  position: "absolute",
-                  top: 0,
-                  right: 0,
-                }}
-                onClick={() => {
-                  closeModal();
-                }}
-              >
-                <CloseIcon sx={{ fontSize: "22px" }} />
-              </button>
-            </div>
-            <div
-              style={{
-                padding: "5px",
-              }}
-            >
-              <TextInput
-                containerStyle={{
-                  width: "100%",
-                }}
-                label={{
-                  title: "Search : ",
-                  style: {
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    width: "70px",
-                    display: "none",
-                  },
-                }}
-                input={{
-                  type: "text",
-                  style: { width: "100%" },
-                  onKeyDown: async (e) => {
-                    if (e.code === "NumpadEnter" || e.code === "Enter") {
-                      _searchInputValueCache = e.currentTarget.value;
-                      mutate({ search: e.currentTarget.value });
-                    }
+//           <div
+//             className="modal-table-datagridview"
+//             ref={modalRef}
+//             style={{
+//               background: "#F1F1F1",
+//               width: customWidth(blick),
+//               height: blick ? "501px" : "500px",
+//               position: "absolute",
+//               zIndex: 111111,
+//               top: "50%",
+//               left: "50%",
+//               transform: "translate(-50%,-50%)",
+//               boxShadow: "3px 6px 32px -7px rgba(0,0,0,0.75)",
+//               boxSizing: "border-box",
+//               display: "flex",
+//               flexDirection: "column",
+//             }}
+//           >
+//             {isLoading && <Loading />}
+//             <div
+//               style={{
+//                 height: "22px",
+//                 background: "white",
+//                 display: "flex",
+//                 justifyContent: "space-between",
+//                 padding: "5px",
+//                 position: "relative",
+//                 alignItems: "center",
+//                 cursor: "grab",
+//               }}
+//               onMouseDown={handleMouseDown}
+//             >
+//               <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+//                 Search
+//               </span>
+//               <button
+//                 className="btn-check-exit-modal"
+//                 style={{
+//                   padding: "0 5px",
+//                   borderRadius: "0px",
+//                   background: "white",
+//                   color: "black",
+//                   height: "22px",
+//                   position: "absolute",
+//                   top: 0,
+//                   right: 0,
+//                 }}
+//                 onClick={() => {
+//                   closeModal();
+//                 }}
+//               >
+//                 <CloseIcon sx={{ fontSize: "22px" }} />
+//               </button>
+//             </div>
+//             <div
+//               style={{
+//                 padding: "5px",
+//               }}
+//             >
+//               <TextInput
+//                 containerStyle={{
+//                   width: "100%",
+//                 }}
+//                 label={{
+//                   title: "Search : ",
+//                   style: {
+//                     fontSize: "12px",
+//                     fontWeight: "bold",
+//                     width: "70px",
+//                     display: "none",
+//                   },
+//                 }}
+//                 input={{
+//                   type: "text",
+//                   style: { width: "100%" },
+//                   onKeyDown: async (e) => {
+//                     if (e.code === "NumpadEnter" || e.code === "Enter") {
+//                       _searchInputValueCache = e.currentTarget.value;
+//                       mutate({ search: e.currentTarget.value });
+//                     }
 
-                    if (e.code === "ArrowDown") {
-                      const td = document.querySelector(
-                        `.td.row-0`
-                      ) as HTMLTableDataCellElement;
-                      if (td) {
-                        const parentElement =
-                          tableRef.current.getParentElement();
+//                     if (e.code === "ArrowDown") {
+//                       const td = document.querySelector(
+//                         `.td.row-0`
+//                       ) as HTMLTableDataCellElement;
+//                       if (td) {
+//                         const parentElement =
+//                           tableRef.current.getParentElement();
 
-                        td.focus({
-                          preventScroll: true,
-                        });
-                        parentElement.style.overflow = "hidden";
-                        wait(100).then(() => {
-                          parentElement.style.overflow = "auto";
-                        });
-                      }
-                      tableRef.current?._setSelectedRow(0);
-                    }
-                  },
-                  onInput: (e) => {
-                    if (e.currentTarget.value === "") {
-                      mutate({ search: "" });
-                    }
-                  },
-                }}
-                inputRef={searchInputRef}
-                icon={<SearchIcon sx={{ fontSize: "18px" }} />}
-                onIconClick={async (e) => {
-                  e.preventDefault();
-                  if (searchInputRef.current)
-                    _searchInputValueCache = searchInputRef.current.value;
+//                         td.focus({
+//                           preventScroll: true,
+//                         });
+//                         parentElement.style.overflow = "hidden";
+//                         wait(100).then(() => {
+//                           parentElement.style.overflow = "auto";
+//                         });
+//                       }
+//                       tableRef.current?._setSelectedRow(0);
+//                     }
+//                   },
+//                   onInput: (e) => {
+//                     if (e.currentTarget.value === "") {
+//                       mutate({ search: "" });
+//                     }
+//                   },
+//                 }}
+//                 inputRef={searchInputRef}
+//                 icon={<SearchIcon sx={{ fontSize: "18px" }} />}
+//                 onIconClick={async (e) => {
+//                   e.preventDefault();
+//                   if (searchInputRef.current)
+//                     _searchInputValueCache = searchInputRef.current.value;
 
-                  mutate({ search: searchInputRef.current?.value });
-                }}
-              />
-            </div>
-            <div
-              style={{
-                flex: 1,
-              }}
-            >
-              <DataGridViewReact
-                columns={column}
-                height={"100%"}
-                ref={tableRef}
-                getSelectedItem={getSelectedItem}
-                onKeyDown={onKeyDown}
-                focusElementOnMaxTop={() => {
-                  searchInputRef.current?.focus();
-                }}
-              />
-            </div>
-            <div style={{ padding: "0 10px" }}>
-              <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                Records: Top {data.length}
-              </span>
-            </div>
-            <style>
-              {`
-                                    .btn-check-exit-modal:hover{
-                                        background:red !important;
-                                        color:white !important;
-                                    }
-                                `}
-            </style>
-          </div>
-        </div>,
-        document.getElementById("modal-portal") as HTMLElement
-      )
-    ) : (
-      <></>
-    );
-  });
+//                   mutate({ search: searchInputRef.current?.value });
+//                 }}
+//               />
+//             </div>
+//             <div
+//               style={{
+//                 flex: 1,
+//               }}
+//             >
+//               <DataGridViewReact
+//                 columns={column}
+//                 height={"100%"}
+//                 ref={tableRef}
+//                 getSelectedItem={getSelectedItem}
+//                 onKeyDown={onKeyDown}
+//                 focusElementOnMaxTop={() => {
+//                   searchInputRef.current?.focus();
+//                 }}
+//               />
+//             </div>
+//             <div style={{ padding: "0 10px" }}>
+//               <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+//                 Records: Top {data.length}
+//               </span>
+//             </div>
+//             <style>
+//               {`
+//                                     .btn-check-exit-modal:hover{
+//                                         background:red !important;
+//                                         color:white !important;
+//                                     }
+//                                 `}
+//             </style>
+//           </div>
+//         </div>,
+//         document.getElementById("modal-portal") as HTMLElement
+//       )
+//     ) : (
+//       <></>
+//     );
+//   });
 
-  return {
-    openModal,
-    closeModal,
-    UpwardTableModalSearch,
-    searchInputRef,
-  };
-};
+//   return {
+//     openModal,
+//     closeModal,
+//     UpwardTableModalSearch,
+//     searchInputRef,
+//   };
+// };
 function isValidDateStrict(dateString: any) {
   const regex = /^\d{4}-\d{2}-\d{2}$/;
   if (!regex.test(dateString)) return false;

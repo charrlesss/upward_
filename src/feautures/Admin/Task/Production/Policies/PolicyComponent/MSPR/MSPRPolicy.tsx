@@ -26,17 +26,13 @@ import {
 } from "../../../../../../../components/UpwardFields";
 import CalculateIcon from "@mui/icons-material/Calculate";
 import { formatNumber } from "../../../../Accounting/ReturnCheck";
-import { Autocomplete } from "../../../../Accounting/PettyCash";
 import { wait } from "../../../../../../../lib/wait";
 import { format } from "date-fns";
 import SearchIcon from "@mui/icons-material/Search";
 import SaveAsIcon from "@mui/icons-material/SaveAs";
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import { Loading } from "../../../../../../../components/Loading";
-import {
-  UpwardTableModalSearch,
-  useUpwardTableModalSearchSafeMode,
-} from "../../../../../../../components/DataGridViewReact";
+import { UpwardTableModalSearch } from "../../../../../../../components/DataGridViewReact";
 import { PolicyContext } from "../../Policy";
 
 export default function MSPRPolicy() {
@@ -348,8 +344,6 @@ export default function MSPRPolicy() {
         }
       },
     });
-
- 
 
   function handleSave() {
     if (
