@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Button } from "@mui/material";
 import { AuthContext } from "../../../../../components/AuthContext";
 import { useMutation, useQuery } from "react-query";
@@ -21,7 +21,7 @@ import {
   TextInput,
 } from "../../../../../components/UpwardFields";
 import SearchIcon from "@mui/icons-material/Search";
-import { DataGridViewReact } from "../../../../../components/DataGridViewReact";
+import { DataGridViewReactUpgraded } from "../../../../../components/DataGridViewReact";
 import { Loading } from "../../../../../components/Loading";
 import { Autocomplete } from "../../../Task/Accounting/PettyCash";
 import ImportExportIcon from "@mui/icons-material/ImportExport";
@@ -214,7 +214,7 @@ export default function Client() {
         }
       ),
     onSuccess: (res) => {
-      tableRef.current.setDataFormated((res as any)?.data.entry);
+      tableRef.current.setData((res as any)?.data.entry);
     },
   });
   const { isLoading: subAccountLoading, refetch: refetchSubAcct } = useQuery({
@@ -252,8 +252,6 @@ export default function Client() {
       resetField();
       setMode("");
       tableRef.current.setSelectedRow(null);
-      tableRef.current.resetCheckBox();
-
       mutateSearchRef.current({
         search: "",
         entry: "Client",
@@ -539,7 +537,6 @@ export default function Client() {
                     resetField();
                     setMode("");
                     tableRef.current.setSelectedRow(null);
-                    tableRef.current.resetCheckBox();
                   }
                 });
               }}
@@ -577,6 +574,7 @@ export default function Client() {
         style={{
           display: "flex",
           columnGap: "20px",
+          marginBottom: "10px",
         }}
       >
         <div
@@ -792,7 +790,6 @@ export default function Client() {
             display: "flex",
             flexDirection: "column",
             rowGap: "5px",
-            marginBottom: "40px",
             flex: 1,
           }}
         >
@@ -942,7 +939,6 @@ export default function Client() {
             display: "flex",
             flexDirection: "column",
             rowGap: "10px",
-            marginBottom: "40px",
             flex: 1,
           }}
         >
@@ -1034,97 +1030,89 @@ export default function Client() {
         </div>
       </div>
       <div
-        className="add-padding"
         style={{
-          display: "flex",
-          flexDirection: "column",
           width: "100%",
-          height: "100%",
+          position: "relative",
           flex: 1,
+          display: "flex",
         }}
       >
-        <DataGridViewReact
-          height="340px"
+        <DataGridViewReactUpgraded
           ref={tableRef}
-          rows={[]}
+          adjustVisibleRowCount={310}
+          disableDeleteAll={true}
           columns={clientColumn}
-          getSelectedItem={(rowSelected: any, _: any, RowIndex: any) => {
+          handleSelectionChange={(rowSelected: any) => {
             if (rowSelected) {
               setMode("edit");
-              setOption(rowSelected[9].toLowerCase());
+              setOption(rowSelected.option?.toLowerCase());
+
               wait(100).then(() => {
                 if (clientIdRef.current) {
-                  clientIdRef.current.value = rowSelected[0];
+                  clientIdRef.current.value = rowSelected.entry_client_id;
                 }
                 if (optionRef.current) {
-                  optionRef.current.value = rowSelected[9]
+                  optionRef.current.value = rowSelected.option
                     ?.toString()
                     .toLowerCase();
                 }
                 if (firstnameRef.current) {
-                  firstnameRef.current.value = rowSelected[2];
+                  firstnameRef.current.value = rowSelected.firstname;
                 }
                 if (middleRef.current) {
-                  middleRef.current.value = rowSelected[4];
+                  middleRef.current.value = rowSelected.middlename;
                 }
                 if (lastnameRef.current) {
-                  lastnameRef.current.value = rowSelected[3];
+                  lastnameRef.current.value = rowSelected.lastname;
                 }
                 if (fullnameRef.current) {
-                  fullnameRef.current.value = rowSelected[1];
+                  fullnameRef.current.value = rowSelected.company;
                 }
                 if (authorizeRepRef.current) {
-                  authorizeRepRef.current.value = rowSelected[7];
+                  authorizeRepRef.current.value =
+                    rowSelected.auth_representative;
                 }
                 if (suffixRef.current) {
-                  suffixRef.current.value = rowSelected[5];
+                  suffixRef.current.value = rowSelected.suffix;
                 }
                 if (subAccount.current) {
-                  subAccount.current.value = rowSelected[16];
+                  subAccount.current.value = rowSelected.NewShortName;
                 }
                 if (mobileNoRef.current) {
-                  mobileNoRef.current.value = rowSelected[6];
+                  mobileNoRef.current.value = rowSelected.mobile;
                 }
                 if (mortgageeRef.current) {
-                  mortgageeRef.current.value = rowSelected[13];
+                  mortgageeRef.current.value = rowSelected.client_mortgagee;
                 }
                 if (tinRef.current) {
-                  tinRef.current.value = rowSelected[10];
-                }
-                if (tinRef.current) {
-                  tinRef.current.value = rowSelected[10];
+                  tinRef.current.value = rowSelected.tin;
                 }
                 if (addressRef.current) {
-                  addressRef.current.value = rowSelected[12];
+                  addressRef.current.value = rowSelected.address;
                 }
                 if (branchRef.current) {
-                  branchRef.current.value = rowSelected[14];
+                  branchRef.current.value = rowSelected.client_branch;
                 }
-                branchCodeRef.current = rowSelected[15];
+
+                branchCodeRef.current = rowSelected.sub_account;
               });
             } else {
               tableRef.current.setSelectedRow(null);
-              tableRef.current.resetCheckBox();
               resetField();
               setMode("");
               return;
             }
           }}
-          onKeyDown={(rowSelected: any, RowIndex: any, e: any) => {
-            if (e.code === "Delete" || e.code === "Backspace") {
-              wait(100).then(() => {
-                codeCondfirmationAlert({
-                  isUpdate: false,
-                  cb: (userCodeConfirmation) => {
-                    mutateDelete({
-                      id: rowSelected[0],
-                      userCodeConfirmation,
-                    });
-                  },
+          onKeyDelete={(rowSelected: any) => {
+            codeCondfirmationAlert({
+              isUpdate: false,
+              cb: (userCodeConfirmation) => {
+                mutateDelete({
+                  id: rowSelected.entry_client_id,
+                  userCodeConfirmation,
                 });
-              });
-              return;
-            }
+              },
+            });
           }}
         />
       </div>
@@ -1221,7 +1209,6 @@ export default function Client() {
                   resetField();
                   setMode("");
                   tableRef.current.setSelectedRow(null);
-                  tableRef.current.resetCheckBox();
                 }
               });
             }}

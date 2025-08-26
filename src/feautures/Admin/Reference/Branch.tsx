@@ -1,4 +1,3 @@
-import React from "react";
 import PageHelmet from "../../../components/Helmet";
 
 export default function Branch() {

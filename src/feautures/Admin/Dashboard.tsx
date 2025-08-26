@@ -1,11 +1,9 @@
 import { useEffect, useState, useRef } from "react";
-import { myAxios } from "../../lib/axios";
 import { useContext } from "react";
 import { AuthContext } from "../../components/AuthContext";
 import "../../style/dashboard.css";
 import PageHelmet from "../../components/Helmet";
 import {
-  DataGridViewReact,
   DataGridViewReactUpgraded,
 } from "../../components/DataGridViewReact";
 import { useMutation } from "react-query";
@@ -62,7 +60,6 @@ export default function Dashboard() {
   const { myAxios, user } = useContext(AuthContext);
   const tableRef = useRef<any>(null);
   const [activeTab, setActiveTab] = useState(0);
-  const [buttonPosition, setButtonPosition] = useState<any>({});
   const buttonsRef = useRef<Array<HTMLButtonElement | null>>([]);
 
   const { mutate: mutateSearchPolicy, isLoading: isLoadingSearchPolicy } =
@@ -140,7 +137,6 @@ export default function Dashboard() {
               key={tab.id}
               onClick={(el) => {
                 setActiveTab(tab.id);
-                setButtonPosition(el.currentTarget.getBoundingClientRect());
                 mutateSearchPolicyRef.current({
                   policy: tab.policy,
                 });
@@ -171,7 +167,6 @@ export default function Dashboard() {
             flex: 1,
             display: "flex",
             borderRadius: "5px",
-            // border:"1px solid red",
             padding: "5px",
             boxSizing: "border-box",
           }}
@@ -183,87 +178,6 @@ export default function Dashboard() {
             handleSelectionChange={(rowItm: any) => {}}
           />
         </div>
-
-        {/* <div
-          style={{
-            display: "flex",
-            padding: 0,
-            margin: 0,
-          }}
-        >
-         
-          <div
-            className="desktop-title"
-            style={{
-              flex: 1,
-              borderTop: "1px solid #64748b",
-              borderRight: "1px solid #64748b",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              background: "#3EA1E2",
-              color: "white",
-            }}
-          >
-            RENEWAL NOTICE
-          </div>
-        </div> */}
-        {/* <div
-          style={{
-            // padding: "7px",
-            flex: 1,
-            display: "flex",
-            // borderTop: "2px solid #007BFF",
-            position: "relative",
-            flexDirection: "column",
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              top: "-20px",
-              left: 0,
-              width: `${(buttonPosition?.left as number) - 5 || 0}px`,
-              height: "1px",
-              background: "#64748b",
-            }}
-          ></div>
-          <div
-            style={{
-              position: "absolute",
-              top: "-20px",
-              right: 0,
-              left: `${(buttonPosition?.right as number) - 5 || 0}px`,
-              height: "1px",
-              background: "#64748b",
-            }}
-          ></div>
-          <div
-            style={{
-              display: "flex",
-              flex: 1,
-              flexDirection: "column",
-            }}
-          >
-            <DataGridViewReact
-              containerStyle={{
-                flex: 1,
-                height: "auto",
-              }}
-              ref={tableRef}
-              width="100%"
-              height="350px"
-              columns={policyColumn}
-              getSelectedItem={(
-                rowItm: any,
-                colItm: any,
-                rowIdx: any,
-                colIdx: any
-              ) => {}}
-              onKeyDown={(rowSelected: any, RowIndex: any, e: any) => {}}
-            />
-          </div>
-        </div> */}
       </div>
     </>
   );

@@ -2,7 +2,6 @@ import React, {
   useContext,
   useState,
   useRef,
-  useReducer,
   useEffect,
   useId,
 } from "react";
@@ -26,7 +25,6 @@ import { TextInput } from "../../../components/UpwardFields";
 import SearchIcon from "@mui/icons-material/Search";
 import { Loading } from "../../../components/Loading";
 import {
-  DataGridViewReact,
   DataGridViewReactUpgraded,
 } from "../../../components/DataGridViewReact";
 import "../../../style/monbileview/reference/reference.css";

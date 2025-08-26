@@ -490,7 +490,7 @@ export default function TransactionCode() {
                   accountRef.current.value = rowItm.Acct_Code;
                 }
                 if (inactiveRef.current) {
-                  inactiveRef.current.checked = rowItm.Inactive == "YES";
+                  inactiveRef.current.checked = rowItm.Inactive === "YES";
                 }
               } else {
                 resetModule();

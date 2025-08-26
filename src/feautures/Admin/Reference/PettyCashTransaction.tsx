@@ -492,7 +492,7 @@ export default function PettyCashTransaction() {
                   accountRef.current.value = rowItm.Code;
                 }
                 if (inactiveRef.current) {
-                  inactiveRef.current.checked = rowItm.Inactive == "YES";
+                  inactiveRef.current.checked = rowItm.Inactive === "YES";
                 }
                 accountShortRef.current = rowItm.Account_Name;
                 petyyLogRef.current = rowItm.Petty_Log;

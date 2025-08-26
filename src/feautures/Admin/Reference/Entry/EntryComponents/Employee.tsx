@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Button } from "@mui/material";
 import { AuthContext } from "../../../../../components/AuthContext";
 import { useMutation, useQuery } from "react-query";
@@ -16,12 +16,11 @@ import {
 } from "../../../../../lib/confirmationAlert";
 import PageHelmet from "../../../../../components/Helmet";
 import {
-  SelectInput,
   TextAreaInput,
   TextInput,
 } from "../../../../../components/UpwardFields";
 import SearchIcon from "@mui/icons-material/Search";
-import { DataGridViewReact } from "../../../../../components/DataGridViewReact";
+import { DataGridViewReactUpgraded } from "../../../../../components/DataGridViewReact";
 import { Loading } from "../../../../../components/Loading";
 import { Autocomplete } from "../../../Task/Accounting/PettyCash";
 const employeeColumn = [
@@ -67,7 +66,7 @@ export default function Employee() {
   const tableRef = useRef<any>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const clientIdRef = useRef<HTMLInputElement>(null);
+  const employeeIdRef = useRef<HTMLInputElement>(null);
   const firstnameRef = useRef<HTMLInputElement>(null);
   const middleRef = useRef<HTMLInputElement>(null);
   const lastnameRef = useRef<HTMLInputElement>(null);
@@ -94,8 +93,8 @@ export default function Employee() {
     refetchOnWindowFocus: false,
     onSuccess: (res) => {
       wait(100).then(() => {
-        if (clientIdRef.current) {
-          clientIdRef.current.value = res.data.generateID;
+        if (employeeIdRef.current) {
+          employeeIdRef.current.value = res.data.generateID;
         }
       });
     },
@@ -135,7 +134,7 @@ export default function Employee() {
       }),
     onSuccess: (res) => {
       console.log(res);
-      tableRef.current.setDataFormated((res as any)?.data.entry);
+      tableRef.current.setData((res as any)?.data.entry);
     },
   });
   const { isLoading: subAccountLoading, refetch: refetchSubAcct } = useQuery({
@@ -173,7 +172,6 @@ export default function Employee() {
       resetField();
       setMode("");
       tableRef.current.setSelectedRow(null);
-      tableRef.current.resetCheckBox();
 
       mutateSearchRef.current({
         search: "",
@@ -218,7 +216,7 @@ export default function Employee() {
     }
 
     const state = {
-      entry_employee_id: clientIdRef.current?.value,
+      entry_employee_id: employeeIdRef.current?.value,
       firstname: firstnameRef.current?.value.toLocaleUpperCase(),
       middlename: middleRef.current?.value.toLocaleUpperCase(),
       lastname: lastnameRef.current?.value.toLocaleUpperCase(),
@@ -381,7 +379,7 @@ export default function Employee() {
                 isUpdate: false,
                 cb: (userCodeConfirmation) => {
                   mutateDelete({
-                    id: clientIdRef.current?.value,
+                    id: employeeIdRef.current?.value,
                     userCodeConfirmation,
                   });
                 },
@@ -413,7 +411,6 @@ export default function Employee() {
                     resetField();
                     setMode("");
                     tableRef.current.setSelectedRow(null);
-                    tableRef.current.resetCheckBox();
                   }
                 });
               }}
@@ -428,6 +425,7 @@ export default function Employee() {
         style={{
           display: "flex",
           columnGap: "20px",
+          marginBottom:"10px"
         }}
       >
         <div
@@ -462,7 +460,7 @@ export default function Employee() {
                   }
                 },
               }}
-              inputRef={clientIdRef}
+              inputRef={employeeIdRef}
             />
           )}
 
@@ -573,7 +571,6 @@ export default function Employee() {
             display: "flex",
             flexDirection: "column",
             rowGap: "5px",
-            marginBottom: "40px",
             flex: 1,
           }}
         >
@@ -648,73 +645,67 @@ export default function Employee() {
         </div>
       </div>
       <div
-      className="add-padding"
         style={{
-          display: "flex",
-          flexDirection: "column",
           width: "100%",
-          height: "100%",
+          position: "relative",
           flex: 1,
+          display: "flex",
         }}
       >
-        <DataGridViewReact
-          height="340px"
+        <DataGridViewReactUpgraded
           ref={tableRef}
-          rows={[]}
+          adjustVisibleRowCount={290}
+          disableDeleteAll={true}
           columns={employeeColumn}
-          getSelectedItem={(rowSelected: any, _: any, RowIndex: any) => {
+          handleSelectionChange={(rowSelected: any) => {
             if (rowSelected) {
               setMode("edit");
+
               wait(100).then(() => {
-                if (clientIdRef.current) {
-                  clientIdRef.current.value = rowSelected[0];
+                if (employeeIdRef.current) {
+                  employeeIdRef.current.value = rowSelected.entry_employee_id;
                 }
                 if (firstnameRef.current) {
-                  firstnameRef.current.value = rowSelected[1];
-                }
-                if (middleRef.current) {
-                  middleRef.current.value = rowSelected[2];
+                  firstnameRef.current.value = rowSelected.firstname;
                 }
                 if (lastnameRef.current) {
-                  lastnameRef.current.value = rowSelected[3];
+                  lastnameRef.current.value = rowSelected.lastname;
+                }
+                if (middleRef.current) {
+                  middleRef.current.value = rowSelected.middlename;
                 }
                 if (suffixRef.current) {
-                  suffixRef.current.value = rowSelected[4];
+                  suffixRef.current.value = rowSelected.suffix;
                 }
                 if (subAccount.current) {
-                  subAccount.current.value = rowSelected[5];
+                  subAccount.current.value = rowSelected.NewShortName;
                 }
-
                 if (addressRef.current) {
-                  addressRef.current.value = rowSelected[6];
+                  addressRef.current.value = rowSelected.address;
                 }
+               
               });
             } else {
               tableRef.current.setSelectedRow(null);
-              tableRef.current.resetCheckBox();
               resetField();
               setMode("");
               return;
             }
           }}
-          onKeyDown={(rowSelected: any, RowIndex: any, e: any) => {
-            if (e.code === "Delete" || e.code === "Backspace") {
-              wait(100).then(() => {
-                codeCondfirmationAlert({
-                  isUpdate: false,
-                  cb: (userCodeConfirmation) => {
-                    mutateDelete({
-                      id: rowSelected[0],
-                      userCodeConfirmation,
-                    });
-                  },
+          onKeyDelete={(rowSelected: any) => {
+            codeCondfirmationAlert({
+              isUpdate: false,
+              cb: (userCodeConfirmation) => {
+                mutateDelete({
+                  id: rowSelected.entry_employee_id,
+                  userCodeConfirmation,
                 });
-              });
-              return;
-            }
+              },
+            });
           }}
         />
       </div>
+  
       <div
         className="button-action-mobile"
         style={{
@@ -776,7 +767,7 @@ export default function Employee() {
               isUpdate: false,
               cb: (userCodeConfirmation) => {
                 mutateDelete({
-                  id: clientIdRef.current?.value,
+                  id: employeeIdRef.current?.value,
                   userCodeConfirmation,
                 });
               },
@@ -808,7 +799,6 @@ export default function Employee() {
                   resetField();
                   setMode("");
                   tableRef.current.setSelectedRow(null);
-                  tableRef.current.resetCheckBox();
                 }
               });
             }}

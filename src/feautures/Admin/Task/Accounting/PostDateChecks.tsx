@@ -23,7 +23,6 @@ import {
   saveCondfirmationAlert,
 } from "../../../../lib/confirmationAlert";
 import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
-import { DisplayFile, checkFile } from "../Claims/Claims";
 import { grey } from "@mui/material/colors";
 import {
   TextAreaInput,
@@ -41,19 +40,11 @@ import {
 import { Loading } from "../../../../components/Loading";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import "../../../../style/monbileview/accounting/pdc.css";
+import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
+import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
+import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 
-export const reducer = (state: any, action: any) => {
-  switch (action.type) {
-    case "UPDATE_FIELD":
-      return {
-        ...state,
-        [action.field]: action.value,
-      };
-    default:
-      return state;
-  }
-};
-export const pdcColumn = [
+const pdcColumn = [
   { key: "Check_No", label: "Check No.", width: 150 },
   { key: "Check_Date", label: "Check Date", width: 150 },
   { key: "Check_Amnt", label: "Amount", width: 150, type: "number" },
@@ -69,20 +60,6 @@ export const pdcColumn = [
   { key: "OR_No", label: "OR Num", width: 150 },
   { key: "BankCode", label: "Bank Code", width: 150, hide: true },
 ];
-export const pdcSearchColumn = [
-  { field: "Date", headerName: "Date Received", width: 160 },
-  { field: "Ref_No", headerName: "Ref No.", width: 160 },
-  {
-    field: "Name",
-    headerName: "Name",
-    flex: 1,
-  },
-];
-export const pdcBanksColumn = [
-  { field: "Bank_Code", headerName: "Code", width: 130 },
-  { field: "Bank", headerName: "Bank Name", flex: 1 },
-];
-
 export default function PostDateChecks() {
   const modalCheckRef = useRef<any>(null);
   const tableRef = useRef<any>(null);
@@ -1641,7 +1618,6 @@ export default function PostDateChecks() {
     </>
   );
 }
-
 const ModalCheck = forwardRef(
   ({ handleOnSave, handleOnClose, hasSelectedRow }: any, ref) => {
     const modalRef = useRef<HTMLDivElement>(null);
@@ -2093,13 +2069,7 @@ const ModalCheck = forwardRef(
     ) : null;
   }
 );
-
-export function setNewStateValue(dispatch: any, obj: any) {
-  Object.entries(obj).forEach(([field, value]) => {
-    dispatch({ type: "UPDATE_FIELD", field, value });
-  });
-}
-export function incrementCheckNo(Check_No: string) {
+function incrementCheckNo(Check_No: string) {
   if (Check_No) {
     let incrementedNumber = (parseInt(Check_No) + 1).toString();
     while (incrementedNumber.length < Check_No.length) {
@@ -2110,7 +2080,6 @@ export function incrementCheckNo(Check_No: string) {
 
   return "001";
 }
-
 function parseNumber(value: any) {
   return isNaN(value) || value === "" ? 0 : Number(value);
 }
@@ -2119,7 +2088,6 @@ function incrementStringNumbers(str: string, increment: number) {
   num = num + increment;
   return num.toString().padStart(str.length, "0");
 }
-
 function incrementDate(dateString: any, i: number) {
   const currentDate = new Date(dateString);
   return format(addMonths(currentDate, i), "MM/dd/yyyy");
@@ -2128,7 +2096,6 @@ function isValidDate(dateString: string): boolean {
   const date = new Date(dateString);
   return date instanceof Date && !isNaN(date.getTime());
 }
-
 function addMonths(date: Date, monthsToAdd: number) {
   let newDate = new Date(date);
   newDate.setMonth(newDate.getMonth() + monthsToAdd);
@@ -2139,4 +2106,130 @@ function addMonths(date: Date, monthsToAdd: number) {
   }
 
   return newDate;
+}
+function DisplayFile({
+  itm,
+  selectedFiles,
+  setSelectedFiles,
+  fileInput,
+}: {
+  itm: File;
+  selectedFiles: Array<File>;
+  setSelectedFiles: React.Dispatch<React.SetStateAction<File[]>>;
+  fileInput: React.RefObject<HTMLInputElement>;
+}) {
+  const objectUrl = URL.createObjectURL(itm);
+  return (
+    <div
+      id="image-card"
+      style={{
+        position: "relative",
+        width: "200px",
+        height: "200px",
+        textAlign: "center",
+        boxShadow: "10px 10px 28px -7px rgba(0,0,0,0.75)",
+        border: "1px solid #cbd5e1",
+      }}
+    >
+      {itm.type.startsWith("image/") ? (
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <img
+            src={objectUrl}
+            alt="img-sss"
+            style={{ width: "100%", height: "auto" }}
+          />
+        </div>
+      ) : (
+        <iframe
+          title="dasdseasd"
+          src={objectUrl}
+          style={{ width: "100%" }}
+        ></iframe>
+      )}
+      <div
+        style={{
+          position: "absolute",
+          bottom: "0",
+          left: "0",
+          right: "0",
+          background: "white",
+          padding: "5px",
+          display: "flex",
+          columnGap: "10px",
+          justifyContent: "center",
+        }}
+      >
+        <IconButton
+          color="primary"
+          edge="end"
+          onClick={() => {
+            window.open(objectUrl, "_blank");
+          }}
+        >
+          <RemoveRedEyeIcon />
+        </IconButton>
+        <IconButton
+          color="success"
+          edge="end"
+          onClick={() => {
+            var downloadLink: any = document.createElement("a");
+            downloadLink.href = objectUrl;
+            downloadLink.download = itm.name;
+            downloadLink.click();
+          }}
+        >
+          <CloudDownloadIcon />
+        </IconButton>
+        <IconButton
+          color="error"
+          edge="end"
+          onClick={() => {
+            const filesToRemove = [itm.name];
+            const filteredFiles = selectedFiles.filter((file) => file !== itm);
+            setSelectedFiles(filteredFiles);
+            const newFileList = filterFileList(
+              fileInput.current?.files as FileList,
+              filesToRemove
+            );
+            if (fileInput.current && fileInput.current.files) {
+              fileInput.current.files = newFileList;
+            }
+            function filterFileList(
+              fileList: FileList,
+              filesToRemove: Array<string>
+            ) {
+              const dataTransfer = new DataTransfer();
+              for (let i = 0; i < fileList.length; i++) {
+                if (!filesToRemove.includes(fileList[i].name)) {
+                  dataTransfer.items.add(fileList[i]);
+                }
+              }
+              return dataTransfer.files;
+            }
+          }}
+        >
+          <HighlightOffIcon />
+        </IconButton>
+      </div>
+    </div>
+  );
+}
+function checkFile(newFiles: Array<File>) {
+  let isNotExt = false;
+  const fileTypes = ["application/pdf", "image/jpg", "image/jpeg", "image/png"];
+  const newFileTpes = newFiles.map((itm) => itm.type);
+  newFileTpes.forEach((fileType) => {
+    if (!fileTypes.includes(fileType)) {
+      isNotExt = true;
+      return;
+    }
+  });
+  return isNotExt;
 }

@@ -1,24 +1,14 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import "../style/header.css";
-import { AuthContext, User } from "./AuthContext";
+import { AuthContext } from "./AuthContext";
 import AccountCircle from "@mui/icons-material/AccountCircle";
-import { useMutation, useQuery } from "react-query";
-import { wait } from "../lib/wait";
+import { useMutation } from "react-query";
 import Swal from "sweetalert2";
-import axios, { AxiosInstance } from "axios";
 import MenuIcon from "@mui/icons-material/Menu";
 import { IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { Loading } from "./Loading";
-
-async function Logout(myAxios: AxiosInstance, user: User | null) {
-  return await myAxios.get("logout", {
-    headers: {
-      Authorization: `Bearer ${user?.accessToken}`,
-    },
-  });
-}
 
 export default function Header() {
   const department = useRef(process.env.REACT_APP_DEPARTMENT);
@@ -135,10 +125,10 @@ export default function Header() {
             name: "Bank Account",
             path: `/${department.current}/dashboard/reference/bank-account`,
           },
-          {
-            name: "Booklet",
-            path: `/${department.current}/dashboard/reference/booklet`,
-          },
+          // {
+          //   name: "Booklet",
+          //   path: `/${department.current}/dashboard/reference/booklet`,
+          // },
           {
             name: "Chart of Accounts",
             path: `/${department.current}/dashboard/reference/chart-accounts`,
@@ -291,10 +281,10 @@ export default function Header() {
                 name: "Bank Account",
                 path: `/${department.current}/dashboard/reference/bank-account`,
               },
-              {
-                name: "Booklet",
-                path: `/${department.current}/dashboard/reference/booklet`,
-              },
+              // {
+              //   name: "Booklet",
+              //   path: `/${department.current}/dashboard/reference/booklet`,
+              // },
               {
                 name: "Chart of Accounts",
                 path: `/${department.current}/dashboard/reference/chart-accounts`,
@@ -451,10 +441,10 @@ export default function Header() {
               name: "Bank Account",
               path: `/${department.current}/dashboard/reference/bank-account`,
             },
-            {
-              name: "Booklet",
-              path: `/${department.current}/dashboard/reference/booklet`,
-            },
+            // {
+            //   name: "Booklet",
+            //   path: `/${department.current}/dashboard/reference/booklet`,
+            // },
             {
               name: "Chart of Accounts",
               path: `/${department.current}/dashboard/reference/chart-accounts`,
@@ -607,10 +597,10 @@ export default function Header() {
                 name: "Bank Account",
                 path: `/${department.current}/dashboard/reference/bank-account`,
               },
-              {
-                name: "Booklet",
-                path: `/${department.current}/dashboard/reference/booklet`,
-              },
+              // {
+              //   name: "Booklet",
+              //   path: `/${department.current}/dashboard/reference/booklet`,
+              // },
               {
                 name: "Chart of Accounts",
                 path: `/${department.current}/dashboard/reference/chart-accounts`,
@@ -741,10 +731,10 @@ export default function Header() {
               name: "Bank Account",
               path: `/${department.current}/dashboard/reference/bank-account`,
             },
-            {
-              name: "Booklet",
-              path: `/${department.current}/dashboard/reference/booklet`,
-            },
+            // {
+            //   name: "Booklet",
+            //   path: `/${department.current}/dashboard/reference/booklet`,
+            // },
             {
               name: "Chart of Accounts",
               path: `/${department.current}/dashboard/reference/chart-accounts`,
@@ -913,10 +903,10 @@ export default function Header() {
                 name: "Bank Account",
                 path: `/${department.current}/dashboard/reference/bank-account`,
               },
-              {
-                name: "Booklet",
-                path: `/${department.current}/dashboard/reference/booklet`,
-              },
+              // {
+              //   name: "Booklet",
+              //   path: `/${department.current}/dashboard/reference/booklet`,
+              // },
               {
                 name: "Chart of Accounts",
                 path: `/${department.current}/dashboard/reference/chart-accounts`,
@@ -1015,10 +1005,10 @@ export default function Header() {
               name: "Bank Account",
               path: `/${department.current}/dashboard/reference/bank-account`,
             },
-            {
-              name: "Booklet",
-              path: `/${department.current}/dashboard/reference/booklet`,
-            },
+            // {
+            //   name: "Booklet",
+            //   path: `/${department.current}/dashboard/reference/booklet`,
+            // },
             {
               name: "Chart of Accounts",
               path: `/${department.current}/dashboard/reference/chart-accounts`,

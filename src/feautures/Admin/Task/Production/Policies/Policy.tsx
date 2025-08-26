@@ -1,12 +1,10 @@
-import { Box, Chip, Divider } from "@mui/material";
+import {  Chip,  } from "@mui/material";
 import { blue } from "@mui/material/colors";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import useUrlParams from "../../../../../hooks/useUrlParams";
 import "../../../../../style/monbileview/production/production.css";
 import { useQuery } from "react-query";
 import { createContext, useContext } from "react";
 import { AuthContext } from "../../../../../components/AuthContext";
-import { wait } from "@testing-library/user-event/dist/utils";
 import { Loading } from "../../../../../components/Loading";
 import Swal from "sweetalert2";
 
@@ -109,11 +107,10 @@ const chips = [
 ];
 
 function ChipsButton() {
-  const { searchParams } = useUrlParams();
   const location = useLocation();
   const navigate = useNavigate();
   function handleClick(e: any, link: string) {
-    navigate(link + `?drawer=${searchParams.get("drawer")}`);
+    navigate(link );
   }
 
   return (

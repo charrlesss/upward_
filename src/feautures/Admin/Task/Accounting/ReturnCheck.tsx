@@ -26,7 +26,6 @@ import {
   DataGridViewReactUpgraded,
   UpwardTableModalSearch,
 } from "../../../../components/DataGridViewReact";
-import "../../../../style/laoding.css";
 import "../../../../style/monbileview/accounting/deposit.css";
 import { Loading } from "../../../../components/Loading";
 import HandshakeIcon from "@mui/icons-material/Handshake";
@@ -277,7 +276,7 @@ function a11yProps(index: number) {
     "aria-controls": `simple-tabpanel-${index}`,
   };
 }
-export default function Deposit() {
+export default function ReturnCheck() {
   const [value, setValue] = useState(0);
   const { user, myAxios } = useContext(AuthContext);
   const [mode, setMode] = useState("");
@@ -579,7 +578,7 @@ export default function Deposit() {
     } else if (value === 2) {
       accountingEntryTableRef.current.setData(accountingEntry);
     }
-  }, [value, selected, accountingEntry, mutateCheckSelected]);
+  }, [value,tableData, selected, accountingEntry, mutateCheckSelected]);
 
   return (
     <>
@@ -1133,7 +1132,6 @@ const ModalReturnCheckEntries = forwardRef(
     const table = useRef<any>(null);
     const [showModal, setShowModal] = useState(false);
     const [isViewer, setIsViewer] = useState(false);
-    const [handleDelayClose, setHandleDelayClose] = useState(false);
     const [selectedItem, setSelectedItem] = useState([]);
     const [blick, setBlick] = useState(false);
     const [checkNo, setcheckNo] = useState("");
@@ -1338,8 +1336,8 @@ const ModalReturnCheckEntries = forwardRef(
             transform: "translate(-50%, -75%)",
             display: "flex",
             flexDirection: "column",
-            zIndex: handleDelayClose ? -100 : 100,
-            opacity: handleDelayClose ? 0 : 1,
+            zIndex: 100,
+            opacity:  1,
             transition: "all 150ms",
             boxShadow: "3px 6px 32px -7px rgba(0,0,0,0.75)",
           }}

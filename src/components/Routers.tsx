@@ -5,22 +5,17 @@ import { RenderPage } from "./Layout";
 import Layout from "./Layout";
 import NotFoundPage from "../feautures/NotFoundPage";
 
-
 const NotFoundPageLazy = lazy(() => import("../feautures/NotFoundPage"));
-const RegtoTpViewer = lazy(() => import("../feautures/Admin/Reference/RegtoTpViewer"));
+const RegtoTpViewer = lazy(
+  () => import("../feautures/Admin/Reference/RegtoTpViewer")
+);
 const MasterAdminDashboard = lazy(
   () => import("../feautures/MasterAdminDashboard")
 );
 const DisplayReport = lazy(() => import("../feautures/Admin/Reports/Report"));
-const Claims = lazy(() => import("../feautures/Admin/Task/Claims/Claims"));
-
-const RenewalTemplate = lazy(
-  () => import("../feautures/Admin/Template/renewal-template")
-);
 const AccountingReport = lazy(
   () => import("../feautures/Admin/Reports/Accounting/AccountingReport")
 );
-
 const ProductionReport = lazy(
   () => import("../feautures/Admin/Reports/Production/ProductionReport")
 );
@@ -305,7 +300,7 @@ export default function Routers() {
       path={`/${department}/dashboard/reference/care-of`}
       element={<CareOf />}
     />,
-      <Route
+    <Route
       key={`/${department}/dashboard/reference/temp-to-reg-viewer`}
       path={`/${department}/dashboard/reference/temp-to-reg-viewer`}
       element={<RegtoTpViewer />}
@@ -426,16 +421,10 @@ export default function Routers() {
   ];
 
   const CLAIMS_REFERENCE: any = [];
-  const CLAIMS_TASK = [
-    <Route
-      key={`/${department}/dashboard/task/claims/claims-id`}
-      path={`/${department}/dashboard/task/claims/claims`}
-      element={<Claims />}
-    />,
-  ];
+
   const ADMIN_REFERENCE = [...PRODUCTION_REFERENCE, ...ACCOUNTING_REFERENCE];
 
-  const ADMIN_TASK = [...PRODUCTION_TASK, ...ACCOUNTING_TASK, ...CLAIMS_TASK];
+  const ADMIN_TASK = [...PRODUCTION_TASK, ...ACCOUNTING_TASK];
 
   const PRODUCTION_ACCOUNTING_REFERENCE = [
     ...PRODUCTION_REFERENCE,
@@ -444,9 +433,6 @@ export default function Routers() {
   const PRODUCTION_ACCOUNTING_TASK = [
     ...PRODUCTION_TASK,
     ...ACCOUNTING_TASK,
-
-    // epal
-    ...CLAIMS_TASK,
   ];
 
   const ACCOUNTING_CHECKS_TASK = [
@@ -494,14 +480,12 @@ export default function Routers() {
   const TASK_ROUTE: {
     PRODUCTION_TASK: Array<JSX.Element>;
     ACCOUNTING_TASK: Array<JSX.Element>;
-    CLAIMS_TASK: Array<JSX.Element>;
     ADMIN_TASK: Array<JSX.Element>;
     PRODUCTION_ACCOUNTING_TASK: Array<JSX.Element>;
     ACCOUNTING_CHECKS_TASK: Array<JSX.Element>;
   } = {
     PRODUCTION_TASK,
     ACCOUNTING_TASK,
-    CLAIMS_TASK,
     ADMIN_TASK,
     PRODUCTION_ACCOUNTING_TASK,
     ACCOUNTING_CHECKS_TASK,
@@ -522,7 +506,6 @@ export default function Routers() {
       `${user?.userAccess as string}_TASK` as
         | "PRODUCTION_TASK"
         | "ACCOUNTING_TASK"
-        | "CLAIMS_TASK"
         | "ADMIN_TASK"
         | "PRODUCTION_ACCOUNTING_TASK"
         | "ACCOUNTING_CHECKS_TASK"
@@ -595,12 +578,6 @@ export default function Routers() {
           <Route
             path={`/${department}/dashboard/reports/accounting/accounting-reports`}
             element={<AccountingReport />}
-          />
-        </Route>
-        <Route path={`/${department}/dashboard`} element={<RenderPage />}>
-          <Route
-            path={`/${department}/dashboard/templates/renewal-template`}
-            element={<RenewalTemplate />}
           />
         </Route>
         <Route path="*" element={<NotFoundPage />} />

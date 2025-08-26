@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import { Outlet } from "react-router-dom";
 import Box from "@mui/material/Box";
 import CssBaseline from "@mui/material/CssBaseline";
-import "../style/laoding.css";
 import Header from "./Header";
 import { Loading } from "./Loading";
 

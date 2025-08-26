@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Button } from "@mui/material";
 import { AuthContext } from "../../../../../components/AuthContext";
 import { useMutation, useQuery } from "react-query";
@@ -21,11 +21,11 @@ import {
   TextInput,
 } from "../../../../../components/UpwardFields";
 import SearchIcon from "@mui/icons-material/Search";
-import { DataGridViewReact } from "../../../../../components/DataGridViewReact";
+import { DataGridViewReactUpgraded } from "../../../../../components/DataGridViewReact";
 import { Loading } from "../../../../../components/Loading";
 import { Autocomplete } from "../../../Task/Accounting/PettyCash";
 
-const clientColumn = [
+const supplierColumn = [
   { key: "entry_supplier_id", label: "ID", width: 130 },
   {
     key: "ShortName",
@@ -164,7 +164,7 @@ export default function Supplier() {
         }
       ),
     onSuccess: (res) => {
-      tableRef.current.setDataFormated((res as any)?.data.entry);
+      tableRef.current.setData((res as any)?.data.entry);
     },
   });
   const { isLoading: subAccountLoading, refetch: refetchSubAcct } = useQuery({
@@ -202,7 +202,6 @@ export default function Supplier() {
       resetField();
       setMode("");
       tableRef.current.setSelectedRow(null);
-      tableRef.current.resetCheckBox();
 
       mutateSearchRef.current({
         search: "",
@@ -483,7 +482,6 @@ export default function Supplier() {
                     resetField();
                     setMode("");
                     tableRef.current.setSelectedRow(null);
-                    tableRef.current.resetCheckBox();
                   }
                 });
               }}
@@ -498,6 +496,7 @@ export default function Supplier() {
         style={{
           display: "flex",
           columnGap: "20px",
+          marginBottom: "10px",
         }}
       >
         <div
@@ -690,7 +689,6 @@ export default function Supplier() {
             display: "flex",
             flexDirection: "column",
             rowGap: "5px",
-            marginBottom: "40px",
             flex: 1,
           }}
         >
@@ -786,7 +784,6 @@ export default function Supplier() {
             display: "flex",
             flexDirection: "column",
             rowGap: "10px",
-            marginBottom: "40px",
             flex: 1,
           }}
         >
@@ -820,84 +817,76 @@ export default function Supplier() {
         </div>
       </div>
       <div
-        className="add-padding"
         style={{
-          display: "flex",
-          flexDirection: "column",
           width: "100%",
-          height: "100%",
+          position: "relative",
           flex: 1,
-          marginTop: "10px",
+          display: "flex",
         }}
       >
-        <DataGridViewReact
-          height="340px"
+        <DataGridViewReactUpgraded
           ref={tableRef}
-          rows={[]}
-          columns={clientColumn}
-          getSelectedItem={(rowSelected: any, _: any, RowIndex: any) => {
+          adjustVisibleRowCount={280}
+          disableDeleteAll={true}
+          columns={supplierColumn}
+          handleSelectionChange={(rowSelected: any) => {
             if (rowSelected) {
               setMode("edit");
-              setOption(rowSelected[7].toLowerCase());
+              setOption(rowSelected.option?.toLowerCase());
               wait(100).then(() => {
                 if (clientIdRef.current) {
-                  clientIdRef.current.value = rowSelected[0];
+                  clientIdRef.current.value = rowSelected.entry_supplier_id;
                 }
                 if (subAccount.current) {
-                  subAccount.current.value = rowSelected[1];
+                  subAccount.current.value = rowSelected.ShortName;
                 }
                 if (fullnameRef.current) {
-                  fullnameRef.current.value = rowSelected[2];
+                  fullnameRef.current.value = rowSelected.company;
                 }
                 if (firstnameRef.current) {
-                  firstnameRef.current.value = rowSelected[3];
+                  firstnameRef.current.value = rowSelected.firstname;
                 }
                 if (lastnameRef.current) {
-                  lastnameRef.current.value = rowSelected[4];
+                  lastnameRef.current.value = rowSelected.lastname;
                 }
                 if (middleRef.current) {
-                  middleRef.current.value = rowSelected[5];
+                  middleRef.current.value = rowSelected.middlename;
                 }
                 if (mobileNoRef.current) {
-                  mobileNoRef.current.value = rowSelected[6];
+                  mobileNoRef.current.value = rowSelected.mobile;
                 }
                 if (optionRef.current) {
-                  optionRef.current.value = rowSelected[7]
+                  optionRef.current.value = rowSelected.option
                     ?.toString()
                     .toLowerCase();
                 }
-
                 if (tinRef.current) {
-                  tinRef.current.value = rowSelected[8];
+                  tinRef.current.value = rowSelected.tin_no;
                 }
                 if (addressRef.current) {
-                  addressRef.current.value = rowSelected[9];
+                  addressRef.current.value = rowSelected.address;
                 }
-                branchCodeRef.current = rowSelected[11];
+
+                // hidden fields
+                branchCodeRef.current = rowSelected.sub_account;
               });
             } else {
               tableRef.current.setSelectedRow(null);
-              tableRef.current.resetCheckBox();
               resetField();
               setMode("");
               return;
             }
           }}
-          onKeyDown={(rowSelected: any, RowIndex: any, e: any) => {
-            if (e.code === "Delete" || e.code === "Backspace") {
-              wait(100).then(() => {
-                codeCondfirmationAlert({
-                  isUpdate: false,
-                  cb: (userCodeConfirmation) => {
-                    mutateDelete({
-                      id: rowSelected[0],
-                      userCodeConfirmation,
-                    });
-                  },
+          onKeyDelete={(rowSelected: any) => {
+            codeCondfirmationAlert({
+              isUpdate: false,
+              cb: (userCodeConfirmation) => {
+                mutateDelete({
+                  id: rowSelected.entry_supplier_id,
+                  userCodeConfirmation,
                 });
-              });
-              return;
-            }
+              },
+            });
           }}
         />
       </div>
@@ -994,7 +983,6 @@ export default function Supplier() {
                   resetField();
                   setMode("");
                   tableRef.current.setSelectedRow(null);
-                  tableRef.current.resetCheckBox();
                 }
               });
             }}

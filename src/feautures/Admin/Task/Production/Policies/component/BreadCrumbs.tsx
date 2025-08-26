@@ -1,11 +1,9 @@
 import { Breadcrumbs } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import useUrlParams from "../../../../../../hooks/useUrlParams";
 
 export default function BreadCrumbs({ list }: { list: Array<any> }) {
   const location = useLocation();
-  const { searchParams } = useUrlParams();
 
   function handleClick(event: React.MouseEvent<HTMLDivElement, MouseEvent>) {
     event.preventDefault();
@@ -20,12 +18,7 @@ export default function BreadCrumbs({ list }: { list: Array<any> }) {
           return (
             <Link
               key={idx}
-              to={
-                item.link +
-                `?drawer=${searchParams.get(
-                  "drawer"
-                )}&pageSize=${searchParams.get("pageSize")}`
-              }
+              to={item.link}
               style={{
                 textDecoration: "none",
                 color: item.link === location.pathname ? "#f97316" : "black",

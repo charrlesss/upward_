@@ -36,7 +36,6 @@ import {
   UpwardTableModalSearch,
 } from "../../../../components/DataGridViewReact";
 import "../../../../style/monbileview/accounting/deposit.css";
-import "../../../../style/laoding.css";
 
 const defaultCashBreakDown = [
   { value1: "1,000.00", value2: "", value3: "0.00" },

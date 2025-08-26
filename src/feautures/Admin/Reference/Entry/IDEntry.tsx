@@ -1,5 +1,5 @@
 import { useState, lazy, Suspense } from "react";
-import { Box, Chip } from "@mui/material";
+import {Chip } from "@mui/material";
 import useUrlParams from "../../../../hooks/useUrlParams";
 import { User } from "../../../../components/AuthContext";
 import { AxiosInstance } from "axios";

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Button } from "@mui/material";
 import { AuthContext } from "../../../../../components/AuthContext";
 import { useMutation, useQuery } from "react-query";
@@ -16,14 +16,14 @@ import {
 } from "../../../../../lib/confirmationAlert";
 import PageHelmet from "../../../../../components/Helmet";
 import {
-  SelectInput,
   TextAreaInput,
   TextInput,
 } from "../../../../../components/UpwardFields";
 import SearchIcon from "@mui/icons-material/Search";
-import { DataGridViewReact } from "../../../../../components/DataGridViewReact";
+import { DataGridViewReactUpgraded } from "../../../../../components/DataGridViewReact";
 import { Loading } from "../../../../../components/Loading";
 import { Autocomplete } from "../../../Task/Accounting/PettyCash";
+
 const clientColumn = [
   { key: "entry_agent_id", label: "ID", width: 130 },
   { key: "firstname", label: "First Name", width: 200 },
@@ -146,7 +146,7 @@ export default function Agent() {
         headers: { Authorization: `Bearer ${user?.accessToken}` },
       }),
     onSuccess: (res) => {
-      tableRef.current.setDataFormated((res as any)?.data.entry);
+      tableRef.current.setData((res as any)?.data.entry);
     },
   });
   const { isLoading: subAccountLoading, refetch: refetchSubAcct } = useQuery({
@@ -184,7 +184,6 @@ export default function Agent() {
       resetField();
       setMode("");
       tableRef.current.setSelectedRow(null);
-      tableRef.current.resetCheckBox();
 
       mutateSearchRef.current({
         search: "",
@@ -441,7 +440,6 @@ export default function Agent() {
                     resetField();
                     setMode("");
                     tableRef.current.setSelectedRow(null);
-                    tableRef.current.resetCheckBox();
                   }
                 });
               }}
@@ -724,80 +722,73 @@ export default function Agent() {
         </div>
       </div>
       <div
-        className="add-padding"
         style={{
-          display: "flex",
-          flexDirection: "column",
+          marginTop: "10px",
           width: "100%",
-          height: "100%",
+          position: "relative",
           flex: 1,
+          display: "flex",
         }}
       >
-        <DataGridViewReact
-          height="340px"
+        <DataGridViewReactUpgraded
           ref={tableRef}
-          rows={[]}
+          adjustVisibleRowCount={310}
+          disableDeleteAll={true}
           columns={clientColumn}
-          getSelectedItem={(rowSelected: any, _: any, RowIndex: any) => {
+          handleSelectionChange={(rowSelected: any) => {
             if (rowSelected) {
               setMode("edit");
               wait(100).then(() => {
                 if (clientIdRef.current) {
-                  clientIdRef.current.value = rowSelected[0];
+                  clientIdRef.current.value = rowSelected.entry_agent_id;
                 }
 
                 if (firstnameRef.current) {
-                  firstnameRef.current.value = rowSelected[1];
+                  firstnameRef.current.value = rowSelected.firstname;
                 }
                 if (lastnameRef.current) {
-                  lastnameRef.current.value = rowSelected[2];
+                  lastnameRef.current.value = rowSelected.lastname;
                 }
                 if (middleRef.current) {
-                  middleRef.current.value = rowSelected[3];
+                  middleRef.current.value = rowSelected.middlename;
                 }
 
                 if (suffixRef.current) {
-                  suffixRef.current.value = rowSelected[4];
+                  suffixRef.current.value = rowSelected.suffix;
                 }
                 if (mobileNoRef.current) {
-                  mobileNoRef.current.value = rowSelected[5];
+                  mobileNoRef.current.value = rowSelected.mobile;
                 }
                 if (subAccount.current) {
-                  subAccount.current.value = rowSelected[6];
+                  subAccount.current.value = rowSelected.ShortName;
                 }
 
                 if (positionRef.current) {
-                  positionRef.current.value = rowSelected[7];
+                  positionRef.current.value = rowSelected.position;
                 }
                 if (addressRef.current) {
-                  addressRef.current.value = rowSelected[8];
+                  addressRef.current.value = rowSelected.address;
                 }
 
-                branchCodeRef.current = rowSelected[9];
+                branchCodeRef.current = rowSelected.sub_account;
               });
             } else {
               tableRef.current.setSelectedRow(null);
-              tableRef.current.resetCheckBox();
               resetField();
               setMode("");
               return;
             }
           }}
-          onKeyDown={(rowSelected: any, RowIndex: any, e: any) => {
-            if (e.code === "Delete" || e.code === "Backspace") {
-              wait(100).then(() => {
-                codeCondfirmationAlert({
-                  isUpdate: false,
-                  cb: (userCodeConfirmation) => {
-                    mutateDelete({
-                      id: rowSelected[0],
-                      userCodeConfirmation,
-                    });
-                  },
+          onKeyDelete={(rowSelected: any) => {
+            codeCondfirmationAlert({
+              isUpdate: false,
+              cb: (userCodeConfirmation) => {
+                mutateDelete({
+                  id: rowSelected.entry_agent_id,
+                  userCodeConfirmation,
                 });
-              });
-              return;
-            }
+              },
+            });
           }}
         />
       </div>
@@ -894,7 +885,6 @@ export default function Agent() {
                   resetField();
                   setMode("");
                   tableRef.current.setSelectedRow(null);
-                  tableRef.current.resetCheckBox();
                 }
               });
             }}

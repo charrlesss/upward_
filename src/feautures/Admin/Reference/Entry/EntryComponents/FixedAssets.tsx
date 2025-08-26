@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Button } from "@mui/material";
 import { AuthContext } from "../../../../../components/AuthContext";
 import { useMutation, useQuery } from "react-query";
@@ -20,7 +20,7 @@ import {
   TextInput,
 } from "../../../../../components/UpwardFields";
 import SearchIcon from "@mui/icons-material/Search";
-import { DataGridViewReact } from "../../../../../components/DataGridViewReact";
+import { DataGridViewReactUpgraded } from "../../../../../components/DataGridViewReact";
 import { Loading } from "../../../../../components/Loading";
 import { Autocomplete } from "../../../Task/Accounting/PettyCash";
 const fixedAssetsColumn = [
@@ -128,7 +128,7 @@ export default function FixedAssets() {
         headers: { Authorization: `Bearer ${user?.accessToken}` },
       }),
     onSuccess: (res) => {
-      tableRef.current.setDataFormated((res as any)?.data.entry);
+      tableRef.current.setData((res as any)?.data.entry);
     },
   });
   const { isLoading: subAccountLoading, refetch: refetchSubAcct } = useQuery({
@@ -167,7 +167,6 @@ export default function FixedAssets() {
       resetField();
       setMode("");
       tableRef.current.setSelectedRow(null);
-      tableRef.current.resetCheckBox();
 
       mutateSearchRef.current({
         search: "",
@@ -386,7 +385,6 @@ export default function FixedAssets() {
                     resetField();
                     setMode("");
                     tableRef.current.setSelectedRow(null);
-                    tableRef.current.resetCheckBox();
                   }
                 });
               }}
@@ -401,6 +399,7 @@ export default function FixedAssets() {
         style={{
           display: "flex",
           columnGap: "20px",
+          marginBottom: "10px",
         }}
       >
         <div
@@ -506,7 +505,6 @@ export default function FixedAssets() {
             display: "flex",
             flexDirection: "column",
             rowGap: "5px",
-            marginBottom: "40px",
             flex: 1,
           }}
         >
@@ -582,63 +580,56 @@ export default function FixedAssets() {
         </div>
       </div>
       <div
-        className="add-padding"
         style={{
-          display: "flex",
-          flexDirection: "column",
           width: "100%",
-          height: "100%",
+          position: "relative",
           flex: 1,
+          display: "flex",
         }}
       >
-        <DataGridViewReact
-          height="340px"
+        <DataGridViewReactUpgraded
           ref={tableRef}
-          rows={[]}
+          adjustVisibleRowCount={260}
+          disableDeleteAll={true}
           columns={fixedAssetsColumn}
-          getSelectedItem={(rowSelected: any, _: any, RowIndex: any) => {
+          handleSelectionChange={(rowSelected: any) => {
             if (rowSelected) {
               setMode("edit");
               wait(100).then(() => {
                 if (clientIdRef.current) {
-                  clientIdRef.current.value = rowSelected[0];
+                  clientIdRef.current.value = rowSelected.entry_fixed_assets_id;
                 }
                 if (fullnameRef.current) {
-                  fullnameRef.current.value = rowSelected[1];
+                  fullnameRef.current.value = rowSelected.fullname;
                 }
                 if (subAccountRef.current) {
-                  subAccountRef.current.value = rowSelected[2];
+                  subAccountRef.current.value = rowSelected.ShortName;
                 }
                 if (descriptionRef.current) {
-                  descriptionRef.current.value = rowSelected[3];
+                  descriptionRef.current.value = rowSelected.description;
                 }
                 if (remarksRef.current) {
-                  remarksRef.current.value = rowSelected[4];
+                  remarksRef.current.value = rowSelected.remarks;
                 }
+
               });
             } else {
               tableRef.current.setSelectedRow(null);
-              tableRef.current.resetCheckBox();
               resetField();
               setMode("");
               return;
             }
           }}
-          onKeyDown={(rowSelected: any, RowIndex: any, e: any) => {
-            if (e.code === "Delete" || e.code === "Backspace") {
-              wait(100).then(() => {
-                codeCondfirmationAlert({
-                  isUpdate: false,
-                  cb: (userCodeConfirmation) => {
-                    mutateDelete({
-                      id: rowSelected[0],
-                      userCodeConfirmation,
-                    });
-                  },
+          onKeyDelete={(rowSelected: any) => {
+            codeCondfirmationAlert({
+              isUpdate: false,
+              cb: (userCodeConfirmation) => {
+                mutateDelete({
+                  id: rowSelected.entry_fixed_assets_id,
+                  userCodeConfirmation,
                 });
-              });
-              return;
-            }
+              },
+            });
           }}
         />
       </div>
@@ -735,7 +726,6 @@ export default function FixedAssets() {
                   resetField();
                   setMode("");
                   tableRef.current.setSelectedRow(null);
-                  tableRef.current.resetCheckBox();
                 }
               });
             }}
