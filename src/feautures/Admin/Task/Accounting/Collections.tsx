@@ -143,6 +143,7 @@ export default function Collection() {
       });
     },
   });
+
   const { isLoading: paymentTypeLoading, data: transactionDesc } = useQuery({
     queryKey: "transaction-code-title",
     queryFn: async () =>
@@ -209,6 +210,7 @@ export default function Collection() {
       });
     },
   });
+
   const { mutate: mutatePrint, isLoading: isLoadingPrint } = useMutation({
     mutationKey: "print",
     mutationFn: async (variables: any) => {
@@ -230,6 +232,7 @@ export default function Collection() {
       );
     },
   });
+
   const {
     mutate: mutateGetSearchCheckFromClientId,
     isLoading: isLoadingGetSearchCheckFromClientId,
@@ -343,6 +346,7 @@ export default function Collection() {
         );
       },
     });
+
   const { mutate: mutateSaveCredit, isLoading: isLoadingSaveCredit } =
     useMutation({
       mutationKey: "save-credit",
@@ -447,6 +451,7 @@ export default function Collection() {
         }
       },
     });
+
   const {
     isLoading: loadingCollectionDataSearch,
     mutate: mutateCollectionDataSearch,
@@ -487,8 +492,6 @@ export default function Collection() {
           dataCollection[i].Payment !== null &&
           dataCollection[i].Payment.toString() !== ""
         ) {
-          console.log(dataCollection[i]);
-
           const isCash = dataCollection[i].Payment.toLowerCase() === "cash";
           debit.push({
             Payment: dataCollection[i].Payment,
@@ -511,26 +514,26 @@ export default function Collection() {
           });
         }
 
-        // if (
-        //   dataCollection[i].Purpose !== null &&
-        //   dataCollection[i].Purpose.toString() !== ""
-        // ) {
-        credit.push({
-          temp_id: `${i}`,
-          transaction: dataCollection[i].Purpose,
-          amount: formatNumber(
-            parseFloat(dataCollection[i].Credit.toString().replace(/,/g, ""))
-          ),
-          Remarks: dataCollection[i].CRRemarks,
-          Code: dataCollection[i].CRCode,
-          Title: dataCollection[i].CRTitle,
-          TC: dataCollection[i].TC,
-          Account_No: dataCollection[i].CRLoanID,
-          Name: dataCollection[i].CRLoanName,
-          VATType: dataCollection[i].CRVATType,
-          invoiceNo: dataCollection[i].CRInvoiceNo,
-        });
-        // }
+        if (
+          dataCollection[i].Purpose !== null &&
+          dataCollection[i].Purpose.toString() !== ""
+        ) {
+          credit.push({
+            temp_id: `${i}`,
+            transaction: dataCollection[i].Purpose,
+            amount: formatNumber(
+              parseFloat(dataCollection[i].Credit.toString().replace(/,/g, ""))
+            ),
+            Remarks: dataCollection[i].CRRemarks,
+            Code: dataCollection[i].CRCode,
+            Title: dataCollection[i].CRTitle,
+            TC: dataCollection[i].TC,
+            Account_No: dataCollection[i].CRLoanID,
+            Name: dataCollection[i].CRLoanName,
+            VATType: dataCollection[i].CRVATType,
+            invoiceNo: dataCollection[i].CRInvoiceNo,
+          });
+        }
       }
 
       debitTable.current.setData(debit);

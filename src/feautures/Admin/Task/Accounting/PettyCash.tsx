@@ -1326,7 +1326,6 @@ export const Autocomplete = forwardRef(
     );
   }
 );
-
 export const AutocompleteNumber = forwardRef(
   (
     {
@@ -1598,7 +1597,6 @@ export const AutocompleteNumber = forwardRef(
     );
   }
 );
-
 export const AutoCompletePro = forwardRef(
   (
     { containerStyle, label, inputRef, onChange, onKeydown, disableInput }: any,

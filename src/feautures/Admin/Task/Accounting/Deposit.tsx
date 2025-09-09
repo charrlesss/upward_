@@ -314,6 +314,7 @@ export default function Deposit() {
         });
       },
     });
+
   const { isLoading: loadingCashCollection, refetch: refetchCash } = useQuery({
     queryKey: "get-cash-collection",
     queryFn: async () =>
@@ -324,11 +325,11 @@ export default function Deposit() {
       }),
     onSuccess: (data) => {
       const response = data as any;
-      console.log(response.data.cash);
       setCashData(response.data.cash);
     },
     refetchOnWindowFocus: false,
   });
+
   const { isLoading: loadingCheckCollection, refetch: refetchCheck } = useQuery(
     {
       queryKey: "get-check-collection",
@@ -340,12 +341,12 @@ export default function Deposit() {
         }),
       onSuccess: (data) => {
         const response = data as any;
-        console.log(response.data.check);
         setCheckData(response.data.check);
       },
       refetchOnWindowFocus: false,
     }
   );
+
   const {
     mutate: mutateDepositSearchSelected,
     isLoading: isLoadingDepositSearchSelected,
@@ -457,6 +458,7 @@ export default function Deposit() {
       });
     },
   });
+
   const { mutate: addDepositMutation, isLoading: addDepositMutationLoading } =
     useMutation({
       mutationKey: "add-deposit",
@@ -486,6 +488,7 @@ export default function Deposit() {
         });
       },
     });
+
   const {
     mutate: updateDepositMutation,
     isLoading: updateDepositMutationLoading,
@@ -517,10 +520,10 @@ export default function Deposit() {
       });
     },
   });
+
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
-
   const updateTableRows = (params: any, idx: number) => {
     setTableRowsInputValue((itm) => {
       const newItm = itm.map((d: any, index: number) => {
@@ -563,7 +566,7 @@ export default function Deposit() {
           cashTotalRef.current.textContent = "0.00";
         }
       }
-    }, 1000);
+    }, 100);
   };
   const handleSave = (e: any) => {
     e.preventDefault();

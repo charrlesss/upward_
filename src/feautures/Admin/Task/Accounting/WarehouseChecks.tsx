@@ -40,7 +40,6 @@ const warehouseColumn = [
   { key: "Bank", label: "Bank", width: 150 },
   { key: "PDC_Status", label: "PDC Status", width: 100 },
 ];
-
 export default function WarehouseChecks() {
   const { myAxios, user } = useContext(AuthContext);
   const [disableSelection, setDisableSelection] = useState(false);
@@ -72,6 +71,7 @@ export default function WarehouseChecks() {
         tableRef.current.setData(res.data.data);
       },
     });
+
   const { mutate: mutateSave, isLoading: isLoadingSave } = useMutation({
     mutationKey: "save",
     mutationFn: async (variables: any) => {
@@ -124,6 +124,7 @@ export default function WarehouseChecks() {
       });
     },
   });
+
   const {
     mutate: mutateGetPulloutSelectedRow,
     isLoading: isLoadingGetPulloutSelectedRow,
@@ -175,6 +176,7 @@ export default function WarehouseChecks() {
       }
     },
   });
+  
   function hanldeOnSave() {
     if (
       refPDCStatus.current?.selectedIndex === 2 &&
@@ -694,7 +696,6 @@ export default function WarehouseChecks() {
     </>
   );
 }
-
 const ModalCheck = forwardRef(
   ({ handleOnSave, handleOnClose, getSelectedItem }: any, ref) => {
     const modalRef = useRef<HTMLDivElement>(null);

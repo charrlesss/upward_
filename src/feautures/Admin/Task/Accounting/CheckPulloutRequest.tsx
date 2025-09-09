@@ -36,6 +36,7 @@ const column = [
   { key: "Status", label: "Status", width: 150 },
   { key: "RCPNO", label: "RCPNO", width: 150 },
 ];
+
 export default function CheckPulloutRequest() {
   const { myAxios, user } = useContext(AuthContext);
 
@@ -97,29 +98,29 @@ export default function CheckPulloutRequest() {
   });
 
   const { isLoading: isLoadingLoadChecks, mutate: mutateLoadChecks } =
-    useMutation({
-      mutationKey: "load-checks",
-      mutationFn: async (variables: any) =>
-        await myAxios.post(
-          `/task/accounting/pullout/reqeust/load-checks`,
-          variables,
-          {
-            headers: {
-              Authorization: `Bearer ${user?.accessToken}`,
-            },
-          }
-        ),
-      onSuccess: (response) => {
-        table.current.setData(
-          response.data.data.map((itm: any) => {
-            itm.Check_Amnt = formatNumber(
-              parseFloat((itm.Check_Amnt || 0).toString().replace(/,/g, ""))
-            );
-            return itm;
-          })
-        );
-      },
-    });
+  useMutation({
+    mutationKey: "load-checks",
+    mutationFn: async (variables: any) =>
+      await myAxios.post(
+        `/task/accounting/pullout/reqeust/load-checks`,
+        variables,
+        {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }
+      ),
+    onSuccess: (response) => {
+      table.current.setData(
+        response.data.data.map((itm: any) => {
+          itm.Check_Amnt = formatNumber(
+            parseFloat((itm.Check_Amnt || 0).toString().replace(/,/g, ""))
+          );
+          return itm;
+        })
+      );
+    },
+  });
 
   const { isLoading: isLoadingAutoId, mutate: mutateAutoId } = useMutation({
     mutationKey: "auto-id",
@@ -197,11 +198,11 @@ export default function CheckPulloutRequest() {
 
   return (
     <>
-      {(isLoadingSavePulloutRequest ||
+      {(
+        isLoadingSavePulloutRequest ||
         isLoadingLoadChecks ||
         isLoadingAutoId ||
         isLoadingGetSelectedRcpnNoPulloutRequest) && <Loading />}
-
       <PageHelmet title="Pullout Request" />
       <div
         className="main"

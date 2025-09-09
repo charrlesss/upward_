@@ -1203,6 +1203,7 @@ export default function Header() {
               display: "flex",
               alignItems: "center",
             }}
+            
           >
             <AccountCircle
               color="info"

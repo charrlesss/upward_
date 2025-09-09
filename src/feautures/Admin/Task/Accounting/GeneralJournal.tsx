@@ -165,6 +165,7 @@ export default function GeneralJournal() {
       });
     },
   });
+  
   const {
     mutate: addGeneralJournalMutate,
     isLoading: loadingGeneralJournalMutate,

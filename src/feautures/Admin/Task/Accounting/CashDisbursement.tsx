@@ -355,6 +355,7 @@ export default function CashDisbursement() {
       });
     },
   });
+
   const { mutate: mutatePrint, isLoading: isLoadingPrint } = useMutation({
     mutationKey: "print",
     mutationFn: async (variables: any) => {
@@ -380,6 +381,7 @@ export default function CashDisbursement() {
       );
     },
   });
+  
   function handleVoid() {
     codeCondfirmationAlert({
       isUpdate: false,
