@@ -829,12 +829,23 @@ export default function PostDateChecks() {
                 onClick={() => {
                   wait(100).then(() => {
                     const tableRows = tableRef.current.getData();
+                    console.log(tableRows);
+
                     const getLastCheck_No: any =
                       tableRows[tableRows.length - 1];
+
                     if (modalCheckRef.current.getRefs().checknoRef.current) {
                       modalCheckRef.current.getRefs().checknoRef.current.value =
                         incrementCheckNo(getLastCheck_No?.Check_No);
+
                     }
+                  // increment check date if exists
+                    if (getLastCheck_No?.Check_Date && modalCheckRef.current.getRefs().checkdateRef?.current) {
+                      modalCheckRef.current.getRefs().checkdateRef.current.value =
+                        dateIncrement(getLastCheck_No.Check_Date);
+                    }
+
+  
                     tableRef.current.setSelectedRow(null);
                     setHasSelectedRow(null);
                     modalCheckRef.current.getRefs().checknoRef.current?.focus();
@@ -1488,6 +1499,7 @@ export default function PostDateChecks() {
                 if (modalCheckRef.current.getRefs().checknoRef.current) {
                   modalCheckRef.current.getRefs().checknoRef.current.value =
                     incrementCheckNo(getLastCheck_No?.Check_No);
+                  
                 }
                 tableRef.current.setSelectedRow(null);
 
@@ -2080,6 +2092,22 @@ function incrementCheckNo(Check_No: string) {
 
   return "001";
 }
+
+function dateIncrement(checkDate: string): string {
+  if (!checkDate) return "";
+
+  const date = new Date(checkDate); // assumes checkDate is "YYYY-MM-DD" or ISO
+  date.setMonth(date.getMonth() + 1);
+
+  // format back to "YYYY-MM-DD"
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+
 function parseNumber(value: any) {
   return isNaN(value) || value === "" ? 0 : Number(value);
 }

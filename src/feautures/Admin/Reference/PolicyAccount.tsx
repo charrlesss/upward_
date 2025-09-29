@@ -78,6 +78,7 @@ export default function PolicyAccount() {
         },
       });
     },
+
     onSuccess: (response) => {
       if (response.data.success) {
         wait(100).then(() => {

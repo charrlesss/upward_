@@ -87,7 +87,6 @@ export default function Rates() {
     },
   });
   const mutateSearchRef = useRef<any>(mutateSearch);
-
   const { mutate: mutateAdd, isLoading: loadingAdd } = useMutation({
     mutationKey: "add",
     mutationFn: async (variables: any) => {

@@ -196,10 +196,11 @@ export default function PettyCashTransaction() {
       timer: 1500,
     });
   }
- 
   useEffect(() => {
     mutateSearchRef.current({ search: "" });
   }, []);
+
+  
 
   return (
     <>

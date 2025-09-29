@@ -47,7 +47,7 @@ export default function CheckPulloutRequest() {
 
   const rcpnRef = useRef<HTMLInputElement>(null);
   const ppnoRef = useRef<HTMLInputElement>(null);
-  const nameRef = useRef<HTMLInputElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null); 
   const reasonRef = useRef<HTMLSelectElement>(null);
 
   const btnAddRef = useRef<HTMLButtonElement>(null);
